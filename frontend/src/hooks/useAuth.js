@@ -1,0 +1,207 @@
+/**
+ * useAuth hook
+ * Custom hook for authentication state and operations
+ * Enhanced with better token validation and role checking
+ */
+
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import jwt_decode from 'jwt-decode';
+import { selectCurrentUser, selectIsAuthenticated, selectAuthRole, fetchProfile, logout } from '../redux/slices/authSlice';
+import socketService from '../services/socket.service';
+import cookieHelper from '../utils/cookieHelper';
+
+export const useAuth = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const currentUser = useSelector(selectCurrentUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const role = useSelector(selectAuthRole);
+  /**
+   * Initialize authentication state on component mount
+   */  useEffect(() => {
+    const token = cookieHelper.getAuthToken();
+
+    if (token) {
+      try {
+        // Check token expiration
+        const decoded = jwt_decode(token);
+        const currentTime = Date.now() / 1000;
+
+        console.log('Token validation check:', {
+          decodedToken: decoded,
+          tokenExpiration: new Date(decoded.exp * 1000).toLocaleString(),
+          currentTime: new Date(currentTime * 1000).toLocaleString(),
+          isExpired: decoded.exp < currentTime,
+          tokenRole: decoded.role || 'not_found_in_token'
+        });
+
+        if (decoded.exp < currentTime) {
+          // Token is expired, log out
+          console.warn('Token expired, logging out');
+          dispatch(logout());
+          navigate('/login');
+        } else if (!isAuthenticated) {
+          // Token is valid but no user in state, fetch profile
+          console.log('Token valid but not authenticated in Redux, fetching profile...');
+          dispatch(fetchProfile())
+            .unwrap()
+            .then(data => {
+              console.log('Profile fetch successful:', data);
+              // Initialize socket connection only after profile is loaded
+              socketService.init(dispatch, token, data?.role || decoded.role);
+            })
+            .catch(error => {
+              console.error('Profile fetch failed:', error);
+              // If profile fetch fails but token is valid, try to recover
+              if (decoded.role) {
+                console.log('Attempting recovery with token data');
+                // We could set some basic user data from the token here if needed
+              } else {
+                // No way to recover, log out
+                dispatch(logout());
+                navigate('/login');
+              }
+            });
+        } else {
+          // We're authenticated, ensure socket is connected
+          console.log('Already authenticated, ensuring socket connection');
+          socketService.init(dispatch, token, decoded.role || role);
+        }
+      } catch (error) {
+        console.error('Token validation error:', error);
+        // Invalid token, log out
+        dispatch(logout());
+        navigate('/login');
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      socketService.disconnect();
+    };
+  }, [dispatch, isAuthenticated, navigate, role]);
+
+  /**
+   * Handle user logout
+   */
+  const handleLogout = () => {
+    dispatch(logout())
+      .unwrap()
+      .then(() => {
+        // Disconnect socket and redirect to login
+        socketService.disconnect();
+        navigate('/login');
+      })
+      .catch((error) => {
+        console.error('Logout failed', error);
+      });
+  };
+  /**
+   * Check if user has required role
+   * @param {Array<string>} allowedRoles - Array of allowed roles
+   * @returns {boolean} - Whether user has required role
+   */  const hasRole = (allowedRoles) => {
+    console.log('hasRole check:', { userRole: role, allowedRoles });
+    console.log('Current auth state:', { isAuthenticated, role, currentUser });
+
+    // If not authenticated, don't even bother checking
+    if (!isAuthenticated) {
+      console.log('Not authenticated, role check failed');
+      return false;
+    }
+
+    // If no role in Redux state, try to get it from token
+    if (!role) {
+      console.log('No role in Redux state, checking token...');
+      try {
+        const token = cookieHelper.getAuthToken();
+        if (token) {
+          const decoded = jwt_decode(token);
+          if (decoded.role) {
+            console.log('Found role in token:', decoded.role);
+
+            // Check with token role
+            if (Array.isArray(allowedRoles)) {
+              const result = allowedRoles.includes(decoded.role);
+              console.log('Token role array check result:', result);
+              return result;
+            } else {
+              const result = decoded.role === allowedRoles;
+              console.log('Token role direct match result:', result);
+              return result;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to extract role from token:', error);
+      }
+
+      console.log('No role found in Redux or token');
+      return false;
+    }
+
+    // We have a role in Redux state, check normally
+    if (Array.isArray(allowedRoles)) {
+      const result = allowedRoles.includes(role);
+      console.log('Array check result:', result);
+      return result;
+    }
+
+    const result = role === allowedRoles;
+    console.log('Direct match result:', result);
+    return result;
+  };
+  /**
+   * Checks token validity and returns decoded token if valid
+   * @returns {Object|null} - Decoded token or null if invalid
+   */
+  const checkToken = () => {
+    try {
+      const token = cookieHelper.getAuthToken();
+      if (!token) return null;
+
+      const decoded = jwt_decode(token);
+      const currentTime = Date.now() / 1000;
+
+      if (decoded.exp < currentTime) {
+        console.warn('Token expired on check:', new Date(decoded.exp * 1000).toLocaleString());
+        return null;
+      }
+
+      return decoded;
+    } catch (error) {
+      console.error('Token check error:', error);
+      return null;
+    }
+  };
+  /**
+   * Refreshes authentication state from cookies
+   * Useful when token is updated but Redux state might be stale
+   */
+  const refreshAuthState = () => {
+    try {
+      const decoded = checkToken();
+      if (decoded && !isAuthenticated) {
+        console.log('Refreshing auth state from token');
+        dispatch(fetchProfile());
+      }
+    } catch (error) {
+      console.error('Error refreshing auth state:', error);
+    }
+  };
+
+  return {
+    currentUser,
+    isAuthenticated,
+    role,
+    logout: handleLogout,
+    hasRole,
+    checkToken,
+    refreshAuthState
+  };
+};
+
+export default useAuth;

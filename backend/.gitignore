@@ -1,0 +1,175 @@
+# Hotel Service Management Platform - .gitignore
+
+# ==============================
+# Environment Variables
+# ==============================
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+
+# ==============================
+# Dependencies
+# ==============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ==============================
+# Production Builds
+# ==============================
+dist/
+build/
+out/
+
+# ==============================
+# Logs
+# ==============================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ==============================
+# Runtime Data
+# ==============================
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ==============================
+# Coverage Directory
+# ==============================
+lib-cov/
+coverage/
+*.lcov
+.nyc_output/
+
+# ==============================
+# Uploads and User Content
+# ==============================
+backend/uploads/
+backend/public/uploads/
+uploads/
+temp/
+tmp/
+
+# ==============================
+# Database Files
+# ==============================
+*.db
+*.sqlite
+*.sqlite3
+
+# ==============================
+# IDE and Editor Files
+# ==============================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ==============================
+# OS Generated Files
+# ==============================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ==============================
+# Package Manager Files
+# ==============================
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ==============================
+# Frontend Specific
+# ==============================
+frontend/build/
+frontend/dist/
+frontend/.next/
+frontend/out/
+frontend/.nuxt/
+frontend/.vuepress/dist/
+frontend/.docusaurus/
+
+# ==============================
+# Backend Specific
+# ==============================
+backend/dist/
+backend/build/
+backend/uploads/
+backend/temp/
+
+# ==============================
+# Security and Certificates
+# ==============================
+*.pem
+*.key
+*.crt
+*.csr
+ssl/
+certificates/
+
+# ==============================
+# Docker
+# ==============================
+.dockerignore
+docker-compose.override.yml
+
+# ==============================
+# Testing
+# ==============================
+test-results/
+coverage/
+.jest/
+*.test.log
+
+# ==============================
+# Miscellaneous
+# ==============================
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.tgz
+*.tar.gz
+
+# ==============================
+# Stripe and Payment Files
+# ==============================
+stripe-webhook-events.log
+
+# ==============================
+# MongoDB Dump Files
+# ==============================
+dump/
+*.dump
+
+# ==============================
+# Email Templates (if sensitive)
+# ==============================
+# Uncomment if email templates contain sensitive info
+# email-templates/
+
+# ==============================
+# Documentation Build
+# ==============================
+docs/build/
+docs/dist/

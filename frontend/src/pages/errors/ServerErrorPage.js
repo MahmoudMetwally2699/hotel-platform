@@ -1,0 +1,50 @@
+/**
+ * Server Error Page
+ * Displayed when a server error occurs
+ */
+
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+
+const ServerErrorPage = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 text-center">
+        <div>
+          <h1 className="text-9xl font-extrabold text-red-600">500</h1>
+          <h2 className="mt-6 text-3xl font-bold text-gray-900">Server Error</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Sorry, something went wrong on our server. We're working to fix it.
+          </p>
+        </div>
+        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center justify-center px-5 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Go back
+          </button>
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Go to home page
+          </Link>
+        </div>
+        <div className="mt-4 text-sm">
+          <p>
+            If the problem persists, please{' '}
+            <a href="/contact" className="text-blue-600 hover:text-blue-500">
+              contact support
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ServerErrorPage;

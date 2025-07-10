@@ -1,0 +1,400 @@
+/**
+ * App Router Configuration
+ * Sets up all routes with proper authentication and role-based access
+ */
+
+import React, { Suspense, lazy } from 'react';
+import { Route, Routes, Navigate } from 'react-router-dom';
+import ProtectedRoute from '../components/common/ProtectedRoute';
+import TailwindLayout from '../layouts/TailwindLayout';
+import LoadingScreen from '../components/common/LoadingScreen';
+
+// Lazy loaded pages for better performance
+// Auth Pages
+const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('../pages/auth/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('../pages/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('../pages/auth/ResetPasswordPage'));
+const VerifyEmailPage = lazy(() => import('../pages/auth/VerifyEmailPage'));
+
+// Public Pages
+const HomePage = lazy(() => import('../pages/client/HomePage'));
+const ServiceListPage = lazy(() => import('../pages/client/ServiceListPage'));
+const ServiceDetailsPage = lazy(() => import('../pages/client/ServiceDetailsPage'));
+const HotelListPage = lazy(() => import('../pages/client/HotelListPage'));
+const HotelDetailsPage = lazy(() => import('../pages/client/HotelDetailsPage'));
+const BookingPage = lazy(() => import('../pages/client/BookingPage'));
+const ProfilePage = lazy(() => import('../pages/common/ProfilePage'));
+
+// Super Admin Pages
+const SuperAdminDashboard = lazy(() => import('../pages/superadmin/DashboardPage'));
+const SuperAdminHotelsPage = lazy(() => import('../pages/superadmin/HotelsPage'));
+const SuperAdminHotelAdminsPage = lazy(() => import('../pages/superadmin/HotelAdminsPage'));
+const SuperAdminAnalyticsPage = lazy(() => import('../pages/superadmin/AnalyticsPage'));
+const SuperAdminPlatformMetricsPage = lazy(() => import('../pages/superadmin/PlatformMetricsPage'));
+const SuperAdminSettingsPage = lazy(() => import('../pages/superadmin/SettingsPage'));
+
+// Hotel Admin Pages
+const HotelAdminDashboard = lazy(() => import('../pages/hotel/DashboardPage'));
+const HotelAdminServiceProvidersPage = lazy(() => import('../pages/hotel/ServiceProvidersPage'));
+const HotelAdminManageProvidersPage = lazy(() => import('../pages/hotel/ManageProvidersPage'));
+const HotelAdminServicesPage = lazy(() => import('../pages/hotel/ServicesPage'));
+const HotelAdminBookingsPage = lazy(() => import('../pages/hotel/BookingsPage'));
+const HotelAdminGuestsPage = lazy(() => import('../pages/hotel/GuestsPage'));
+const HotelAdminUserManagementPage = lazy(() => import('../pages/hotel/UserManagementPage'));
+const HotelAdminRevenuePage = lazy(() => import('../pages/hotel/RevenuePage'));
+const HotelAdminMarkupSettingsPage = lazy(() => import('../pages/hotel/MarkupSettingsPage'));
+const HotelAdminProviderAnalyticsPage = lazy(() => import('../pages/hotel/ProviderAnalyticsPage'));
+const HotelAdminSettingsPage = lazy(() => import('../pages/hotel/SettingsPage'));
+const ServiceProviderClients = lazy(() => import('../components/hotel/ServiceProviderClients'));
+const HotelServiceProviderAnalytics = lazy(() => import('../components/hotel/HotelServiceProviderAnalytics'));
+
+// Service Provider Pages
+const MultiCategoryDashboard = lazy(() => import('../pages/service/MultiCategoryDashboard'));
+const ServiceProviderServicesPage = lazy(() => import('../pages/service/ServicesPage'));
+const ServiceProviderOrdersPage = lazy(() => import('../pages/service/OrdersPage'));
+const ServiceProviderOrderDetailPage = lazy(() => import('../pages/service/OrderDetailPage'));
+const ServiceProviderProcessBookingsPage = lazy(() => import('../pages/service/ProcessBookingsPage'));
+const ServiceProviderEarningsPage = lazy(() => import('../pages/service/EarningsPage'));
+const ServiceProviderMetricsPage = lazy(() => import('../pages/service/MetricsPage'));
+const ServiceProviderSettingsPage = lazy(() => import('../pages/service/SettingsPage'));
+const CategorySelectionDashboard = lazy(() => import('../components/service/CategorySelectionDashboard'));
+const ServiceProviderAnalytics = lazy(() => import('../components/service/ServiceProviderAnalytics'));
+
+// Error Pages
+const NotFoundPage = lazy(() => import('../pages/errors/NotFoundPage'));
+const ForbiddenPage = lazy(() => import('../pages/errors/ForbiddenPage'));
+const ServerErrorPage = lazy(() => import('../pages/errors/ServerErrorPage'));
+
+const AppRouter = () => {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+
+        {/* Client/Guest Routes */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/hotels" element={<HotelListPage />} />
+        <Route path="/hotels/:id" element={<HotelDetailsPage />} />
+        <Route path="/services/:category" element={<ServiceListPage />} />
+        <Route path="/services/details/:id" element={<ServiceDetailsPage />} />
+
+        {/* Protected Client/Guest Routes */}
+        <Route
+          path="/bookings"
+          element={
+            <ProtectedRoute>
+              <TailwindLayout>
+                <BookingPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <TailwindLayout>
+                <ProfilePage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Super Admin Routes */}
+        <Route
+          path="/superadmin/dashboard"
+          element={            <ProtectedRoute allowedRoles="superadmin">
+              <TailwindLayout>
+                <SuperAdminDashboard />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />        <Route          path="/superadmin/hotels"
+          element={
+            <ProtectedRoute allowedRoles="superadmin">
+              <TailwindLayout>
+                <SuperAdminHotelsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route          path="/superadmin/hotel-admins"
+          element={
+            <ProtectedRoute allowedRoles="superadmin">
+              <TailwindLayout>
+                <SuperAdminHotelAdminsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />        <Route          path="/superadmin/platform-metrics"
+          element={
+            <ProtectedRoute allowedRoles="superadmin">
+              <TailwindLayout>
+                <SuperAdminPlatformMetricsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route          path="/superadmin/analytics"
+          element={
+            <ProtectedRoute allowedRoles="superadmin">
+              <TailwindLayout>
+                <SuperAdminAnalyticsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route          path="/superadmin/settings"
+          element={
+            <ProtectedRoute allowedRoles="superadmin">
+              <TailwindLayout>
+                <SuperAdminSettingsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Hotel Admin Routes */}
+        <Route
+          path="/hotel/dashboard"          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminDashboard />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel/service-providers"          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminServiceProvidersPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel/services"          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminServicesPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel/bookings"          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminBookingsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />        <Route
+          path="/hotel/guests"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminGuestsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel/revenue"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminRevenuePage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />        <Route
+          path="/hotel/manage-providers"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminManageProvidersPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel/user-management"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminUserManagementPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel/markup-settings"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminMarkupSettingsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />        <Route
+          path="/hotel/provider-analytics"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminProviderAnalyticsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel/provider-clients"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <ServiceProviderClients />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel/analytics"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelServiceProviderAnalytics />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }        />
+        <Route
+          path="/hotel/settings"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminSettingsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Service Provider Routes */}
+        <Route
+          path="/service/dashboard"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <MultiCategoryDashboard />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/categories"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <CategorySelectionDashboard />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/analytics"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <ServiceProviderAnalytics />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/services"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <ServiceProviderServicesPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/orders"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <ServiceProviderOrdersPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/orders/:orderId"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <ServiceProviderOrderDetailPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/earnings"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <ServiceProviderEarningsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />        <Route
+          path="/service/process-bookings"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <ServiceProviderProcessBookingsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/metrics"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <ServiceProviderMetricsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/settings"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <ServiceProviderSettingsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Error Pages */}
+        <Route path="/forbidden" element={<ForbiddenPage />} />
+        <Route path="/server-error" element={<ServerErrorPage />} />
+        <Route path="/not-found" element={<NotFoundPage />} />
+
+        {/* Redirect all other paths to not found */}
+        <Route path="*" element={<Navigate to="/not-found" replace />} />
+      </Routes>
+    </Suspense>
+  );
+};
+
+export default AppRouter;
