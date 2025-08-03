@@ -21,53 +21,47 @@ if (!isServerless) {
 }
 
 // Configure multer for different file types
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    let uploadPath;
+let storage;
 
-    if (isServerless) {
-      // Use /tmp directory for serverless environments
-      uploadPath = '/tmp/uploads/';
-    } else {
-      uploadPath = 'uploads/';
+if (isServerless) {
+  // For serverless environments, disable file uploads or use memory storage
+  storage = multer.memoryStorage();
+} else {
+  storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      let uploadPath = 'uploads/';
+
+      // Determine upload path based on file purpose
+      if (req.params.type === 'hotel') {
+        uploadPath += 'hotels/';
+      } else if (req.params.type === 'service') {
+        uploadPath += 'services/';
+      } else if (req.params.type === 'profile') {
+        uploadPath += 'profiles/';
+      } else if (req.params.type === 'document') {
+        uploadPath += 'documents/';
+      } else {
+        uploadPath += 'misc/';
+      }
+
+      const fullPath = path.join(__dirname, '..', uploadPath);
+
+      // Ensure directory exists
+      if (!fs.existsSync(fullPath)) {
+        fs.mkdirSync(fullPath, { recursive: true });
+      }
+
+      cb(null, fullPath);
+    },
+    filename: (req, file, cb) => {
+      // Generate unique filename
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      const name = file.fieldname + '-' + uniqueSuffix + ext;
+      cb(null, name);
     }
-
-    // Determine upload path based on file purpose
-    if (req.params.type === 'hotel') {
-      uploadPath += 'hotels/';
-    } else if (req.params.type === 'service') {
-      uploadPath += 'services/';
-    } else if (req.params.type === 'profile') {
-      uploadPath += 'profiles/';
-    } else if (req.params.type === 'document') {
-      uploadPath += 'documents/';
-    } else {
-      uploadPath += 'misc/';
-    }
-
-    // Determine full path
-    let fullPath;
-    if (isServerless) {
-      fullPath = uploadPath;
-    } else {
-      fullPath = path.join(__dirname, '..', uploadPath);
-    }
-
-    // Ensure directory exists
-    if (!fs.existsSync(fullPath)) {
-      fs.mkdirSync(fullPath, { recursive: true });
-    }
-
-    cb(null, fullPath);
-  },
-  filename: (req, file, cb) => {
-    // Generate unique filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    const name = file.fieldname + '-' + uniqueSuffix + ext;
-    cb(null, name);
-  }
-});
+  });
+}
 
 // File filter function
 const fileFilter = (req, file, cb) => {
@@ -106,7 +100,19 @@ const upload = multer({
  * @route   POST /api/upload/single/:type
  * @access  Private
  */
-router.post('/single/:type', protect, upload.single('file'), (req, res) => {
+router.post('/single/:type', protect, (req, res, next) => {
+  // For serverless environments, return a message about file upload limitations
+  if (isServerless) {
+    return res.status(501).json({
+      success: false,
+      message: 'File uploads are not supported in serverless deployment. Please use a cloud storage service like AWS S3 or Cloudinary.',
+      suggestion: 'Consider implementing cloud storage integration for production use.'
+    });
+  }
+
+  // Continue with normal file upload for non-serverless environments
+  next();
+}, upload.single('file'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -117,7 +123,7 @@ router.post('/single/:type', protect, upload.single('file'), (req, res) => {
 
     // Apply role-based permissions
     if (req.params.type === 'hotel' && req.user.role !== 'superadmin' && req.user.role !== 'hotel') {
-      fs.unlinkSync(req.file.path); // Delete the uploaded file
+      if (req.file.path) fs.unlinkSync(req.file.path); // Delete the uploaded file
       return res.status(403).json({
         success: false,
         message: 'You do not have permission to upload hotel files'
@@ -125,7 +131,7 @@ router.post('/single/:type', protect, upload.single('file'), (req, res) => {
     }
 
     if (req.params.type === 'service' && req.user.role !== 'hotel' && req.user.role !== 'service') {
-      fs.unlinkSync(req.file.path); // Delete the uploaded file
+      if (req.file.path) fs.unlinkSync(req.file.path); // Delete the uploaded file
       return res.status(403).json({
         success: false,
         message: 'You do not have permission to upload service files'
@@ -164,7 +170,19 @@ router.post('/single/:type', protect, upload.single('file'), (req, res) => {
  * @route   POST /api/upload/multiple/:type
  * @access  Private
  */
-router.post('/multiple/:type', protect, upload.array('files', 10), (req, res) => {
+router.post('/multiple/:type', protect, (req, res, next) => {
+  // For serverless environments, return a message about file upload limitations
+  if (isServerless) {
+    return res.status(501).json({
+      success: false,
+      message: 'File uploads are not supported in serverless deployment. Please use a cloud storage service like AWS S3 or Cloudinary.',
+      suggestion: 'Consider implementing cloud storage integration for production use.'
+    });
+  }
+
+  // Continue with normal file upload for non-serverless environments
+  next();
+}, upload.array('files', 10), (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
@@ -225,6 +243,15 @@ router.post('/multiple/:type', protect, upload.array('files', 10), (req, res) =>
  */
 router.delete('/:type/:filename', protect, (req, res) => {
   try {
+    // For serverless environments, return a message about file operations limitations
+    if (isServerless) {
+      return res.status(501).json({
+        success: false,
+        message: 'File operations are not supported in serverless deployment. Please use a cloud storage service like AWS S3 or Cloudinary.',
+        suggestion: 'Consider implementing cloud storage integration for production use.'
+      });
+    }
+
     const filePath = path.join(__dirname, '..', 'uploads', req.params.type, req.params.filename);
 
     // Check if file exists

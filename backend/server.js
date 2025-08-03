@@ -81,8 +81,8 @@ try {
       }
     },
     credentials: true,
-    optionsSuccessStatus: 200
-  };app.use(cors(corsOptions));
+    optionsSuccessStatus: 200  };
+  app.use(cors(corsOptions));
   console.log('✅ CORS configured');
 
   // Rate limiting
@@ -92,11 +92,13 @@ try {
     message: {
       error: 'Too many requests from this IP, please try again later'
     }
-  });  app.use('/api/', limiter);
+  });
+  app.use('/api/', limiter);
   console.log('✅ Rate limiting configured');
 
   // Body parsing middleware
-  app.use(express.json({ limit: '10mb' }));  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
   console.log('✅ Body parsing configured');
 
   // Compression middleware
