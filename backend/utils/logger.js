@@ -9,10 +9,18 @@ const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
 
-// Create logs directory if it doesn't exist
-const logsDir = path.join(__dirname, '../logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
+// Create logs directory if it doesn't exist (only in non-serverless environments)
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY;
+let logsDir;
+
+if (!isServerless) {
+  logsDir = path.join(__dirname, '../logs');
+  if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+  }
+} else {
+  // Use /tmp directory for serverless environments (if needed)
+  logsDir = '/tmp';
 }
 
 // Custom log format
