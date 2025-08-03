@@ -17,11 +17,39 @@ require('dotenv').config();
 const { globalErrorHandler } = require('../middleware/error');
 
 // Connect to database
-try {
-  require('../config/database');
-} catch (error) {
-  console.error('Database connection error:', error);
-}
+let isConnected = false;
+
+const connectToDatabase = async () => {
+  if (isConnected) {
+    return;
+  }
+
+  try {
+    const mongoose = require('mongoose');
+    
+    // Serverless-optimized options
+    const options = {
+      maxPoolSize: 1, // Single connection for serverless
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      family: 4,
+      bufferCommands: false,
+      bufferMaxEntries: 0,
+    };
+
+    const mongoURI = process.env.MONGODB_URI;
+    if (!mongoURI) {
+      throw new Error('MongoDB URI is not defined');
+    }
+
+    await mongoose.connect(mongoURI, options);
+    isConnected = true;
+    console.log('Connected to MongoDB for serverless function');
+  } catch (error) {
+    console.error('Database connection error:', error);
+    throw error;
+  }
+};
 
 let app;
 
@@ -54,9 +82,8 @@ function createApp() {
         'http://localhost:3000',
         'https://hotel-platform-teud.vercel.app'
       ];
-      
-      // Trim whitespace from origins
-      const cleanOrigins = allowedOrigins.map(origin => origin.trim());
+        // Trim whitespace and trailing slashes from origins
+      const cleanOrigins = allowedOrigins.map(origin => origin.trim().replace(/\/$/, ''));
       
       console.log('CORS check - Origin:', origin);
       console.log('CORS check - Allowed origins:', cleanOrigins);
@@ -126,9 +153,19 @@ function createApp() {
 }
 
 // Export for Vercel
-module.exports = (req, res) => {
-  const app = createApp();
-  return app(req, res);
+module.exports = async (req, res) => {
+  try {
+    await connectToDatabase();
+    const app = createApp();
+    return app(req, res);
+  } catch (error) {
+    console.error('Serverless function error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
 };
 
 // Also export the app for local testing
