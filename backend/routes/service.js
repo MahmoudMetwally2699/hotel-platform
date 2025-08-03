@@ -360,54 +360,7 @@ router.put('/services/:id', catchAsync(async (req, res, next) => {
   });
 }));
 
-/**
- * @route   GET /api/service/bookings
- * @desc    Get all bookings for the provider
- * @access  Private/ServiceProvider
- */
-router.get('/bookings', catchAsync(async (req, res) => {
-  const providerId = req.user.serviceProviderId;
 
-  // Query filters
-  const filter = { serviceProviderId: providerId };
-
-  if (req.query.status) {
-    filter.status = req.query.status;
-  }
-
-  if (req.query.fromDate && req.query.toDate) {
-    filter.bookingDate = {
-      $gte: new Date(req.query.fromDate),
-      $lte: new Date(req.query.toDate)
-    };
-  }
-
-  // Get bookings with pagination
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
-
-  const [bookings, total] = await Promise.all([
-    Booking.find(filter)
-      .populate('serviceId', 'name category')
-      .populate('userId', 'firstName lastName email')
-      .sort({ bookingDate: -1 })
-      .skip(skip)
-      .limit(limit),
-    Booking.countDocuments(filter)
-  ]);
-
-  res.status(200).json({
-    status: 'success',
-    results: bookings.length,
-    total,
-    pagination: {
-      page,
-      limit,
-      pages: Math.ceil(total / limit)
-    },    data: { bookings }
-  });
-}));
 
 /**
  * @route   GET /api/service/orders
