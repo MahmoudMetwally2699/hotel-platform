@@ -441,53 +441,7 @@ router.get('/bookings/:id', catchAsync(async (req, res, next) => {
   });
 }));
 
-/**
- * @route   PUT /api/service/bookings/:id/status
- * @desc    Update booking status
- * @access  Private/ServiceProvider
- */
-router.put('/bookings/:id/status', catchAsync(async (req, res, next) => {
-  const providerId = req.user.serviceProviderId;
-  const bookingId = req.params.id;
-  const { status, notes } = req.body;
 
-  if (!['confirmed', 'in-progress', 'completed', 'cancelled'].includes(status)) {
-    return next(new AppError('Invalid status', 400));
-  }
-
-  const booking = await Booking.findOne({
-    _id: bookingId,
-    serviceProviderId: providerId
-  });
-
-  if (!booking) {
-    return next(new AppError('No booking found with that ID for this provider', 404));
-  }
-
-  // Update booking status
-  booking.status = status;
-
-  if (notes) {
-    booking.notes = booking.notes || [];
-    booking.notes.push({
-      content: notes,
-      addedBy: req.user.id,
-      addedAt: Date.now()
-    });
-  }
-
-  await booking.save();
-
-  logger.info(`Booking status updated to ${status}`, {
-    serviceProviderId: providerId,
-    bookingId: booking._id
-  });
-
-  res.status(200).json({
-    status: 'success',
-    data: { booking }
-  });
-}));
 
 /**
  * @route   PUT /api/service/orders/:id/status
