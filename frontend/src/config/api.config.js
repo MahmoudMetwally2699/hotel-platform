@@ -3,10 +3,17 @@
  * This file contains all API endpoints used in the application
  */
 
-// Use proxy in development, full URL in production
-export const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? (process.env.REACT_APP_API_URL || 'http://localhost:5000/api')
-  : '/api'; // Use proxy in development
+// Dynamic API base URL configuration for different environments
+const getApiBaseUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    // Use environment variable in production (Vercel)
+    return process.env.REACT_APP_API_URL || 'https://your-backend-app.vercel.app/api';
+  }
+  // Use proxy in development
+  return '/api';
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 // Authentication endpoints
 export const AUTH_API = {
