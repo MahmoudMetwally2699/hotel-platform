@@ -31,8 +31,7 @@ const EarningsPage = () => {
 
   const [timeRange, setTimeRange] = useState('month'); // 'week', 'month', 'year'
   const [showPayoutModal, setShowPayoutModal] = useState(false);
-  const [payoutAmount, setPayoutAmount] = useState('');
-  const [payoutMethod, setPayoutMethod] = useState('bank_transfer');
+  const [payoutAmount, setPayoutAmount] = useState('');  const [payoutMethod, setPayoutMethod] = useState('bank_transfer');
 
   useEffect(() => {
     dispatch(fetchProviderEarnings(timeRange));
@@ -58,19 +57,23 @@ const EarningsPage = () => {
       }
     });
   };
-
   // Format chart data
   const getChartData = () => {
-    if (!earnings || !earnings.timeline) return null;
+    if (!earnings?.data?.breakdown?.monthly || earnings.data.breakdown.monthly.length === 0) {
+      return null;
+    }
 
-    const chartLabels = earnings.timeline.map(item => item.date);
-    const earningsData = earnings.timeline.map(item => item.amount);
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const chartLabels = earnings.data.breakdown.monthly.map(item =>
+      `${monthNames[item.month - 1]} ${item.year}`
+    );
+    const earningsData = earnings.data.breakdown.monthly.map(item => item.earnings);
 
     return {
       labels: chartLabels,
       datasets: [
         {
-          label: 'Daily Earnings',
+          label: 'Monthly Earnings',
           data: earningsData,
           borderColor: 'rgb(59, 130, 246)',
           backgroundColor: 'rgba(59, 130, 246, 0.5)',
@@ -81,14 +84,16 @@ const EarningsPage = () => {
   };
 
   const getBarChartData = () => {
-    if (!earnings || !earnings.byHotel) return null;
+    if (!earnings?.data?.breakdown?.byCategory || earnings.data.breakdown.byCategory.length === 0) {
+      return null;
+    }
 
     return {
-      labels: earnings.byHotel.map(item => item.hotelName),
+      labels: earnings.data.breakdown.byCategory.map(item => item.category.charAt(0).toUpperCase() + item.category.slice(1)),
       datasets: [
         {
-          label: 'Earnings by Hotel',
-          data: earnings.byHotel.map(item => item.amount),
+          label: 'Earnings by Category',
+          data: earnings.data.breakdown.byCategory.map(item => item.earnings),
           backgroundColor: 'rgba(75, 192, 192, 0.6)',
           borderColor: 'rgb(75, 192, 192)',
           borderWidth: 1
@@ -118,10 +123,9 @@ const EarningsPage = () => {
                 </svg>
               </div>
               <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Available Balance</dt>
+                <dl>                  <dt className="text-sm font-medium text-gray-500 truncate">Available Balance</dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900">${earnings?.availableBalance || '0.00'}</div>
+                    <div className="text-lg font-medium text-gray-900">${earnings?.data?.availableBalance || '0.00'}</div>
                   </dd>
                 </dl>
               </div>
@@ -138,10 +142,9 @@ const EarningsPage = () => {
                 </svg>
               </div>
               <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Monthly Earnings</dt>
+                <dl>                  <dt className="text-sm font-medium text-gray-500 truncate">Monthly Earnings</dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900">${earnings?.monthlyEarnings || '0.00'}</div>
+                    <div className="text-lg font-medium text-gray-900">${earnings?.data?.monthlyEarnings || '0.00'}</div>
                   </dd>
                 </dl>
               </div>
@@ -158,10 +161,9 @@ const EarningsPage = () => {
                 </svg>
               </div>
               <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Earnings YTD</dt>
+                <dl>                  <dt className="text-sm font-medium text-gray-500 truncate">Total Earnings YTD</dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900">${earnings?.yearlyEarnings || '0.00'}</div>
+                    <div className="text-lg font-medium text-gray-900">${earnings?.data?.yearlyEarnings || '0.00'}</div>
                   </dd>
                 </dl>
               </div>
@@ -178,10 +180,9 @@ const EarningsPage = () => {
                 </svg>
               </div>
               <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Orders</dt>
+                <dl>                  <dt className="text-sm font-medium text-gray-500 truncate">Total Orders</dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900">{earnings?.totalOrders || 0}</div>
+                    <div className="text-lg font-medium text-gray-900">{earnings?.data?.totalOrders || 0}</div>
                   </dd>
                 </dl>
               </div>
@@ -239,77 +240,76 @@ const EarningsPage = () => {
       ) : (
         <>
           {/* Earnings Charts */}
-          <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
-            <div className="bg-white p-6 rounded-lg shadow">
+          <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">            <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Earnings Over Time</h2>
               {getChartData() ? (
-                <Line
-                  data={getChartData()}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        ticks: {
-                          callback: function(value) {
-                            return '$' + value;
+                <div style={{ height: '300px' }}>
+                  <Line
+                    data={getChartData()}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          ticks: {
+                            callback: function(value) {
+                              return '$' + value;
+                            }
+                          }
+                        }
+                      },
+                      plugins: {
+                        tooltip: {
+                          callbacks: {
+                            label: function(context) {
+                              return '$' + context.raw;
+                            }
                           }
                         }
                       }
-                    },
-                    plugins: {
-                      tooltip: {
-                        callbacks: {
-                          label: function(context) {
-                            return '$' + context.raw;
-                          }
-                        }
-                      }
-                    }
-                  }}
-                  height={300}
-                />
+                    }}
+                  />
+                </div>
               ) : (
                 <div className="flex items-center justify-center h-64">
                   <p className="text-gray-500">No earnings data available</p>
                 </div>
               )}
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Earnings by Hotel</h2>
+            </div>            <div className="bg-white p-6 rounded-lg shadow">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Earnings by Category</h2>
               {getBarChartData() ? (
-                <Bar
-                  data={getBarChartData()}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        ticks: {
-                          callback: function(value) {
-                            return '$' + value;
+                <div style={{ height: '300px' }}>
+                  <Bar
+                    data={getBarChartData()}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      scales: {
+                        y: {
+                          beginAtZero: true,
+                          ticks: {
+                            callback: function(value) {
+                              return '$' + value;
+                            }
+                          }
+                        }
+                      },
+                      plugins: {
+                        tooltip: {
+                          callbacks: {
+                            label: function(context) {
+                              return '$' + context.raw;
+                            }
                           }
                         }
                       }
-                    },
-                    plugins: {
-                      tooltip: {
-                        callbacks: {
-                          label: function(context) {
-                            return '$' + context.raw;
-                          }
-                        }
-                      }
-                    }
-                  }}
-                  height={300}
-                />
+                    }}
+                  />
+                </div>
               ) : (
                 <div className="flex items-center justify-center h-64">
-                  <p className="text-gray-500">No hotel earnings data available</p>
+                  <p className="text-gray-500">No category earnings data available</p>
                 </div>
               )}
             </div>

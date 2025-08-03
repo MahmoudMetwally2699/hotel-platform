@@ -8,7 +8,13 @@ import { AUTH_API, CLIENT_API } from '../config/api.config';
 import jwt_decode from 'jwt-decode';
 import cookieHelper from '../utils/cookieHelper';
 
-class AuthService {  /**
+class AuthService {
+  constructor() {
+    // Debounce mechanism for checkAuth to prevent spam
+    this.lastCheckAuthCall = 0;
+    this.checkAuthDebounceMs = 1000; // 1 second debounce
+    this.pendingCheckAuth = null;
+  }  /**
    * Login user with email and password
    * @param {string} email - User's email
    * @param {string} password - User's password
@@ -24,6 +30,9 @@ class AuthService {  /**
       }
 
       console.log(`Making login request to ${endpoint} with role: ${role}`);
+      console.log('API Base URL:', apiClient.defaults.baseURL);
+      console.log('Full URL:', `${apiClient.defaults.baseURL}${endpoint}`);
+
       const response = await apiClient.post(endpoint, { email, password, role });
       console.log('Login response received:', response.data);      // Store tokens and user data properly
       if (response.data.data && response.data.data.token) {
@@ -34,18 +43,29 @@ class AuthService {  /**
         // Alternative location for token
         localStorage.setItem('token', response.data.token);
         console.log('Token stored in localStorage from response.data.token');
-      }
-
-      // Store user data and make sure role is included
+      }      // Store user data and make sure role is included
       if (response.data.data) {
         response.data.data.role = role; // Explicitly set role from login form
-        console.log('Setting user data with role:', role);
         this.setUserData(response.data.data);
       }
 
       return response.data;
     } catch (error) {
       console.error('Login error details:', error.response?.data);
+      console.error('Login error message:', error.message);
+      console.error('Login error code:', error.code);
+
+      // If it's a network error, provide helpful information
+      if (error.isNetworkError || (!error.response && error.request)) {
+        console.error('❌ Network Error: Cannot connect to backend server');
+        console.error('Please ensure:');
+        console.error('1. Backend server is running on http://localhost:5000');
+        console.error('2. No firewall is blocking the connection');
+        console.error('3. CORS is properly configured on the backend');
+
+        throw new Error('Cannot connect to server. Please check if the backend is running.');
+      }
+
       throw error;
     }
   }
@@ -123,49 +143,6 @@ class AuthService {  /**
       throw error;
     }
   }
-
-  /**
-   * Verify email with token
-   * @param {string} token - Verification token from email
-   * @returns {Promise} - Response from API
-   */
-  async verifyEmail(token) {
-    try {
-      const response = await apiClient.post(AUTH_API.VERIFY_EMAIL, { token });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * Verify reset password token
-   * @param {string} token - Reset token from email
-   * @returns {Promise} - Response from API
-   */
-  async verifyResetToken(token) {
-    try {
-      const response = await apiClient.post(AUTH_API.VERIFY_RESET_TOKEN, { token });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * Resend email verification link
-   * @param {string} email - User's email
-   * @returns {Promise} - Response from API
-   */
-  async resendVerificationEmail(email) {
-    try {
-      const response = await apiClient.post(AUTH_API.RESEND_VERIFICATION, { email });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
   /**
    * Get user profile
    * @returns {Promise} - Response from API
@@ -178,6 +155,14 @@ class AuthService {  /**
     } catch (error) {
       throw error;
     }
+  }
+
+  /**
+   * Get user profile (alias for backward compatibility)
+   * @returns {Promise} - Response from API
+   */
+  async getUserProfile() {
+    return this.getProfile();
   }
 
   /**
@@ -225,27 +210,61 @@ class AuthService {  /**
     } catch (error) {
       throw error;
     }
-  }
-
-  /**
+  }  /**
    * Check authentication status
    * @returns {Promise} - Response with authentication status and user info
    */
   async checkAuth() {
     try {
-      // This will trigger the auth interceptor if the token is invalid
-      const response = await apiClient.get(AUTH_API.CHECK);
+      const now = Date.now();
 
-      if (response.data.success) {
-        // Update stored user data if needed
-        this.setUserData(response.data.data);
+      // Debounce checkAuth calls to prevent spam
+      if (now - this.lastCheckAuthCall < this.checkAuthDebounceMs) {
+        console.log('🔍 checkAuth: Call debounced, returning pending promise');
+        if (this.pendingCheckAuth) {
+          return this.pendingCheckAuth;
+        }
       }
 
-      return response.data;
-    } catch (error) {
+      this.lastCheckAuthCall = now;
+
+      console.log('🔍 checkAuth: Making request to /api/auth/me...');
+      // This will trigger the auth interceptor if the token is invalid
+      this.pendingCheckAuth = apiClient.get(AUTH_API.CHECK);
+
+      const response = await this.pendingCheckAuth;
+      this.pendingCheckAuth = null;
+
+      console.log('✅ checkAuth: Response received:', response.data);
+
+      if (response.data.success) {
+        console.log('✅ checkAuth: Auth successful, user data:', response.data.data);
+        // Don't store in localStorage since we're using cookies
+        // The user data will be managed by Redux
+      }
+
+      return response.data;    } catch (error) {
+      this.pendingCheckAuth = null;
+      console.log('❌ checkAuth: Auth check failed - this is normal for unauthenticated users');
+
       // Clear session on auth check failure
       this.clearSession();
-      throw error;
+
+      // For auth check failures, throw a custom error that suppresses toast
+      const authError = {
+        ...error,
+        suppressToast: true,
+        response: {
+          ...error.response,
+          data: {
+            ...error.response?.data,
+            suppressToast: true,
+            message: 'Authentication check failed'
+          }
+        }
+      };
+
+      throw authError;
     }
   }
 
@@ -295,16 +314,16 @@ class AuthService {  /**
     } catch (error) {
       return null;
     }
-  }
-  /**
-   * Clear session data from localStorage
-   */  clearSession() {
+  }  /**
+   * Clear session data
+   */
+  clearSession() {
     // We can't directly clear HttpOnly cookies from JavaScript
     // The backend will handle cookie removal on logout
-    // Remove user data and token from localStorage
+    // Remove user data and token from localStorage (backup)
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    console.log('Session data cleared from localStorage');
+    console.log('🧹 Session data cleared from localStorage');
   }
 }
 

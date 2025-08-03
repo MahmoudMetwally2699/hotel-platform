@@ -80,13 +80,61 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     subcategory: String,
     description: String
   },
-
   // Booking Configuration
   bookingConfig: {
     quantity: {
       type: Number,
       required: [true, 'Quantity is required'],
       min: [1, 'Quantity must be at least 1']
+    },    // Multi-item laundry support with service type pricing
+    laundryItems: [{
+      itemName: {
+        type: String,
+        required: true
+      },
+      itemId: {
+        type: String,
+        required: true
+      },
+      itemCategory: {
+        type: String,
+        required: true
+      },
+      itemIcon: {
+        type: String,
+        default: '👕'
+      },
+      quantity: {
+        type: Number,
+        required: true,
+        min: [1, 'Item quantity must be at least 1']
+      },
+      serviceType: {
+        id: { type: String, required: true },
+        name: { type: String, required: true },
+        description: String,
+        duration: {
+          value: Number,
+          unit: String
+        },
+        icon: String
+      },
+      basePrice: {
+        type: Number,
+        required: true,
+        min: [0, 'Item base price cannot be negative']
+      },
+      finalPrice: {
+        type: Number,
+        required: true,
+        min: [0, 'Item final price cannot be negative']
+      }
+    }],
+
+    // Express service selection
+    isExpressService: {
+      type: Boolean,
+      default: false
     },
 
     selectedOptions: [{
@@ -100,6 +148,18 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
         default: 0
       }
     }],
+
+    // Service Combination (for package services like laundry)
+    serviceCombination: {
+      id: String,
+      name: String,
+      description: String,
+      serviceTypes: [String],
+      finalPrice: Number,
+      priceMultiplier: Number,
+      duration: String,
+      isPopular: Boolean
+    },
 
     additionalServices: [{
       name: {
@@ -218,12 +278,17 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
       type: Number,
       default: 0,
       min: [0, 'Additional services total cannot be negative']
-    },
-
-    deliveryCharge: {
+    },    deliveryCharge: {
       type: Number,
       default: 0,
       min: [0, 'Delivery charge cannot be negative']
+    },
+
+    // Express surcharge for rush services
+    expressSurcharge: {
+      type: Number,
+      default: 0,
+      min: [0, 'Express surcharge cannot be negative']
     },
 
     // Hotel markup calculation

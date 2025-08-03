@@ -9,6 +9,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchServiceDetails, selectServiceDetails, selectServiceLoading } from '../../redux/slices/serviceSlice';
 import { format } from 'date-fns';
 import useAuth from '../../hooks/useAuth';
+import { API_BASE_URL, CLIENT_API } from '../../config/api.config';
+import ServiceCombinationSelector from '../../components/client/ServiceCombinationSelector';
 
 const ServiceDetailsPage = () => {
   const { id } = useParams();
@@ -16,11 +18,10 @@ const ServiceDetailsPage = () => {
   const dispatch = useDispatch();
   const { isAuthenticated } = useAuth();
   const service = useSelector(selectServiceDetails);
-  const isLoading = useSelector(selectServiceLoading);
-
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTime, setSelectedTime] = useState('');
+  const isLoading = useSelector(selectServiceLoading);  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedTime, setSelectedTime] = useState('09:00 AM'); // Set default time
   const [quantity, setQuantity] = useState(1);
+  const [selectedCombination, setSelectedCombination] = useState(null);
 
   // Available times for booking (would come from API in a real app)
   const availableTimes = [
@@ -28,24 +29,36 @@ const ServiceDetailsPage = () => {
     '12:00 PM', '01:00 PM', '02:00 PM',
     '03:00 PM', '04:00 PM', '05:00 PM'
   ];
-
   useEffect(() => {
     if (id) {
+      console.log('🔍 ServiceDetailsPage: Fetching service details for ID:', id);
       dispatch(fetchServiceDetails(id));
     }
-  }, [dispatch, id]);
-
-  // Calculate total price with markup
+  }, [dispatch, id]);  // Add effect to log service data when it changes
+  useEffect(() => {
+    if (service) {
+      console.log('🎯 ServiceDetailsPage: Service data received');
+    }
+  }, [service]);// Calculate total price
   const calculateTotal = () => {
     if (!service) return 0;
-    const basePrice = service.basePrice || 0;
-    const markupPercentage = service.hotel?.markupPercentage || 0;
-    return basePrice + (basePrice * (markupPercentage / 100)) * quantity;
-  };
 
-  // Handle booking
-  const handleBooking = () => {
+    // For package services, use selected combination price
+    if (service.packagePricing?.isPackageService && selectedCombination) {
+      return Math.round((selectedCombination.totalPrice || selectedCombination.finalPrice * quantity) * 100) / 100;
+    }
+
+    // Use final price if available, otherwise use base price
+    const price = service.pricing?.finalPrice || service.pricing?.basePrice || service.basePrice || 0;
+    return Math.round((price * quantity) * 100) / 100;
+  };// Handle booking
+  const handleBooking = async () => {
+    console.log('🔥 handleBooking: Button clicked!');
+    console.log('🔥 handleBooking: isAuthenticated =', isAuthenticated);
+    console.log('🔥 handleBooking: selectedTime =', selectedTime);
+
     if (!isAuthenticated) {
+      console.log('🔥 handleBooking: User not authenticated, redirecting to login');
       navigate('/login', {
         state: {
           redirect: `/services/details/${id}`,
@@ -53,17 +66,85 @@ const ServiceDetailsPage = () => {
         }
       });
       return;
+    }    if (!selectedTime) {
+      console.log('🔥 handleBooking: No time selected, showing alert');
+      alert('Please select a time for your booking');
+      return;
+    }    if (!service) {
+      console.log('🔥 handleBooking: No service data available');
+      alert('Service information is not available. Please refresh the page.');
+      return;
     }
 
-    navigate('/bookings/new', {
-      state: {
-        serviceId: id,
-        date: selectedDate,
-        time: selectedTime,
-        quantity: quantity,
-        totalPrice: calculateTotal()
+    // Convert 12-hour format to 24-hour format
+    const convertTo24Hour = (time12h) => {
+      const [time, modifier] = time12h.split(' ');
+      let [hours, minutes] = time.split(':');
+
+      if (hours === '12') {
+        hours = modifier === 'AM' ? '00' : '12';
+      } else {
+        hours = modifier === 'AM' ? hours : String(parseInt(hours, 10) + 12);
       }
-    });
+
+      // Ensure hours is always 2 digits
+      hours = hours.padStart(2, '0');
+
+      return `${hours}:${minutes}`;
+    };
+
+    const selectedTime24h = convertTo24Hour(selectedTime);
+    console.log('🔥 handleBooking: Converted time from', selectedTime, 'to', selectedTime24h);
+
+    try {
+      console.log('🔥 handleBooking: Starting booking process...');
+      const token = localStorage.getItem('token');
+      console.log('🔥 handleBooking: Token exists =', !!token);      const bookingData = {
+        serviceId: id,
+        bookingDate: selectedDate.toISOString(),
+        selectedTime: selectedTime24h, // Use 24-hour format
+        quantity,
+        specialRequests: '', // You can add a field for this if needed
+        options: [], // Add any selected options if needed
+        serviceCombination: selectedCombination || null // Include selected combination for package services
+      };console.log('🔥 handleBooking: Booking data =', bookingData);
+
+      // Construct the full API URL
+      const apiUrl = `${API_BASE_URL}${CLIENT_API.BOOKINGS}`;
+      console.log('🔥 handleBooking: Making request to:', apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(bookingData)
+      });
+
+      console.log('🔥 handleBooking: Response status =', response.status);
+      console.log('🔥 handleBooking: Response ok =', response.ok);
+
+      const data = await response.json();
+      console.log('🔥 handleBooking: Response data =', data);
+
+      if (data.success) {
+        console.log('🔥 handleBooking: Booking successful, navigating to my-orders');
+        // Navigate to My Orders page
+        navigate('/my-orders', {
+          state: {
+            message: 'Booking created successfully! The service provider has been notified.',
+            newBooking: data.data
+          }
+        });
+      } else {
+        console.log('🔥 handleBooking: Booking failed with message:', data.message);
+        alert(data.message || 'Failed to create booking');
+      }
+    } catch (error) {
+      console.error('🔥 handleBooking: Booking error:', error);
+      alert('Failed to create booking. Please try again.');
+    }
   };
 
   if (isLoading) {
@@ -105,8 +186,17 @@ const ServiceDetailsPage = () => {
           </li>
           <li className="mx-2 text-gray-500">/</li>
           <li className="text-gray-500">{service.name}</li>
-        </ol>
-      </nav>
+        </ol>      </nav>
+
+      {/* Service Combination Selector for Package Services */}
+      {service?.packagePricing?.isPackageService && (
+        <ServiceCombinationSelector
+          service={service}
+          selectedCombination={selectedCombination}
+          onCombinationChange={setSelectedCombination}
+          quantity={quantity}
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}
@@ -132,7 +222,7 @@ const ServiceDetailsPage = () => {
               <div className="flex flex-wrap justify-between items-start">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">{service.name}</h1>
-                  <p className="text-gray-600 mt-1">Provided by {service.provider?.name || 'Unknown Provider'}</p>
+                  <p className="text-gray-600 mt-1">Provided by {service.providerId?.businessName || 'Unknown Provider'}</p>
                 </div>
 
                 <div className="flex items-center mt-2 md:mt-0">
@@ -140,7 +230,7 @@ const ServiceDetailsPage = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
-                    <span className="ml-1 text-gray-700 font-medium">{service.rating.toFixed(1)}</span>
+                    <span className="ml-1 text-gray-700 font-medium">{(service.rating || 0).toFixed(1)}</span>
                     <span className="ml-1 text-gray-500">({service.reviewCount || 0} reviews)</span>
                   </div>
                   <span className="text-gray-500">
@@ -174,25 +264,36 @@ const ServiceDetailsPage = () => {
 
               {/* Provider Info */}
               <div className="mt-6 pb-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-800">About the Provider</h2>
-                <div className="mt-4 flex items-start">
+                <h2 className="text-xl font-semibold text-gray-800">About the Provider</h2>                <div className="mt-4 flex items-start">
                   <div className="flex-shrink-0">
-                    {service.provider?.logo ? (
+                    {service.providerId?.logo ? (
                       <img
-                        src={service.provider.logo}
-                        alt={service.provider.name}
+                        src={service.providerId.logo}
+                        alt={service.providerId.businessName}
                         className="h-12 w-12 rounded-full object-cover"
                       />
                     ) : (
                       <div className="h-12 w-12 rounded-full bg-primary-light text-white flex items-center justify-center text-lg font-semibold">
-                        {service.provider?.name?.charAt(0) || 'P'}
+                        {service.providerId?.businessName?.charAt(0) || 'P'}
                       </div>
                     )}
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-800">{service.provider?.name || 'Unknown Provider'}</h3>
-                    <p className="text-sm text-gray-500">Member since {service.provider?.joinedAt ? format(new Date(service.provider.joinedAt), 'MMM yyyy') : 'Unknown'}</p>
-                    <p className="mt-1 text-gray-600">{service.provider?.description || 'No description available.'}</p>
+                  </div>                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-800">
+                      {(() => {
+                        console.log('🔥 RENDER: service exists:', !!service);
+                        console.log('🔥 RENDER: providerId exists:', !!service?.providerId);
+                        console.log('🔥 RENDER: businessName:', service?.providerId?.businessName);
+                        return service?.providerId?.businessName || 'Unknown Provider';
+                      })()}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Member since {(() => {
+                        const createdAt = service?.providerId?.createdAt;
+                        console.log('🔥 RENDER: createdAt value:', createdAt);
+                        return createdAt ? format(new Date(createdAt), 'MMM yyyy') : 'Unknown';
+                      })()}
+                    </p>
+                    <p className="mt-1 text-gray-600">{service?.providerId?.description || 'No description available.'}</p>
                   </div>
                 </div>
               </div>
@@ -245,17 +346,12 @@ const ServiceDetailsPage = () => {
         {/* Booking Section */}
         <div className="lg:col-span-1">
           <div className="sticky top-24 bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Book this service</h2>
-
-            {/* Price Display */}
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Book this service</h2>            {/* Price Display */}
             <div className="mb-6">
               <div className="flex items-baseline">
-                <span className="text-3xl font-bold text-gray-900">${service.basePrice?.toFixed(2)}</span>
-                {service.hotel?.markupPercentage > 0 && (
-                  <span className="ml-2 text-sm text-gray-500">
-                    + {service.hotel.markupPercentage}% hotel markup
-                  </span>
-                )}
+                <span className="text-3xl font-bold text-gray-900">
+                  ${Math.round(((service.pricing?.finalPrice || service.pricing?.basePrice || service.basePrice || 0) * 100)) / 100}
+                </span>
               </div>
               <p className="text-sm text-gray-500 mt-1">Per unit • Includes all taxes and fees</p>
             </div>
@@ -323,21 +419,21 @@ const ServiceDetailsPage = () => {
                   +
                 </button>
               </div>
-            </div>
-
-            {/* Total Price */}
+            </div>            {/* Total Price */}
             <div className="mb-6 pb-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
                 <span className="font-medium">Total</span>
-                <span className="text-xl font-bold">${calculateTotal().toFixed(2)}</span>
+                <span className="text-xl font-bold">${(calculateTotal() || 0).toFixed(2)}</span>
               </div>
-            </div>
-
-            {/* Book Now Button */}
+            </div>            {/* Book Now Button */}
             <button
               className="w-full btn-primary py-3 font-medium"
-              onClick={handleBooking}
-              disabled={!selectedTime}
+              onClick={() => {
+                console.log('🔥 BUTTON CLICKED: Book Now button clicked!');
+                console.log('🔥 BUTTON CLICKED: selectedTime =', selectedTime);
+                console.log('🔥 BUTTON CLICKED: button disabled =', !selectedTime);
+                handleBooking();
+              }}
             >
               Book Now
             </button>

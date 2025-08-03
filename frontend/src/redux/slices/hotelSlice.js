@@ -12,6 +12,7 @@ import hotelService from '../../services/hotel.service';
 const initialState = {
   hotels: [],
   currentHotel: null,
+  dashboardStats: null,
   isLoading: false,
   error: null,
 };
@@ -98,9 +99,9 @@ const hotelSlice = createSlice({
   reducers: {
     setCurrentHotel: (state, action) => {
       state.currentHotel = action.payload;
-    },
-    clearHotelState: (state) => {
+    },    clearHotelState: (state) => {
       state.currentHotel = null;
+      state.dashboardStats = null;
       state.error = null;
     },
   },  extraReducers: (builder) => {
@@ -195,8 +196,22 @@ const hotelSlice = createSlice({
         state.isLoading = false;
         state.hotels = state.hotels.filter(h => h._id !== action.payload);
         state.error = null;
+      })      .addCase(deleteHotel.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       })
-      .addCase(deleteHotel.rejected, (state, action) => {
+
+      // Fetch hotel stats cases
+      .addCase(fetchHotelStats.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchHotelStats.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.dashboardStats = action.payload?.data || null;
+        state.error = null;
+      })
+      .addCase(fetchHotelStats.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       });
@@ -219,16 +234,16 @@ export const selectHotels = (state) => state.hotel.hotels;
 export const selectHotelsLoading = (state) => state.hotel.isLoading;
 export const selectHotelList = (state) => state.hotel.hotels;
 export const selectHotelListLoading = (state) => state.hotel.isLoading;
-export const selectHotelStats = (state) => state.hotel.stats || { revenue: 0, bookings: 0, providers: 0 };
+export const selectHotelStats = (state) => state.hotel.dashboardStats;
 export const selectHotelStatsLoading = (state) => state.hotel.isLoading;
 
 // Additional async thunks for hotel management
 export const fetchAllHotels = fetchHotels;
 export const fetchHotelStats = createAsyncThunk(
   'hotel/fetchHotelStats',
-  async (hotelId, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await hotelService.getHotelStats(hotelId);
+      const response = await hotelService.getDashboardData();
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch hotel statistics');

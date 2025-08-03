@@ -69,41 +69,98 @@ const serviceSchema = new mongoose.Schema({
   serviceType: {
     type: String,
     required: [true, 'Service type is required']
-  },
-
-  // Service Combinations (for complex services like laundry)
+  },  // Service Combinations (for complex services like laundry)
   serviceCombinations: [{
+    id: {
+      type: String,
+      required: true
+    },
     name: {
       type: String,
       required: true
     },
     description: String,
-    basePrice: {
+    serviceTypes: [{
+      type: String,
+      required: true // e.g., 'washing', 'ironing', 'express'
+    }],
+    price: {
       type: Number,
       required: true,
-      min: [0, 'Base price cannot be negative']
+      min: [0, 'Price cannot be negative']
     },
-    duration: {
-      value: Number,
-      unit: {
-        type: String,
-        enum: ['minutes', 'hours', 'days'],
-        default: 'hours'
-      }
+    duration: String, // e.g., '24 hours', '4 hours', '12 hours'
+    icon: {
+      type: String,
+      default: '🧼' // Emoji icon for display
     },
     isPopular: {
       type: Boolean,
-      default: false
-    },
+      default: false    },
     features: [String]
   }],
 
+  // Individual laundry items (for item-based laundry services)
+  laundryItems: [{
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    category: {
+      type: String,
+      enum: ['clothing', 'outerwear', 'undergarments', 'linens', 'home'],
+      required: true
+    },
+    icon: {
+      type: String,
+      default: '👕'
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: [0, 'Item price cannot be negative']
+    },
+    isAvailable: {
+      type: Boolean,
+      default: true
+    },
+    serviceTypes: [{
+      serviceTypeId: {
+        type: String,
+        required: true // e.g., 'wash_only', 'iron_only', 'wash_iron', 'dry_cleaning'
+      },
+      price: {
+        type: Number,
+        required: true,
+        min: [0, 'Service type price cannot be negative']
+      },
+      isAvailable: {
+        type: Boolean,
+        default: true
+      }
+    }],
+    // Additional notes or specifications for the item
+    notes: String,
+    // Date when this item was added
+    dateAdded: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   // Pricing Information
   pricing: {
     basePrice: {
       type: Number,
       required: [true, 'Base price is required'],
       min: [0, 'Base price cannot be negative']
+    },
+
+    // Express surcharge for rush services
+    expressSurcharge: {
+      type: Number,
+      default: 0,
+      min: [0, 'Express surcharge cannot be negative']
     },
 
     currency: {

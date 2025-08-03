@@ -34,14 +34,16 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     validate: [validator.isEmail, 'Please provide a valid email'],
     index: true
-  },
-  phone: {
+  },  phone: {
     type: String,
-    required: [true, 'Phone number is required'],
+    required: function() {
+      // Only require phone for guest users
+      return this.role === 'guest';
+    },
     validate: {
       validator: function(v) {
         // More flexible phone validation - allows +, -, spaces, parentheses
-        return /^[\+]?[\d\s\-\(\)\.]{7,20}$/.test(v);
+        return !v || /^[\+]?[\d\s\-\(\)\.]{7,20}$/.test(v);
       },
       message: 'Please provide a valid phone number'
     }
@@ -127,23 +129,23 @@ const userSchema = new mongoose.Schema({
     required: function() {
       return this.role === 'guest';
     }
-  },
-
-  checkInDate: {
+  },  checkInDate: {
     type: Date,
     required: function() {
-      return this.role === 'guest';
+      // Only require when making actual bookings
+      return this.role === 'guest' && this.hasActiveBooking;
     }
   },
 
   checkOutDate: {
     type: Date,
     required: function() {
-      return this.role === 'guest';
+      // Only require when making actual bookings
+      return this.role === 'guest' && this.hasActiveBooking;
     },
     validate: {
       validator: function(checkOut) {
-        return !this.checkInDate || checkOut > this.checkInDate;
+        return !this.checkInDate || !checkOut || checkOut > this.checkInDate;
       },
       message: 'Check-out date must be after check-in date'
     }
@@ -152,7 +154,8 @@ const userSchema = new mongoose.Schema({
   roomNumber: {
     type: String,
     required: function() {
-      return this.role === 'guest';
+      // Only require when making actual bookings
+      return this.role === 'guest' && this.hasActiveBooking;
     }
   },
 
@@ -163,12 +166,8 @@ const userSchema = new mongoose.Schema({
     select: false
   },
 
-  isEmailVerified: {
-    type: Boolean,
-    default: false
-  },
-
-  isPhoneVerified: {
+  // Booking status
+  hasActiveBooking: {
     type: Boolean,
     default: false
   },
@@ -183,18 +182,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     select: false
   },
-
   passwordResetExpires: {
-    type: Date,
-    select: false
-  },
-
-  emailVerificationToken: {
-    type: String,
-    select: false
-  },
-
-  emailVerificationExpires: {
     type: Date,
     select: false
   },
@@ -203,15 +191,6 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date,
     default: Date.now
-  },
-
-  loginAttempts: {
-    type: Number,
-    default: 0
-  },
-
-  lockUntil: {
-    type: Date
   },
 
   // Preferences
@@ -275,12 +254,7 @@ userSchema.virtual('age').get(function() {
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
-
   return age;
-});
-
-userSchema.virtual('isLocked').get(function() {
-  return !!(this.lockUntil && this.lockUntil > Date.now());
 });
 
 // Pre-save middleware
@@ -302,7 +276,14 @@ userSchema.pre('save', async function(next) {
 userSchema.pre('save', function(next) {
   // Validate role-specific requirements
   if (this.role === 'guest') {
-    if (!this.selectedHotelId || !this.checkInDate || !this.checkOutDate || !this.roomNumber) {
+    if (!this.selectedHotelId || !this.checkInDate || !this.checkOutDate || !this.roomNumber ||
+        (typeof this.roomNumber === 'string' && this.roomNumber.trim() === '')) {
+      console.log('Guest validation failed:', {
+        selectedHotelId: this.selectedHotelId,
+        checkInDate: this.checkInDate,
+        checkOutDate: this.checkOutDate,
+        roomNumber: this.roomNumber
+      });
       return next(new Error('Guest users must have hotel selection, check-in/out dates, and room number'));
     }
   }
@@ -344,49 +325,6 @@ userSchema.methods.createPasswordResetToken = function() {
   return resetToken;
 };
 
-userSchema.methods.createEmailVerificationToken = function() {
-  const verificationToken = crypto.randomBytes(32).toString('hex');
-
-  this.emailVerificationToken = crypto
-    .createHash('sha256')
-    .update(verificationToken)
-    .digest('hex');
-
-  this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-
-  return verificationToken;
-};
-
-userSchema.methods.incrementLoginAttempts = function() {
-  // Skip incrementing login attempts for superadmin users
-  if (this.role === 'superadmin') {
-    return Promise.resolve();
-  }
-
-  // If we have a previous lock that has expired, restart at 1
-  if (this.lockUntil && this.lockUntil < Date.now()) {
-    return this.updateOne({
-      $unset: { lockUntil: 1 },
-      $set: { loginAttempts: 1 }
-    });
-  }
-
-  const updates = { $inc: { loginAttempts: 1 } };
-
-  // Lock account after 5 failed attempts for 2 hours
-  if (this.loginAttempts + 1 >= 5 && !this.isLocked) {
-    updates.$set = { lockUntil: Date.now() + 2 * 60 * 60 * 1000 };
-  }
-
-  return this.updateOne(updates);
-};
-
-userSchema.methods.resetLoginAttempts = function() {
-  return this.updateOne({
-    $unset: { loginAttempts: 1, lockUntil: 1 }
-  });
-};
-
 userSchema.methods.toJSON = function() {
   const userObject = this.toObject();
 
@@ -394,10 +332,6 @@ userSchema.methods.toJSON = function() {
   delete userObject.password;
   delete userObject.passwordResetToken;
   delete userObject.passwordResetExpires;
-  delete userObject.emailVerificationToken;
-  delete userObject.emailVerificationExpires;
-  delete userObject.loginAttempts;
-  delete userObject.lockUntil;
 
   return userObject;
 };

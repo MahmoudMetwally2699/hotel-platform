@@ -116,18 +116,9 @@ const OrderDetailModal = ({
           </div>
         </div>
 
-        <div className="mt-4">
-          <h4 className="font-medium text-gray-800">Pricing Details</h4>
+        <div className="mt-4">          <h4 className="font-medium text-gray-800">Pricing Details</h4>
           <div className="mt-2 bg-gray-50 p-4 rounded">
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Base Price:</span>
-              <span className="text-sm font-medium">${order.basePrice?.toFixed(2) || '0.00'}</span>
-            </div>
-            <div className="flex justify-between mt-1">
-              <span className="text-sm text-gray-600">Hotel Markup:</span>
-              <span className="text-sm font-medium">${(order.totalAmount - order.basePrice)?.toFixed(2) || '0.00'}</span>
-            </div>
-            <div className="flex justify-between mt-1 border-t pt-1">
               <span className="text-sm font-medium">Total Amount:</span>
               <span className="text-sm font-bold">${order.totalAmount?.toFixed(2) || '0.00'}</span>
             </div>

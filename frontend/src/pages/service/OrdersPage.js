@@ -13,8 +13,7 @@ import {
   selectServiceError
 } from '../../redux/slices/serviceSlice';
 
-const OrdersPage = () => {
-  const dispatch = useDispatch();
+const OrdersPage = () => {  const dispatch = useDispatch();
   const orders = useSelector(selectProviderOrders);
   const isLoading = useSelector(selectServiceLoading);
   const error = useSelector(selectServiceError);
@@ -23,25 +22,49 @@ const OrdersPage = () => {
   const [dateFilter, setDateFilter] = useState('all');
   const [currentOrder, setCurrentOrder] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
-
-  useEffect(() => {
+  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });  useEffect(() => {
     dispatch(fetchProviderOrders());
   }, [dispatch]);
-
   const handleStatusChange = (orderId, newStatus) => {
-    dispatch(updateOrderStatus({ orderId, status: newStatus }))
-      .then(() => {
-        if (currentOrder && currentOrder._id === orderId) {
-          setCurrentOrder({
-            ...currentOrder,
-            status: newStatus
-          });
-        }
-      });
-  };
+    console.log('🔧 OrdersPage: Updating status for order', orderId, 'to', newStatus);
 
-  const handleViewDetails = (order) => {
+    dispatch(updateOrderStatus({ orderId, status: newStatus }))
+      .then((result) => {
+        console.log('🔧 OrdersPage: Status update result:', result);
+
+        if (result.type === 'service/updateOrderStatus/fulfilled') {
+          // Update the currentOrder if it's the one being updated
+          if (currentOrder && currentOrder._id === orderId) {
+            setCurrentOrder({
+              ...currentOrder,
+              status: newStatus
+            });
+          }
+
+          // Refresh the orders list to get the latest data
+          dispatch(fetchProviderOrders());
+        } else if (result.type === 'service/updateOrderStatus/rejected') {
+          console.error('🔧 OrdersPage: Status update failed:', result.payload);
+          alert('Failed to update order status: ' + result.payload);
+        }
+      })
+      .catch((error) => {
+        console.error('🔧 OrdersPage: Status update error:', error);
+        alert('Failed to update order status');
+      });
+  };const handleViewDetails = (order) => {
+    console.log('🔧 OrdersPage: handleViewDetails called with order =', order);
+    console.log('🔧 OrdersPage: order structure:', {
+      id: order._id,
+      serviceId: order.serviceId,
+      hotelId: order.hotelId,
+      guestId: order.guestId,
+      guestDetails: order.guestDetails,
+      pricing: order.pricing,
+      schedule: order.schedule,
+      bookingConfig: order.bookingConfig,
+      bookingNumber: order.bookingNumber
+    });
     setCurrentOrder(order);
     setIsDetailsOpen(true);
   };
@@ -58,9 +81,8 @@ const OrdersPage = () => {
     }
     setSortConfig({ key, direction });
   };
-
   // Filter orders based on selected filters
-  const filteredOrders = orders ? orders.filter((order) => {
+  const filteredOrders = (Array.isArray(orders) ? orders : []).filter((order) => {
     let passesStatusFilter = statusFilter === 'all' || order.status === statusFilter;
 
     let passesDateFilter = true;
@@ -81,10 +103,8 @@ const OrdersPage = () => {
       passesDateFilter = orderDate >= lastWeek;
     } else if (dateFilter === 'month') {
       passesDateFilter = orderDate >= lastMonth;
-    }
-
-    return passesStatusFilter && passesDateFilter;
-  }) : [];
+    }    return passesStatusFilter && passesDateFilter;
+  });
 
   // Sort filtered orders
   const sortedOrders = [...filteredOrders].sort((a, b) => {
@@ -228,20 +248,19 @@ const OrdersPage = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {sortedOrders.map((order) => (
+              <tbody className="bg-white divide-y divide-gray-200">                {sortedOrders.map((order) => (
                   <tr key={order._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {order.orderId}
+                      {order.bookingNumber || order._id}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.service.name}
+                      {order.serviceId?.name || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.hotel.name}
+                      {order.hotelId?.name || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${order.totalAmount.toFixed(2)}
+                      ${(order.pricing?.totalAmount || order.totalAmount || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
@@ -313,7 +332,7 @@ const OrdersPage = () => {
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                     <h3 className="text-lg leading-6 font-medium text-gray-900">
                       Order Details
-                      <span className="ml-2 text-sm text-gray-500">#{currentOrder.orderId}</span>
+                      <span className="ml-2 text-sm text-gray-500">#{currentOrder.bookingNumber || currentOrder._id}</span>
                     </h3>
 
                     <div className="mt-4 border-t border-gray-200 pt-4">
@@ -338,52 +357,70 @@ const OrdersPage = () => {
                             {new Date(currentOrder.createdAt).toLocaleString()}
                           </p>
                         </div>
+                      </div>                      <div className="mb-4">
+                        <p className="text-sm font-medium text-gray-500">Service</p>
+                        <p className="mt-1 text-sm text-gray-900">{currentOrder.serviceId?.name || 'Unknown Service'}</p>
                       </div>
 
-                      <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-500">Service</p>
-                        <p className="mt-1 text-sm text-gray-900">{currentOrder.service.name}</p>
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Scheduled Date</p>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {currentOrder.schedule?.preferredDate ?
+                              new Date(currentOrder.schedule.preferredDate).toLocaleDateString() :
+                              'Not scheduled'
+                            }
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">Scheduled Time</p>
+                          <p className="mt-1 text-sm text-gray-900">{currentOrder.schedule?.preferredTime || 'Not specified'}</p>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
                           <p className="text-sm font-medium text-gray-500">Hotel</p>
-                          <p className="mt-1 text-sm text-gray-900">{currentOrder.hotel.name}</p>
-                        </div>
-                        <div>
+                          <p className="mt-1 text-sm text-gray-900">{currentOrder.hotelId?.name || 'Unknown Hotel'}</p>
+                        </div><div>
                           <p className="text-sm font-medium text-gray-500">Room Number</p>
-                          <p className="mt-1 text-sm text-gray-900">{currentOrder.roomNumber || 'N/A'}</p>
+                          <p className="mt-1 text-sm text-gray-900">{currentOrder.guestDetails?.roomNumber || 'N/A'}</p>
                         </div>
                       </div>
 
                       <div className="mb-4">
                         <p className="text-sm font-medium text-gray-500">Guest</p>
                         <p className="mt-1 text-sm text-gray-900">
-                          {currentOrder.guest.firstName} {currentOrder.guest.lastName}
+                          {currentOrder.guestId?.firstName || currentOrder.guestDetails?.firstName || 'Unknown'} {currentOrder.guestId?.lastName || currentOrder.guestDetails?.lastName || 'Guest'}
                         </p>
-                        <p className="mt-1 text-sm text-gray-500">{currentOrder.guest.email}</p>
-                        <p className="mt-1 text-sm text-gray-500">{currentOrder.guest.phone || 'No phone provided'}</p>
+                        <p className="mt-1 text-sm text-gray-500">{currentOrder.guestId?.email || currentOrder.guestDetails?.email || 'No email provided'}</p>
+                        <p className="mt-1 text-sm text-gray-500">{currentOrder.guestDetails?.phone || 'No phone provided'}</p>
+                      </div>                      <div className="mb-4">
+                        <p className="text-sm font-medium text-gray-500">Notes/Special Requests</p>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {currentOrder.bookingConfig?.specialRequests || currentOrder.bookingConfig?.notes || currentOrder.notes || currentOrder.specialRequests || 'No special requests'}
+                        </p>
                       </div>
 
                       <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-500">Notes/Special Requests</p>
+                        <p className="text-sm font-medium text-gray-500">Quantity</p>
                         <p className="mt-1 text-sm text-gray-900">
-                          {currentOrder.notes || 'No special requests'}
+                          {currentOrder.bookingConfig?.quantity || currentOrder.quantity || 1}
                         </p>
                       </div>
 
                       <div className="border-t border-gray-200 pt-4 mt-4">
                         <div className="flex justify-between mb-2">
                           <p className="text-sm font-medium text-gray-500">Base Price</p>
-                          <p className="text-sm text-gray-900">${currentOrder.basePrice.toFixed(2)}</p>
+                          <p className="text-sm text-gray-900">${(currentOrder.pricing?.basePrice || currentOrder.basePrice || 0).toFixed(2)}</p>
                         </div>
                         <div className="flex justify-between mb-2">
                           <p className="text-sm font-medium text-gray-500">Hotel Markup</p>
-                          <p className="text-sm text-gray-900">${(currentOrder.totalAmount - currentOrder.basePrice).toFixed(2)}</p>
+                          <p className="text-sm text-gray-900">${((currentOrder.pricing?.totalAmount || currentOrder.totalAmount || 0) - (currentOrder.pricing?.basePrice || currentOrder.basePrice || 0)).toFixed(2)}</p>
                         </div>
                         <div className="flex justify-between font-medium">
                           <p className="text-sm text-gray-900">Total Amount</p>
-                          <p className="text-sm text-gray-900">${currentOrder.totalAmount.toFixed(2)}</p>
+                          <p className="text-sm text-gray-900">${(currentOrder.pricing?.totalAmount || currentOrder.totalAmount || 0).toFixed(2)}</p>
                         </div>
                       </div>
                     </div>

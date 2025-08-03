@@ -169,7 +169,7 @@ router.get('/hotels/:id', catchAsync(async (req, res, next) => {
 
   // Get hotel performance metrics
   const bookingStats = await Booking.aggregate([
-    { $match: { hotelId: mongoose.Types.ObjectId(req.params.id) } },
+    { $match: { hotelId: new mongoose.Types.ObjectId(req.params.id) } },
     {
       $group: {
         _id: null,
@@ -182,7 +182,7 @@ router.get('/hotels/:id', catchAsync(async (req, res, next) => {
 
   // Get monthly booking trends for this hotel
   const monthlyBookings = await Booking.aggregate([
-    { $match: { hotelId: mongoose.Types.ObjectId(req.params.id) } },
+    { $match: { hotelId: new mongoose.Types.ObjectId(req.params.id) } },
     {
       $group: {
         _id: {

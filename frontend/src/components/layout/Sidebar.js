@@ -51,10 +51,8 @@ const navigationItems = {
   ],
   hotel_admin: [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/hotel/dashboard' },
+    { text: 'Orders', icon: <AssignmentIcon />, path: '/hotel/orders' },
     { text: 'Service Providers', icon: <CategoryIcon />, path: '/hotel/service-providers' },
-    { text: 'Services', icon: <RoomServiceIcon />, path: '/hotel/services' },
-    { text: 'Bookings', icon: <BookOnlineIcon />, path: '/hotel/bookings' },
-    { text: 'Guests', icon: <PeopleIcon />, path: '/hotel/guests' },
     { text: 'Revenue', icon: <MoneyIcon />, path: '/hotel/revenue' },
     { text: 'Settings', icon: <SettingsIcon />, path: '/hotel/settings' },
   ],

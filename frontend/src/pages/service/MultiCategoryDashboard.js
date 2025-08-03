@@ -6,23 +6,25 @@ import {
   FaCog,
   FaPlus
 } from 'react-icons/fa';
+
+// Import dashboard components
 import CategorySelectionDashboard from '../../components/service/CategorySelectionDashboard';
 import CategoryOrdersManager from '../../components/service/CategoryOrdersManager';
 import ServiceProviderAnalytics from '../../components/service/ServiceProviderAnalytics';
-import LaundryServiceCreator from '../../components/service/LaundryServiceCreator';
 import TransportationServiceCreator from '../../components/service/TransportationServiceCreator';
 import ToursServiceCreator from '../../components/service/ToursServiceCreator';
+import LaundryServiceCreator from '../../components/service/LaundryServiceCreator';
+import ErrorBoundary from '../../components/common/ErrorBoundary';
 
-const ServiceProviderDashboard = () => {
+const MultiCategoryDashboard = () => {
   const [activeTab, setActiveTab] = useState('categories');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categoryTemplate, setCategoryTemplate] = useState(null);
-
   const tabs = [
     { id: 'categories', name: 'Service Categories', icon: FaTh },
+    { id: 'manage-services', name: 'Manage Services', icon: FaCog },
     { id: 'orders', name: 'Order Management', icon: FaClipboardList },
-    { id: 'analytics', name: 'Analytics', icon: FaChartLine },
-    { id: 'settings', name: 'Settings', icon: FaCog }
+    { id: 'analytics', name: 'Analytics', icon: FaChartLine }
   ];
 
   const handleCategorySelect = (category, template) => {
@@ -41,14 +43,12 @@ const ServiceProviderDashboard = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'categories':
-        return <CategorySelectionDashboard onCategorySelect={handleCategorySelect} />;
-        case 'create-service':
+        return <CategorySelectionDashboard onCategorySelect={handleCategorySelect} />;      case 'create-service':
         if (selectedCategory === 'laundry') {
           return (
-            <LaundryServiceCreator
-              categoryTemplate={categoryTemplate}
-              onServiceCreated={handleServiceCreated}
-            />
+            <ErrorBoundary>
+              <LaundryServiceCreator />
+            </ErrorBoundary>
           );
         } else if (selectedCategory === 'transportation') {
           return (
@@ -65,6 +65,7 @@ const ServiceProviderDashboard = () => {
             />
           );
         }
+
         // Fallback for other categories
         return (
           <div className="max-w-4xl mx-auto p-6">
@@ -84,29 +85,26 @@ const ServiceProviderDashboard = () => {
               </button>
             </div>
           </div>
-        );
-
-      case 'orders':
-        return <CategoryOrdersManager />;
-
-      case 'analytics':
+        );      case 'orders':
+        return <CategoryOrdersManager />;      case 'manage-services':
+        return (
+          <ErrorBoundary>
+            <LaundryServiceCreator />
+          </ErrorBoundary>
+        );case 'analytics':
         return <ServiceProviderAnalytics />;
 
-      case 'settings':
+      default:
         return (
           <div className="max-w-4xl mx-auto p-6">
-            <div className="bg-white rounded-lg shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">Service Provider Settings</h2>
-              <p className="text-gray-600">Settings panel coming soon...</p>
+            <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Service Dashboard</h2>
+              <p className="text-gray-600">Welcome to your service provider dashboard!</p>
             </div>
           </div>
         );
-
-      default:
-        return <CategorySelectionDashboard onCategorySelect={handleCategorySelect} />;
     }
   };
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation Tabs */}
@@ -158,4 +156,4 @@ const ServiceProviderDashboard = () => {
   );
 };
 
-export default ServiceProviderDashboard;
+export default MultiCategoryDashboard;

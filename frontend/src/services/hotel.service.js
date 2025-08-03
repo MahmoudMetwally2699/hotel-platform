@@ -42,12 +42,14 @@ class HotelService {
    * @param {string} id - Hotel ID
    * @param {Object} queryParams - Query parameters for filtering
    * @returns {Promise} - Response from API
-   */
-  async getHotelServices(id, queryParams = {}) {
+   */  async getHotelServices(id, queryParams = {}) {
     try {
+      console.log('🔍 Fetching hotel services:', { hotelId: id, queryParams });
       const response = await apiClient.get(`${CLIENT_API.HOTELS}/${id}/services`, { params: queryParams });
+      console.log('📊 Hotel services response:', response.data);
       return response.data;
     } catch (error) {
+      console.error('❌ Hotel services error:', error.response?.data || error.message);
       throw error;
     }
   }

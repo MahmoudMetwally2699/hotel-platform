@@ -4,7 +4,7 @@
  * Enhanced with better token validation and role checking
  */
 
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import jwt_decode from 'jwt-decode';
@@ -19,9 +19,17 @@ export const useAuth = () => {
   const currentUser = useSelector(selectCurrentUser);
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const role = useSelector(selectAuthRole);
+
+  // Track if we've already checked authentication to prevent loops
+  const [authChecked, setAuthChecked] = React.useState(false);
+
   /**
    * Initialize authentication state on component mount
-   */  useEffect(() => {
+   */
+  useEffect(() => {
+    // Prevent multiple authentication checks
+    if (authChecked) return;
+
     const token = cookieHelper.getAuthToken();
 
     if (token) {
@@ -41,20 +49,23 @@ export const useAuth = () => {
         if (decoded.exp < currentTime) {
           // Token is expired, log out
           console.warn('Token expired, logging out');
+          setAuthChecked(true);
           dispatch(logout());
           navigate('/login');
-        } else if (!isAuthenticated) {
+        } else if (!isAuthenticated && !currentUser) {
           // Token is valid but no user in state, fetch profile
           console.log('Token valid but not authenticated in Redux, fetching profile...');
           dispatch(fetchProfile())
             .unwrap()
             .then(data => {
               console.log('Profile fetch successful:', data);
+              setAuthChecked(true);
               // Initialize socket connection only after profile is loaded
               socketService.init(dispatch, token, data?.role || decoded.role);
             })
             .catch(error => {
               console.error('Profile fetch failed:', error);
+              setAuthChecked(true);
               // If profile fetch fails but token is valid, try to recover
               if (decoded.role) {
                 console.log('Attempting recovery with token data');
@@ -68,21 +79,26 @@ export const useAuth = () => {
         } else {
           // We're authenticated, ensure socket is connected
           console.log('Already authenticated, ensuring socket connection');
+          setAuthChecked(true);
           socketService.init(dispatch, token, decoded.role || role);
         }
       } catch (error) {
         console.error('Token validation error:', error);
+        setAuthChecked(true);
         // Invalid token, log out
         dispatch(logout());
         navigate('/login');
       }
+    } else {
+      // No token found
+      setAuthChecked(true);
     }
 
     // Cleanup function
     return () => {
       socketService.disconnect();
     };
-  }, [dispatch, isAuthenticated, navigate, role]);
+  }, [dispatch, isAuthenticated, navigate, role, currentUser, authChecked]);
 
   /**
    * Handle user logout

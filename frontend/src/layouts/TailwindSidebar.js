@@ -35,22 +35,13 @@ const TailwindSidebar = ({ isMobile, closeMobileMenu }) => {
         ];      case 'hotel':
         return [
           { name: 'Dashboard', path: '/hotel/dashboard', icon: 'home' },
+          { name: 'Orders', path: '/hotel/orders', icon: 'shopping-bag' },
           { name: 'Service Providers', path: '/hotel/service-providers', icon: 'briefcase' },
-          { name: 'Manage Providers', path: '/hotel/manage-providers', icon: 'user-add' },
-          { name: 'Services', path: '/hotel/services', icon: 'server' },
-          { name: 'Bookings', path: '/hotel/bookings', icon: 'calendar' },
-          { name: 'Guests', path: '/hotel/guests', icon: 'users' },
-          { name: 'User Management', path: '/hotel/user-management', icon: 'user-group' },
-          { name: 'Markup Settings', path: '/hotel/markup-settings', icon: 'percentage' },
           { name: 'Revenue', path: '/hotel/revenue', icon: 'cash' },
-          { name: 'Provider Analytics', path: '/hotel/provider-analytics', icon: 'chart-bar' },
           { name: 'Settings', path: '/hotel/settings', icon: 'cog' }
-        ];
-
-      case 'service':
+        ];case 'service':
         return [
           { name: 'Dashboard', path: '/service/dashboard', icon: 'home' },
-          { name: 'Services', path: '/service/services', icon: 'server' },
           { name: 'Orders', path: '/service/orders', icon: 'shopping-bag' },
           { name: 'Earnings', path: '/service/earnings', icon: 'cash' },
           { name: 'Settings', path: '/service/settings', icon: 'cog' }
@@ -58,10 +49,8 @@ const TailwindSidebar = ({ isMobile, closeMobileMenu }) => {
 
       case 'guest':
         return [
-          { name: 'Home', path: '/', icon: 'home' },
-          { name: 'Hotels', path: '/hotels', icon: 'building' },
-          { name: 'Services', path: '/services', icon: 'server' },
-          { name: 'My Bookings', path: '/bookings', icon: 'calendar' }
+          { name: 'My Hotel Services', path: '/my-hotel-services', icon: 'server' },
+          { name: 'My Orders', path: '/my-orders', icon: 'shopping-bag' }
         ];
 
       default:

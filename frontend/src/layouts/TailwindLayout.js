@@ -7,7 +7,6 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import TailwindHeader from './TailwindHeader';
 import TailwindSidebar from './TailwindSidebar';
-import AuthDebugger from '../components/debug/AuthDebugger';
 
 const TailwindLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -28,11 +27,7 @@ const TailwindLayout = ({ children }) => {
         <main className="flex-1 overflow-y-auto p-6 pt-4 md:ml-0">
           <div className="max-w-7xl mx-auto">
             {children}
-          </div>
-        </main>
-
-        {/* Auth Debugger - only shown in development */}
-        {process.env.NODE_ENV === 'development' && <AuthDebugger />}
+          </div>        </main>
       </div>
     </div>
   );

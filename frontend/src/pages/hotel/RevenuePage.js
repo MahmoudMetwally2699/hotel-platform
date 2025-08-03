@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchBookingStats, selectBookingStats, selectBookingStatsLoading } from '../../redux/slices/bookingSlice';
-import useAuth from '../../hooks/useAuth';
+import { fetchHotelStats, selectHotelStats, selectHotelStatsLoading } from '../../redux/slices/hotelSlice';
 
 /**
  * Hotel Admin Revenue Management Page
@@ -9,33 +8,58 @@ import useAuth from '../../hooks/useAuth';
  */
 const RevenuePage = () => {
   const dispatch = useDispatch();
-  const bookingStats = useSelector(selectBookingStats);
-  const isLoading = useSelector(selectBookingStatsLoading);
-  const { user } = useAuth();
+  const dashboardStats = useSelector(selectHotelStats);
+  const isLoading = useSelector(selectHotelStatsLoading);
   const [dateRange, setDateRange] = useState('month');
 
   useEffect(() => {
-    if (user?.hotelId) {
-      dispatch(fetchBookingStats());
-    }
-  }, [dispatch, user, dateRange]);
+    console.log('🔍 RevenuePage - Fetching hotel stats');
+    dispatch(fetchHotelStats());
+  }, [dispatch, dateRange]);
 
-  // Calculate revenue metrics
-  const totalRevenue = bookingStats?.revenue || 0;
-  const totalBookings = bookingStats?.total || 0;
-  const completedBookings = bookingStats?.completed || 0;
+  useEffect(() => {
+    if (dashboardStats) {
+      console.log('🔍 RevenuePage - Dashboard stats:', dashboardStats);
+      console.log('🔍 RevenuePage - Revenue stats:', dashboardStats.revenueStats);
+      console.log('🔍 RevenuePage - Category performance:', dashboardStats.categoryPerformance);
+      console.log('🔍 RevenuePage - Monthly trends:', dashboardStats.monthlyTrends);
+    }
+  }, [dashboardStats]);
+
+  // Extract revenue data from dashboard stats
+  const revenueStats = dashboardStats?.revenueStats || [];
+  const categoryPerformance = dashboardStats?.categoryPerformance || [];
+  const monthlyTrends = dashboardStats?.monthlyTrends || [];
+  const recentBookings = dashboardStats?.recentBookings || [];
+
+  // Calculate metrics from actual data
+  const totalRevenue = Array.isArray(revenueStats) && revenueStats.length > 0
+    ? revenueStats[0]?.totalRevenue || 0
+    : 0;
+    const totalBookings = dashboardStats?.counts?.totalBookings || 0;
+  const completedBookings = recentBookings.filter(booking =>
+    booking.status?.toLowerCase() === 'completed'
+  ).length;
   const avgBookingValue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
 
-  // Mock data for chart (would be replaced with real data from API)
-  const revenueData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    datasets: [
-      {
-        label: 'Revenue',
-        data: [4500, 5200, 4800, 6000, 5500, 7000, 6500, 8000, 7500, 9000, 8500, 10000],
-      }
-    ]
-  };
+  // Debug logging
+  console.log('🔍 Revenue Page Debug:');
+  console.log('- dashboardStats:', dashboardStats);
+  console.log('- recentBookings:', recentBookings);
+  console.log('- totalBookings:', totalBookings);
+  console.log('- completedBookings:', completedBookings);
+  console.log('- Booking statuses:', recentBookings.map(b => ({ id: b._id?.substring(0, 8), status: b.status })));
+
+  // Calculate completion rate
+  const completionRate = totalBookings > 0 ? (completedBookings / totalBookings) * 100 : 0;
+
+  const chartRevenue = monthlyTrends.map(trend => trend.revenue).slice(-12);
+
+  // Get top 5 categories by revenue
+  const topCategories = categoryPerformance.slice(0, 5);
+
+  // Calculate total revenue for percentage calculations
+  const totalCategoryRevenue = categoryPerformance.reduce((sum, cat) => sum + cat.revenue, 0);
 
   // Handle date range change
   const handleDateRangeChange = (range) => {
@@ -97,131 +121,137 @@ const RevenuePage = () => {
       ) : (
         <>
           {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
               <h3 className="text-gray-500 text-sm">Total Revenue</h3>
               <p className="text-2xl font-bold">${totalRevenue.toLocaleString()}</p>
-              <div className="text-green-500 text-sm mt-2">
-                <span className="font-medium">+5.3%</span> vs. last {dateRange}
+              <div className="text-gray-500 text-sm mt-2">
+                <span className="font-medium">Based on completed orders</span>
               </div>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
               <h3 className="text-gray-500 text-sm">Total Bookings</h3>
               <p className="text-2xl font-bold">{totalBookings.toLocaleString()}</p>
-              <div className="text-green-500 text-sm mt-2">
-                <span className="font-medium">+3.1%</span> vs. last {dateRange}
+              <div className="text-gray-500 text-sm mt-2">
+                <span className="font-medium">All time bookings</span>
               </div>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
               <h3 className="text-gray-500 text-sm">Avg. Booking Value</h3>
               <p className="text-2xl font-bold">${avgBookingValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-              <div className="text-green-500 text-sm mt-2">
-                <span className="font-medium">+2.2%</span> vs. last {dateRange}
+              <div className="text-gray-500 text-sm mt-2">
+                <span className="font-medium">Average order value</span>
               </div>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
               <h3 className="text-gray-500 text-sm">Completion Rate</h3>
               <p className="text-2xl font-bold">
-                {totalBookings > 0 ? ((completedBookings / totalBookings) * 100).toFixed(1) : 0}%
+                {completionRate.toFixed(1)}%
               </p>
-              <div className="text-green-500 text-sm mt-2">
-                <span className="font-medium">+1.8%</span> vs. last {dateRange}
+              <div className="text-gray-500 text-sm mt-2">
+                <span className="font-medium">Orders completed</span>
               </div>
             </div>
-          </div>
-
-          {/* Revenue Chart (placeholder) */}
+          </div>          {/* Revenue Chart */}
           <div className="bg-white p-6 rounded-lg shadow border border-gray-200 mb-8">
-            <h2 className="text-lg font-semibold mb-4">Revenue Over Time</h2>
-            <div className="h-64 flex items-center justify-center bg-gray-50">
-              <p className="text-gray-400">Revenue chart would be displayed here</p>
-            </div>
+            <h2 className="text-lg font-semibold mb-4">Revenue Trends</h2>
+            {monthlyTrends.length > 0 ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-500">Total Months</p>
+                    <p className="text-2xl font-bold">{monthlyTrends.length}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm text-gray-500">Peak Month Revenue</p>
+                    <p className="text-2xl font-bold">
+                      ${Math.max(...chartRevenue).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm text-gray-500">Avg Monthly Revenue</p>
+                    <p className="text-2xl font-bold">
+                      ${(chartRevenue.reduce((a, b) => a + b, 0) / chartRevenue.length).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-4 rounded">
+                  <p className="text-sm text-gray-600 mb-2">Monthly Revenue Data:</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    {monthlyTrends.slice(-8).map((trend, index) => (
+                      <div key={index} className="bg-white p-2 rounded">
+                        <p className="font-medium">
+                          {new Date(2024, trend._id.month - 1).toLocaleString('default', { month: 'short' })} {trend._id.year}
+                        </p>
+                        <p className="text-green-600">${trend.revenue.toLocaleString()}</p>
+                        <p className="text-gray-500">{trend.count} orders</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="h-64 flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                  <p className="text-gray-400 mb-2">No revenue data available yet</p>
+                  <p className="text-sm text-gray-500">Revenue trends will appear here once orders are completed</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Revenue by Category & Service */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
               <h2 className="text-lg font-semibold mb-4">Revenue by Category</h2>
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">Laundry</h3>
-                    <p className="text-sm text-gray-500">32% of total</p>
+                {topCategories.length > 0 ? (
+                  topCategories.map((category, index) => {
+                    const percentage = totalCategoryRevenue > 0
+                      ? ((category.revenue / totalCategoryRevenue) * 100).toFixed(0)
+                      : 0;
+                    return (
+                      <div key={index} className="flex justify-between items-center">
+                        <div>
+                          <h3 className="font-medium capitalize">{category._id || 'Unknown'}</h3>
+                          <p className="text-sm text-gray-500">{percentage}% of total • {category.bookings} bookings</p>
+                        </div>
+                        <span className="font-semibold">${category.revenue.toLocaleString()}</span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No category data available</p>
                   </div>
-                  <span className="font-semibold">${(totalRevenue * 0.32).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">Transportation</h3>
-                    <p className="text-sm text-gray-500">28% of total</p>
-                  </div>
-                  <span className="font-semibold">${(totalRevenue * 0.28).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">Tourism</h3>
-                    <p className="text-sm text-gray-500">20% of total</p>
-                  </div>
-                  <span className="font-semibold">${(totalRevenue * 0.20).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">Food & Beverage</h3>
-                    <p className="text-sm text-gray-500">15% of total</p>
-                  </div>
-                  <span className="font-semibold">${(totalRevenue * 0.15).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">Wellness & Spa</h3>
-                    <p className="text-sm text-gray-500">5% of total</p>
-                  </div>
-                  <span className="font-semibold">${(totalRevenue * 0.05).toLocaleString()}</span>
-                </div>
+                )}
               </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h2 className="text-lg font-semibold mb-4">Top Services by Revenue</h2>
+            </div>            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+              <h2 className="text-lg font-semibold mb-4">Recent High-Value Orders</h2>
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">City Tour Package</h3>
-                    <p className="text-sm text-gray-500">Tourism • 42 bookings</p>
+                {recentBookings.length > 0 ? (
+                  recentBookings
+                    .filter(booking => booking.pricing?.totalAmount > 0)
+                    .slice(0, 5)
+                    .map((booking, index) => (
+                      <div key={index} className="flex justify-between items-center">
+                        <div>
+                          <h3 className="font-medium">{booking.serviceId?.name || 'Service Name'}</h3>
+                          <p className="text-sm text-gray-500">
+                            {booking.serviceId?.category || 'Category'} •
+                            Status: {booking.status} •
+                            Guest: {booking.guestId?.firstName || 'Unknown'} {booking.guestId?.lastName || ''}
+                          </p>
+                        </div>
+                        <span className="font-semibold">${booking.pricing?.totalAmount?.toFixed(2) || '0.00'}</span>
+                      </div>
+                    ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No recent orders available</p>
                   </div>
-                  <span className="font-semibold">$4,200</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">Airport Transfer</h3>
-                    <p className="text-sm text-gray-500">Transportation • 78 bookings</p>
-                  </div>
-                  <span className="font-semibold">$3,900</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">Full Spa Package</h3>
-                    <p className="text-sm text-gray-500">Wellness • 25 bookings</p>
-                  </div>
-                  <span className="font-semibold">$3,750</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">Premium Laundry</h3>
-                    <p className="text-sm text-gray-500">Laundry • 112 bookings</p>
-                  </div>
-                  <span className="font-semibold">$3,360</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-medium">Fine Dining Experience</h3>
-                    <p className="text-sm text-gray-500">Food • 32 bookings</p>
-                  </div>
-                  <span className="font-semibold">$2,560</span>
-                </div>
+                )}
               </div>
             </div>
           </div>

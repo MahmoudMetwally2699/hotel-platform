@@ -9,67 +9,97 @@ const categoryTemplates = {
   laundry: {
     name: 'Laundry Services',
     icon: 'washing-machine',
-    description: 'Professional laundry and dry cleaning services',
-    items: [
-      { name: 'T-Shirt', basePrice: 5, category: 'clothing' },
-      { name: 'Dress Shirt', basePrice: 8, category: 'clothing' },
-      { name: 'Pants/Trousers', basePrice: 10, category: 'clothing' },
-      { name: 'Dress', basePrice: 12, category: 'clothing' },
-      { name: 'Suit Jacket', basePrice: 15, category: 'clothing' },
-      { name: 'Coat/Jacket', basePrice: 18, category: 'outerwear' },
-      { name: 'Sweater', basePrice: 10, category: 'clothing' },
-      { name: 'Jeans', basePrice: 8, category: 'clothing' },
-      { name: 'Underwear (per piece)', basePrice: 3, category: 'undergarments' },
-      { name: 'Socks (per pair)', basePrice: 2, category: 'undergarments' },
-      { name: 'Bedsheet (single)', basePrice: 15, category: 'linens' },
-      { name: 'Bedsheet (double)', basePrice: 20, category: 'linens' },
-      { name: 'Pillowcase', basePrice: 5, category: 'linens' },
-      { name: 'Towel', basePrice: 8, category: 'linens' },
-      { name: 'Curtains', basePrice: 25, category: 'home' }
-    ],
+    description: 'Professional laundry and dry cleaning services',    items: [
+      { name: 'T-Shirt', category: 'clothing', icon: '👕' },
+      { name: 'Dress Shirt', category: 'clothing', icon: '👔' },
+      { name: 'Pants/Trousers', category: 'clothing', icon: '👖' },
+      { name: 'Dress', category: 'clothing', icon: '👗' },
+      { name: 'Suit Jacket', category: 'clothing', icon: '🧥' },
+      { name: 'Coat/Jacket', category: 'outerwear', icon: '🧥' },
+      { name: 'Sweater', category: 'clothing', icon: '🧶' },
+      { name: 'Jeans', category: 'clothing', icon: '👖' },
+      { name: 'Underwear (per piece)', category: 'undergarments', icon: '🩲' },
+      { name: 'Socks (per pair)', category: 'undergarments', icon: '🧦' },
+      { name: 'Bedsheet (single)', category: 'linens', icon: '🛏️' },
+      { name: 'Bedsheet (double)', category: 'linens', icon: '🛏️' },
+      { name: 'Pillowcase', category: 'linens', icon: '🛏️' },
+      { name: 'Towel', category: 'linens', icon: '🏖️' },
+      { name: 'Curtains', category: 'home', icon: '🪟' }
+    ],    // Simplified base service types (no fixed pricing multipliers)
     serviceTypes: [
       {
-        id: 'washing',
-        name: 'Washing Only',
+        id: 'wash_only',
+        name: 'Wash Only',
         description: 'Machine wash with appropriate detergent',
-        priceModifier: 0,
-        duration: { value: 24, unit: 'hours' }
-      },
-      {
-        id: 'ironing',
-        name: 'Ironing Only',
-        description: 'Professional ironing and pressing',
-        priceModifier: 0.3,
-        duration: { value: 12, unit: 'hours' }
-      },
-      {
-        id: 'washing_ironing',
-        name: 'Washing + Ironing',
-        description: 'Complete wash and iron service',
-        priceModifier: 0.4,
         duration: { value: 24, unit: 'hours' },
+        icon: '🧼'
+      },
+      {
+        id: 'iron_only',
+        name: 'Iron Only',
+        description: 'Professional ironing and pressing',
+        duration: { value: 12, unit: 'hours' },
+        icon: '👕'
+      },
+      {
+        id: 'wash_iron',
+        name: 'Wash + Iron',
+        description: 'Complete wash and iron service',
+        duration: { value: 24, unit: 'hours' },
+        icon: '⭐',
         isPopular: true
       },
       {
         id: 'dry_cleaning',
         name: 'Dry Cleaning',
         description: 'Professional dry cleaning service',
-        priceModifier: 1.5,
-        duration: { value: 48, unit: 'hours' }
+        duration: { value: 48, unit: 'hours' },
+        icon: '✨'
+      }
+    ],// Express surcharge configuration (service providers set their own rate)
+    expressSurcharge: {
+      name: 'Express Service',
+      description: 'Rush 4-hour delivery service',
+      duration: { value: 4, unit: 'hours' },
+      icon: '⚡',
+      isOptional: true // Service providers can choose to offer this
+    },    // Simplified service combinations for package services (no fixed pricing)
+    serviceCombinations: [
+      {
+        id: 'wash_only',
+        name: 'Wash Only',
+        description: 'Machine wash with appropriate detergent',
+        serviceTypes: ['wash_only'],
+        duration: { value: 24, unit: 'hours' },
+        icon: '🧼',
+        isPopular: false
       },
       {
-        id: 'express',
-        name: 'Express Service (4 hours)',
-        description: 'Rush service for urgent items',
-        priceModifier: 2.0,
-        duration: { value: 4, unit: 'hours' }
+        id: 'iron_only',
+        name: 'Iron Only',
+        description: 'Professional ironing and pressing',
+        serviceTypes: ['iron_only'],
+        duration: { value: 12, unit: 'hours' },
+        icon: '👕',
+        isPopular: false
       },
       {
-        id: 'standard',
-        name: 'Standard Delivery (24 hours)',
-        description: 'Regular pickup and delivery',
-        priceModifier: 0,
-        duration: { value: 24, unit: 'hours' }
+        id: 'wash_iron',
+        name: 'Wash & Iron',
+        description: 'Complete wash and iron service',
+        serviceTypes: ['wash_iron'],
+        duration: { value: 24, unit: 'hours' },
+        icon: '⭐',
+        isPopular: true
+      },
+      {
+        id: 'dry_cleaning',
+        name: 'Dry Cleaning',
+        description: 'Professional dry cleaning service',
+        serviceTypes: ['dry_cleaning'],
+        duration: { value: 48, unit: 'hours' },
+        icon: '✨',
+        isPopular: false
       }
     ]
   },

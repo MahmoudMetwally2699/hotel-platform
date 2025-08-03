@@ -12,8 +12,9 @@ import {
   FaShoppingBag,
   FaDumbbell
 } from 'react-icons/fa';
-import axios from 'axios';
+import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const categoryIcons = {
   laundry: FaTshirt,
@@ -49,7 +50,7 @@ const CategoryOrdersManager = () => {
         limit: 20
       });
 
-      const response = await axios.get(`/api/service/orders/by-category?${params}`);
+      const response = await apiClient.get(`/api/service/orders/by-category?${params}`);
       const data = response.data.data;
 
       setOrders(data.orders);
@@ -256,14 +257,10 @@ const CategoryOrdersManager = () => {
                             {order.userId?.email}
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      </td>                      <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
                             {order.serviceId?.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            Base: ${order.serviceId?.pricing?.basePrice}
                           </div>
                         </div>
                       </td>

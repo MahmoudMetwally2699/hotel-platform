@@ -47,40 +47,16 @@ const templates = {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2c3e50;">Welcome ${data.firstName}!</h2>
         <p>Thank you for registering with our hotel services platform. You're now able to book amazing services during your stay at <strong>${data.hotelName}</strong>.</p>
-        <p>To get started, please verify your email address by clicking the button below:</p>
+        <p>Your account has been activated and you can start exploring our services immediately.</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${data.verifyURL}"
+          <a href="${data.loginURL}"
              style="background-color: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-            Verify Email Address
+            Start Booking Services
           </a>
         </div>
-        <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-        <p style="word-break: break-all; color: #7f8c8d;">${data.verifyURL}</p>
-        <p>If you didn't create this account, please ignore this email.</p>
+        <p>We hope you have a wonderful stay!</p>
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #ecf0f1;">
         <p style="color: #7f8c8d; font-size: 12px;">This email was sent from the Hotel Services Platform. Please do not reply to this email.</p>
-      </div>
-    `
-  }),
-
-  'email-verification': (data) => ({
-    subject: 'Please verify your email address',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2c3e50;">Email Verification Required</h2>
-        <p>Hello ${data.firstName},</p>
-        <p>Please verify your email address by clicking the button below:</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${data.verifyURL}"
-             style="background-color: #27ae60; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-            Verify Email Address
-          </a>
-        </div>
-        <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-        <p style="word-break: break-all; color: #7f8c8d;">${data.verifyURL}</p>
-        <p>This verification link will expire in 24 hours.</p>
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ecf0f1;">
-        <p style="color: #7f8c8d; font-size: 12px;">If you didn't request this verification, please ignore this email.</p>
       </div>
     `
   }),

@@ -54,11 +54,10 @@ router.get('/dashboard', catchAsync(async (req, res) => {
     ServiceProvider.countDocuments({ hotelId, isActive: true, isVerified: true }),
     Service.countDocuments({ hotelId }),
     Service.countDocuments({ hotelId, isActive: true, isApproved: true }),
-    Booking.countDocuments({ hotelId }),
-    Booking.find({ hotelId })
+    Booking.countDocuments({ hotelId }),    Booking.find({ hotelId })
       .sort({ createdAt: -1 })
       .limit(10)
-      .populate('serviceId serviceProviderId userId', 'name businessName firstName lastName'),
+      .populate('serviceId serviceProviderId guestId', 'name businessName firstName lastName'),
     Booking.getRevenueStats({ hotelId }),
     Service.find({ hotelId, isActive: true })
       .sort({ 'performance.totalBookings': -1 })
@@ -68,9 +67,8 @@ router.get('/dashboard', catchAsync(async (req, res) => {
     User.find({ role: 'guest', selectedHotelId: hotelId })
       .sort({ createdAt: -1 })
       .limit(5)
-      .select('firstName lastName email createdAt'),
-    Service.aggregate([
-      { $match: { hotelId: mongoose.Types.ObjectId(hotelId) } },
+      .select('firstName lastName email createdAt'),    Service.aggregate([
+      { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
       {
         $group: {
           _id: '$category',
@@ -81,10 +79,9 @@ router.get('/dashboard', catchAsync(async (req, res) => {
       }
     ])
   ]);
-
   // Get monthly booking trends
   const monthlyTrends = await Booking.aggregate([
-    { $match: { hotelId: mongoose.Types.ObjectId(hotelId) } },
+    { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
     {
       $group: {
         _id: {
@@ -92,15 +89,14 @@ router.get('/dashboard', catchAsync(async (req, res) => {
           month: { $month: '$createdAt' }
         },
         count: { $sum: 1 },
-        revenue: { $sum: '$totalAmount' }
+        revenue: { $sum: '$pricing.totalAmount' }
       }
     },
     { $sort: { '_id.year': 1, '_id.month': 1 } }
   ]);
-
   // Get category performance
   const categoryPerformance = await Booking.aggregate([
-    { $match: { hotelId: mongoose.Types.ObjectId(hotelId) } },
+    { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
     {
       $lookup: {
         from: 'services',
@@ -114,7 +110,7 @@ router.get('/dashboard', catchAsync(async (req, res) => {
       $group: {
         _id: '$serviceData.category',
         bookings: { $sum: 1 },
-        revenue: { $sum: '$totalAmount' }
+        revenue: { $sum: '$pricing.totalAmount' }
       }
     },
     { $sort: { revenue: -1 } }
@@ -216,13 +212,12 @@ router.get('/service-providers/:id', catchAsync(async (req, res, next) => {
     serviceProviderId: providerId,
     hotelId
   });
-
   // Get booking statistics
   const bookingStats = await Booking.aggregate([
     {
       $match: {
-        serviceProviderId: mongoose.Types.ObjectId(providerId),
-        hotelId: mongoose.Types.ObjectId(hotelId)
+        serviceProviderId: new mongoose.Types.ObjectId(providerId),
+        hotelId: new mongoose.Types.ObjectId(hotelId)
       }
     },
     {
@@ -239,10 +234,9 @@ router.get('/service-providers/:id', catchAsync(async (req, res, next) => {
 
   // Get monthly booking trends
   const monthlyBookings = await Booking.aggregate([
-    {
-      $match: {
-        serviceProviderId: mongoose.Types.ObjectId(providerId),
-        hotelId: mongoose.Types.ObjectId(hotelId)
+    {      $match: {
+        serviceProviderId: new mongoose.Types.ObjectId(providerId),
+        hotelId: new mongoose.Types.ObjectId(hotelId)
       }
     },
     {
@@ -894,7 +888,7 @@ router.get('/analytics/providers', catchAsync(async (req, res) => {
   // Time range filters
   const timeRange = req.query.timeRange || '30days'; // default to last 30 days
 
-  let dateFilter = { hotelId: mongoose.Types.ObjectId(hotelId) };
+  let dateFilter = { hotelId: new mongoose.Types.ObjectId(hotelId) };
   const now = new Date();
 
   switch (timeRange) {
@@ -980,7 +974,7 @@ router.get('/analytics/providers', catchAsync(async (req, res) => {
 
   // Get provider growth over time
   const providerGrowth = await ServiceProvider.aggregate([
-    { $match: { hotelId: mongoose.Types.ObjectId(hotelId) } },
+    { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
     {
       $group: {
         _id: {
@@ -1198,12 +1192,11 @@ router.get('/analytics/service-providers', catchAsync(async (req, res) => {
     },
     { $sort: { totalRevenue: -1 } }
   ]);
-
   // Get category-wise performance
   const categoryPerformance = await Booking.aggregate([
     {
       $match: {
-        hotelId: mongoose.Types.ObjectId(hotelId),
+        hotelId: new mongoose.Types.ObjectId(hotelId),
         createdAt: { $gte: startDate }
       }
     },
@@ -1239,7 +1232,7 @@ router.get('/analytics/service-providers', catchAsync(async (req, res) => {
   const growthTrends = await Booking.aggregate([
     {
       $match: {
-        hotelId: mongoose.Types.ObjectId(hotelId),
+        hotelId: new mongoose.Types.ObjectId(hotelId),
         createdAt: { $gte: startDate }
       }
     },
@@ -1290,6 +1283,265 @@ router.get('/analytics/service-providers', catchAsync(async (req, res) => {
       timeRange: parseInt(timeRange)
     }
   });
+}));
+
+/**
+ * @route   GET /api/hotel/category-providers
+ * @desc    Get current category service provider assignments
+ * @access  Private/HotelAdmin
+ */
+router.get('/category-providers', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+
+  const hotel = await Hotel.findById(hotelId)
+    .populate('categoryServiceProviders.laundry', 'businessName email contactPhone isActive isVerified')
+    .populate('categoryServiceProviders.transportation', 'businessName email contactPhone isActive isVerified')
+    .populate('categoryServiceProviders.tours', 'businessName email contactPhone isActive isVerified')
+    .populate('categoryServiceProviders.spa', 'businessName email contactPhone isActive isVerified')
+    .populate('categoryServiceProviders.dining', 'businessName email contactPhone isActive isVerified')
+    .populate('categoryServiceProviders.entertainment', 'businessName email contactPhone isActive isVerified')
+    .populate('categoryServiceProviders.shopping', 'businessName email contactPhone isActive isVerified')
+    .populate('categoryServiceProviders.fitness', 'businessName email contactPhone isActive isVerified')
+    .select('categoryServiceProviders');
+
+  if (!hotel) {
+    return next(new AppError('Hotel not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      categoryProviders: hotel.categoryServiceProviders
+    }
+  });
+}));
+
+/**
+ * @route   PUT /api/hotel/category-providers/:category
+ * @desc    Assign a service provider to a specific category
+ * @access  Private/HotelAdmin
+ */
+router.put('/category-providers/:category', catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const { category } = req.params;
+  const { serviceProviderId } = req.body;
+
+  // Validate category
+  const validCategories = ['laundry', 'transportation', 'tours', 'spa', 'dining', 'entertainment', 'shopping', 'fitness'];
+  if (!validCategories.includes(category)) {
+    return next(new AppError('Invalid category', 400));
+  }
+
+  // Validate service provider exists and belongs to this hotel
+  if (serviceProviderId) {
+    const serviceProvider = await ServiceProvider.findOne({
+      _id: serviceProviderId,
+      hotelId: hotelId,
+      isActive: true,
+      isVerified: true
+    });
+
+    if (!serviceProvider) {
+      return next(new AppError('Service provider not found or not available', 404));
+    }
+  }
+
+  // Update the hotel's category service provider assignment
+  const updateField = `categoryServiceProviders.${category}`;
+  const hotel = await Hotel.findByIdAndUpdate(
+    hotelId,
+    {
+      [updateField]: serviceProviderId || null
+    },
+    {
+      new: true,
+      runValidators: true
+    }
+  ).populate(`categoryServiceProviders.${category}`, 'businessName email contactPhone isActive isVerified');
+
+  if (!hotel) {
+    return next(new AppError('Hotel not found', 404));
+  }
+
+  logger.info(`Category service provider assigned: ${category}`, {
+    hotelId,
+    category,
+    serviceProviderId: serviceProviderId || 'unassigned'
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      category,
+      serviceProvider: hotel.categoryServiceProviders[category]
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/hotel/available-providers/:category
+ * @desc    Get available service providers for a specific category
+ * @access  Private/HotelAdmin
+ */
+router.get('/available-providers/:category', catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const { category } = req.params;
+
+  // Validate category
+  const validCategories = ['laundry', 'transportation', 'tours', 'spa', 'dining', 'entertainment', 'shopping', 'fitness'];
+  if (!validCategories.includes(category)) {
+    return next(new AppError('Invalid category', 400));
+  }
+
+  // Get all active and verified service providers for this hotel
+  // who have services in the specified category
+  const serviceProviders = await ServiceProvider.find({
+    hotelId: hotelId,
+    isActive: true,
+    isVerified: true
+  }).populate({
+    path: 'services',
+    match: { category: category, isActive: true },
+    select: 'name category'
+  });
+
+  // Filter providers who have at least one service in this category
+  const availableProviders = serviceProviders.filter(provider =>
+    provider.services && provider.services.length > 0
+  ).map(provider => ({
+    _id: provider._id,
+    businessName: provider.businessName,
+    email: provider.email,
+    contactPhone: provider.contactPhone,
+    servicesCount: provider.services.length,
+    services: provider.services.map(service => ({
+      name: service.name,
+      category: service.category
+    }))
+  }));
+  res.status(200).json({
+    status: 'success',
+    data: {
+      category,
+      providers: availableProviders
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/hotel/bookings
+ * @desc    Get all bookings for the hotel with filtering options
+ * @access  Private/HotelAdmin
+ */
+router.get('/bookings', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { category, status, page = 1, limit = 50 } = req.query;
+
+  // Build the query object
+  const query = { hotelId };
+
+  // Add category filter if provided
+  if (category && category !== 'all') {
+    // Need to populate service first to filter by category
+    // We'll handle this in the aggregation pipeline
+  }
+
+  // Add status filter if provided
+  if (status) {
+    query.status = status;
+  }
+
+  try {
+    let bookings;
+
+    if (category && category !== 'all') {
+      // Use aggregation when filtering by category
+      bookings = await Booking.aggregate([
+        { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
+        {
+          $lookup: {
+            from: 'services',
+            localField: 'serviceId',
+            foreignField: '_id',
+            as: 'service'
+          }
+        },
+        { $unwind: { path: '$service', preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'guestId',
+            foreignField: '_id',
+            as: 'guestDetails'
+          }
+        },
+        { $unwind: { path: '$guestDetails', preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: 'serviceproviders',
+            localField: 'service.providerId',
+            foreignField: '_id',
+            as: 'provider'
+          }
+        },
+        { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+        {
+          $match: {
+            'service.category': category,
+            ...(status && { status })
+          }
+        },
+        { $sort: { createdAt: -1 } },
+        { $skip: (page - 1) * limit },
+        { $limit: parseInt(limit) }
+      ]);
+    } else {
+      // Use regular query when not filtering by category
+      bookings = await Booking.find(query)
+        .populate({
+          path: 'serviceId',
+          select: 'name category description pricing images',
+          populate: {
+            path: 'providerId',
+            select: 'businessName contactInfo'
+          }
+        })
+        .populate({
+          path: 'guestId',
+          select: 'firstName lastName email phone'
+        })
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit));
+
+      // Transform to match aggregation structure
+      bookings = bookings.map(booking => ({
+        ...booking.toObject(),
+        service: booking.serviceId,
+        guestDetails: booking.guestId,
+        provider: booking.serviceId?.providerId
+      }));
+    }
+
+    // Get total count for pagination
+    const totalCount = await Booking.countDocuments(query);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        bookings,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: totalCount,
+          pages: Math.ceil(totalCount / limit)
+        }
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching hotel bookings:', error);
+    throw new AppError('Failed to fetch bookings', 500);
+  }
 }));
 
 module.exports = router;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api.service';
+import { toast } from 'react-toastify';
 
 /**
  * Transportation Service Creator Component
@@ -34,22 +35,27 @@ const TransportationServiceCreator = () => {
     loadTemplates();
     loadServices();
   }, []);
-
   const loadTemplates = async () => {
     try {
+      console.log('Loading transportation templates...');
       const response = await api.get('/service/category-templates/transportation');
-      setTemplates(response.data.template);
+      console.log('Templates response:', response.data);
+      setTemplates(response.data.data.template);
     } catch (error) {
       console.error('Error loading templates:', error);
+      toast.error('Failed to load transportation templates');
     }
   };
 
   const loadServices = async () => {
     try {
+      console.log('Loading transportation services...');
       const response = await api.get('/service/services-by-category/transportation');
-      setServices(response.data.services || []);
+      console.log('Services response:', response.data);
+      setServices(response.data.data.services || []);
     } catch (error) {
       console.error('Error loading services:', error);
+      toast.error('Failed to load existing services');
     }
   };
 

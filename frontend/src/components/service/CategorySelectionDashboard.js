@@ -12,8 +12,9 @@ import {
   FaPlus,
   FaSpinner
 } from 'react-icons/fa';
-import axios from 'axios';
+import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
+import { handleApiError, showErrorToast, showSuccessToast } from '../../utils/errorHandler';
 
 const categoryIcons = {
   laundry: FaTshirt,
@@ -26,37 +27,111 @@ const categoryIcons = {
   fitness: FaDumbbell
 };
 
-const CategorySelectionDashboard = () => {
+const CategorySelectionDashboard = ({ onCategorySelect }) => {
   const [categories, setCategories] = useState({});
   const [activeCategories, setActiveCategories] = useState([]);  const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(null);
 
   useEffect(() => {
     fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
+  }, []);  const fetchCategories = async () => {
     try {
-      const response = await axios.get('/api/service/categories');
+      const response = await apiClient.get('/service/categories');
       setCategories(response.data.data.availableCategories);
       setActiveCategories(response.data.data.activeCategories || []);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching categories:', error);
-      toast.error('Failed to load service categories');
+
+      // Fallback to local category data if API fails
+      const fallbackCategories = {
+        laundry: {
+          name: 'Laundry & Dry Cleaning',
+          description: 'Professional laundry and dry cleaning services',
+          items: [
+            { name: 'Shirts', category: 'clothing' },
+            { name: 'Pants', category: 'clothing' },
+            { name: 'Dresses', category: 'clothing' },
+            { name: 'Suits', category: 'formal' }
+          ]
+        },
+        transportation: {
+          name: 'Transportation',
+          description: 'Car rental, taxi, and airport transfer services',
+          vehicleTypes: [
+            { name: 'Sedan', capacity: 4 },
+            { name: 'SUV', capacity: 7 },
+            { name: 'Van', capacity: 12 }
+          ]
+        },
+        tours: {
+          name: 'Tours & Tourism',
+          description: 'Guided tours and travel experiences',
+          tourTypes: [
+            { name: 'City Tour', duration: '4 hours' },
+            { name: 'Historical Tour', duration: '6 hours' },
+            { name: 'Nature Tour', duration: '8 hours' }
+          ]
+        },
+        spa: {
+          name: 'Spa & Wellness',
+          description: 'Relaxation and wellness services',
+          items: [
+            { name: 'Massage', duration: '60 min' },
+            { name: 'Facial', duration: '45 min' }
+          ]
+        }
+      };
+
+      setCategories(fallbackCategories);
+      setActiveCategories([]);
+      toast.warn('Using offline mode - some features may be limited');
       setLoading(false);
     }
-  };
-
-  const activateCategory = async (categoryKey) => {
+  };  const activateCategory = async (categoryKey) => {
     setActivating(categoryKey);
     try {
-      const response = await axios.post(`/api/service/categories/${categoryKey}/activate`);
+      const response = await apiClient.post(`/service/categories/${categoryKey}/activate`);
       setActiveCategories(prev => [...prev, categoryKey]);
       toast.success(response.data.message);
+
+      // Call the callback if provided
+      if (onCategorySelect) {
+        onCategorySelect(categoryKey, categories[categoryKey]);
+      }
     } catch (error) {
       console.error('Error activating category:', error);
-      toast.error(error.response?.data?.message || 'Failed to activate category');
+
+      // Fallback for offline mode - just activate locally
+      if (error.response?.status === 404 || error.code === 'ERR_NETWORK') {
+        setActiveCategories(prev => [...prev, categoryKey]);
+        toast.success(`${categories[categoryKey]?.name || categoryKey} activated locally (offline mode)`);
+
+        // Call the callback if provided
+        if (onCategorySelect) {
+          onCategorySelect(categoryKey, categories[categoryKey]);
+        }      } else {
+        showErrorToast(error, 'Failed to activate category');
+      }
+    } finally {
+      setActivating(null);
+    }
+  };
+  const deactivateCategory = async (categoryKey) => {
+    setActivating(categoryKey);
+    try {
+      const response = await apiClient.post(`/service/categories/${categoryKey}/deactivate`);
+      setActiveCategories(prev => prev.filter(cat => cat !== categoryKey));
+      toast.success(response.data.message);
+    } catch (error) {
+      console.error('Error deactivating category:', error);
+
+      // Fallback for offline mode
+      if (error.response?.status === 404 || error.code === 'ERR_NETWORK') {
+        setActiveCategories(prev => prev.filter(cat => cat !== categoryKey));
+        toast.success(`${categories[categoryKey]?.name || categoryKey} deactivated locally (offline mode)`);      } else {
+        showErrorToast(error, 'Failed to deactivate category');
+      }
     } finally {
       setActivating(null);
     }
@@ -145,15 +220,33 @@ const CategorySelectionDashboard = () => {
 
                 <p className="text-gray-600 text-center text-sm mb-4">
                   {category.description}
-                </p>
-
-                {isActive ? (
-                  <div className="text-center">
-                    <span className="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                      <FaCheck className="mr-1" />
-                      Active
-                    </span>
-                  </div>
+                </p>                {isActive ? (
+                  <button
+                    disabled={isActivating}
+                    className={`
+                      w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200
+                      ${isActivating
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-red-500 hover:bg-red-600 text-white'
+                      }
+                    `}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isActivating) deactivateCategory(categoryKey);
+                    }}
+                  >
+                    {isActivating ? (
+                      <div className="flex items-center justify-center">
+                        <FaSpinner className="animate-spin mr-2" />
+                        Deactivating...
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <FaCheck className="mr-2" />
+                        Deactivate
+                      </div>
+                    )}
+                  </button>
                 ) : (
                   <button
                     disabled={isActivating}

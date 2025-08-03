@@ -8,33 +8,14 @@ import authService from '../../services/auth.service';
 
 // Auth service is already instantiated in the imported module
 
-// Helper function to get initial state from localStorage
+// Helper function to get initial state (empty since we use cookies)
 const getInitialAuthState = () => {
-  try {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-
-    if (token && user) {
-      const userData = JSON.parse(user);
-      return {
-        user: userData,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-        role: userData.role,
-      };
-    }
-  } catch (error) {
-    console.error('Error loading auth state from localStorage:', error);
-    // Clear corrupted data
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  }
-
+  // Since we're using cookies, we don't restore from localStorage
+  // The checkAuth action will handle restoring user data from the server
   return {
     user: null,
     isAuthenticated: false,
-    isLoading: false,
+    isLoading: false, // Set to false initially to prevent stuck loading state
     error: null,
     role: null,
   };
@@ -105,6 +86,21 @@ export const fetchProfile = createAsyncThunk(
   }
 );
 
+export const checkAuth = createAsyncThunk(
+  'auth/checkAuth',
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('🔍 Checking authentication...');
+      const response = await authService.checkAuth();
+      console.log('✅ Auth check successful');
+      return response;
+    } catch (error) {
+      console.log('❌ Auth check failed - redirecting to login');
+      return rejectWithValue(error.response?.data?.message || 'Authentication check failed');
+    }
+  }
+);
+
 // Create the auth slice
 const authSlice = createSlice({
   name: 'auth',
@@ -113,52 +109,42 @@ const authSlice = createSlice({
       state.user = action.payload;
       state.isAuthenticated = true;
       state.role = action.payload.role;
+      state.isLoading = false;
     },
     clearCredentials: (state) => {
       state.user = null;
       state.isAuthenticated = false;
       state.role = null;
       state.error = null;
-      // Also clear localStorage
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-    },
-    hydrateAuth: (state) => {
-      // Restore auth state from localStorage
-      try {
-        const token = localStorage.getItem('token');
-        const user = localStorage.getItem('user');
-
-        if (token && user) {
-          const userData = JSON.parse(user);
-          state.user = userData;
-          state.isAuthenticated = true;
-          state.role = userData.role;
-          state.error = null;
-        }
-      } catch (error) {
-        console.error('Error hydrating auth state:', error);
-        state.user = null;
-        state.isAuthenticated = false;
-        state.role = null;
-      }
+      state.isLoading = false;
+      // Note: Cookies are cleared by the server during logout
     },
     setError: (state, action) => {
       state.error = action.payload;
+      state.isLoading = false;
     },
+    clearError: (state) => {
+      state.error = null;
+    },
+    clearLoading: (state) => {
+      state.isLoading = false;
+    }
   },
   extraReducers: (builder) => {
     builder
-      // Login cases
       .addCase(login.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-      })      .addCase(login.fulfilled, (state, action) => {
+      })
+      .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
 
         // Handle both data formats that might come from the API
-        const userData = action.payload.data || action.payload;
+        const responseData = action.payload.data || action.payload;
+
+        // Extract the actual user object (it might be nested under 'user' property)
+        const userData = responseData.user || responseData;
         state.user = userData;
 
         // Extract role, ensuring it exists
@@ -166,14 +152,20 @@ const authSlice = createSlice({
 
         // Debug the exact data we're getting
         console.log('Login succeeded! Full payload:', action.payload);
+        console.log('Response data extracted:', responseData);
         console.log('User data extracted:', userData);
         console.log('Role set to:', state.role);
 
         state.error = null;
-      })
-      .addCase(login.rejected, (state, action) => {
+      })      .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.role = null;
         state.error = action.payload;
+        // Clear any stored tokens/session data on login failure
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       })
 
       // Register cases
@@ -185,8 +177,14 @@ const authSlice = createSlice({
         state.isLoading = false;
         if (action.payload.token) {
           state.isAuthenticated = true;
-          state.user = action.payload.data;
-          state.role = action.payload.data.role;
+
+          // Handle both data formats that might come from the API
+          const responseData = action.payload.data || action.payload;
+
+          // Extract the actual user object (it might be nested under 'user' property)
+          const userData = responseData.user || responseData;
+          state.user = userData;
+          state.role = userData.role;
         }
         state.error = null;
       })
@@ -211,38 +209,124 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
         state.role = null;
-      })
-
-      // Fetch profile cases
+      })      // Fetch profile cases
       .addCase(fetchProfile.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-      })
-      .addCase(fetchProfile.fulfilled, (state, action) => {
+      })      .addCase(fetchProfile.fulfilled, (state, action) => {
         state.isLoading = false;
 
+        // DEBUG: Log the complete action payload
+        console.log('🐛 fetchProfile.fulfilled - Complete action:', action);
+        console.log('🐛 fetchProfile.fulfilled - action.payload:', action.payload);
+        console.log('🐛 fetchProfile.fulfilled - action.payload.data:', action.payload.data);
+
         // Handle both data formats that might come from the API
-        const userData = action.payload.data || action.payload;
+        const responseData = action.payload.data || action.payload;
+
+        // DEBUG: Log the response data processing
+        console.log('🐛 fetchProfile.fulfilled - responseData:', responseData);
+        console.log('🐛 fetchProfile.fulfilled - responseData.user:', responseData.user);
+        console.log('🐛 fetchProfile.fulfilled - responseData.role:', responseData.role);
+
+        // FIXED: Handle the nested response structure correctly
+        // The API returns { success: true, data: { user_object } }
+        // But sometimes the entire response gets stored as action.payload
+        let userData;
+        if (responseData.success && responseData.data) {
+          // Case 1: Full API response structure
+          userData = responseData.data;
+        } else if (responseData.user) {
+          // Case 2: Data is nested under 'user' property
+          userData = responseData.user;
+        } else {
+          // Case 3: Data is the responseData itself
+          userData = responseData;
+        }
+
         state.user = userData;
         state.isAuthenticated = true;
+
+        // DEBUG: Log the user data processing
+        console.log('🐛 fetchProfile.fulfilled - extracted userData:', userData);
+        console.log('🐛 fetchProfile.fulfilled - userData.role:', userData.role);
+        console.log('🐛 fetchProfile.fulfilled - typeof userData.role:', typeof userData.role);
 
         // Extract role, ensuring it exists
         state.role = userData.role || 'guest';
 
-        console.log('Profile fetched! User:', userData);
-        console.log('Role set to:', state.role);
-
+        console.log('✅ Profile fetched! User:', userData);
+        console.log('✅ Role set to:', state.role);
         state.error = null;
-      })
-      .addCase(fetchProfile.rejected, (state, action) => {
+      })      .addCase(fetchProfile.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload;
+        // Don't set error for profile fetch failures to prevent toast notifications
+        // state.error = action.payload;
+        console.log('❌ Profile fetch failed - not setting error in state to prevent toast');
+      })
+
+      // Check auth cases
+      .addCase(checkAuth.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })      .addCase(checkAuth.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+
+        // DEBUG: Log the complete action payload
+        console.log('🐛 checkAuth.fulfilled - Complete action:', action);
+        console.log('🐛 checkAuth.fulfilled - action.payload:', action.payload);
+        console.log('🐛 checkAuth.fulfilled - action.payload.data:', action.payload.data);
+
+        // Handle both data formats that might come from the API
+        const responseData = action.payload.data || action.payload;
+
+        // DEBUG: Log the response data processing
+        console.log('🐛 checkAuth.fulfilled - responseData:', responseData);
+        console.log('🐛 checkAuth.fulfilled - responseData.user:', responseData.user);
+        console.log('🐛 checkAuth.fulfilled - responseData.role:', responseData.role);
+
+        // FIXED: Handle the nested response structure correctly
+        // The API returns { success: true, data: { user_object } }
+        // But sometimes the entire response gets stored as action.payload
+        let userData;
+        if (responseData.success && responseData.data) {
+          // Case 1: Full API response structure
+          userData = responseData.data;
+        } else if (responseData.user) {
+          // Case 2: Data is nested under 'user' property
+          userData = responseData.user;
+        } else {
+          // Case 3: Data is the responseData itself
+          userData = responseData;
+        }
+
+        state.user = userData;
+
+        // DEBUG: Log the user data processing
+        console.log('🐛 checkAuth.fulfilled - extracted userData:', userData);
+        console.log('🐛 checkAuth.fulfilled - userData.role:', userData.role);
+        console.log('🐛 checkAuth.fulfilled - typeof userData.role:', typeof userData.role);
+
+        // Extract role, ensuring it exists
+        state.role = userData.role || 'guest';
+
+        console.log('✅ Auth check succeeded! User:', userData);
+        console.log('✅ Role set to:', state.role);
+      })      .addCase(checkAuth.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.role = null;
+        // Don't set error for auth check failures to prevent toast notifications
+        // state.error = action.payload;
+        console.log('❌ Auth check rejected - user not authenticated');
       });
-  },
+  }
 });
 
 // Export actions and reducer
-export const { setCredentials, clearCredentials, hydrateAuth, setError } = authSlice.actions;
+export const { setCredentials, clearCredentials, setError, clearError, clearLoading } = authSlice.actions;
 
 export default authSlice.reducer;
 

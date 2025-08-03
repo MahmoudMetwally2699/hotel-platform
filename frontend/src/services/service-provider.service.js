@@ -7,17 +7,20 @@ import apiClient from './api.service';
 import { SERVICE_PROVIDER_API, CLIENT_API } from '../config/api.config';
 import cookieHelper from '../utils/cookieHelper';
 
-class ServiceProviderService {
-  /**
+class ServiceProviderService {  /**
    * Get service details (for guests)
    * @param {string} id - Service ID
    * @returns {Promise} - Response from API
    */
   async getServiceDetails(id) {
     try {
+      console.log('🔍 getServiceDetails: Fetching service for ID:', id);
+      console.log('🔍 getServiceDetails: Full URL:', `${CLIENT_API.SERVICES}/${id}`);
       const response = await apiClient.get(`${CLIENT_API.SERVICES}/${id}`);
+      console.log('✅ getServiceDetails: Response received:', response.data);
       return response.data;
     } catch (error) {
+      console.log('❌ getServiceDetails: Error occurred:', error.response?.data || error.message);
       throw error;
     }
   }
@@ -166,11 +169,16 @@ class ServiceProviderService {
    * @param {string} id - Order ID
    * @param {string} status - New order status
    * @returns {Promise} - Response from API
-   */
-  async updateOrderStatus(id, status) {
+   */  async updateOrderStatus(id, status, notes) {
     try {
-      const response = await apiClient.put(`${SERVICE_PROVIDER_API.ORDERS}/${id}/status`, { status });
-      return response.data;
+      const payload = { status };
+      if (notes) {
+        payload.notes = notes;
+      }
+      const response = await apiClient.put(`${SERVICE_PROVIDER_API.ORDERS}/${id}/status`, payload);
+      // Backend returns { status: 'success', data: { booking } }
+      // We need just the booking object
+      return response.data.data?.booking || response.data;
     } catch (error) {
       throw error;
     }
@@ -217,7 +225,6 @@ class ServiceProviderService {
       throw error;
     }
   }
-
   /**
    * Get provider's recent orders (for dashboard)
    * @param {number} limit - Number of recent orders to fetch
@@ -225,8 +232,11 @@ class ServiceProviderService {
    */
   async getProviderRecentOrders(limit = 10) {
     try {
-      const response = await apiClient.get(`${SERVICE_PROVIDER_API.ORDERS}/recent?limit=${limit}`);
-      return response.data;
+      // Use regular orders endpoint with limit parameter since /orders/recent doesn't exist
+      const response = await apiClient.get(SERVICE_PROVIDER_API.ORDERS, { params: { limit } });
+      // Backend returns {success, results, total, pagination, data}
+      // We need just the data array
+      return response.data.data || [];
     } catch (error) {
       throw error;
     }
@@ -236,11 +246,12 @@ class ServiceProviderService {
    * Get all provider orders with optional filtering
    * @param {Object} filters - Filter parameters
    * @returns {Promise} - Response from API
-   */
-  async getProviderOrders(filters = {}) {
+   */  async getProviderOrders(filters = {}) {
     try {
       const response = await apiClient.get(SERVICE_PROVIDER_API.ORDERS, { params: filters });
-      return response.data;
+      // Backend returns {success, results, total, pagination, data}
+      // We need just the data array
+      return response.data.data || [];
     } catch (error) {
       throw error;
     }
@@ -251,8 +262,7 @@ class ServiceProviderService {
    * Get provider earnings data
    * @param {string} timeRange - Time range for earnings data
    * @returns {Promise} - Response from API
-   */
-  async getProviderEarnings(timeRange = 'month') {
+   */  async getProviderEarnings(timeRange = 'month') {
     try {
       const response = await apiClient.get(`${SERVICE_PROVIDER_API.EARNINGS}?timeRange=${timeRange}`);
       return response.data;

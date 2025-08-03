@@ -44,11 +44,12 @@ const ToursServiceCreator = () => {
     loadTemplates();
     loadServices();
   }, []);
-
   const loadTemplates = async () => {
     try {
+      console.log('Loading tours templates...');
       const response = await api.get('/service/category-templates/tours');
-      setTemplates(response.data.template);
+      console.log('Tours templates response:', response.data);
+      setTemplates(response.data.data.template);
     } catch (error) {
       console.error('Error loading templates:', error);
     }
@@ -56,8 +57,10 @@ const ToursServiceCreator = () => {
 
   const loadServices = async () => {
     try {
+      console.log('Loading tours services...');
       const response = await api.get('/service/services-by-category/tours');
-      setServices(response.data.services || []);
+      console.log('Tours services response:', response.data);
+      setServices(response.data.data.services || []);
     } catch (error) {
       console.error('Error loading services:', error);
     }

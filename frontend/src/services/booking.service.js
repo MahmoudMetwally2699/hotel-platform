@@ -19,6 +19,18 @@ class BookingService {
       throw error;
     }
   }
+  /**
+   * Get hotel's bookings (for authenticated hotel admin)
+   * @returns {Promise} - Response from API
+   */
+  async getHotelBookingsForAdmin() {
+    try {
+      const response = await apiClient.get(HOTEL_ADMIN_API.BOOKINGS);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 
   /**
    * Get hotel's bookings

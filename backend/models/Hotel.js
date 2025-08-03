@@ -258,7 +258,50 @@ const hotelSchema = new mongoose.Schema({
         min: [0.5, 'Seasonal multiplier cannot be less than 0.5'],
         max: [3, 'Seasonal multiplier cannot exceed 3']
       }
-    }]
+    }]  },
+
+  // Category-specific service providers (one provider per category)
+  categoryServiceProviders: {
+    laundry: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'ServiceProvider',
+      default: null
+    },
+    transportation: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'ServiceProvider',
+      default: null
+    },
+    tours: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'ServiceProvider',
+      default: null
+    },
+    spa: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'ServiceProvider',
+      default: null
+    },
+    dining: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'ServiceProvider',
+      default: null
+    },
+    entertainment: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'ServiceProvider',
+      default: null
+    },
+    shopping: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'ServiceProvider',
+      default: null
+    },
+    fitness: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'ServiceProvider',
+      default: null
+    }
   },
 
   // Payment Settings

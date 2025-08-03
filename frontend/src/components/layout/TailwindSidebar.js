@@ -58,12 +58,6 @@ const UserIcon = () => (
   </svg>
 );
 
-const ServerIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
-  </svg>
-);
-
 const CurrencyDollarIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -95,12 +89,6 @@ const CloseIcon = () => (
   </svg>
 );
 
-const PercentIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z" />
-  </svg>
-);
-
 // Navigation items by role with updated permissions
 const navigationItems = {
   superadmin: [
@@ -110,17 +98,9 @@ const navigationItems = {
     { text: 'Platform Metrics', icon: <ChartBarIcon />, path: '/superadmin/platform-metrics' },
     { text: 'Analytics', icon: <ChartBarIcon />, path: '/superadmin/analytics' },
     { text: 'Settings', icon: <CogIcon />, path: '/superadmin/settings' }
-  ],
-  hotel: [
+  ],  hotel: [
     { text: 'Dashboard', icon: <HomeIcon />, path: '/hotel/dashboard' },
-    { text: 'Service Providers', icon: <UserGroupIcon />, path: '/hotel/service-providers' },
-    { text: 'Manage Providers', icon: <UserGroupIcon />, path: '/hotel/manage-providers' },
-    { text: 'Services', icon: <ShoppingBagIcon />, path: '/hotel/services' },
-    { text: 'Bookings', icon: <ClipboardListIcon />, path: '/hotel/bookings' },
-    { text: 'User Management', icon: <UserIcon />, path: '/hotel/user-management' },
     { text: 'Revenue', icon: <CurrencyDollarIcon />, path: '/hotel/revenue' },
-    { text: 'Markup Settings', icon: <PercentIcon />, path: '/hotel/markup-settings' },
-    { text: 'Provider Analytics', icon: <ChartBarIcon />, path: '/hotel/provider-analytics' },
     { text: 'Settings', icon: <CogIcon />, path: '/hotel/settings' }
   ],
   service: [

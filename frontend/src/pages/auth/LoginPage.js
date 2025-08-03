@@ -1,6 +1,6 @@
 /**
- * Login Page
- * Handles user authentication for all user roles
+ * Client Login Page
+ * Handles authentication for guests/clients only
  */
 
 import React, { useState, useEffect } from 'react';
@@ -8,13 +8,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { login, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole } from '../../redux/slices/authSlice';
+import { login, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole, clearError, clearLoading, setError } from '../../redux/slices/authSlice';
 
 // Validation schema
 const validationSchema = Yup.object({
   email: Yup.string().email('Invalid email address').required('Email is required'),
   password: Yup.string().required('Password is required'),
-  role: Yup.string().required('Role is required'),
 });
 
 const LoginPage = () => {
@@ -27,30 +26,21 @@ const LoginPage = () => {
 
   const [showError, setShowError] = useState(false);  // Handle redirection after successful login
   useEffect(() => {
-    console.log('Authentication state:', { isAuthenticated, role });
-
-    if (isAuthenticated) {
-      console.log('User is authenticated, redirecting based on role:', role);
-
+    if (isAuthenticated && role === 'guest') {
+      navigate('/');
+    } else if (isAuthenticated && role !== 'guest') {
+      // If logged in but not as guest, redirect to appropriate dashboard
       switch (role) {
         case 'superadmin':
-          console.log('Redirecting to superadmin dashboard');
           navigate('/superadmin/dashboard');
           break;
         case 'hotel':
-          console.log('Redirecting to hotel dashboard');
           navigate('/hotel/dashboard');
           break;
         case 'service':
-          console.log('Redirecting to service provider dashboard');
           navigate('/service/dashboard');
           break;
-        case 'guest':
-          console.log('Redirecting to guest home page');
-          navigate('/');
-          break;
         default:
-          console.log('No matching role, redirecting to default page');
           navigate('/');
           break;
       }
@@ -68,28 +58,45 @@ const LoginPage = () => {
     }
   }, [authError]);
 
+  // Clear any errors and loading state when component mounts
+  useEffect(() => {
+    dispatch(clearError());
+    dispatch(clearLoading());
+  }, [dispatch]);
+
   // Initial form values
   const initialValues = {
     email: '',
     password: '',
-    role: 'guest', // Default role
-  };
-  // Handle form submission
+    role: 'guest', // Fixed role for client login
+  };  // Handle form submission
   const handleSubmit = (values) => {
-    // If superadmin was selected, make sure to set the correct role value
-    if (values.role === 'superadmin') {
-      console.log('Login as superadmin, setting correct role');
-    }
-    console.log('Login attempt with values:', values);
-    dispatch(login(values));
+    console.log('Submitting login form with values:', values);
+
+    // Clear any previous errors
+    dispatch(clearError());
+
+    // Dispatch the login action
+    const loginPromise = dispatch(login(values));
+
+    // Set a timeout to clear loading state if login takes too long
+    const timeoutId = setTimeout(() => {
+      console.warn('Login taking too long, clearing loading state');
+      dispatch(clearLoading());
+      dispatch(setError('Login request timed out. Please try again.'));
+    }, 30000); // 30 second timeout
+
+    // Clear timeout if login completes
+    loginPromise.finally(() => {
+      clearTimeout(timeoutId);
+    });
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">        <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-800">Welcome Back</h2>
-          <p className="text-gray-600 mt-2">Sign in to access your account</p>
+          <p className="text-gray-600 mt-2">Sign in to your account</p>
         </div>
 
         {showError && (
@@ -122,9 +129,7 @@ const LoginPage = () => {
                   placeholder="Enter your email"
                 />
                 <ErrorMessage name="email" component="div" className="mt-1 text-sm text-red-600" />
-              </div>
-
-              <div className="mb-4">
+              </div>              <div className="mb-4">
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
@@ -135,22 +140,6 @@ const LoginPage = () => {
                   placeholder="Enter your password"
                 />
                 <ErrorMessage name="password" component="div" className="mt-1 text-sm text-red-600" />
-              </div>
-
-              <div className="mb-6">
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                  Login As
-                </label>                <Field
-                  as="select"
-                  name="role"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="guest">Guest</option>
-                  <option value="hotel">Hotel Admin</option>
-                  <option value="service">Service Provider</option>
-                  <option value="superadmin">Super Admin</option>
-                </Field>
-                <ErrorMessage name="role" component="div" className="mt-1 text-sm text-red-600" />
               </div>
 
               <div className="flex items-center justify-between mb-6">

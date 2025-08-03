@@ -41,13 +41,30 @@ export const fetchServices = createAsyncThunk(
   }
 );
 
+// New async thunk for fetching hotel services for guests/clients
+export const fetchHotelServices = createAsyncThunk(
+  'service/fetchHotelServices',
+  async ({ hotelId, category }, { rejectWithValue }) => {
+    try {
+      const queryParams = category ? { category } : {};
+      const response = await hotelService.getHotelServices(hotelId, queryParams);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch hotel services');
+    }
+  }
+);
+
 export const fetchServiceById = createAsyncThunk(
   'service/fetchServiceById',
   async (serviceId, { rejectWithValue }) => {
     try {
-      const response = await serviceProviderService.getServiceById(serviceId);
+      console.log('🔍 fetchServiceById: Fetching service details for ID:', serviceId);
+      const response = await serviceProviderService.getServiceDetails(serviceId);
+      console.log('✅ fetchServiceById: Service details received:', response);
       return response;
     } catch (error) {
+      console.log('❌ fetchServiceById: Failed to fetch service details:', error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch service details');
     }
   }
@@ -287,8 +304,16 @@ export const fetchOrderById = createAsyncThunk(
 export const fetchServiceDetails = fetchServiceById;
 export const fetchProviderServices = createAsyncThunk(
   'service/fetchProviderServices',
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
+      // Check if user has service provider role
+      const state = getState();
+      const userRole = state.auth?.user?.role;
+
+      if (userRole !== 'service') {
+        return rejectWithValue('Unauthorized: Only service providers can access this data');
+      }
+
       const response = await serviceProviderService.getServices();
       return response;
     } catch (error) {
@@ -412,14 +437,11 @@ const serviceSlice = createSlice({
       state.currentServiceProvider = null;
       state.error = null;
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      // Fetch services cases
-      .addCase(fetchServices.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
+  },  extraReducers: (builder) => {
+    builder.addCase(fetchServices.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    })
       .addCase(fetchServices.fulfilled, (state, action) => {
         state.isLoading = false;
         state.services = action.payload;
@@ -429,27 +451,43 @@ const serviceSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
+      .addCase(fetchHotelServices.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchHotelServices.fulfilled, (state, action) => {
+        state.isLoading = false;
+        // Extract services from the API response data structure
+        state.services = action.payload.data || action.payload || [];
+        state.error = null;
+      })
+      .addCase(fetchHotelServices.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
 
       // Fetch service by ID cases
       .addCase(fetchServiceById.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-      })
-      .addCase(fetchServiceById.fulfilled, (state, action) => {
+      })      .addCase(fetchServiceById.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.currentService = action.payload;
+        // Handle both direct data and nested data structure
+        const serviceData = action.payload?.data || action.payload;
+        state.currentService = serviceData;
+        console.log('✅ Redux: Service details stored:', serviceData);
         state.error = null;
       })
       .addCase(fetchServiceById.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload;
-      })
+        state.error = action.payload;      })
 
       // Fetch service providers cases
       .addCase(fetchServiceProviders.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-      })      .addCase(fetchServiceProviders.fulfilled, (state, action) => {
+      })
+      .addCase(fetchServiceProviders.fulfilled, (state, action) => {
         state.isLoading = false;
         state.serviceProviders = action.payload.data?.serviceProviders || action.payload;
         state.error = null;
@@ -471,14 +509,14 @@ const serviceSlice = createSlice({
       })
       .addCase(createServiceProvider.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload;
-      })
+        state.error = action.payload;      })
 
       // Set service provider markup cases
       .addCase(setServiceProviderMarkup.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-      })      .addCase(setServiceProviderMarkup.fulfilled, (state, action) => {
+      })
+      .addCase(setServiceProviderMarkup.fulfilled, (state, action) => {
         state.isLoading = false;
         // Update the specific service provider with the new markup
         const { providerId, data } = action.payload;
@@ -557,8 +595,7 @@ const serviceSlice = createSlice({
       .addCase(fetchProviderEarnings.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-      })
-      .addCase(fetchProviderEarnings.fulfilled, (state, action) => {
+      })      .addCase(fetchProviderEarnings.fulfilled, (state, action) => {
         state.isLoading = false;
         state.providerEarnings = action.payload;
         state.error = null;
@@ -610,8 +647,7 @@ const serviceSlice = createSlice({
       })
       .addCase(fetchOrderById.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload;
-      })
+        state.error = action.payload;      })
 
       // Update order status cases
       .addCase(updateOrderStatus.pending, (state) => {
@@ -620,11 +656,18 @@ const serviceSlice = createSlice({
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.isLoading = false;
+        console.log('🔧 Redux: updateOrderStatus.fulfilled payload:', action.payload);
+
         // Update the order in providerOrders array
         const updatedOrder = action.payload;
-        state.providerOrders = state.providerOrders.map(order =>
-          order._id === updatedOrder._id ? updatedOrder : order
-        );
+        const orderIndex = state.providerOrders.findIndex(order => order._id === updatedOrder._id);
+        if (orderIndex !== -1) {
+          state.providerOrders[orderIndex] = updatedOrder;
+          console.log('🔧 Redux: Updated order at index', orderIndex, 'new status:', updatedOrder.status);
+        } else {
+          console.log('🔧 Redux: Order not found in providerOrders array');
+        }
+
         // Update current order if it matches
         if (state.currentOrder && state.currentOrder._id === updatedOrder._id) {
           state.currentOrder = updatedOrder;

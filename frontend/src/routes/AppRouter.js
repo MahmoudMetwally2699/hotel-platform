@@ -12,19 +12,24 @@ import LoadingScreen from '../components/common/LoadingScreen';
 // Lazy loaded pages for better performance
 // Auth Pages
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
+const SuperAdminLoginPage = lazy(() => import('../pages/auth/SuperAdminLoginPage'));
+const HotelAdminLoginPage = lazy(() => import('../pages/auth/HotelAdminLoginPage'));
+const ServiceProviderLoginPage = lazy(() => import('../pages/auth/ServiceProviderLoginPage'));
 const RegisterPage = lazy(() => import('../pages/auth/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('../pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('../pages/auth/ResetPasswordPage'));
-const VerifyEmailPage = lazy(() => import('../pages/auth/VerifyEmailPage'));
 
 // Public Pages
 const HomePage = lazy(() => import('../pages/client/HomePage'));
 const ServiceListPage = lazy(() => import('../pages/client/ServiceListPage'));
 const ServiceDetailsPage = lazy(() => import('../pages/client/ServiceDetailsPage'));
+const MyHotelServicesPage = lazy(() => import('../pages/client/MyHotelServicesPage'));
+const MyOrdersPage = lazy(() => import('../pages/client/MyOrdersPage'));
 const HotelListPage = lazy(() => import('../pages/client/HotelListPage'));
-const HotelDetailsPage = lazy(() => import('../pages/client/HotelDetailsPage'));
-const BookingPage = lazy(() => import('../pages/client/BookingPage'));
+const HotelCategoryServicesPage = lazy(() => import('../pages/client/HotelCategoryServicesPage'));
+const LaundryBookingPage = lazy(() => import('../pages/client/LaundryBookingPage'));
 const ProfilePage = lazy(() => import('../pages/common/ProfilePage'));
+const AdminAccessPage = lazy(() => import('../pages/common/AdminAccessPage'));
 
 // Super Admin Pages
 const SuperAdminDashboard = lazy(() => import('../pages/superadmin/DashboardPage'));
@@ -36,6 +41,7 @@ const SuperAdminSettingsPage = lazy(() => import('../pages/superadmin/SettingsPa
 
 // Hotel Admin Pages
 const HotelAdminDashboard = lazy(() => import('../pages/hotel/DashboardPage'));
+const HotelAdminOrdersPage = lazy(() => import('../pages/hotel/OrdersPage'));
 const HotelAdminServiceProvidersPage = lazy(() => import('../pages/hotel/ServiceProvidersPage'));
 const HotelAdminManageProvidersPage = lazy(() => import('../pages/hotel/ManageProvidersPage'));
 const HotelAdminServicesPage = lazy(() => import('../pages/hotel/ServicesPage'));
@@ -46,12 +52,12 @@ const HotelAdminRevenuePage = lazy(() => import('../pages/hotel/RevenuePage'));
 const HotelAdminMarkupSettingsPage = lazy(() => import('../pages/hotel/MarkupSettingsPage'));
 const HotelAdminProviderAnalyticsPage = lazy(() => import('../pages/hotel/ProviderAnalyticsPage'));
 const HotelAdminSettingsPage = lazy(() => import('../pages/hotel/SettingsPage'));
+const CategoryProviderManagement = lazy(() => import('../components/hotel/CategoryProviderManagement'));
 const ServiceProviderClients = lazy(() => import('../components/hotel/ServiceProviderClients'));
 const HotelServiceProviderAnalytics = lazy(() => import('../components/hotel/HotelServiceProviderAnalytics'));
 
 // Service Provider Pages
 const MultiCategoryDashboard = lazy(() => import('../pages/service/MultiCategoryDashboard'));
-const ServiceProviderServicesPage = lazy(() => import('../pages/service/ServicesPage'));
 const ServiceProviderOrdersPage = lazy(() => import('../pages/service/OrdersPage'));
 const ServiceProviderOrderDetailPage = lazy(() => import('../pages/service/OrderDetailPage'));
 const ServiceProviderProcessBookingsPage = lazy(() => import('../pages/service/ProcessBookingsPage'));
@@ -68,29 +74,38 @@ const ServerErrorPage = lazy(() => import('../pages/errors/ServerErrorPage'));
 
 const AppRouter = () => {
   return (
-    <Suspense fallback={<LoadingScreen />}>
-      <Routes>
-        {/* Public Routes */}
+    <Suspense fallback={<LoadingScreen />}>      <Routes>        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/admin" element={<AdminAccessPage />} />
+        <Route path="/superadmin/login" element={<SuperAdminLoginPage />} />
+        <Route path="/hotel/login" element={<HotelAdminLoginPage />} />
+        <Route path="/serviceprovider/login" element={<ServiceProviderLoginPage />} />        <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-        <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
-
         {/* Client/Guest Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/hotels" element={<HotelListPage />} />
-        <Route path="/hotels/:id" element={<HotelDetailsPage />} />
+        <Route path="/hotels/:hotelId/categories" element={<TailwindLayout><HotelCategoryServicesPage /></TailwindLayout>} />
+        <Route path="/hotels/:hotelId/services/:category" element={<TailwindLayout><HotelCategoryServicesPage /></TailwindLayout>} />
+        <Route path="/hotels/:hotelId/services/laundry/booking" element={<TailwindLayout><LaundryBookingPage /></TailwindLayout>} />
         <Route path="/services/:category" element={<ServiceListPage />} />
-        <Route path="/services/details/:id" element={<ServiceDetailsPage />} />
-
-        {/* Protected Client/Guest Routes */}
+        <Route path="/services/details/:id" element={<ServiceDetailsPage />} />{/* Protected Client/Guest Routes */}
         <Route
-          path="/bookings"
+          path="/my-hotel-services"
           element={
             <ProtectedRoute>
               <TailwindLayout>
-                <BookingPage />
+                <MyHotelServicesPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-orders"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <MyOrdersPage />
               </TailwindLayout>
             </ProtectedRoute>
           }
@@ -158,14 +173,22 @@ const AppRouter = () => {
               </TailwindLayout>
             </ProtectedRoute>
           }
-        />
-
-        {/* Hotel Admin Routes */}
+        />        {/* Hotel Admin Routes */}
         <Route
           path="/hotel/dashboard"          element={
             <ProtectedRoute allowedRoles="hotel">
               <TailwindLayout>
                 <HotelAdminDashboard />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel/orders"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminOrdersPage />
               </TailwindLayout>
             </ProtectedRoute>
           }
@@ -234,8 +257,7 @@ const AppRouter = () => {
               </TailwindLayout>
             </ProtectedRoute>
           }
-        />
-        <Route
+        />        <Route
           path="/hotel/markup-settings"
           element={
             <ProtectedRoute allowedRoles="hotel">
@@ -244,7 +266,18 @@ const AppRouter = () => {
               </TailwindLayout>
             </ProtectedRoute>
           }
-        />        <Route
+        />
+        <Route
+          path="/hotel/category-providers"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <CategoryProviderManagement />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/hotel/provider-analytics"
           element={
             <ProtectedRoute allowedRoles="hotel">
@@ -313,19 +346,7 @@ const AppRouter = () => {
                 <ServiceProviderAnalytics />
               </TailwindLayout>
             </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/service/services"
-          element={
-            <ProtectedRoute allowedRoles="service">
-              <TailwindLayout>
-                <ServiceProviderServicesPage />
-              </TailwindLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
+          }        />        <Route
           path="/service/orders"
           element={
             <ProtectedRoute allowedRoles="service">

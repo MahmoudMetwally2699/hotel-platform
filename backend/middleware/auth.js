@@ -9,25 +9,8 @@ const jwt = require('jsonwebtoken');
 const { AppError, catchAsync } = require('./error');
 const User = require('../models/User');
 const logger = require('../utils/logger');
-const rateLimit = require('express-rate-limit');
 
-/**
- * Rate limiter for authentication requests to prevent brute force attacks
- */
-const authRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs for auth routes
-  message: {
-    success: false,
-    message: 'Too many authentication attempts, please try again after 15 minutes'
-  },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  skip: (req) => {
-    // Skip rate limiting if IP is undefined (for testing environments)
-    return !req.ip;
-  }
-});
+// Removed rate limiting for authentication attempts
 
 /**
  * Protect routes - Verify JWT token
@@ -52,10 +35,11 @@ const protect = catchAsync(async (req, res, next) => {
 
   try {
     // 2) Verification token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // 3) Check if user still exists
-    const currentUser = await User.findById(decoded.id).select('+isActive');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);    // 3) Check if user still exists
+    const currentUser = await User.findById(decoded.id)
+      .select('+isActive')
+      .populate('selectedHotelId', 'name address')
+      .populate('serviceProviderId', 'businessName');
     if (!currentUser) {
       logger.logSecurity('ACCESS_DENIED_USER_NOT_FOUND', req, { userId: decoded.id });
       return next(new AppError('The user belonging to this token does no longer exist.', 401));
@@ -77,7 +61,9 @@ const protect = catchAsync(async (req, res, next) => {
       userId: req.user._id,
       role: req.user.role,
       email: req.user.email,
-      hotelId: req.user.hotelId
+      hotelId: req.user.hotelId,
+      serviceProviderId: req.user.serviceProviderId,
+      selectedHotelId: req.user.selectedHotelId
     });
     next();
   } catch (error) {
@@ -106,7 +92,19 @@ const restrictTo = (...roles) => {
         userRole: req.user.role,
         requiredRoles: roles
       });
-      return next(new AppError('You do not have permission to perform this action', 403));
+
+      // Provide more specific error messages based on the user's role and required roles
+      let errorMessage = 'You do not have permission to perform this action';
+
+      if (req.user.role === 'guest' && roles.includes('service')) {
+        errorMessage = 'This endpoint is only accessible to service providers. Guests should use the client endpoints instead.';
+      } else if (req.user.role === 'guest' && roles.includes('hotel')) {
+        errorMessage = 'This endpoint is only accessible to hotel administrators. Guests should use the client endpoints instead.';
+      } else if (req.user.role === 'guest' && roles.includes('superadmin')) {
+        errorMessage = 'This endpoint is only accessible to platform administrators.';
+      }
+
+      return next(new AppError(errorMessage, 403));
     }
     next();
   };
@@ -253,6 +251,5 @@ module.exports = {
   restrictToOwnHotel,
   restrictToOwnServiceProvider,
   restrictToOwnBookings,
-  restrictProviderToHotelAdmin,
-  authRateLimit
+  restrictProviderToHotelAdmin
 };

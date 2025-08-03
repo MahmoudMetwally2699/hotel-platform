@@ -36,14 +36,17 @@ const ServiceListPage = () => {
     if (filter === 'all') return true;
     return service.type === filter;
   });
-
   // Sort services
   const sortedServices = [...filteredServices].sort((a, b) => {
     switch (sortBy) {
       case 'price_low':
-        return a.basePrice - b.basePrice;
+        const priceA = a.pricing?.finalPrice || a.pricing?.basePrice || a.basePrice || 0;
+        const priceB = b.pricing?.finalPrice || b.pricing?.basePrice || b.basePrice || 0;
+        return priceA - priceB;
       case 'price_high':
-        return b.basePrice - a.basePrice;
+        const priceHighA = a.pricing?.finalPrice || a.pricing?.basePrice || a.basePrice || 0;
+        const priceHighB = b.pricing?.finalPrice || b.pricing?.basePrice || b.basePrice || 0;
+        return priceHighB - priceHighA;
       case 'rating':
         return b.rating - a.rating;
       case 'popularity':
@@ -137,11 +140,9 @@ const ServiceListPage = () => {
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                     <span className="text-gray-400">No image</span>
                   </div>
-                )}
-
-                {/* Price Tag */}
+                )}                {/* Price Tag */}
                 <div className="absolute bottom-0 right-0 bg-primary-main text-white px-3 py-1 rounded-tl-lg font-semibold">
-                  ${service.basePrice.toFixed(2)}
+                  ${(Math.round(((service.pricing?.finalPrice || service.pricing?.basePrice || service.basePrice || 0) * 100)) / 100).toFixed(2)}
                 </div>
               </div>
 

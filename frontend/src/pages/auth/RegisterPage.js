@@ -1,6 +1,6 @@
 /**
- * Register Page
- * Handles user registration for all user roles
+ * Client Register Page
+ * Handles user registration for guests/clients only
  */
 
 import React, { useState, useEffect } from 'react';
@@ -9,12 +9,20 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { register, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole } from '../../redux/slices/authSlice';
+import hotelService from '../../services/hotel.service';
 
 // Validation schema
 const validationSchema = Yup.object({
   firstName: Yup.string().required('First name is required'),
   lastName: Yup.string().required('Last name is required'),
   email: Yup.string().email('Invalid email address').required('Email is required'),
+  phone: Yup.string().required('Phone number is required'),
+  selectedHotelId: Yup.string().required('Please select a hotel'),
+  roomNumber: Yup.string().required('Room number is required'),
+  checkInDate: Yup.date().required('Check-in date is required'),
+  checkOutDate: Yup.date()
+    .min(Yup.ref('checkInDate'), 'Check-out date must be after check-in date')
+    .required('Check-out date is required'),
   password: Yup.string()
     .min(8, 'Password must be at least 8 characters')
     .matches(
@@ -25,7 +33,6 @@ const validationSchema = Yup.object({
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password'), null], 'Passwords must match')
     .required('Confirm password is required'),
-  role: Yup.string().required('Role is required'),
   acceptTerms: Yup.boolean().oneOf([true], 'You must accept the terms and conditions')
 });
 
@@ -38,22 +45,39 @@ const RegisterPage = () => {
   const role = useSelector(selectAuthRole);
 
   const [showError, setShowError] = useState(false);
+  const [hotels, setHotels] = useState([]);
+  const [loadingHotels, setLoadingHotels] = useState(true);  // Fetch available hotels
+  useEffect(() => {
+    const fetchHotels = async () => {
+      try {
+        const response = await hotelService.getAllHotels();
+        setHotels(response.data || []);
+      } catch (error) {
+        console.error('Error fetching hotels:', error);
+        setHotels([]);
+      } finally {
+        setLoadingHotels(false);
+      }
+    };
+
+    fetchHotels();
+  }, []);
 
   // Handle redirection after successful registration
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && role === 'guest') {
+      navigate('/');
+    } else if (isAuthenticated && role !== 'guest') {
+      // If registered but not as guest, redirect to appropriate dashboard
       switch (role) {
-        case 'super_admin':
+        case 'superadmin':
           navigate('/superadmin/dashboard');
           break;
-        case 'hotel_admin':
+        case 'hotel':
           navigate('/hotel/dashboard');
           break;
-        case 'service_provider':
+        case 'service':
           navigate('/service/dashboard');
-          break;
-        case 'guest':
-          navigate('/');
           break;
         default:
           navigate('/');
@@ -71,99 +95,48 @@ const RegisterPage = () => {
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [authError]);
-
-  // Initial form values
+  }, [authError]);  // Initial form values
   const initialValues = {
     firstName: '',
     lastName: '',
     email: '',
+    phone: '',
+    selectedHotelId: '',
+    roomNumber: '',
+    checkInDate: '',
+    checkOutDate: '',
     password: '',
     confirmPassword: '',
-    role: 'guest', // Default role
+    role: 'guest', // Fixed role for client registration
     acceptTerms: false,
-  };
-
-  // Handle form submission
+  };  // Handle form submission
   const handleSubmit = (values) => {
     const userData = {
       firstName: values.firstName,
       lastName: values.lastName,
       email: values.email,
+      phone: values.phone,
       password: values.password,
+      selectedHotelId: values.selectedHotelId,
+      roomNumber: values.roomNumber,
+      checkInDate: values.checkInDate,
+      checkOutDate: values.checkOutDate,
     };
 
     dispatch(register({ userData, role: values.role }));
   };
 
-  // Dynamic fields based on role
-  const renderRoleSpecificFields = (values, setFieldValue) => {
-    switch(values.role) {
-      case 'hotel_admin':
-        return (
-          <div className="mb-4">
-            <label htmlFor="hotelName" className="block text-sm font-medium text-gray-700 mb-1">
-              Hotel Name
-            </label>
-            <Field
-              type="text"
-              name="hotelName"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter hotel name"
-            />
-            <ErrorMessage name="hotelName" component="div" className="mt-1 text-sm text-red-600" />
-          </div>
-        );
-      case 'service_provider':
-        return (
-          <>
-            <div className="mb-4">
-              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">
-                Business Name
-              </label>
-              <Field
-                type="text"
-                name="businessName"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter business name"
-              />
-              <ErrorMessage name="businessName" component="div" className="mt-1 text-sm text-red-600" />
-            </div>
-            <div className="mb-4">
-              <label htmlFor="serviceType" className="block text-sm font-medium text-gray-700 mb-1">
-                Service Category
-              </label>
-              <Field
-                as="select"
-                name="serviceType"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select service category</option>
-                <option value="laundry">Laundry</option>
-                <option value="transportation">Transportation</option>
-                <option value="tourism">Travel & Tourism</option>
-              </Field>
-              <ErrorMessage name="serviceType" component="div" className="mt-1 text-sm text-red-600" />
-            </div>
-          </>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">Create an Account</h2>
-          <p className="text-gray-600 mt-2">Sign up to join our platform</p>
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">        <div className="text-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">Create Your Account</h2>
+          <p className="text-gray-600 mt-2">Register for your hotel stay</p>
         </div>
 
         {showError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
             <span className="block sm:inline">{authError}</span>
-            <span className="absolute top-0 bottom-0 right-0 px-4 py-3" onClick={() => setShowError(false)}>
+            <span className="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onClick={() => setShowError(false)}>
               <svg className="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                 <title>Close</title>
                 <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
@@ -177,7 +150,7 @@ const RegisterPage = () => {
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          {({ isSubmitting, values, setFieldValue }) => (
+          {({ isSubmitting }) => (
             <Form className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -205,9 +178,7 @@ const RegisterPage = () => {
                   />
                   <ErrorMessage name="lastName" component="div" className="mt-1 text-sm text-red-600" />
                 </div>
-              </div>
-
-              <div>
+              </div>              <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address
                 </label>
@@ -215,9 +186,84 @@ const RegisterPage = () => {
                   type="email"
                   name="email"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Email address"
+                  placeholder="Enter your email"
                 />
                 <ErrorMessage name="email" component="div" className="mt-1 text-sm text-red-600" />
+              </div>
+
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <Field
+                  type="tel"
+                  name="phone"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter your phone number"
+                />
+                <ErrorMessage name="phone" component="div" className="mt-1 text-sm text-red-600" />
+              </div>              <div>
+                <label htmlFor="selectedHotelId" className="block text-sm font-medium text-gray-700 mb-1">
+                  Select Hotel
+                </label>
+                <Field
+                  as="select"
+                  name="selectedHotelId"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={loadingHotels}
+                >
+                  <option value="">
+                    {loadingHotels ? 'Loading hotels...' : 'Choose a hotel'}
+                  </option>
+                  {hotels.map((hotel) => (
+                    <option key={hotel._id || hotel.id} value={hotel._id || hotel.id}>
+                      {hotel.name}
+                    </option>
+                  ))}
+                </Field>
+                <ErrorMessage name="selectedHotelId" component="div" className="mt-1 text-sm text-red-600" />
+                {hotels.length === 0 && !loadingHotels && (
+                  <p className="mt-1 text-sm text-yellow-600">No hotels available at the moment.</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="roomNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                  Room Number
+                </label>
+                <Field
+                  type="text"
+                  name="roomNumber"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter your room number"
+                />
+                <ErrorMessage name="roomNumber" component="div" className="mt-1 text-sm text-red-600" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="checkInDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    Check-in Date
+                  </label>
+                  <Field
+                    type="date"
+                    name="checkInDate"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <ErrorMessage name="checkInDate" component="div" className="mt-1 text-sm text-red-600" />
+                </div>
+
+                <div>
+                  <label htmlFor="checkOutDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    Check-out Date
+                  </label>
+                  <Field
+                    type="date"
+                    name="checkOutDate"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <ErrorMessage name="checkOutDate" component="div" className="mt-1 text-sm text-red-600" />
+                </div>
               </div>
 
               <div>
@@ -228,7 +274,7 @@ const RegisterPage = () => {
                   type="password"
                   name="password"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Password"
+                  placeholder="Create password"
                 />
                 <ErrorMessage name="password" component="div" className="mt-1 text-sm text-red-600" />
               </div>
@@ -245,27 +291,6 @@ const RegisterPage = () => {
                 />
                 <ErrorMessage name="confirmPassword" component="div" className="mt-1 text-sm text-red-600" />
               </div>
-
-              <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                  Register As
-                </label>
-                <Field
-                  as="select"
-                  name="role"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  onChange={(e) => {
-                    setFieldValue('role', e.target.value);
-                  }}
-                >
-                  <option value="guest">Guest</option>
-                  <option value="hotel_admin">Hotel Admin</option>
-                  <option value="service_provider">Service Provider</option>
-                </Field>
-                <ErrorMessage name="role" component="div" className="mt-1 text-sm text-red-600" />
-              </div>
-
-              {renderRoleSpecificFields(values, setFieldValue)}
 
               <div className="flex items-center">
                 <Field
@@ -290,10 +315,10 @@ const RegisterPage = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Registering...</span>
+                    <span>Creating Account...</span>
                   </div>
                 ) : (
-                  'Register'
+                  'Create Account'
                 )}
               </button>
             </Form>
@@ -304,7 +329,7 @@ const RegisterPage = () => {
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
             <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Sign in
+              Sign in here
             </Link>
           </p>
         </div>

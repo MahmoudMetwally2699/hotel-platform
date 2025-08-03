@@ -15,7 +15,7 @@ import {
   FaDumbbell
 } from 'react-icons/fa';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import axios from 'axios';
+import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
 
 const categoryIcons = {
@@ -42,7 +42,7 @@ const ServiceProviderAnalytics = () => {
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`/api/service/analytics/categories?timeRange=${timeRange}`);
+      const response = await apiClient.get(`/api/service/analytics/categories?timeRange=${timeRange}`);
       setAnalytics(response.data.data);
       setLoading(false);
     } catch (error) {

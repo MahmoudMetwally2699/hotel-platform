@@ -29,9 +29,13 @@ const TailwindHeader = () => {
     logout();
     navigate('/login');
   };
-
   const navigateToProfile = () => {
     navigate('/profile');
+    setShowProfileMenu(false);
+  };
+
+  const navigateToMyHotelServices = () => {
+    navigate('/my-hotel-services');
     setShowProfileMenu(false);
   };
 
@@ -40,10 +44,9 @@ const TailwindHeader = () => {
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <img
+            <div className="flex-shrink-0 flex items-center">              <img
                 className="block h-8 w-auto"
-                src="/logo.png"
+                src="/logo192.png"
                 alt="Hotel Service Platform"
               />
             </div>
@@ -98,8 +101,7 @@ const TailwindHeader = () => {
               {showProfileMenu && (
                 <div
                   className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
-                >
-                  <div className="px-4 py-2 border-b border-gray-200">
+                >                  <div className="px-4 py-2 border-b border-gray-200">
                     <p className="text-sm font-medium text-gray-900 truncate">
                       {user?.firstName} {user?.lastName}
                     </p>
@@ -107,6 +109,14 @@ const TailwindHeader = () => {
                       {user?.email}
                     </p>
                   </div>
+                  {user?.role === 'guest' && user?.selectedHotelId && (
+                    <button
+                      onClick={navigateToMyHotelServices}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      My Hotel Services
+                    </button>
+                  )}
                   <button
                     onClick={navigateToProfile}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

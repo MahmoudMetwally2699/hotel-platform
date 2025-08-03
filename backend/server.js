@@ -57,15 +57,22 @@ try {
   // Security middleware
   app.use(helmet());
   console.log('✅ Helmet configured');
-
   // CORS configuration
   const corsOptions = {
     origin: function (origin, callback) {
       try {
+        // In development, allow all origins
+        if (process.env.NODE_ENV === 'development') {
+          callback(null, true);
+          return;
+        }
+
+        // In production, check allowed origins
         const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
+          console.log('CORS blocked origin:', origin);
           callback(new Error('Not allowed by CORS'));
         }
       } catch (error) {
@@ -75,7 +82,7 @@ try {
     },
     credentials: true,
     optionsSuccessStatus: 200
-  };  app.use(cors(corsOptions));
+  };app.use(cors(corsOptions));
   console.log('✅ CORS configured');
 
   // Rate limiting

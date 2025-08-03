@@ -29,6 +29,20 @@ export const fetchUserBookings = createAsyncThunk(
   }
 );
 
+export const fetchHotelBookingsForAdmin = createAsyncThunk(
+  'booking/fetchHotelBookingsForAdmin',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await bookingService.getHotelBookingsForAdmin();
+      console.log('🔍 fetchHotelBookingsForAdmin response:', response);
+      // Extract the bookings array from the response
+      return response?.data?.bookings || [];
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch hotel bookings');
+    }
+  }
+);
+
 export const fetchHotelBookings = createAsyncThunk(
   'booking/fetchHotelBookings',
   async (hotelId, { rejectWithValue }) => {
@@ -49,6 +63,18 @@ export const fetchProviderBookings = createAsyncThunk(
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch provider bookings');
+    }
+  }
+);
+
+export const fetchCurrentHotelBookings = createAsyncThunk(
+  'booking/fetchCurrentHotelBookings',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await bookingService.getCurrentHotelBookings();
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch hotel bookings');
     }
   }
 );
@@ -95,8 +121,7 @@ const bookingSlice = createSlice({
   initialState,
   reducers: {
     setCurrentBooking: (state, action) => {
-      state.currentBooking = action.payload;
-    },
+      state.currentBooking = action.payload;    },
     clearBookingState: (state) => {
       state.currentBooking = null;
       state.error = null;
@@ -115,6 +140,19 @@ const bookingSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchUserBookings.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })// Fetch hotel bookings for admin cases
+      .addCase(fetchHotelBookingsForAdmin.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchHotelBookingsForAdmin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.bookings = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchHotelBookingsForAdmin.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
@@ -143,8 +181,22 @@ const bookingSlice = createSlice({
         state.isLoading = false;
         state.bookings = action.payload;
         state.error = null;
+      })      .addCase(fetchProviderBookings.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       })
-      .addCase(fetchProviderBookings.rejected, (state, action) => {
+
+      // Fetch current hotel bookings cases
+      .addCase(fetchCurrentHotelBookings.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchCurrentHotelBookings.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.bookings = action.payload?.data?.bookings || action.payload || [];
+        state.error = null;
+      })
+      .addCase(fetchCurrentHotelBookings.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
