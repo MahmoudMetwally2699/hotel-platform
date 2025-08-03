@@ -107,13 +107,13 @@ try {
 
   // Logging middleware
   if (process.env.NODE_ENV === 'development') {
-    app.use(morgan('dev'));
-  } else {
+    app.use(morgan('dev'));  } else {
     app.use(morgan('combined'));
-  }  console.log('✅ Logging configured');
+  }
+  console.log('✅ Logging configured');
 
-  // Serve static files
-  app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+  // Serve static files (disabled for serverless deployment)
+  // app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
   console.log('✅ Static files configured');
 
   // Health check endpoint
@@ -154,7 +154,6 @@ try {
   } catch (error) {
     console.error('❌ Service routes failed:', error.message);
   }
-
   try {
     app.use('/api/client', require('./routes/client'));
     console.log('✅ Client routes loaded');
@@ -162,12 +161,14 @@ try {
     console.error('❌ Client routes failed:', error.message);
   }
 
-  try {
-    app.use('/api/upload', require('./routes/upload'));
-    console.log('✅ Upload routes loaded');
-  } catch (error) {
-    console.error('❌ Upload routes failed:', error.message);
-  }
+  // Upload routes disabled for serverless deployment
+  // try {
+  //   app.use('/api/upload', require('./routes/upload'));
+  //   console.log('✅ Upload routes loaded');
+  // } catch (error) {
+  //   console.error('❌ Upload routes failed:', error.message);
+  // }
+
   try {
     app.use('/api/payments', require('./routes/payments'));
     console.log('✅ Payment routes loaded');
