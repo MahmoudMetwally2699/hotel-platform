@@ -6,19 +6,31 @@ const fs = require('fs');
 const { protect, restrictTo } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
-// Ensure upload directories exist
-const uploadDirs = ['hotels', 'services', 'profiles', 'documents'];
-uploadDirs.forEach(dir => {
-  const dirPath = path.join(__dirname, '..', 'uploads', dir);
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
-});
+// Check if running in serverless environment
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY;
+
+// Ensure upload directories exist (only in non-serverless environments)
+if (!isServerless) {
+  const uploadDirs = ['hotels', 'services', 'profiles', 'documents'];
+  uploadDirs.forEach(dir => {
+    const dirPath = path.join(__dirname, '..', 'uploads', dir);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+  });
+}
 
 // Configure multer for different file types
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    let uploadPath = 'uploads/';
+    let uploadPath;
+
+    if (isServerless) {
+      // Use /tmp directory for serverless environments
+      uploadPath = '/tmp/uploads/';
+    } else {
+      uploadPath = 'uploads/';
+    }
 
     // Determine upload path based on file purpose
     if (req.params.type === 'hotel') {
@@ -33,8 +45,15 @@ const storage = multer.diskStorage({
       uploadPath += 'misc/';
     }
 
+    // Determine full path
+    let fullPath;
+    if (isServerless) {
+      fullPath = uploadPath;
+    } else {
+      fullPath = path.join(__dirname, '..', uploadPath);
+    }
+
     // Ensure directory exists
-    const fullPath = path.join(__dirname, '..', uploadPath);
     if (!fs.existsSync(fullPath)) {
       fs.mkdirSync(fullPath, { recursive: true });
     }

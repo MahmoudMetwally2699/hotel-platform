@@ -49,44 +49,59 @@ const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: logFormat,
   defaultMeta: { service: 'hotel-platform-backend' },
-  transports: [
-    // Write all logs to app.log
-    new winston.transports.File({
-      filename: path.join(logsDir, 'app.log'),
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-      tailable: true
-    }),
+  transports: []
+});
 
-    // Write error logs to error.log
-    new winston.transports.File({
-      filename: path.join(logsDir, 'error.log'),
-      level: 'error',
-      maxsize: 5242880, // 5MB
-      maxFiles: 3,
-      tailable: true
-    })
-  ],
+// Configure transports based on environment
+if (isServerless) {
+  // For serverless environments, use console logging only
+  logger.add(new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.timestamp({
+        format: 'YYYY-MM-DD HH:mm:ss'
+      }),
+      winston.format.errors({ stack: true }),
+      winston.format.json()
+    )
+  }));
+} else {
+  // For traditional server environments, use file logging
+  logger.add(new winston.transports.File({
+    filename: path.join(logsDir, 'app.log'),
+    maxsize: 5242880, // 5MB
+    maxFiles: 5,
+    tailable: true
+  }));
 
-  // Handle exceptions and rejections
-  exceptionHandlers: [
+  logger.add(new winston.transports.File({
+    filename: path.join(logsDir, 'error.log'),
+    level: 'error',
+    maxsize: 5242880, // 5MB
+    maxFiles: 3,
+    tailable: true
+  }));
+
+  // Handle exceptions and rejections with files
+  logger.exceptions.handle(
     new winston.transports.File({
       filename: path.join(logsDir, 'exceptions.log')
     })
-  ],
+  );
 
-  rejectionHandlers: [
+  logger.rejections.handle(
     new winston.transports.File({
       filename: path.join(logsDir, 'rejections.log')
     })
-  ]
-});
+  );
+}
 
-// Add console logging in development
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: consoleFormat
-  }));
+// Add console logging in development or serverless environments
+if (process.env.NODE_ENV !== 'production' || isServerless) {
+  if (!isServerless) {
+    logger.add(new winston.transports.Console({
+      format: consoleFormat
+    }));
+  }
 }
 
 // Create a stream object for Morgan HTTP request logging
