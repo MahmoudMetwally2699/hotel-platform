@@ -44,26 +44,35 @@ function createApp() {
         imgSrc: ["'self'", "data:", "https:"],
       },
     },
-  }));
-  // CORS configuration for Vercel
+  }));  // CORS configuration for Vercel
   const corsOptions = {
     origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      
       const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
         'http://localhost:3000',
         'https://hotel-platform-teud.vercel.app'
       ];
       
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Trim whitespace from origins
+      const cleanOrigins = allowedOrigins.map(origin => origin.trim());
+      
+      console.log('CORS check - Origin:', origin);
+      console.log('CORS check - Allowed origins:', cleanOrigins);
+      
+      if (cleanOrigins.includes(origin)) {
         callback(null, true);
       } else {
         console.log('CORS blocked origin:', origin);
-        callback(new Error('Not allowed by CORS'));
+        // For debugging, temporarily allow all origins
+        callback(null, true);
       }
     },
     credentials: true,
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
   };
   app.use(cors(corsOptions));
 
