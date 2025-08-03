@@ -32,21 +32,34 @@ const connectToDatabase = async () => {
       maxPoolSize: 1, // Single connection for serverless
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
-      family: 4,
-      bufferCommands: false,
-      bufferMaxEntries: 0,
+      connectTimeoutMS: 10000,
+      family: 4, // Use IPv4, skip trying IPv6
     };
 
     const mongoURI = process.env.MONGODB_URI;
     if (!mongoURI) {
-      throw new Error('MongoDB URI is not defined');
+      throw new Error('MongoDB URI is not defined in environment variables');
     }
 
+    console.log('Attempting to connect to MongoDB...');
     await mongoose.connect(mongoURI, options);
     isConnected = true;
-    console.log('Connected to MongoDB for serverless function');
+    console.log('Successfully connected to MongoDB for serverless function');
+    
+    // Handle connection events
+    mongoose.connection.on('error', (err) => {
+      console.error('MongoDB connection error:', err);
+      isConnected = false;
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.log('MongoDB disconnected');
+      isConnected = false;
+    });
+    
   } catch (error) {
     console.error('Database connection error:', error);
+    isConnected = false;
     throw error;
   }
 };
@@ -73,6 +86,10 @@ function createApp() {
       },
     },
   }));  // CORS configuration for Vercel
+  console.log('Environment check:');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('ALLOWED_ORIGINS:', process.env.ALLOWED_ORIGINS);
+  
   const corsOptions = {
     origin: function (origin, callback) {
       // Allow requests with no origin (mobile apps, curl, etc.)
@@ -82,19 +99,24 @@ function createApp() {
         'http://localhost:3000',
         'https://hotel-platform-teud.vercel.app'
       ];
-        // Trim whitespace and trailing slashes from origins
+      
+      // Trim whitespace and trailing slashes from origins
       const cleanOrigins = allowedOrigins.map(origin => origin.trim().replace(/\/$/, ''));
       
       console.log('CORS check - Origin:', origin);
       console.log('CORS check - Allowed origins:', cleanOrigins);
       
-      if (cleanOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log('CORS blocked origin:', origin);
-        // For debugging, temporarily allow all origins
-        callback(null, true);
-      }
+      // For now, allow all origins to debug
+      console.log('CORS: Allowing all origins for debugging');
+      callback(null, true);
+      
+      // Uncomment below when environment variables are properly set
+      // if (cleanOrigins.includes(origin)) {
+      //   callback(null, true);
+      // } else {
+      //   console.log('CORS blocked origin:', origin);
+      //   callback(new Error('Not allowed by CORS'));
+      // }
     },
     credentials: true,
     optionsSuccessStatus: 200,
@@ -102,6 +124,20 @@ function createApp() {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
   };
   app.use(cors(corsOptions));
+
+  // Additional explicit CORS headers as fallback
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'https://hotel-platform-teud.vercel.app');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(200);
+    } else {
+      next();
+    }
+  });
 
   // Rate limiting (reduced for serverless)
   const limiter = rateLimit({
@@ -117,13 +153,23 @@ function createApp() {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
   app.use(compression());
-
   // Health check
   app.get('/health', (req, res) => {
     res.status(200).json({
       status: 'OK',
       timestamp: new Date().toISOString(),
-      environment: 'vercel'
+      environment: 'vercel',
+      origin: req.headers.origin,
+      allowedOrigins: process.env.ALLOWED_ORIGINS
+    });
+  });
+
+  // CORS test endpoint
+  app.get('/test-cors', (req, res) => {
+    res.status(200).json({
+      message: 'CORS test successful',
+      origin: req.headers.origin,
+      timestamp: new Date().toISOString()
     });
   });
   // API Routes
