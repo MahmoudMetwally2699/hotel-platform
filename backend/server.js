@@ -104,10 +104,10 @@ try {
   // Compression middleware
   app.use(compression());
   console.log('✅ Compression configured');
-
   // Logging middleware
   if (process.env.NODE_ENV === 'development') {
-    app.use(morgan('dev'));  } else {
+    app.use(morgan('dev'));
+  } else {
     app.use(morgan('combined'));
   }
   console.log('✅ Logging configured');
@@ -200,12 +200,12 @@ try {
     // Handle booking updates
     socket.on('booking-update', (data) => {
       socket.to(`hotel-${data.hotelId}`).emit('booking-notification', data);
-    });
-
-    // Handle service provider notifications
+    });    // Handle service provider notifications
     socket.on('service-request', (data) => {
       socket.to(`service-provider-${data.providerId}`).emit('new-service-request', data);
-    });    socket.on('disconnect', () => {
+    });
+
+    socket.on('disconnect', () => {
       logger.info(`User disconnected: ${socket.id}`);
     });
   });
