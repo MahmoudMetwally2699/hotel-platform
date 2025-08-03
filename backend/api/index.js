@@ -11,16 +11,17 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const { createServer } = require('http');
-const { Server } = require('socket.io');
 require('dotenv').config();
 
-// Import middleware and utilities
-const globalErrorHandler = require('./middleware/error');
-const logger = require('./utils/logger');
+// Import middleware and utilities with correct paths
+const { globalErrorHandler } = require('../middleware/error');
 
 // Connect to database
-require('./config/database');
+try {
+  require('../config/database');
+} catch (error) {
+  console.error('Database connection error:', error);
+}
 
 let app;
 
@@ -87,15 +88,14 @@ function createApp() {
       environment: 'vercel'
     });
   });
-
   // API Routes
   try {
-    app.use('/api/auth', require('./routes/auth'));
-    app.use('/api/superadmin', require('./routes/superadmin'));
-    app.use('/api/hotel', require('./routes/hotel'));
-    app.use('/api/service', require('./routes/service'));
-    app.use('/api/client', require('./routes/client'));
-    app.use('/api/payments', require('./routes/payments'));
+    app.use('/api/auth', require('../routes/auth'));
+    app.use('/api/superadmin', require('../routes/superadmin'));
+    app.use('/api/hotel', require('../routes/hotel'));
+    app.use('/api/service', require('../routes/service'));
+    app.use('/api/client', require('../routes/client'));
+    app.use('/api/payments', require('../routes/payments'));
   } catch (error) {
     console.error('Error loading routes:', error);
   }
