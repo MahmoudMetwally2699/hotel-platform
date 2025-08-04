@@ -1156,7 +1156,6 @@ router.post('/categories/:category/activate', catchAsync(async (req, res) => {
       message: 'Invalid service category'
     });
   }
-
   const provider = await ServiceProvider.findById(providerId);
 
   // Add category if not already present
@@ -1169,6 +1168,18 @@ router.post('/categories/:category/activate', catchAsync(async (req, res) => {
     provider.serviceTemplates[category] = { isActive: true, services: [] };
   } else {
     provider.serviceTemplates[category].isActive = true;
+  }
+
+  // Ensure expiry dates are in the future before saving (fix legacy data)
+  const now = new Date();
+  const futureDate = new Date(now.getTime() + 366 * 24 * 60 * 60 * 1000); // 366 days from now
+
+  if (provider.businessLicense && provider.businessLicense.expiryDate <= now) {
+    provider.businessLicense.expiryDate = futureDate;
+  }
+
+  if (provider.insurance && provider.insurance.expiryDate <= now) {
+    provider.insurance.expiryDate = futureDate;
   }
 
   await provider.save();
@@ -1202,7 +1213,6 @@ router.post('/categories/:category/deactivate', catchAsync(async (req, res) => {
       message: 'Invalid service category'
     });
   }
-
   const provider = await ServiceProvider.findById(providerId);
 
   // Deactivate service template for this category
@@ -1212,6 +1222,18 @@ router.post('/categories/:category/deactivate', catchAsync(async (req, res) => {
 
   // Remove category from active categories but keep the template for data preservation
   provider.categories = provider.categories.filter(cat => cat !== category);
+
+  // Ensure expiry dates are in the future before saving (fix legacy data)
+  const now = new Date();
+  const futureDate = new Date(now.getTime() + 366 * 24 * 60 * 60 * 1000); // 366 days from now
+
+  if (provider.businessLicense && provider.businessLicense.expiryDate <= now) {
+    provider.businessLicense.expiryDate = futureDate;
+  }
+
+  if (provider.insurance && provider.insurance.expiryDate <= now) {
+    provider.insurance.expiryDate = futureDate;
+  }
 
   await provider.save();
 

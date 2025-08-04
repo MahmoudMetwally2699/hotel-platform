@@ -151,7 +151,7 @@ function App() {
     <div className="min-h-screen bg-background-default">
       <BrowserRouter>
         <AuthGuard />
-        <ToastContainer
+        {/* <ToastContainer
           position="top-right"
           autoClose={5000}
           hideProgressBar={false}
@@ -162,7 +162,7 @@ function App() {
           draggable
           pauseOnHover
           theme="light"
-        />
+        /> */}
       </BrowserRouter>
     </div>
   );

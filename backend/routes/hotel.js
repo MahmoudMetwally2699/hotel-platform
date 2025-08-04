@@ -278,7 +278,14 @@ router.get('/service-providers/:id', catchAsync(async (req, res, next) => {
  * @access  Private/HotelAdmin
  */
 router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async (req, res, next) => {
-  const hotelId = req.user.hotelId;  const {
+  const hotelId = req.user.hotelId;
+
+  // Helper function to ensure future dates
+  const getFutureDate = (days = 366) => {
+    return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  };
+
+  const {
     businessName,
     description,
     contactEmail,
@@ -303,7 +310,22 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
     email = userCredentials.email;
     phone = userCredentials.phone;
     password = userCredentials.password;
-  }  // Create user and service provider without transaction for better compatibility
+  }  // Validate provided dates if businessLicense or insurance are provided
+  if (businessLicense && businessLicense.expiryDate) {
+    const licenseExpiryDate = new Date(businessLicense.expiryDate);
+    if (licenseExpiryDate <= new Date()) {
+      return next(new AppError('Business license expiry date must be in the future', 400));
+    }
+  }
+
+  if (insurance && insurance.expiryDate) {
+    const insuranceExpiryDate = new Date(insurance.expiryDate);
+    if (insuranceExpiryDate <= new Date()) {
+      return next(new AppError('Insurance expiry date must be in the future', 400));
+    }
+  }
+
+  // Create user and service provider without transaction for better compatibility
   // Note: If you need ACID compliance, ensure your MongoDB setup supports transactions
 
   try {
@@ -448,25 +470,35 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
           state: 'Not specified',
           country: 'Not specified',
           zipCode: '00000'
-        },
-
-        // Business License - use provided data or defaults
-        businessLicense: businessLicense || {
+        },        // Business License - use provided data or defaults with validation
+        businessLicense: businessLicense ? {
+          ...businessLicense,
+          // Ensure expiry date is in the future if provided
+          expiryDate: businessLicense.expiryDate ?
+            new Date(businessLicense.expiryDate) :
+            getFutureDate(366)
+        } : {
           number: `TEMP-${Date.now()}`,
           issuedBy: 'Pending Documentation',
           issuedDate: new Date(),
-          expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year from now
+          expiryDate: getFutureDate(366) // 366 days from now to ensure future date
         },
 
         // Tax ID - use provided or temporary
         taxId: taxId || `TEMP-TAX-${Date.now()}`,
 
-        // Insurance - use provided data or defaults
-        insurance: insurance || {
+        // Insurance - use provided data or defaults with validation
+        insurance: insurance ? {
+          ...insurance,
+          // Ensure expiry date is in the future if provided
+          expiryDate: insurance.expiryDate ?
+            new Date(insurance.expiryDate) :
+            getFutureDate(366)
+        } : {
           provider: 'Pending Documentation',
           policyNumber: `TEMP-POL-${Date.now()}`,
           coverage: 50000,
-          expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          expiryDate: getFutureDate(366) // 366 days from now to ensure future date
         },
 
         adminId: userId,
@@ -534,11 +566,8 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
         message: sendEmail
           ? 'Service provider created successfully. Login credentials sent via email.'
           : 'Service provider created successfully. Please provide login credentials manually.'
-      }
-    });} catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-
+      }    });
+  } catch (error) {
     // Handle specific MongoDB errors
     if (error.name === 'MongoServerError') {
       logger.error('MongoDB Server Error in service provider creation:', error);
