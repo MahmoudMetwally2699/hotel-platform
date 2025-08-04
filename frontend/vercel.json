@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "name": "hotel-platform-frontend",
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
+  "installCommand": "npm install --f",
+  "framework": "create-react-app",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "build": {
+    "env": {
+      "CI": "false"
+    }
+  }
+}

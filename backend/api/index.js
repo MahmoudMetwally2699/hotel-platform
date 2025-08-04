@@ -1,6 +1,6 @@
 /**
  * Vercel Serverless Entry Point
- * 
+ *
  * This file provides a serverless-compatible version of the Express app
  * for deployment on Vercel. It imports the main server logic but exports
  * it as a function rather than starting a server.
@@ -26,7 +26,7 @@ const connectToDatabase = async () => {
 
   try {
     const mongoose = require('mongoose');
-    
+
     // Serverless-optimized options
     const options = {
       maxPoolSize: 1, // Single connection for serverless
@@ -45,18 +45,18 @@ const connectToDatabase = async () => {
     await mongoose.connect(mongoURI, options);
     isConnected = true;
     console.log('Successfully connected to MongoDB for serverless function');
-    
+
     // Handle connection events
     mongoose.connection.on('error', (err) => {
       console.error('MongoDB connection error:', err);
       isConnected = false;
     });
-    
+
     mongoose.connection.on('disconnected', () => {
       console.log('MongoDB disconnected');
       isConnected = false;
     });
-    
+
   } catch (error) {
     console.error('Database connection error:', error);
     isConnected = false;
@@ -89,27 +89,27 @@ function createApp() {
   console.log('Environment check:');
   console.log('NODE_ENV:', process.env.NODE_ENV);
   console.log('ALLOWED_ORIGINS:', process.env.ALLOWED_ORIGINS);
-  
+
   const corsOptions = {
     origin: function (origin, callback) {
       // Allow requests with no origin (mobile apps, curl, etc.)
       if (!origin) return callback(null, true);
-      
+
       const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
         'http://localhost:3000',
         'https://hotel-platform-teud.vercel.app'
       ];
-      
+
       // Trim whitespace and trailing slashes from origins
       const cleanOrigins = allowedOrigins.map(origin => origin.trim().replace(/\/$/, ''));
-      
+
       console.log('CORS check - Origin:', origin);
       console.log('CORS check - Allowed origins:', cleanOrigins);
-      
+
       // For now, allow all origins to debug
       console.log('CORS: Allowing all origins for debugging');
       callback(null, true);
-      
+
       // Uncomment below when environment variables are properly set
       // if (cleanOrigins.includes(origin)) {
       //   callback(null, true);
@@ -131,7 +131,7 @@ function createApp() {
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    
+
     if (req.method === 'OPTIONS') {
       res.sendStatus(200);
     } else {

@@ -232,47 +232,70 @@ router.post('/hotels', catchAsync(async (req, res, next) => {
       return next(new AppError('Admin email already exists', 400));
     }
   }  // Create hotel first without admin
-  const hotel = await Hotel.create({
-    name: hotelData.name,
-    description: hotelData.description,
-    email: hotelData.contactEmail,
-    phone: hotelData.contactPhone,
-    address: hotelData.address,
-    category: hotelData.category || 'mid-range',
-    starRating: hotelData.starRating || 3,
-    totalRooms: hotelData.totalRooms || 50,
-    totalFloors: hotelData.totalFloors || 5,
-    taxId: hotelData.taxId || 'TEMP-' + Date.now(),
-    businessLicense: hotelData.businessLicense || {
-      number: 'TEMP-BL-' + Date.now(),
-      issuedBy: 'System Generated',
-      issuedDate: new Date(),
-      expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year from now
-    },
-    facilities: hotelData.facilities,
-    images: hotelData.images || [],
-    isActive: hotelData.isActive || true,
-    isPublished: hotelData.isPublished || false,
-    metadata: {
-      createdBy: req.user._id,
-      source: 'admin'
+  let hotel;
+  try {
+    hotel = await Hotel.create({
+      name: hotelData.name,
+      description: hotelData.description,
+      email: hotelData.contactEmail,
+      phone: hotelData.contactPhone,
+      address: hotelData.address,
+      category: hotelData.category || 'mid-range',
+      starRating: hotelData.starRating || 3,
+      totalRooms: hotelData.totalRooms || 50,
+      totalFloors: hotelData.totalFloors || 5,
+      taxId: hotelData.taxId || 'TEMP-' + Date.now(),
+      businessLicense: hotelData.businessLicense || {
+        number: 'TEMP-BL-' + Date.now(),
+        issuedBy: 'System Generated',
+        issuedDate: new Date(),
+        expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year from now
+      },
+      facilities: hotelData.facilities,
+      images: hotelData.images || [],
+      isActive: hotelData.isActive || true,
+      isPublished: hotelData.isPublished || false,
+      metadata: {
+        createdBy: req.user._id,
+        source: 'admin'
+      }
+    });
+  } catch (error) {
+    // Handle validation errors specifically
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(el => el.message);
+      return next(new AppError(errors.join('. '), 400));
     }
-  });
+    // Re-throw other errors to be handled by global error handler
+    throw error;
+  }
 
   let hotelAdmin = null;
-
   // Create hotel admin after hotel is created
   if (adminData) {
-    hotelAdmin = await User.create({
-      firstName: adminData.firstName,
-      lastName: adminData.lastName,
-      email: adminData.email,
-      phone: adminData.phone,
-      password: adminData.password,
-      role: 'hotel',
-      hotelId: hotel._id, // Now we have the hotel ID
-      isActive: true
-    });
+    try {
+      hotelAdmin = await User.create({
+        firstName: adminData.firstName,
+        lastName: adminData.lastName,
+        email: adminData.email,
+        phone: adminData.phone,
+        password: adminData.password,
+        role: 'hotel',
+        hotelId: hotel._id, // Now we have the hotel ID
+        isActive: true
+      });
+    } catch (error) {
+      // If user creation fails, we should clean up the hotel we just created
+      await Hotel.findByIdAndDelete(hotel._id);
+
+      // Handle validation errors specifically
+      if (error.name === 'ValidationError') {
+        const errors = Object.values(error.errors).map(el => el.message);
+        return next(new AppError(`Admin account creation failed: ${errors.join('. ')}`, 400));
+      }
+      // Re-throw other errors to be handled by global error handler
+      throw error;
+    }
 
     // Update hotel with admin ID
     hotel.adminId = hotelAdmin._id;

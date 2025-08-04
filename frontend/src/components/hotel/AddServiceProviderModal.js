@@ -280,12 +280,14 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
       setTimeout(() => {
         setShowSuccess(false);
         onClose();
-      }, 2000);
-
-    } catch (error) {
+      }, 2000);    } catch (error) {
       console.error('Error creating service provider:', error);
+
+      // Display the specific error message from the backend
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to create service provider';
+
       setErrors({
-        submit: error.message || 'Failed to create service provider'
+        submit: errorMessage
       });
     } finally {
       setIsLoading(false);

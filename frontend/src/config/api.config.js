@@ -5,12 +5,9 @@
 
 // Dynamic API base URL configuration for different environments
 const getApiBaseUrl = () => {
-  if (process.env.NODE_ENV === 'production') {
-    // Use environment variable in production (Vercel)
-    return process.env.REACT_APP_API_URL || 'https://your-backend-app.vercel.app/api';
-  }
-  // Use proxy in development
-  return '/api';
+  // Always use the environment variable or fallback to localhost
+  // This works for both development and production
+  return process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();

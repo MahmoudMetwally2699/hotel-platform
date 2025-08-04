@@ -46,7 +46,6 @@ const SuperAdminHotelsPage = () => {
   useEffect(() => {
     dispatch(fetchAllHotels());
   }, [dispatch]);
-
   const handleCreateHotel = async (e) => {
     e.preventDefault();
     try {
@@ -56,10 +55,12 @@ const SuperAdminHotelsPage = () => {
       resetForm();
       dispatch(fetchAllHotels());
     } catch (error) {
-      toast.error(`Error creating hotel: ${error.message || error}`);
+      console.error('Hotel creation error:', error);
+      // Display the specific error message from the backend
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to create hotel';
+      toast.error(errorMessage);
     }
   };
-
   const handleUpdateHotel = async (e) => {
     e.preventDefault();
     try {
@@ -69,10 +70,12 @@ const SuperAdminHotelsPage = () => {
       resetForm();
       dispatch(fetchAllHotels());
     } catch (error) {
-      toast.error(`Error updating hotel: ${error.message || error}`);
+      console.error('Hotel update error:', error);
+      // Display the specific error message from the backend
+      const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to update hotel';
+      toast.error(errorMessage);
     }
   };
-
   const handleDeleteHotel = (hotelId) => {
     if (window.confirm('Are you sure you want to delete this hotel? This action cannot be undone.')) {
       dispatch(deleteHotel(hotelId))
@@ -81,7 +84,11 @@ const SuperAdminHotelsPage = () => {
           toast.success('Hotel deleted successfully');
           dispatch(fetchAllHotels());
         })
-        .catch((error) => toast.error(`Error deleting hotel: ${error.message || error}`));
+        .catch((error) => {
+          console.error('Hotel delete error:', error);
+          const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to delete hotel';
+          toast.error(errorMessage);
+        });
     }
   };
 

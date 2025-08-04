@@ -303,10 +303,8 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
     email = userCredentials.email;
     phone = userCredentials.phone;
     password = userCredentials.password;
-  }
-  // Transaction to ensure user and service provider are created together
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  }  // Create user and service provider without transaction for better compatibility
+  // Note: If you need ACID compliance, ensure your MongoDB setup supports transactions
 
   try {
     let user;
@@ -317,7 +315,8 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
     // If userId is provided, check if user exists and has the right role
     if (userId) {
       user = await User.findById(userId);
-      if (!user) {        return next(new AppError('User not found', 404));
+      if (!user) {
+        return next(new AppError('User not found', 404));
       }
 
       if (user.role !== 'service') {
@@ -347,30 +346,46 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
         if (password.length < 6) {
           return next(new AppError('Password must be at least 6 characters long', 400));
         }
-      } else {        // Auto-generate credentials
+      } else {
+        // Auto-generate credentials
         const randomId = crypto.randomBytes(8).toString('hex');
-        userEmail = `provider-${randomId}@${req.get('host') || 'hotel-platform.com'}`;        userPassword = crypto.randomBytes(8).toString('hex');
+        userEmail = `provider-${randomId}@${req.get('host') || 'hotel-platform.com'}`;
+        userPassword = crypto.randomBytes(8).toString('hex');
         userFirstName = businessName.split(' ')[0] || 'Service';
-        userLastName = 'Provider';        userPhone = contactPhone; // Use contactPhone for auto-generated users
+        userLastName = 'Provider';
+        userPhone = contactPhone; // Use contactPhone for auto-generated users
       }
 
       // Generate userId for new user creation
       userId = new mongoose.Types.ObjectId();
 
-      user = await User.create([{
-        _id: userId,
-        firstName: userFirstName,
-        lastName: userLastName,
-        email: userEmail,
-        phone: userPhone || contactPhone, // Ensure phone is always provided
-        password: userPassword,
-        role: 'service',
-        hotelId,
-        isActive: true,
-        serviceProviderId: serviceProviderId // Set the pre-generated ID
-      }], { session });
-
-      user = user[0]; // Get the created user from the array
+      try {
+        user = await User.create({
+          _id: userId,
+          firstName: userFirstName,
+          lastName: userLastName,
+          email: userEmail,
+          phone: userPhone || contactPhone, // Ensure phone is always provided
+          password: userPassword,
+          role: 'service',
+          hotelId,
+          isActive: true,
+          serviceProviderId: serviceProviderId // Set the pre-generated ID
+        });
+      } catch (error) {
+        // Handle validation errors specifically
+        if (error.name === 'ValidationError') {
+          const errors = Object.values(error.errors).map(el => el.message);
+          return next(new AppError(`User account creation failed: ${errors.join('. ')}`, 400));
+        }
+        // Handle duplicate key errors
+        if (error.code === 11000) {
+          const field = Object.keys(error.keyValue)[0];
+          return next(new AppError(`User creation failed: ${field} already exists`, 400));
+        }
+        // Re-throw other errors to be handled by global error handler
+        throw error;
+      }
 
       // Send welcome email with credentials if requested
       if (sendEmail) {
@@ -412,78 +427,98 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
             message: emailMessage
           });        } catch (err) {
           logger.error('Failed to send service provider welcome email', { error: err });
-        }      }    }
+        }      }    }    // Create service provider with pre-generated ID (no category assignment)
+    let serviceProvider;
+    try {
+      serviceProvider = await ServiceProvider.create({
+        _id: serviceProviderId,
+        userId: userId,
+        hotelId,
+        businessName,
+        categories: [], // Start with no categories - provider will select them
+        serviceTemplates: {}, // Empty templates - will be populated when categories are selected
+        description: description || `${businessName} - Multi-service provider`,
+        email: contactEmail || user.email,
+        phone: contactPhone || user.phone,
 
-    // Create service provider with pre-generated ID (no category assignment)
-    const serviceProvider = await ServiceProvider.create([{
-      _id: serviceProviderId,
-      userId: userId,
+        // Address - use structured address data
+        address: address || {
+          street: 'Not specified',
+          city: 'Not specified',
+          state: 'Not specified',
+          country: 'Not specified',
+          zipCode: '00000'
+        },
+
+        // Business License - use provided data or defaults
+        businessLicense: businessLicense || {
+          number: `TEMP-${Date.now()}`,
+          issuedBy: 'Pending Documentation',
+          issuedDate: new Date(),
+          expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year from now
+        },
+
+        // Tax ID - use provided or temporary
+        taxId: taxId || `TEMP-TAX-${Date.now()}`,
+
+        // Insurance - use provided data or defaults
+        insurance: insurance || {
+          provider: 'Pending Documentation',
+          policyNumber: `TEMP-POL-${Date.now()}`,
+          coverage: 50000,
+          expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        },
+
+        adminId: userId,
+
+        // Capacity - use provided data or defaults
+        capacity: capacity || {
+          maxOrdersPerDay: 10
+        },
+
+        // Staff - use provided data or defaults
+        staff: staff || {
+          totalEmployees: 1
+        },
+
+        // Status fields
+        isVerified: req.body.isVerified || false,
+        verificationStatus: req.body.isVerified ? 'approved' : 'pending',
+        isActive: req.body.isActive !== false // Default to true unless explicitly set to false
+      });
+    } catch (error) {
+      // If service provider creation fails, clean up the user we just created
+      if (user && user._id) {
+        try {
+          await User.findByIdAndDelete(user._id);
+        } catch (cleanupError) {
+          logger.error('Failed to cleanup user after service provider creation failed:', cleanupError);
+        }
+      }
+
+      // Handle validation errors specifically
+      if (error.name === 'ValidationError') {
+        const errors = Object.values(error.errors).map(el => el.message);
+        return next(new AppError(`Service provider creation failed: ${errors.join('. ')}`, 400));
+      }
+
+      // Handle duplicate key errors
+      if (error.code === 11000) {
+        const field = Object.keys(error.keyValue)[0];
+        return next(new AppError(`Service provider creation failed: ${field} already exists`, 400));
+      }
+
+      // Re-throw other errors to be handled by global error handler
+      throw error;
+    }    logger.info(`New service provider created: ${businessName}`, {
       hotelId,
-      businessName,
-      categories: [], // Start with no categories - provider will select them
-      serviceTemplates: {}, // Empty templates - will be populated when categories are selected
-      description: description || `${businessName} - Multi-service provider`,
-      email: contactEmail || user.email,
-      phone: contactPhone || user.phone,
-
-      // Address - use structured address data
-      address: address || {
-        street: 'Not specified',
-        city: 'Not specified',
-        state: 'Not specified',
-        country: 'Not specified',
-        zipCode: '00000'
-      },
-
-      // Business License - use provided data or defaults
-      businessLicense: businessLicense || {
-        number: `TEMP-${Date.now()}`,
-        issuedBy: 'Pending Documentation',
-        issuedDate: new Date(),
-        expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year from now
-      },
-
-      // Tax ID - use provided or temporary
-      taxId: taxId || `TEMP-TAX-${Date.now()}`,
-
-      // Insurance - use provided data or defaults
-      insurance: insurance || {
-        provider: 'Pending Documentation',
-        policyNumber: `TEMP-POL-${Date.now()}`,
-        coverage: 50000,
-        expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-      },
-
-      adminId: userId,
-
-      // Capacity - use provided data or defaults
-      capacity: capacity || {
-        maxOrdersPerDay: 10
-      },
-
-      // Staff - use provided data or defaults
-      staff: staff || {
-        totalEmployees: 1
-      },
-
-      // Status fields
-      isVerified: req.body.isVerified || false,
-      verificationStatus: req.body.isVerified ? 'approved' : 'pending',
-      isActive: req.body.isActive !== false // Default to true unless explicitly set to false
-    }], { session });
-
-    await session.commitTransaction();
-    session.endSession();
-
-    logger.info(`New service provider created: ${businessName}`, {
-      hotelId,
-      serviceProviderId: serviceProvider[0]._id
+      serviceProviderId: serviceProvider._id
     });
 
     res.status(201).json({
       status: 'success',
       data: {
-        serviceProvider: serviceProvider[0],
+        serviceProvider: serviceProvider,
         user: {
           id: user._id,
           name: `${user.firstName} ${user.lastName}`,
@@ -500,10 +535,29 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
           ? 'Service provider created successfully. Login credentials sent via email.'
           : 'Service provider created successfully. Please provide login credentials manually.'
       }
-    });
-  } catch (error) {
+    });} catch (error) {
     await session.abortTransaction();
     session.endSession();
+
+    // Handle specific MongoDB errors
+    if (error.name === 'MongoServerError') {
+      logger.error('MongoDB Server Error in service provider creation:', error);
+      return next(new AppError(`Database operation failed: ${error.message}. Please try again.`, 500));
+    }
+
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(el => el.message);
+      return next(new AppError(`Validation failed: ${errors.join('. ')}`, 400));
+    }
+
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return next(new AppError(`Duplicate ${field}: ${error.keyValue[field]} already exists`, 400));
+    }
+
+    logger.error('Service provider creation error:', error);
     next(error);
   }
 }));

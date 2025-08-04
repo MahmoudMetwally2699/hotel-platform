@@ -101,7 +101,16 @@ export const createServiceProvider = createAsyncThunk(
       const response = await hotelService.createServiceProvider(providerData);
       return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to create service provider');
+      console.error('🔧 Redux createServiceProvider action failed:', error);
+      console.error('🔧 Error response:', error.response?.data);
+
+      // Extract the most specific error message available
+      const errorMessage = error.response?.data?.message ||
+                           error.response?.data?.error ||
+                           error.message ||
+                           'Failed to create service provider';
+
+      return rejectWithValue(errorMessage);
     }
   }
 );

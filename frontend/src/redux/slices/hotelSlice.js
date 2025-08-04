@@ -65,7 +65,14 @@ export const createHotel = createAsyncThunk(
     } catch (error) {
       console.error('🏪 Redux createHotel action failed:', error);
       console.error('🏪 Error response:', error.response?.data);
-      return rejectWithValue(error.response?.data?.message || 'Failed to create hotel');
+
+      // Extract the most specific error message available
+      const errorMessage = error.response?.data?.message ||
+                           error.response?.data?.error ||
+                           error.message ||
+                           'Failed to create hotel';
+
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -77,7 +84,16 @@ export const updateHotel = createAsyncThunk(
       const response = await hotelService.updateHotel(id, hotelData);
       return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update hotel');
+      console.error('🏪 Redux updateHotel action failed:', error);
+      console.error('🏪 Error response:', error.response?.data);
+
+      // Extract the most specific error message available
+      const errorMessage = error.response?.data?.message ||
+                           error.response?.data?.error ||
+                           error.message ||
+                           'Failed to update hotel';
+
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -89,24 +105,31 @@ export const deleteHotel = createAsyncThunk(
       await hotelService.deleteHotel(hotelId);
       return hotelId;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete hotel');
+      console.error('🏪 Redux deleteHotel action failed:', error);
+      console.error('🏪 Error response:', error.response?.data);
+
+      // Extract the most specific error message available
+      const errorMessage = error.response?.data?.message ||
+                           error.response?.data?.error ||
+                           error.message ||
+                           'Failed to delete hotel';
+
+      return rejectWithValue(errorMessage);
     }
   }
 );
 const hotelSlice = createSlice({
   name: 'hotel',
-  initialState,
-  reducers: {
+  initialState,  reducers: {
     setCurrentHotel: (state, action) => {
       state.currentHotel = action.payload;
     },    clearHotelState: (state) => {
       state.currentHotel = null;
       state.dashboardStats = null;
       state.error = null;
-    },
+    }
   },  extraReducers: (builder) => {
     builder
-      // Fetch hotels cases
       .addCase(fetchHotels.pending, (state) => {
         state.isLoading = true;
         state.error = null;
