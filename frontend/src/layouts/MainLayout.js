@@ -6,8 +6,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Box, CssBaseline } from '@mui/material';
-import Header from './Header';
-import Sidebar from './Sidebar';
+import Header from '../components/layout/Header';
+import Sidebar from '../components/layout/Sidebar';
 
 const MainLayout = ({ children }) => {
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);

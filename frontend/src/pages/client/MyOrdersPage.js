@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import { API_BASE_URL, CLIENT_API } from '../../config/api.config';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 /**
  * MyOrders Component
  * Displays user's booking history and current orders
  */
 const MyOrdersPage = () => {
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const { user } = useSelector(state => state.auth);
 
@@ -88,13 +91,12 @@ const MyOrdersPage = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
-
   // Tab configuration
   const tabs = [
-    { key: 'all', label: 'All Orders', count: bookings.length },
-    { key: 'pending', label: 'Pending', count: bookings.filter(b => b.status === 'pending').length },
-    { key: 'confirmed', label: 'Confirmed', count: bookings.filter(b => b.status === 'confirmed').length },
-    { key: 'completed', label: 'Completed', count: bookings.filter(b => b.status === 'completed').length }
+    { key: 'all', label: t('myOrders.tabs.allOrders'), count: bookings.length },
+    { key: 'pending', label: t('myOrders.tabs.pending'), count: bookings.filter(b => b.status === 'pending').length },
+    { key: 'confirmed', label: t('myOrders.tabs.confirmed'), count: bookings.filter(b => b.status === 'confirmed').length },
+    { key: 'completed', label: t('myOrders.tabs.completed'), count: bookings.filter(b => b.status === 'completed').length }
   ];
 
   const handleViewDetails = (booking) => {
@@ -102,14 +104,12 @@ const MyOrdersPage = () => {
     setShowDetailsModal(true);
   };
 
-  if (isLoading) return <LoadingScreen />;
-
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
+  if (isLoading) return <LoadingScreen />;  return (
+    <div className="min-h-screen bg-gray-50 py-8 pb-20 lg:pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
-          <p className="mt-2 text-gray-600">Track and manage your service bookings</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('myOrders.title')}</h1>
+          <p className="mt-2 text-sm sm:text-base text-gray-600">{t('myOrders.description')}</p>
         </div>
 
         {/* Success Message */}
@@ -120,9 +120,8 @@ const MyOrdersPage = () => {
                 <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-green-800">Success!</h3>
+              </div>              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800">{t('common.success')}!</h3>
                 <div className="mt-2 text-sm text-green-700">{successMessage}</div>
               </div>
               <div className="ml-auto pl-3">
@@ -139,17 +138,15 @@ const MyOrdersPage = () => {
               </div>
             </div>
           </div>
-        )}
-
-        {/* Tabs */}
+        )}        {/* Tabs */}
         <div className="mb-6">
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
+            <nav className="-mb-px flex flex-wrap space-x-2 sm:space-x-8 overflow-x-auto">
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-2 px-2 sm:px-3 border-b-2 font-medium text-sm whitespace-nowrap ${
                     activeTab === tab.key
                       ? 'border-indigo-500 text-indigo-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -157,7 +154,7 @@ const MyOrdersPage = () => {
                 >
                   {tab.label}
                   {tab.count > 0 && (
-                    <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
+                    <span className={`ml-1 sm:ml-2 py-0.5 px-1.5 sm:px-2 rounded-full text-xs ${
                       activeTab === tab.key ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-900'
                     }`}>
                       {tab.count}
@@ -177,9 +174,8 @@ const MyOrdersPage = () => {
                 <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Error</h3>
+              </div>              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">{t('common.error')}</h3>
                 <div className="mt-2 text-sm text-red-700">{error}</div>
               </div>
             </div>
@@ -193,37 +189,36 @@ const MyOrdersPage = () => {
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
-            </div>
-            <h3 className="mt-2 text-lg font-medium text-gray-900">No orders found</h3>
+            </div>            <h3 className="mt-2 text-lg font-medium text-gray-900">{t('myOrders.noOrdersFound')}</h3>
             <p className="mt-1 text-sm text-gray-500">
               {activeTab === 'all'
-                ? "You haven't made any bookings yet."
-                : `No ${activeTab} orders found.`
+                ? t('myOrders.noBookingsYet')
+                : t('myOrders.noOrdersInCategory', { category: activeTab })
               }
             </p>
-          </div>
-        ) : (
+          </div>        ) : (
           <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <ul className="divide-y divide-gray-200">
               {bookings.map((booking) => (
-                <li key={booking._id} className="px-6 py-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
+                <li key={booking._id} className="px-4 sm:px-6 py-4 hover:bg-gray-50">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">                        <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                        <div className="flex-1">
                           <h3 className="text-lg font-medium text-gray-900 truncate">
-                            {booking.serviceDetails?.name || booking.serviceId?.name || 'Service Name'}
+                            {booking.serviceDetails?.name || booking.serviceId?.name || t('myOrders.serviceName')}
                           </h3>
                           <p className="text-sm text-gray-500">
-                            Booking #{booking.bookingNumber || booking._id.slice(-8)}
+                            {t('myOrders.bookingNumber')} #{booking.bookingNumber || booking._id.slice(-8)}
                           </p>
                         </div>
-                        <div className="flex items-center space-x-4">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(booking.status)}`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full self-start sm:self-auto ${getStatusColor(booking.status)}`}>
                             {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1)}
                           </span>
-                          <div className="text-right">
+                          <div className="text-left sm:text-right">
                             <p className="text-lg font-semibold text-gray-900">
-                              ${(booking.pricing?.totalAmount || 0).toFixed(2)}
+                              {formatPriceByLanguage(booking.pricing?.totalAmount || 0, i18n.language)}
                             </p>
                             <p className="text-sm text-gray-500">
                               {booking.serviceDetails?.category || booking.serviceId?.category}
@@ -232,50 +227,52 @@ const MyOrdersPage = () => {
                         </div>
                       </div>
 
-                      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div>
-                          <span className="font-medium">Date: </span>
-                          {booking.schedule?.preferredDate
-                            ? format(new Date(booking.schedule.preferredDate), 'PPP')
-                            : 'Not specified'
-                          }
+                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 text-sm text-gray-600">
+                        <div className="truncate">
+                          <span className="font-medium">{t('myOrders.date')}: </span>
+                          <span className="break-words">
+                            {booking.schedule?.preferredDate
+                              ? format(new Date(booking.schedule.preferredDate), 'PPP')
+                              : t('myOrders.notSpecified')
+                            }
+                          </span>
                         </div>
-                        <div>
-                          <span className="font-medium">Time: </span>
-                          {booking.schedule?.preferredTime || 'Not specified'}
+                        <div className="truncate">
+                          <span className="font-medium">{t('myOrders.time')}: </span>
+                          <span>{booking.schedule?.preferredTime || t('myOrders.notSpecified')}</span>
                         </div>
-                        <div>
-                          <span className="font-medium">Hotel: </span>
-                          {booking.hotelId?.name || 'Hotel Name'}
+                        <div className="truncate">
+                          <span className="font-medium">{t('myOrders.hotel')}: </span>
+                          <span className="break-words">{booking.hotelId?.name || t('myOrders.hotelName')}</span>
                         </div>
-                        <div>
-                          <span className="font-medium">Room: </span>
-                          {user?.roomNumber || booking.guestDetails?.roomNumber || 'Not specified'}
+                        <div className="truncate">
+                          <span className="font-medium">{t('myOrders.room')}: </span>
+                          <span>{user?.roomNumber || booking.guestDetails?.roomNumber || t('myOrders.notSpecified')}</span>
                         </div>
-                        <div>
-                          <span className="font-medium">Quantity: </span>
-                          {booking.bookingConfig?.quantity || booking.pricing?.quantity || 1}
+                        <div className="truncate">
+                          <span className="font-medium">{t('myOrders.quantity')}: </span>
+                          <span>{booking.bookingConfig?.quantity || booking.pricing?.quantity || 1}</span>
                         </div>
-                        <div>
-                          <span className="font-medium">Provider: </span>
-                          {booking.serviceProviderId?.businessName || 'Provider'}
+                        <div className="truncate">
+                          <span className="font-medium">{t('myOrders.provider')}: </span>
+                          <span className="break-words">{booking.serviceProviderId?.businessName || t('myOrders.providerName')}</span>
                         </div>
                       </div>
 
                       {booking.specialRequests && (
                         <div className="mt-2">
-                          <span className="text-sm font-medium text-gray-600">Special Requests: </span>
-                          <span className="text-sm text-gray-500">{booking.specialRequests}</span>
+                          <span className="text-sm font-medium text-gray-600">{t('myOrders.specialRequests')}: </span>
+                          <span className="text-sm text-gray-500 break-words">{booking.specialRequests}</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="ml-6 flex-shrink-0">
+                    <div className="flex-shrink-0 self-start sm:self-auto sm:ml-6">
                       <button
                         onClick={() => handleViewDetails(booking)}
-                        className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                       >
-                        View Details
+                        {t('myOrders.viewDetails')}
                       </button>
                     </div>
                   </div>
@@ -283,9 +280,7 @@ const MyOrdersPage = () => {
               ))}
             </ul>
           </div>
-        )}
-
-        {/* Details Modal */}
+        )}        {/* Details Modal */}
         {showDetailsModal && selectedBooking && (
           <div className="fixed inset-0 z-50 overflow-y-auto">
             <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -293,13 +288,13 @@ const MyOrdersPage = () => {
                 <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
               </div>
 
-              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full max-w-full mx-4 sm:mx-0">
                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-medium text-gray-900">Booking Details</h3>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-medium text-gray-900 pr-4">{t('myOrders.bookingDetails')}</h3>
                     <button
                       onClick={() => setShowDetailsModal(false)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-gray-400 hover:text-gray-600 flex-shrink-0"
                     >
                       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -307,38 +302,51 @@ const MyOrdersPage = () => {
                     </button>
                   </div>
 
-                  <div className="mt-4 space-y-4">
+                  <div className="space-y-4">
                     <div>
-                      <h4 className="font-medium text-gray-800">Service Information</h4>
-                      <p className="text-sm text-gray-600">{selectedBooking.serviceId?.name}</p>
+                      <h4 className="font-medium text-gray-800 mb-2">{t('myOrders.serviceInformation')}</h4>
+                      <p className="text-sm text-gray-600 break-words">{selectedBooking.serviceId?.name}</p>
                       <p className="text-sm text-gray-500">{selectedBooking.serviceId?.category}</p>
                     </div>
 
                     <div>
-                      <h4 className="font-medium text-gray-800">Booking Details</h4>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <p><span className="font-medium">Booking #:</span> {selectedBooking.bookingNumber || selectedBooking._id.slice(-8)}</p>
-                        <p><span className="font-medium">Date:</span> {selectedBooking.bookingDate ? format(new Date(selectedBooking.bookingDate), 'PPP') : 'Not specified'}</p>
-                        <p><span className="font-medium">Status:</span>
-                          <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedBooking.status)}`}>
+                      <h4 className="font-medium text-gray-800 mb-2">{t('myOrders.bookingDetails')}</h4>
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center">
+                          <span className="font-medium w-full sm:w-32 flex-shrink-0">{t('myOrders.bookingNumber')}:</span>
+                          <span className="break-words">{selectedBooking.bookingNumber || selectedBooking._id.slice(-8)}</span>
+                        </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center">
+                          <span className="font-medium w-full sm:w-32 flex-shrink-0">{t('myOrders.date')}:</span>
+                          <span className="break-words">{selectedBooking.bookingDate ? format(new Date(selectedBooking.bookingDate), 'PPP') : t('myOrders.notSpecified')}</span>
+                        </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center">
+                          <span className="font-medium w-full sm:w-32 flex-shrink-0">{t('myOrders.status')}:</span>
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full self-start ${getStatusColor(selectedBooking.status)}`}>
                             {selectedBooking.status?.charAt(0).toUpperCase() + selectedBooking.status?.slice(1)}
                           </span>
-                        </p>
-                        <p><span className="font-medium">Room:</span> {user?.roomNumber || selectedBooking.guestDetails?.roomNumber || 'Not specified'}</p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center">
+                          <span className="font-medium w-full sm:w-32 flex-shrink-0">{t('myOrders.room')}:</span>
+                          <span>{user?.roomNumber || selectedBooking.guestDetails?.roomNumber || t('myOrders.notSpecified')}</span>
+                        </div>
                       </div>
                     </div>
 
                     <div>
-                      <h4 className="font-medium text-gray-800">Pricing</h4>
+                      <h4 className="font-medium text-gray-800 mb-2">{t('myOrders.pricing')}</h4>
                       <div className="text-sm text-gray-600">
-                        <p><span className="font-medium">Total Amount:</span> ${selectedBooking.totalAmount?.toFixed(2) || '0.00'}</p>
+                        <div className="flex flex-col sm:flex-row sm:items-center">
+                          <span className="font-medium w-full sm:w-32 flex-shrink-0">{t('myOrders.totalAmount')}:</span>
+                          <span className="text-lg font-semibold text-gray-900">{formatPriceByLanguage(selectedBooking.totalAmount || 0, i18n.language)}</span>
+                        </div>
                       </div>
                     </div>
 
                     {selectedBooking.specialRequests && (
                       <div>
-                        <h4 className="font-medium text-gray-800">Special Requests</h4>
-                        <p className="text-sm text-gray-600">{selectedBooking.specialRequests}</p>
+                        <h4 className="font-medium text-gray-800 mb-2">{t('myOrders.specialRequests')}</h4>
+                        <p className="text-sm text-gray-600 break-words">{selectedBooking.specialRequests}</p>
                       </div>
                     )}
                   </div>
@@ -349,7 +357,7 @@ const MyOrdersPage = () => {
                     onClick={() => setShowDetailsModal(false)}
                     className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
                   >
-                    Close
+                    {t('common.close')}
                   </button>
                 </div>
               </div>

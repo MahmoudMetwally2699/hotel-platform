@@ -9,7 +9,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const path = require('path');
 const http = require('http');
@@ -84,17 +83,8 @@ try {
     optionsSuccessStatus: 200  };
   app.use(cors(corsOptions));
   console.log('✅ CORS configured');
-
-  // Rate limiting
-  const limiter = rateLimit({
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
-    message: {
-      error: 'Too many requests from this IP, please try again later'
-    }
-  });
-  app.use('/api/', limiter);
-  console.log('✅ Rate limiting configured');
+  // Rate limiting disabled
+  console.log('✅ Rate limiting disabled');
 
   // Body parsing middleware
   app.use(express.json({ limit: '10mb' }));

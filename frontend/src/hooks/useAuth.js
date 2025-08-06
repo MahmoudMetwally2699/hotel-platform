@@ -8,8 +8,8 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import jwt_decode from 'jwt-decode';
-import { selectCurrentUser, selectIsAuthenticated, selectAuthRole, fetchProfile, logout } from '../redux/slices/authSlice';
-import socketService from '../services/socket.service';
+import { selectCurrentUser, selectIsAuthenticated, selectAuthRole, fetchProfile, logout, restoreFromLocalStorage } from '../redux/slices/authSlice';
+// import socketService from '../services/socket.service';
 import cookieHelper from '../utils/cookieHelper';
 
 export const useAuth = () => {
@@ -22,7 +22,6 @@ export const useAuth = () => {
 
   // Track if we've already checked authentication to prevent loops
   const [authChecked, setAuthChecked] = React.useState(false);
-
   /**
    * Initialize authentication state on component mount
    */
@@ -30,7 +29,7 @@ export const useAuth = () => {
     // Prevent multiple authentication checks
     if (authChecked) return;
 
-    const token = cookieHelper.getAuthToken();
+    const token = cookieHelper.getAuthToken() || localStorage.getItem('token');
 
     if (token) {
       try {
@@ -51,17 +50,37 @@ export const useAuth = () => {
           console.warn('Token expired, logging out');
           setAuthChecked(true);
           dispatch(logout());
-          navigate('/login');
-        } else if (!isAuthenticated && !currentUser) {
-          // Token is valid but no user in state, fetch profile
-          console.log('Token valid but not authenticated in Redux, fetching profile...');
-          dispatch(fetchProfile())
+          navigate('/login');        } else if (!isAuthenticated) {
+          // Token is valid but user might not be authenticated in Redux
+          // Check if we have user data in localStorage first
+          const storedUser = localStorage.getItem('user');
+
+          if (storedUser) {
+            try {
+              const userData = JSON.parse(storedUser);
+              console.log('✅ Restoring authentication from localStorage:', userData.email);
+                // Manually update Redux state to restore authentication
+              // This is faster than making an API call
+              dispatch(restoreFromLocalStorage({
+                user: userData,
+                role: userData.role || decoded.role,
+                isAuthenticated: true
+              }));              setAuthChecked(true);
+              // socketService.init(dispatch, token, userData.role || decoded.role);
+              return;
+            } catch (error) {
+              console.warn('Invalid stored user data, fetching from server:', error);
+            }
+          }
+
+          // No stored user data or invalid, fetch profile from server
+          console.log('Token valid, fetching profile from server...');          dispatch(fetchProfile())
             .unwrap()
             .then(data => {
               console.log('Profile fetch successful:', data);
               setAuthChecked(true);
               // Initialize socket connection only after profile is loaded
-              socketService.init(dispatch, token, data?.role || decoded.role);
+              // socketService.init(dispatch, token, data?.role || decoded.role);
             })
             .catch(error => {
               console.error('Profile fetch failed:', error);
@@ -76,11 +95,10 @@ export const useAuth = () => {
                 navigate('/login');
               }
             });
-        } else {
-          // We're authenticated, ensure socket is connected
+        } else {          // We're authenticated, ensure socket is connected
           console.log('Already authenticated, ensuring socket connection');
           setAuthChecked(true);
-          socketService.init(dispatch, token, decoded.role || role);
+          // socketService.init(dispatch, token, decoded.role || role);
         }
       } catch (error) {
         console.error('Token validation error:', error);
@@ -92,23 +110,20 @@ export const useAuth = () => {
     } else {
       // No token found
       setAuthChecked(true);
-    }
-
-    // Cleanup function
+    }    // Cleanup function
     return () => {
-      socketService.disconnect();
+      // socketService.disconnect();
     };
   }, [dispatch, isAuthenticated, navigate, role, currentUser, authChecked]);
 
   /**
    * Handle user logout
    */
-  const handleLogout = () => {
-    dispatch(logout())
+  const handleLogout = () => {    dispatch(logout())
       .unwrap()
       .then(() => {
         // Disconnect socket and redirect to login
-        socketService.disconnect();
+        // socketService.disconnect();
         navigate('/login');
       })
       .catch((error) => {

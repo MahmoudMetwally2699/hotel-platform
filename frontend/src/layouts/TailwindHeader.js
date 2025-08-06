@@ -5,11 +5,16 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import useAuth from '../hooks/useAuth';
+import useRTL from '../hooks/useRTL';
+import LanguageSwitcher from '../components/common/LanguageSwitcher';
 // Fix import path to ensure component is available
 // import TailwindNotificationsMenu from '../components/notifications/TailwindNotificationsMenu';
 
 const TailwindHeader = () => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -47,19 +52,22 @@ const TailwindHeader = () => {
             <div className="flex-shrink-0 flex items-center">              <img
                 className="block h-8 w-auto"
                 src="/logo192.png"
-                alt="Hotel Service Platform"
+                alt={t('homepage.platformName')}
               />
             </div>
-          </div>
+          </div>          <div className="flex items-center">
+            {/* Language Switcher */}
+            <div className={`${isRTL ? 'ml-4' : 'mr-4'}`}>
+              <LanguageSwitcher />
+            </div>
 
-          <div className="flex items-center">
             {/* Notifications dropdown */}
             <div className="relative ml-4">
               <button
                 onClick={handleNotificationsClick}
                 className="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                <span className="sr-only">View notifications</span>
+                <span className="sr-only">{t('notifications.viewNotifications')}</span>
                 <svg
                   className="h-6 w-6"
                   xmlns="http://www.w3.org/2000/svg"
@@ -89,19 +97,18 @@ const TailwindHeader = () => {
                   onClick={handleProfileClick}
                   className="bg-white rounded-full flex focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  <span className="sr-only">Open user menu</span>
+                  <span className="sr-only">{t('common.openUserMenu')}</span>
                   <img
                     className="h-8 w-8 rounded-full"
-                    src={user?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixqx=CSFCItvz2e&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}
-                    alt={user?.firstName || "User avatar"}
+                    src={user?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixqx=CSFCItvz2e&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}                    alt={user?.firstName || t('common.userAvatar')}
                   />
                 </button>
               </div>
 
               {showProfileMenu && (
                 <div
-                  className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
-                >                  <div className="px-4 py-2 border-b border-gray-200">
+                  className={`origin-top-${isRTL ? 'left' : 'right'} absolute ${isRTL ? 'left-0' : 'right-0'} mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none`}
+                ><div className="px-4 py-2 border-b border-gray-200">
                     <p className="text-sm font-medium text-gray-900 truncate">
                       {user?.firstName} {user?.lastName}
                     </p>
@@ -110,24 +117,23 @@ const TailwindHeader = () => {
                     </p>
                   </div>
                   {user?.role === 'guest' && user?.selectedHotelId && (
-                    <button
-                      onClick={navigateToMyHotelServices}
+                    <button                      onClick={navigateToMyHotelServices}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      My Hotel Services
+                      {t('navigation.hotelServices')}
                     </button>
                   )}
                   <button
                     onClick={navigateToProfile}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    Your Profile
+                    {t('navigation.profile')}
                   </button>
                   <button
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    Sign out
+                    {t('auth.signOut')}
                   </button>
                 </div>
               )}

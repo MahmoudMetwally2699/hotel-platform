@@ -16,18 +16,16 @@ const TailwindLayout = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen bg-background-default">
-      {/* Sidebar */}
-      <TailwindSidebar open={sidebarOpen} setOpen={setSidebarOpen} />      {/* Main Content */}
+    <div className="flex h-screen bg-background-default">      {/* Sidebar */}
+      <TailwindSidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />{/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <TailwindHeader onOpenSidebar={toggleSidebar} />
-
-        {/* Main Content Scrollable Area */}
-        <main className="flex-1 overflow-y-auto p-6 pt-4 md:ml-0">
+        <TailwindHeader onOpenSidebar={toggleSidebar} />        {/* Main Content Scrollable Area */}
+        <main className="flex-1 overflow-y-auto p-6 pt-4 md:ml-0 pb-20 lg:pb-6">
           <div className="max-w-7xl mx-auto">
             {children}
-          </div>        </main>
+          </div>
+        </main>
       </div>
     </div>
   );

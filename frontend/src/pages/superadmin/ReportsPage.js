@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import {
   selectReportsData,
   fetchReportsData,
@@ -22,6 +23,7 @@ import {
   ArcElement
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 ChartJS.register(
   CategoryScale,
@@ -37,6 +39,7 @@ ChartJS.register(
 
 const ReportsPage = () => {
   const dispatch = useDispatch();
+  const { i18n } = useTranslation();
   const reportsData = useSelector(selectReportsData);
   const loading = useSelector(selectReportsLoading);
   const error = useSelector(selectReportsError);
@@ -534,9 +537,8 @@ const ReportsPage = () => {
               </div>
 
               <div className="bg-white rounded-lg shadow p-4">
-                <h3 className="text-sm font-medium text-gray-500">Average Service Price</h3>
-                <p className="mt-2 text-3xl font-bold text-gray-900">
-                  ${reportsData.summary?.averageServicePrice?.toFixed(2) || '0.00'}
+                <h3 className="text-sm font-medium text-gray-500">Average Service Price</h3>                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {formatPriceByLanguage(reportsData.summary?.averageServicePrice, i18n.language) || '0.00'}
                 </p>
               </div>
 

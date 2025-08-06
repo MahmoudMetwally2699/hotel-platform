@@ -6,9 +6,12 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { SUPERADMIN_API } from '../../config/api.config';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 const PlatformMetricsPage = () => {
+  const { i18n } = useTranslation();
   const [metrics, setMetrics] = useState({
     totalHotels: 0,
     totalServiceProviders: 0,
@@ -81,10 +84,9 @@ const PlatformMetricsPage = () => {
             <div>
               <p className="text-sm text-gray-500">Total Bookings</p>
               <p className="text-xl font-bold">{metrics.totalBookings}</p>
-            </div>
-            <div>
+            </div>            <div>
               <p className="text-sm text-gray-500">Total Revenue</p>
-              <p className="text-xl font-bold">${metrics.totalRevenue.toFixed(2)}</p>
+              <p className="text-xl font-bold">{formatPriceByLanguage(metrics.totalRevenue, i18n.language)}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">API Requests (24h)</p>

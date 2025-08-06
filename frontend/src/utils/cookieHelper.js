@@ -11,8 +11,14 @@ import jwt_decode from 'jwt-decode';
  * @returns {string|null} - Cookie value or null if not found
  */
 export const getCookie = (name) => {
-  const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
-  return match ? decodeURIComponent(match[3]) : null;
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [cookieName, cookieValue] = cookie.trim().split('=');
+    if (cookieName === name) {
+      return decodeURIComponent(cookieValue);
+    }
+  }
+  return null;
 };
 
 /**
@@ -55,19 +61,43 @@ export const getRoleFromCookieToken = () => {
 };
 
 /**
- * Get token from cookies
+ * Get token from cookies or localStorage as fallback
  * @returns {string|null} - JWT token or null if not found
  */
 export const getAuthToken = () => {
-  return getCookie('jwt');
+  // First try to get from cookies (HTTP-only cookies can't be read by JS, but non-HTTP-only can)
+  const cookieToken = getCookie('jwt');
+  if (cookieToken) {
+    return cookieToken;
+  }
+
+  // Fallback to localStorage
+  const localToken = localStorage.getItem('token');
+  if (localToken) {
+    return localToken;
+  }
+
+  return null;
 };
 
 /**
- * Get refresh token from cookies
+ * Get refresh token from cookies or localStorage as fallback
  * @returns {string|null} - Refresh token or null if not found
  */
 export const getRefreshToken = () => {
-  return getCookie('refreshToken');
+  // First try to get from cookies
+  const cookieRefreshToken = getCookie('refreshToken');
+  if (cookieRefreshToken) {
+    return cookieRefreshToken;
+  }
+
+  // Fallback to localStorage
+  const localRefreshToken = localStorage.getItem('refreshToken');
+  if (localRefreshToken) {
+    return localRefreshToken;
+  }
+
+  return null;
 };
 
 const cookieHelper = {

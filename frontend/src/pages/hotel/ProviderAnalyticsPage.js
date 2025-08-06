@@ -6,9 +6,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { HOTEL_API } from '../../config/api.config';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 const ProviderAnalyticsPage = () => {
+  const { i18n } = useTranslation();
   const [providers, setProviders] = useState([]);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [timeframe, setTimeframe] = useState('month');
@@ -169,22 +172,24 @@ const ProviderAnalyticsPage = () => {
               </div>
 
               <div className="bg-white shadow-md rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-2">Revenue</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <h3 className="text-lg font-semibold mb-2">Revenue</h3>                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500">Total</p>
-                    <p className="text-2xl font-bold">${performanceMetrics.totalRevenue.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">{formatPriceByLanguage(performanceMetrics.totalRevenue, i18n.language)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Hotel Share</p>
-                    <p className="text-2xl font-bold">${performanceMetrics.hotelRevenue.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">{formatPriceByLanguage(performanceMetrics.hotelRevenue, i18n.language)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Avg. Order Value</p>
                     <p className="text-xl font-medium">
-                      ${analytics.totalBookings > 0
-                        ? (performanceMetrics.totalRevenue / analytics.totalBookings).toFixed(2)
-                        : '0.00'}
+                      {formatPriceByLanguage(
+                        analytics.totalBookings > 0
+                          ? (performanceMetrics.totalRevenue / analytics.totalBookings)
+                          : 0,
+                        i18n.language
+                      )}
                     </p>
                   </div>
                   <div>

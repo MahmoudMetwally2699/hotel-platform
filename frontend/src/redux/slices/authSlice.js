@@ -5,17 +5,137 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import authService from '../../services/auth.service';
+import { cleanupClerkTokens, isClerkToken } from '../../utils/cleanupClerkTokens';
 
 // Auth service is already instantiated in the imported module
 
-// Helper function to get initial state (empty since we use cookies)
-const getInitialAuthState = () => {
-  // Since we're using cookies, we don't restore from localStorage
-  // The checkAuth action will handle restoring user data from the server
+// Helper function to get initial state with localStorage backup
+const getInitialAuthState = () => {  try {
+    // Check if we have a valid token in cookies or localStorage
+    // First, try localStorage (which we control completely)
+    let token = localStorage.getItem('token');
+
+    // If no token in localStorage, check cookies for our specific JWT token
+    if (!token) {
+      // Look specifically for the 'jwt' cookie (our application's token, not Clerk's)
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'jwt') {
+          token = decodeURIComponent(value);
+          break;
+        }
+      }
+    }
+      console.log('🔍 Checking authentication state on app init:');
+    console.log('Token found:', token ? 'Yes (length: ' + token.length + ')' : 'No');
+
+    // Check if this token is a Clerk token (which we should ignore)
+    if (token && isClerkToken(token)) {
+      console.warn('⚠️ Detected Clerk token, ignoring and checking localStorage only');
+      token = null; // Ignore Clerk token
+      cleanupClerkTokens(); // Clean up any Clerk tokens
+    }
+
+    console.log('Token format check:', token ? (token.split('.').length === 3 ? 'Valid JWT format' : 'Invalid JWT format') : 'No token');
+
+    // Check if we have user data in localStorage
+    const storedUser = localStorage.getItem('user');
+    console.log('Stored user found:', storedUser ? 'Yes' : 'No');
+      if (token && storedUser) {
+      // Check if this is a valid JWT token (should have 3 parts separated by dots)
+      const tokenParts = token.split('.');
+
+      if (tokenParts.length === 3) {
+        // Try to decode JWT token to check if it's still valid
+        try {
+          // Properly decode JWT token
+          const base64Url = tokenParts[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const decoded = JSON.parse(atob(base64));
+          const currentTime = Date.now() / 1000;
+
+          console.log('🔍 Token validation:', {
+            tokenExpiry: new Date(decoded.exp * 1000).toLocaleString(),
+            currentTime: new Date(currentTime * 1000).toLocaleString(),
+            isValid: decoded.exp > currentTime,
+            tokenRole: decoded.role,
+            userId: decoded.id
+          });
+
+          if (decoded.exp > currentTime) {
+            // Token is still valid, restore user state
+            const userData = JSON.parse(storedUser);
+            console.log('✅ Restoring authentication state from localStorage:', userData);
+            return {
+              user: userData,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+              role: userData.role || decoded.role || 'guest',
+            };
+          } else {
+            console.warn('⚠️ JWT token expired but keeping user data - refresh mechanism will handle this');
+            // Don't clear localStorage immediately - let the refresh token mechanism handle it
+            const userData = JSON.parse(storedUser);
+            return {
+              user: userData,
+              isAuthenticated: false, // Mark as not authenticated but keep user data
+              isLoading: false,
+              error: null,
+              role: userData.role || decoded.role || 'guest',
+            };
+          }
+        } catch (error) {
+          console.warn('⚠️ Error processing JWT token but keeping user data:', error.message);
+          // Don't clear localStorage on token errors - let authentication flow handle verification
+          try {
+            const userData = JSON.parse(storedUser);
+            return {
+              user: userData,
+              isAuthenticated: false,
+              isLoading: false,
+              error: null,
+              role: userData.role || 'guest',
+            };
+          } catch (parseError) {
+            console.warn('❌ Cannot parse user data, will clear corrupted data');
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+          }
+        }
+      } else {
+        console.warn('⚠️ Invalid token format (not JWT) - token:', token.substring(0, 20) + '...');
+        console.warn('⚠️ This appears to be a Clerk or other third-party token, not our JWT');
+
+        // We have user data but invalid token format - keep user data but mark as not authenticated
+        try {
+          const userData = JSON.parse(storedUser);
+          console.log('⚠️ Keeping user data despite invalid token format');
+          return {
+            user: userData,
+            isAuthenticated: false,
+            isLoading: false,
+            error: null,
+            role: userData.role || 'guest',
+          };
+        } catch (parseError) {
+          console.warn('❌ Cannot parse user data, will clear corrupted data');
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('❌ Error reading stored auth data:', error);
+  }
+
+  console.log('🔄 Using default empty auth state');
+  // Default empty state
   return {
     user: null,
     isAuthenticated: false,
-    isLoading: false, // Set to false initially to prevent stuck loading state
+    isLoading: false,
     error: null,
     role: null,
   };
@@ -125,9 +245,17 @@ const authSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
-    },
-    clearLoading: (state) => {
+    },    clearLoading: (state) => {
       state.isLoading = false;
+    },
+    restoreFromLocalStorage: (state, action) => {
+      const { user, role, isAuthenticated } = action.payload;
+      state.user = user;
+      state.role = role;
+      state.isAuthenticated = isAuthenticated;
+      state.isLoading = false;
+      state.error = null;
+      console.log('✅ Authentication state restored from localStorage');
     }
   },
   extraReducers: (builder) => {
@@ -135,8 +263,7 @@ const authSlice = createSlice({
       .addCase(login.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-      })
-      .addCase(login.fulfilled, (state, action) => {
+      })      .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
 
@@ -150,6 +277,10 @@ const authSlice = createSlice({
         // Extract role, ensuring it exists
         state.role = userData.role || 'guest';
 
+        // Store user data in localStorage for persistence across tab refreshes
+        localStorage.setItem('user', JSON.stringify(userData));
+        console.log('✅ User data stored in localStorage for persistence');
+
         // Debug the exact data we're getting
         console.log('Login succeeded! Full payload:', action.payload);
         console.log('Response data extracted:', responseData);
@@ -157,7 +288,7 @@ const authSlice = createSlice({
         console.log('Role set to:', state.role);
 
         state.error = null;
-      })      .addCase(login.rejected, (state, action) => {
+      }).addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;
@@ -172,8 +303,7 @@ const authSlice = createSlice({
       .addCase(register.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-      })
-      .addCase(register.fulfilled, (state, action) => {
+      })      .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
         if (action.payload.token) {
           state.isAuthenticated = true;
@@ -185,6 +315,10 @@ const authSlice = createSlice({
           const userData = responseData.user || responseData;
           state.user = userData;
           state.role = userData.role;
+
+          // Store user data in localStorage for persistence
+          localStorage.setItem('user', JSON.stringify(userData));
+          console.log('✅ User data stored in localStorage from registration');
         }
         state.error = null;
       })
@@ -242,10 +376,12 @@ const authSlice = createSlice({
         } else {
           // Case 3: Data is the responseData itself
           userData = responseData;
-        }
-
-        state.user = userData;
+        }        state.user = userData;
         state.isAuthenticated = true;
+
+        // Store user data in localStorage for persistence across tab refreshes
+        localStorage.setItem('user', JSON.stringify(userData));
+        console.log('✅ User data stored in localStorage from fetchProfile');
 
         // DEBUG: Log the user data processing
         console.log('🐛 fetchProfile.fulfilled - extracted userData:', userData);
@@ -326,7 +462,7 @@ const authSlice = createSlice({
 });
 
 // Export actions and reducer
-export const { setCredentials, clearCredentials, setError, clearError, clearLoading } = authSlice.actions;
+export const { setCredentials, clearCredentials, setError, clearError, clearLoading, restoreFromLocalStorage } = authSlice.actions;
 
 export default authSlice.reducer;
 

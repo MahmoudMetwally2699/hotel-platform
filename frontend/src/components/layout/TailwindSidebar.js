@@ -136,44 +136,43 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
 
   // Get navigation items for the user role
   const navItems = navigationItems[userRole] || navigationItems.guest;
-
   return (
     <>
       {/* Sidebar Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-30 bg-gray-600 bg-opacity-50 lg:hidden"
+          className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
           onClick={toggleSidebar}
+          aria-hidden="true"
         ></div>
-      )}
-
-      {/* Sidebar */}
+      )}      {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 w-64 transform overflow-y-auto bg-white transition duration-300 ease-in-out lg:static lg:inset-0 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-full lg:w-72 max-w-full lg:max-w-xs transform overflow-y-auto bg-white shadow-xl transition duration-300 ease-in-out lg:static lg:inset-0 lg:translate-x-0 lg:shadow-none ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
-          <h2 className="text-xl font-semibold text-gray-700">Hotel Service Platform</h2>
+        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
+          <h2 className="text-lg font-semibold text-gray-700 truncate">Hotel Service Platform</h2>
           <button
-            className="rounded-md p-1 text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 lg:hidden"
+            className="rounded-md p-2 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 lg:hidden"
             onClick={toggleSidebar}
+            aria-label="Close sidebar"
           >
             <CloseIcon />
           </button>
         </div>
 
-        <div className="px-4 py-2">
+        <div className="px-4 py-4">
           {/* User info */}
           {user && (
-            <div className="mb-4 mt-2">
-              <p className="text-sm font-medium text-gray-500">Logged in as</p>
-              <p className="text-sm font-bold text-gray-700">{user.firstName} {user.lastName}</p>
-              <p className="text-xs text-gray-500">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</p>
+            <div className="mb-6 rounded-lg bg-gray-50 p-4">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Logged in as</p>
+              <p className="text-sm font-bold text-gray-900 mt-1">{user.firstName} {user.lastName}</p>
+              <p className="text-xs text-gray-600 mt-1 px-2 py-1 bg-white rounded-full inline-block">
+                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+              </p>
             </div>
-          )}
-
-          {/* Navigation */}
+          )}          {/* Navigation */}
           <nav className="space-y-1">
             {navItems.map((item) => {
               const isActive = location.pathname.startsWith(item.path);
@@ -181,10 +180,10 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 <Link
                   key={item.text}
                   to={item.path}
-                  className={`group flex items-center rounded-md px-3 py-2 text-sm font-medium ${
+                  className={`group flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors min-h-[48px] ${
                     isActive
-                      ? 'bg-indigo-100 text-indigo-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-indigo-100 text-indigo-700 border-l-4 border-indigo-500'
+                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                   onClick={() => {
                     if (window.innerWidth < 1024) {
@@ -192,8 +191,8 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                     }
                   }}
                 >
-                  <span className="mr-3">{item.icon}</span>
-                  {item.text}
+                  <span className="mr-4 flex-shrink-0">{item.icon}</span>
+                  <span className="truncate">{item.text}</span>
                 </Link>
               );
             })}
@@ -202,23 +201,23 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           {/* Categories - only show for guest users */}
           {userRole === 'guest' && (
             <div className="mt-8">
-              <h3 className="px-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <h3 className="px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
                 Service Categories
               </h3>
-              <div className="mt-2 space-y-1">
+              <div className="space-y-1">
                 {Object.entries(categoryIcons).map(([category, icon]) => (
                   <Link
                     key={category}
                     to={`/services/${category}`}
-                    className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                    className="group flex items-center rounded-lg px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors min-h-[48px]"
                     onClick={() => {
                       if (window.innerWidth < 1024) {
                         toggleSidebar();
                       }
                     }}
                   >
-                    <span className="mr-3">{icon}</span>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                    <span className="mr-4 flex-shrink-0">{icon}</span>
+                    <span className="truncate">{category.charAt(0).toUpperCase() + category.slice(1)}</span>
                   </Link>
                 ))}
               </div>

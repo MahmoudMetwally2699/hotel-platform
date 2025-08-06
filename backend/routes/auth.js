@@ -51,12 +51,11 @@ const signRefreshToken = (id) => {
 const createSendToken = (user, statusCode, res, message = 'Success') => {
   const token = signToken(user._id, user.role);
   const refreshToken = signRefreshToken(user._id);
-
   const cookieOptions = {
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-    httpOnly: true,
+    httpOnly: process.env.NODE_ENV === 'production', // Allow JS access in development
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
   };
 
   res.cookie('jwt', token, cookieOptions);

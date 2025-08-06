@@ -40,10 +40,22 @@ module.exports = {
       },
       fontFamily: {
         sans: ['Roboto', 'Arial', 'sans-serif'],
-      },
-      spacing: {
+        arabic: ['Segoe UI', 'Tahoma', 'Arial', 'Helvetica', 'sans-serif'],
+      },      spacing: {
         navbar: '64px',
         sidebar: '240px',
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
+      },
+      screens: {
+        'xs': '475px',
+        'sm': '640px',
+        'md': '768px',
+        'lg': '1024px',
+        'xl': '1280px',
+        '2xl': '1536px',
       },
       borderRadius: {
         'xl': '1rem',

@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import {
   fetchProviderStats,
   fetchProviderRecentOrders,
@@ -26,6 +27,7 @@ import {
 } from 'chart.js';
 import QuickActionsMenu from '../../components/service/QuickActionsMenu';
 import UpcomingBookings from '../../components/service/UpcomingBookings';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 // Register Chart.js components
 ChartJS.register(
@@ -45,6 +47,7 @@ const DashboardPage = () => {
   const recentOrders = useSelector(selectProviderRecentOrders);
   const isLoading = useSelector(selectServiceLoading);
   const [timeRange, setTimeRange] = useState('week'); // 'day', 'week', 'month', 'year'
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     dispatch(fetchProviderStats(timeRange));
@@ -107,8 +110,8 @@ const DashboardPage = () => {
   return (
     <div className="py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold text-gray-800">Service Provider Dashboard</h1>
-        <span className="text-sm text-gray-500">Welcome back, {stats?.providerName || 'Service Provider'}</span>
+        <h1 className="text-2xl font-semibold text-gray-800">{t('dashboard.title')}</h1>
+        <span className="text-sm text-gray-500">{t('dashboard.welcome', { providerName: stats?.providerName || 'Service Provider' })}</span>
       </div>
 
       {/* Quick Actions Menu */}
@@ -125,7 +128,7 @@ const DashboardPage = () => {
               timeRange === 'day' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            Today
+            {t('dashboard.timeRange.today')}
           </button>
           <button
             onClick={() => handleTimeRangeChange('week')}
@@ -133,7 +136,7 @@ const DashboardPage = () => {
               timeRange === 'week' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            This Week
+            {t('dashboard.timeRange.thisWeek')}
           </button>
           <button
             onClick={() => handleTimeRangeChange('month')}
@@ -141,7 +144,7 @@ const DashboardPage = () => {
               timeRange === 'month' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            This Month
+            {t('dashboard.timeRange.thisMonth')}
           </button>
           <button
             onClick={() => handleTimeRangeChange('year')}
@@ -149,7 +152,7 @@ const DashboardPage = () => {
               timeRange === 'year' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            This Year
+            {t('dashboard.timeRange.thisYear')}
           </button>
         </div>
       </div>
@@ -166,9 +169,9 @@ const DashboardPage = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">{t('dashboard.totalRevenue')}</dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900">${stats?.totalRevenue?.toFixed(2) || '0.00'}</div>
+                    <div className="text-lg font-medium text-gray-900">{formatPriceByLanguage(stats?.totalRevenue || 0, i18n.language)}</div>
                   </dd>
                 </dl>
               </div>
@@ -178,8 +181,8 @@ const DashboardPage = () => {
             <div className="text-sm">
               <span className="font-medium text-gray-500">
                 {stats?.revenueTrend > 0 ?
-                  <span className="text-green-600">+{stats?.revenueTrend?.toFixed(1)}% from last period</span> :
-                  <span className="text-red-600">{stats?.revenueTrend?.toFixed(1)}% from last period</span>
+                  <span className="text-green-600">+{stats?.revenueTrend?.toFixed(1)}% {t('dashboard.fromLastPeriod')}</span> :
+                  <span className="text-red-600">{stats?.revenueTrend?.toFixed(1)}% {t('dashboard.fromLastPeriod')}</span>
                 }
               </span>
             </div>
@@ -196,7 +199,7 @@ const DashboardPage = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Orders</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">{t('dashboard.totalOrders')}</dt>
                   <dd>
                     <div className="text-lg font-medium text-gray-900">{stats?.totalOrders || 0}</div>
                   </dd>
@@ -208,8 +211,8 @@ const DashboardPage = () => {
             <div className="text-sm">
               <span className="font-medium text-gray-500">
                 {stats?.ordersTrend > 0 ?
-                  <span className="text-green-600">+{stats?.ordersTrend?.toFixed(1)}% from last period</span> :
-                  <span className="text-red-600">{stats?.ordersTrend?.toFixed(1)}% from last period</span>
+                  <span className="text-green-600">+{stats?.ordersTrend?.toFixed(1)}% {t('dashboard.fromLastPeriod')}</span> :
+                  <span className="text-red-600">{stats?.ordersTrend?.toFixed(1)}% {t('dashboard.fromLastPeriod')}</span>
                 }
               </span>
             </div>
@@ -226,7 +229,7 @@ const DashboardPage = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Active Services</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">{t('dashboard.activeServices')}</dt>
                   <dd>
                     <div className="text-lg font-medium text-gray-900">{stats?.activeServices || 0}</div>
                   </dd>
@@ -237,7 +240,7 @@ const DashboardPage = () => {
           <div className="bg-gray-50 px-4 py-2 sm:px-6">
             <div className="text-sm">
               <span className="font-medium text-green-600">
-                {stats?.activeServicesTrend > 0 ? '+' : ''}{stats?.activeServicesTrend?.toFixed(1) || 0}% from last period
+                {stats?.activeServicesTrend > 0 ? '+' : ''}{stats?.activeServicesTrend?.toFixed(1) || 0}% {t('dashboard.fromLastPeriod')}
               </span>
             </div>
           </div>
@@ -253,7 +256,7 @@ const DashboardPage = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Partnered Hotels</dt>
+                  <dt className="text-sm font-medium text-gray-500 truncate">{t('dashboard.partneredHotels')}</dt>
                   <dd>
                     <div className="text-lg font-medium text-gray-900">{stats?.partneredHotels || 0}</div>
                   </dd>
@@ -264,7 +267,7 @@ const DashboardPage = () => {
           <div className="bg-gray-50 px-4 py-2 sm:px-6">
             <div className="text-sm">
               <span className="font-medium text-green-600">
-                {stats?.partneredHotelsTrend > 0 ? '+' : ''}{stats?.partneredHotelsTrend?.toFixed(1) || 0}% from last period
+                {stats?.partneredHotelsTrend > 0 ? '+' : ''}{stats?.partneredHotelsTrend?.toFixed(1) || 0}% {t('dashboard.fromLastPeriod')}
               </span>
             </div>
           </div>
@@ -280,7 +283,7 @@ const DashboardPage = () => {
         <div className="lg:col-span-2 grid grid-cols-1 gap-5">
           {/* Revenue Line Chart */}
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Revenue Trend</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('dashboard.revenueTrend')}</h3>
             <div className="h-64">
               <Line
                 data={revenueChartData}
@@ -309,7 +312,7 @@ const DashboardPage = () => {
 
           {/* Service Distribution Doughnut Chart */}
           <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Service Distribution</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('dashboard.serviceDistribution')}</h3>
             <div className="h-64 flex items-center justify-center">
               <Doughnut
                 data={serviceDistributionData}
@@ -331,21 +334,21 @@ const DashboardPage = () => {
       {/* Performance metrics */}
       <div className="mt-8 bg-white shadow rounded-lg overflow-hidden">
         <div className="px-6 py-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Performance Metrics</h3>
+          <h3 className="text-lg font-medium text-gray-900">{t('dashboard.performanceMetrics')}</h3>
         </div>
         <div className="px-6 py-5">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             <div>
-              <dt className="text-sm font-medium text-gray-500">Avg. Response Time</dt>
+              <dt className="text-sm font-medium text-gray-500">{t('dashboard.avgResponseTime')}</dt>
               <dd className="mt-1 text-lg font-semibold text-gray-900">
-                {stats?.avgResponseTime || '15'} min
+                {stats?.avgResponseTime || '15'} {t('dashboard.minutes')}
                 <span className="text-sm font-medium text-green-600 ml-2">
                   ↓ {stats?.avgResponseTimeTrend || '5%'}
                 </span>
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Completion Rate</dt>
+              <dt className="text-sm font-medium text-gray-500">{t('dashboard.completionRate')}</dt>
               <dd className="mt-1 text-lg font-semibold text-gray-900">
                 {stats?.completionRate || '98'}%
                 <span className="text-sm font-medium text-green-600 ml-2">
@@ -354,7 +357,7 @@ const DashboardPage = () => {
               </dd>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500">Avg. Rating</dt>
+              <dt className="text-sm font-medium text-gray-500">{t('dashboard.avgRating')}</dt>
               <dd className="mt-1 text-lg font-semibold text-gray-900">
                 {stats?.avgRating || '4.8'}/5
                 <span className="text-sm font-medium text-green-600 ml-2">
@@ -380,7 +383,7 @@ const DashboardPage = () => {
 
       {/* Recent orders */}
       <div className="mt-8">
-        <h2 className="text-lg font-medium text-gray-900">Recent Orders</h2>
+        <h2 className="text-lg font-medium text-gray-900">{t('dashboard.recentOrders')}</h2>
         <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
           <div className="flex flex-col">
             <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -389,28 +392,28 @@ const DashboardPage = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Order ID
+                        {t('dashboard.orderId')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Service
+                        {t('dashboard.service')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Hotel
+                        {t('dashboard.hotel')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Guest
+                        {t('dashboard.guest')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
+                        {t('dashboard.status')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Amount
+                        {t('dashboard.amount')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
+                        {t('dashboard.date')}
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
+                        {t('dashboard.actions')}
                       </th>
                     </tr>
                   </thead>
@@ -433,16 +436,16 @@ const DashboardPage = () => {
                               ${order.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : ''}
                               ${order.status === 'cancelled' ? 'bg-red-100 text-red-800' : ''}
                             `}>
-                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                              {t(`dashboard.orderStatus.${order.status}`)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${order.totalAmount.toFixed(2)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatPriceByLanguage(order.totalAmount, i18n.language)}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {new Date(order.createdAt).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <a href={`/service/orders/${order._id}`} className="text-blue-600 hover:text-blue-900">
-                              View
+                              {t('dashboard.view')}
                             </a>
                           </td>
                         </tr>
@@ -450,7 +453,7 @@ const DashboardPage = () => {
                     ) : (
                       <tr>
                         <td colSpan="8" className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                          No recent orders found
+                          {t('dashboard.noRecentOrders')}
                         </td>
                       </tr>
                     )}
@@ -464,20 +467,20 @@ const DashboardPage = () => {
 
       {/* Upcoming Bookings */}
       <div className="mt-8">
-        <h2 className="text-lg font-medium text-gray-900">Upcoming Bookings</h2>
+        <h2 className="text-lg font-medium text-gray-900">{t('dashboard.upcomingBookings')}</h2>
         <div className="mt-4 bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:px-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <dt className="text-sm font-medium text-gray-500">Next Booking</dt>
+                <dt className="text-sm font-medium text-gray-500">{t('dashboard.nextBooking')}</dt>
                 <dd className="mt-1 text-lg font-semibold text-gray-900">
-                  {stats?.nextBooking?.service.name || 'N/A'}
+                  {stats?.nextBooking?.service.name || t('dashboard.na')}
                 </dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">Scheduled Date</dt>
+                <dt className="text-sm font-medium text-gray-500">{t('dashboard.scheduledDate')}</dt>
                 <dd className="mt-1 text-lg font-semibold text-gray-900">
-                  {stats?.nextBooking?.scheduledDate ? new Date(stats.nextBooking.scheduledDate).toLocaleString() : 'N/A'}
+                  {stats?.nextBooking?.scheduledDate ? new Date(stats.nextBooking.scheduledDate).toLocaleString() : t('dashboard.na')}
                 </dd>
               </div>
             </div>
@@ -485,9 +488,9 @@ const DashboardPage = () => {
           <div className="border-t border-gray-200">
             <div className="px-4 py-3 sm:px-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-500">All Upcoming Bookings</h3>
+                <h3 className="text-sm font-medium text-gray-500">{t('dashboard.allUpcomingBookings')}</h3>
                 <a href="/service/bookings" className="text-sm font-semibold text-blue-600 hover:text-blue-500">
-                  View All
+                  {t('dashboard.viewAll')}
                 </a>
               </div>
             </div>
@@ -507,14 +510,14 @@ const DashboardPage = () => {
                         ${booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}
                         ${booking.status === 'cancelled' ? 'bg-red-100 text-red-800' : ''}
                       `}>
-                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                        {t(`dashboard.bookingStatus.${booking.status}`)}
                       </span>
                     </div>
                   </div>
                 ))
               ) : (
                 <div className="px-4 py-3 sm:px-6 text-center text-sm text-gray-500">
-                  No upcoming bookings
+                  {t('dashboard.noUpcomingBookings')}
                 </div>
               )}
             </div>

@@ -6,9 +6,12 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { SERVICE_API } from '../../config/api.config';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 const MetricsPage = () => {
+  const { t, i18n } = useTranslation();
   const [metrics, setMetrics] = useState({
     overview: {
       totalBookings: 0,
@@ -59,19 +62,19 @@ const MetricsPage = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Your Performance Metrics</h1>
+        <h1 className="text-2xl font-bold">{t('yourPerformanceMetrics')}</h1>
         <div>
-          <label htmlFor="timeframe" className="mr-2">Timeframe:</label>
+          <label htmlFor="timeframe" className="mr-2">{t('timeframe')}:</label>
           <select
             id="timeframe"
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
             className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           >
-            <option value="week">Last 7 Days</option>
-            <option value="month">Last 30 Days</option>
-            <option value="quarter">Last 3 Months</option>
-            <option value="year">Last 12 Months</option>
+            <option value="week">{t('last7Days')}</option>
+            <option value="month">{t('last30Days')}</option>
+            <option value="quarter">{t('last3Months')}</option>
+            <option value="year">{t('last12Months')}</option>
           </select>
         </div>
       </div>
@@ -79,23 +82,23 @@ const MetricsPage = () => {
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-500">Total Bookings</h3>
+          <h3 className="text-sm font-medium text-gray-500">{t('totalBookings')}</h3>
           <p className="text-2xl font-bold">{metrics.overview.totalBookings}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-500">Completed</h3>
+          <h3 className="text-sm font-medium text-gray-500">{t('completed')}</h3>
           <p className="text-2xl font-bold text-green-600">{metrics.overview.completedBookings}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-500">Completion Rate</h3>
+          <h3 className="text-sm font-medium text-gray-500">{t('completionRate')}</h3>
           <p className="text-2xl font-bold">{completionRate.toFixed(1)}%</p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-500">Total Earnings</h3>
-          <p className="text-2xl font-bold">${metrics.overview.totalEarnings.toFixed(2)}</p>
+          <h3 className="text-sm font-medium text-gray-500">{t('totalEarnings')}</h3>
+          <p className="text-2xl font-bold">{formatPriceByLanguage(metrics.overview.totalEarnings, i18n.language)}</p>
         </div>
         <div className="bg-white rounded-lg shadow p-4">
-          <h3 className="text-sm font-medium text-gray-500">Rating</h3>
+          <h3 className="text-sm font-medium text-gray-500">{t('rating')}</h3>
           <div className="flex items-center">
             <p className="text-2xl font-bold mr-1">{metrics.overview.avgRating.toFixed(1)}</p>
             <div className="text-yellow-400">
@@ -110,17 +113,17 @@ const MetricsPage = () => {
       {/* Booking Trends */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Booking Trends</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('bookingTrends')}</h2>
           <div className="h-64 bg-gray-100 rounded flex items-center justify-center">
-            <p className="text-gray-500">Booking trend chart will be displayed here</p>
+            <p className="text-gray-500">{t('bookingTrendChartPlaceholder')}</p>
             {/* In a real implementation, use Chart.js or similar */}
           </div>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Revenue Comparison</h2>
+          <h2 className="text-lg font-semibold mb-4">{t('revenueComparison')}</h2>
           <div className="h-64 bg-gray-100 rounded flex items-center justify-center">
-            <p className="text-gray-500">Revenue comparison chart will be displayed here</p>
+            <p className="text-gray-500">{t('revenueComparisonChartPlaceholder')}</p>
             {/* In a real implementation, use Chart.js or similar */}
           </div>
         </div>
@@ -129,17 +132,17 @@ const MetricsPage = () => {
       {/* Performance by Service */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold">Performance by Service</h2>
+          <h2 className="text-lg font-semibold">{t('performanceByService')}</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bookings</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completion</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('service')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('bookings')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('completion')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('revenue')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('rating')}</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -156,7 +159,7 @@ const MetricsPage = () => {
                       {service.completionRate.toFixed(1)}%
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      ${service.revenue.toFixed(2)}
+                      {formatPriceByLanguage(service.revenue, i18n.language)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -173,7 +176,7 @@ const MetricsPage = () => {
               ) : (
                 <tr>
                   <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                    No service data available
+                    {t('noServiceData')}
                   </td>
                 </tr>
               )}
@@ -185,18 +188,18 @@ const MetricsPage = () => {
       {/* Recent Bookings */}
       <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold">Recent Bookings</h2>
+          <h2 className="text-lg font-semibold">{t('recentBookings')}</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('id')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('service')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customer')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('date')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('amount')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('status')}</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -218,7 +221,7 @@ const MetricsPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium">${booking.amount.toFixed(2)}</div>
+                      <div className="text-sm font-medium">{formatPriceByLanguage(booking.amount, i18n.language)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
@@ -233,7 +236,7 @@ const MetricsPage = () => {
               ) : (
                 <tr>
                   <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
-                    No recent bookings
+                    {t('noRecentBookings')}
                   </td>
                 </tr>
               )}
@@ -245,7 +248,7 @@ const MetricsPage = () => {
       {/* Customer Feedback */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold">Customer Feedback</h2>
+          <h2 className="text-lg font-semibold">{t('customerFeedback')}</h2>
         </div>
         <div>
           {metrics.customerFeedback.length > 0 ? (
@@ -272,12 +275,12 @@ const MetricsPage = () => {
                     </span>
                   </div>
                   <p className="text-gray-700">{feedback.comment}</p>
-                  <p className="text-sm text-gray-500 mt-1">Service: {feedback.serviceName}</p>
+                  <p className="text-sm text-gray-500 mt-1">{t('service')}: {feedback.serviceName}</p>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="p-6 text-center text-gray-500">No feedback received yet</div>
+            <div className="p-6 text-center text-gray-500">{t('noFeedbackReceived')}</div>
           )}
         </div>
       </div>

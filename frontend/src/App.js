@@ -2,10 +2,12 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-toastify/dist/ReactToastify.minimal.css';
 import AppRouter from './routes/AppRouter';
-import { selectIsAuthenticated, selectAuthRole, checkAuth, clearLoading } from './redux/slices/authSlice';
+import { selectIsAuthenticated, selectAuthRole, checkAuth } from './redux/slices/authSlice';
+import './i18n'; // Initialize i18n
 import './App.css';
 
 // Public routes that don't require authentication check
@@ -74,6 +76,7 @@ const AuthGuard = () => {
 };
 
 function App() {
+  const { i18n } = useTranslation();
   const dispatch = useDispatch();
   const { user, isAuthenticated, isLoading, error } = useSelector(state => state.auth);
 
@@ -151,18 +154,7 @@ function App() {
     <div className="min-h-screen bg-background-default">
       <BrowserRouter>
         <AuthGuard />
-        {/* <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        /> */}
+
       </BrowserRouter>
     </div>
   );

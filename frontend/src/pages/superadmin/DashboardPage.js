@@ -24,6 +24,8 @@ import {
   ArcElement
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import { useTranslation } from 'react-i18next';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 ChartJS.register(
   CategoryScale,
@@ -38,6 +40,7 @@ ChartJS.register(
 );
 
 const DashboardPage = () => {
+  const { i18n } = useTranslation();
   const dispatch = useDispatch();
   const hotels = useSelector(selectHotelList);
   const bookingStats = useSelector(selectBookingStats);
@@ -133,12 +136,10 @@ const DashboardPage = () => {
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-medium text-gray-500">Total Bookings</h3>
               <p className="text-3xl font-bold text-gray-900 mt-2">{bookingStats?.totalBookings || 0}</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
+            </div>            <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-medium text-gray-500">Platform Revenue</h3>
               <p className="text-3xl font-bold text-gray-900 mt-2">
-                ${bookingStats?.platformRevenue?.toFixed(2) || '0.00'}
+                {formatPriceByLanguage(bookingStats?.platformRevenue || 0, i18n.language)}
               </p>
             </div>
           </div>

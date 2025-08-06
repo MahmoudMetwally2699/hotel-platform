@@ -6,9 +6,12 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { SERVICE_API } from '../../config/api.config';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 const ProcessBookingsPage = () => {
+  const { i18n } = useTranslation();
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -163,7 +166,7 @@ const ProcessBookingsPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium">${booking.amount.toFixed(2)}</div>
+                      <div className="text-sm font-medium">{formatPriceByLanguage(booking.amount, i18n.language)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(booking.status)}`}>
@@ -278,11 +281,11 @@ const ProcessBookingsPage = () => {
                       </div>
                       <div className="flex justify-between border-b border-gray-200 pb-2">
                         <span className="text-gray-500">Amount</span>
-                        <span className="font-medium">${selectedBooking.amount.toFixed(2)}</span>
+                        <span className="font-medium">{formatPriceByLanguage(selectedBooking.amount, i18n.language)}</span>
                       </div>
                       <div className="flex justify-between border-b border-gray-200 pb-2">
                         <span className="text-gray-500">Your Earnings</span>
-                        <span className="font-medium">${selectedBooking.providerEarnings?.toFixed(2) || 'N/A'}</span>
+                        <span className="font-medium">{formatPriceByLanguage(selectedBooking.providerEarnings || 0, i18n.language)}</span>
                       </div>
                       <div className="border-b border-gray-200 pb-2">
                         <p className="text-gray-500 mb-1">Special Requests</p>

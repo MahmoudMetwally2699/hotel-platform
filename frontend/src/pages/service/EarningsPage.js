@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import {
   fetchProviderEarnings,
   fetchProviderPayouts,
@@ -14,6 +15,7 @@ import {
   selectServiceLoading,
   selectServiceError
 } from '../../redux/slices/serviceSlice';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 // Chart.js imports
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement } from 'chart.js';
@@ -28,6 +30,7 @@ const EarningsPage = () => {
   const payouts = useSelector(selectProviderPayouts);
   const isLoading = useSelector(selectServiceLoading);
   const error = useSelector(selectServiceError);
+  const { t, i18n } = useTranslation();
 
   const [timeRange, setTimeRange] = useState('month'); // 'week', 'month', 'year'
   const [showPayoutModal, setShowPayoutModal] = useState(false);
@@ -349,9 +352,8 @@ const EarningsPage = () => {
                         <tr key={payout._id}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {payout.payoutId}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            ${payout.amount.toFixed(2)}
+                          </td>                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {formatPriceByLanguage(payout.amount, i18n.language)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
                             {payout.method.replace('_', ' ')}

@@ -171,12 +171,11 @@ const ServiceDetailsPage = () => {
       </div>
     );
   }
-
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
       {/* Breadcrumbs */}
-      <nav className="mb-6">
-        <ol className="flex text-sm">
+      <nav className="mb-4 sm:mb-6">
+        <ol className="flex text-xs sm:text-sm">
           <li className="hover:text-primary-main">
             <button onClick={() => navigate('/')}>Home</button>
           </li>
@@ -185,7 +184,7 @@ const ServiceDetailsPage = () => {
             <button onClick={() => navigate(`/services/${service.category}`)}>{service.category}</button>
           </li>
           <li className="mx-2 text-gray-500">/</li>
-          <li className="text-gray-500">{service.name}</li>
+          <li className="text-gray-500 truncate">{service.name}</li>
         </ol>      </nav>
 
       {/* Service Combination Selector for Package Services */}
@@ -196,14 +195,12 @@ const ServiceDetailsPage = () => {
           onCombinationChange={setSelectedCombination}
           quantity={quantity}
         />
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      )}      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2">
           {/* Service Images */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="relative h-64 md:h-96">
+            <div className="relative h-48 sm:h-64 md:h-80 lg:h-96">
               {service.image ? (
                 <img
                   src={service.image}
@@ -212,50 +209,48 @@ const ServiceDetailsPage = () => {
                 />
               ) : (
                 <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-400">No image available</span>
+                  <span className="text-gray-400 text-sm sm:text-base">No image available</span>
                 </div>
               )}
             </div>
 
             {/* Service Info */}
-            <div className="p-6">
-              <div className="flex flex-wrap justify-between items-start">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">{service.name}</h1>
-                  <p className="text-gray-600 mt-1">Provided by {service.providerId?.businessName || 'Unknown Provider'}</p>
+            <div className="p-4 sm:p-6">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{service.name}</h1>
+                  <p className="text-sm sm:text-base text-gray-600 mt-1">Provided by {service.providerId?.businessName || 'Unknown Provider'}</p>
                 </div>
 
-                <div className="flex items-center mt-2 md:mt-0">
-                  <div className="flex items-center mr-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
-                    <span className="ml-1 text-gray-700 font-medium">{(service.rating || 0).toFixed(1)}</span>
-                    <span className="ml-1 text-gray-500">({service.reviewCount || 0} reviews)</span>
+                    <span className="ml-1 text-sm sm:text-base text-gray-700 font-medium">{(service.rating || 0).toFixed(1)}</span>
+                    <span className="ml-1 text-xs sm:text-sm text-gray-500">({service.reviewCount || 0} reviews)</span>
                   </div>
-                  <span className="text-gray-500">
+                  <span className="text-xs sm:text-sm text-gray-500">
                     {service.bookingCount || 0} bookings
                   </span>
                 </div>
-              </div>
-
-              {/* Description */}
-              <div className="mt-6">
-                <h2 className="text-xl font-semibold text-gray-800">Description</h2>
-                <p className="mt-2 text-gray-600">{service.description}</p>
+              </div>              {/* Description */}
+              <div className="mt-4 sm:mt-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Description</h2>
+                <p className="mt-2 text-sm sm:text-base text-gray-600">{service.description}</p>
               </div>
 
               {/* Features */}
               {service.features && service.features.length > 0 && (
-                <div className="mt-6">
-                  <h2 className="text-xl font-semibold text-gray-800">Features</h2>
-                  <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="mt-4 sm:mt-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Features</h2>
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {service.features.map((feature, index) => (
                       <div key={index} className="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
-                        <span className="ml-2 text-gray-600">{feature}</span>
+                        <span className="ml-2 text-sm sm:text-base text-gray-600">{feature}</span>
                       </div>
                     ))}
                   </div>
@@ -341,30 +336,28 @@ const ServiceDetailsPage = () => {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Booking Section */}
+        </div>        {/* Booking Section */}
         <div className="lg:col-span-1">
-          <div className="sticky top-24 bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Book this service</h2>            {/* Price Display */}
-            <div className="mb-6">
+          <div className="sticky top-4 lg:top-24 bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Book this service</h2>            {/* Price Display */}
+            <div className="mb-4 sm:mb-6">
               <div className="flex items-baseline">
-                <span className="text-3xl font-bold text-gray-900">
+                <span className="text-2xl sm:text-3xl font-bold text-gray-900">
                   ${Math.round(((service.pricing?.finalPrice || service.pricing?.basePrice || service.basePrice || 0) * 100)) / 100}
                 </span>
               </div>
-              <p className="text-sm text-gray-500 mt-1">Per unit • Includes all taxes and fees</p>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">Per unit • Includes all taxes and fees</p>
             </div>
 
             {/* Date Selection */}
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4">
               <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
                 Select Date
               </label>
               <input
                 type="date"
                 id="date"
-                className="form-input w-full"
+                className="form-input w-full text-sm sm:text-base"
                 min={new Date().toISOString().split('T')[0]}
                 value={selectedDate.toISOString().split('T')[0]}
                 onChange={(e) => setSelectedDate(new Date(e.target.value))}
@@ -372,13 +365,13 @@ const ServiceDetailsPage = () => {
             </div>
 
             {/* Time Selection */}
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4">
               <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-1">
                 Select Time
               </label>
               <select
                 id="time"
-                className="form-input w-full"
+                className="form-input w-full text-sm sm:text-base"
                 value={selectedTime}
                 onChange={(e) => setSelectedTime(e.target.value)}
                 required
@@ -391,14 +384,14 @@ const ServiceDetailsPage = () => {
             </div>
 
             {/* Quantity Selection */}
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
                 Quantity
               </label>
               <div className="flex items-center">
                 <button
                   type="button"
-                  className="px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-gray-600 hover:bg-gray-100"
+                  className="px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-gray-600 hover:bg-gray-100 text-sm sm:text-base"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 >
                   -
@@ -406,28 +399,28 @@ const ServiceDetailsPage = () => {
                 <input
                   type="number"
                   id="quantity"
-                  className="form-input border-l-0 border-r-0 rounded-none text-center"
+                  className="form-input border-l-0 border-r-0 rounded-none text-center text-sm sm:text-base"
                   min="1"
                   value={quantity}
                   onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                 />
                 <button
                   type="button"
-                  className="px-3 py-2 border border-gray-300 rounded-r-md bg-gray-50 text-gray-600 hover:bg-gray-100"
+                  className="px-3 py-2 border border-gray-300 rounded-r-md bg-gray-50 text-gray-600 hover:bg-gray-100 text-sm sm:text-base"
                   onClick={() => setQuantity(quantity + 1)}
                 >
                   +
                 </button>
               </div>
             </div>            {/* Total Price */}
-            <div className="mb-6 pb-6 border-b border-gray-200">
+            <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
-                <span className="font-medium">Total</span>
-                <span className="text-xl font-bold">${(calculateTotal() || 0).toFixed(2)}</span>
+                <span className="font-medium text-sm sm:text-base">Total</span>
+                <span className="text-lg sm:text-xl font-bold">${(calculateTotal() || 0).toFixed(2)}</span>
               </div>
             </div>            {/* Book Now Button */}
             <button
-              className="w-full btn-primary py-3 font-medium"
+              className="w-full btn-primary py-2 sm:py-3 font-medium text-sm sm:text-base"
               onClick={() => {
                 console.log('🔥 BUTTON CLICKED: Book Now button clicked!');
                 console.log('🔥 BUTTON CLICKED: selectedTime =', selectedTime);
@@ -439,7 +432,7 @@ const ServiceDetailsPage = () => {
             </button>
 
             {/* Cancellation Policy */}
-            <p className="mt-4 text-xs text-gray-500 text-center">
+            <p className="mt-3 sm:mt-4 text-xs text-gray-500 text-center">
               Free cancellation up to 24 hours before the booking.
               <br />
               <span className="text-primary-main hover:text-primary-dark cursor-pointer">View cancellation policy</span>

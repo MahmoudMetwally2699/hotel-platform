@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   FaTshirt,
   FaCar,
@@ -24,6 +25,7 @@ import {
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
+import useRTL from '../../hooks/useRTL';
 
 const categoryIcons = {
   laundry: FaTshirt,
@@ -36,74 +38,135 @@ const categoryIcons = {
   fitness: FaDumbbell
 };
 
-const categoryDescriptions = {
-  laundry: {
-    title: 'Laundry & Dry Cleaning',
-    description: 'Professional washing, ironing, and dry cleaning services',
-    features: ['Express Service Available', 'Premium Care', 'Room Pickup & Delivery'],
-    estimatedTime: '4-24 hours',
-    color: 'bg-blue-500'
-  },
-  transportation: {
-    title: 'Transportation',
-    description: 'Car rental, taxi, and airport transfer services',
-    features: ['Various Vehicle Types', 'Professional Drivers', 'City Tours'],
-    estimatedTime: 'On-demand',
-    color: 'bg-green-500'
-  },
-  tours: {
-    title: 'Tours & Activities',
-    description: 'Guided tours and recreational activities',
-    features: ['Local Expertise', 'Group & Private Tours', 'Cultural Experiences'],
-    estimatedTime: '2-8 hours',
-    color: 'bg-purple-500'
-  },
-  spa: {
-    title: 'Spa & Wellness',
-    description: 'Relaxation and wellness treatments',
-    features: ['Professional Therapists', 'Premium Products', 'In-Room Service'],
-    estimatedTime: '30-90 minutes',
-    color: 'bg-pink-500'
-  },
-  dining: {
-    title: 'Dining Services',
-    description: 'Food delivery and catering services',
-    features: ['Multiple Cuisines', 'Fresh Ingredients', 'Quick Delivery'],
-    estimatedTime: '30-60 minutes',
-    color: 'bg-orange-500'
-  },
-  entertainment: {
-    title: 'Entertainment',
-    description: 'Live music, DJ services, and events',
-    features: ['Professional Artists', 'Custom Playlists', 'Event Planning'],
-    estimatedTime: '2-6 hours',
-    color: 'bg-red-500'
-  },
-  shopping: {
-    title: 'Shopping Services',
-    description: 'Personal shopping and delivery services',
-    features: ['Local Shopping', 'Gift Selection', 'Same-Day Delivery'],
-    estimatedTime: '1-4 hours',
-    color: 'bg-yellow-500'
-  },
-  fitness: {
-    title: 'Fitness & Sports',
-    description: 'Personal training and sports activities',
-    features: ['Certified Trainers', 'Equipment Provided', 'Flexible Schedules'],
-    estimatedTime: '30-90 minutes',
-    color: 'bg-indigo-500'
-  }
-};
-
 const GuestCategorySelection = () => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const navigate = useNavigate();
   const { hotelId } = useParams();
 
-  const [categories, setCategories] = useState([]);
+  // Get localized category descriptions
+  const getCategoryDescriptions = () => ({
+    laundry: {
+      title: t('services.laundry'),
+      description: t('homepage.laundryDescription'),
+      features: [t('guestCategories.expressService'), t('guestCategories.premiumCare'), t('guestCategories.roomPickup')],
+      estimatedTime: t('guestCategories.laundryTime'),
+      color: 'bg-blue-500'
+    },
+    transportation: {
+      title: t('services.transportation'),
+      description: t('homepage.transportationDescription'),
+      features: [t('guestCategories.variousVehicles'), t('guestCategories.professionalDrivers'), t('guestCategories.cityTours')],
+      estimatedTime: t('guestCategories.onDemand'),
+      color: 'bg-green-500'
+    },
+    tours: {
+      title: t('services.tourism'),
+      description: t('homepage.tourismDescription'),
+      features: [t('guestCategories.localExpertise'), t('guestCategories.groupPrivateTours'), t('guestCategories.culturalExperiences')],
+      estimatedTime: t('guestCategories.toursTime'),
+      color: 'bg-purple-500'
+    },
+    spa: {
+      title: t('services.spa'),
+      description: t('guestCategories.spaDescription'),
+      features: [t('guestCategories.professionalTherapists'), t('guestCategories.premiumProducts'), t('guestCategories.inRoomService')],
+      estimatedTime: t('guestCategories.spaTime'),
+      color: 'bg-pink-500'
+    },
+    dining: {
+      title: t('services.dining'),
+      description: t('guestCategories.diningDescription'),
+      features: [t('guestCategories.multipleCuisines'), t('guestCategories.freshIngredients'), t('guestCategories.quickDelivery')],
+      estimatedTime: t('guestCategories.diningTime'),
+      color: 'bg-orange-500'
+    },
+    entertainment: {
+      title: t('services.entertainment'),
+      description: t('guestCategories.entertainmentDescription'),
+      features: [t('guestCategories.professionalArtists'), t('guestCategories.customPlaylists'), t('guestCategories.eventPlanning')],
+      estimatedTime: t('guestCategories.entertainmentTime'),
+      color: 'bg-red-500'
+    },
+    shopping: {
+      title: t('services.shopping'),
+      description: t('guestCategories.shoppingDescription'),
+      features: [t('guestCategories.localShopping'), t('guestCategories.giftSelection'), t('guestCategories.sameDayDelivery')],
+      estimatedTime: t('guestCategories.shoppingTime'),
+      color: 'bg-yellow-500'
+    },
+    fitness: {
+      title: t('services.fitness'),
+      description: t('guestCategories.fitnessDescription'),
+      features: [t('guestCategories.certifiedTrainers'), t('guestCategories.equipmentProvided'), t('guestCategories.flexibleSchedules')],
+      estimatedTime: t('guestCategories.fitnessTime'),
+      color: 'bg-indigo-500'
+    }
+  });  const [categories, setCategories] = useState([]);
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hoveredCategory, setHoveredCategory] = useState(null);
   useEffect(() => {
+    // Get localized category descriptions
+    const getCategoryDescriptions = () => ({
+      laundry: {
+        title: t('services.laundry'),
+        description: t('homepage.laundryDescription'),
+        features: [t('guestCategories.expressService'), t('guestCategories.premiumCare'), t('guestCategories.roomPickup')],
+        estimatedTime: t('guestCategories.laundryTime'),
+        color: 'bg-blue-500'
+      },
+      transportation: {
+        title: t('services.transportation'),
+        description: t('homepage.transportationDescription'),
+        features: [t('guestCategories.variousVehicles'), t('guestCategories.professionalDrivers'), t('guestCategories.cityTours')],
+        estimatedTime: t('guestCategories.onDemand'),
+        color: 'bg-green-500'
+      },
+      tours: {
+        title: t('services.tourism'),
+        description: t('homepage.tourismDescription'),
+        features: [t('guestCategories.localExpertise'), t('guestCategories.groupPrivateTours'), t('guestCategories.culturalExperiences')],
+        estimatedTime: t('guestCategories.toursTime'),
+        color: 'bg-purple-500'
+      },
+      spa: {
+        title: t('services.spa'),
+        description: t('guestCategories.spaDescription'),
+        features: [t('guestCategories.professionalTherapists'), t('guestCategories.premiumProducts'), t('guestCategories.inRoomService')],
+        estimatedTime: t('guestCategories.spaTime'),
+        color: 'bg-pink-500'
+      },
+      dining: {
+        title: t('services.dining'),
+        description: t('guestCategories.diningDescription'),
+        features: [t('guestCategories.multipleCuisines'), t('guestCategories.freshIngredients'), t('guestCategories.quickDelivery')],
+        estimatedTime: t('guestCategories.diningTime'),
+        color: 'bg-orange-500'
+      },
+      entertainment: {
+        title: t('services.entertainment'),
+        description: t('guestCategories.entertainmentDescription'),
+        features: [t('guestCategories.professionalArtists'), t('guestCategories.customPlaylists'), t('guestCategories.eventPlanning')],
+        estimatedTime: t('guestCategories.entertainmentTime'),
+        color: 'bg-red-500'
+      },
+      shopping: {
+        title: t('services.shopping'),
+        description: t('guestCategories.shoppingDescription'),
+        features: [t('guestCategories.localShopping'), t('guestCategories.giftSelection'), t('guestCategories.sameDayDelivery')],
+        estimatedTime: t('guestCategories.shoppingTime'),
+        color: 'bg-yellow-500'
+      },
+      fitness: {
+        title: t('services.fitness'),
+        description: t('guestCategories.fitnessDescription'),
+        features: [t('guestCategories.certifiedTrainers'), t('guestCategories.equipmentProvided'), t('guestCategories.flexibleSchedules')],
+        estimatedTime: t('guestCategories.fitnessTime'),
+        color: 'bg-indigo-500'
+      }
+    });
+
     const fetchHotelAndCategories = async () => {
       try {
         setLoading(true);
@@ -126,6 +189,9 @@ const GuestCategorySelection = () => {
           serviceCounts[service.category]++;
         });
 
+        // Get localized category descriptions
+        const categoryDescriptions = getCategoryDescriptions();
+
         // Create category list with service counts
         const availableCategories = Object.keys(serviceCounts).map(categoryKey => ({
           key: categoryKey,
@@ -137,7 +203,7 @@ const GuestCategorySelection = () => {
 
       } catch (error) {
         console.error('Error fetching hotel and categories:', error);
-        toast.error('Failed to load hotel services');
+        toast.error(t('errors.loadServices'));
       } finally {
         setLoading(false);
       }
@@ -145,8 +211,9 @@ const GuestCategorySelection = () => {
 
     if (hotelId) {
       fetchHotelAndCategories();
-    }
-  }, [hotelId]);  /**
+    }  }, [hotelId, t]); // Remove categoryDescriptions from dependencies
+
+  /**
    * Handle category selection - updated routing for better UX
    */
   const handleCategorySelect = (categoryKey) => {
@@ -158,18 +225,16 @@ const GuestCategorySelection = () => {
       navigate(`/hotels/${hotelId}/services/${categoryKey}`);
     }
   };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <FaSpinner className="text-4xl text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading hotel services...</p>
+          <p className="text-gray-600">{t('common.loading')} {t('navigation.services').toLowerCase()}...</p>
         </div>
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -178,15 +243,15 @@ const GuestCategorySelection = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {hotel?.name} Services
+                {hotel?.name} {t('navigation.services')}
               </h1>
               <p className="text-gray-600 mt-2">
-                Choose from our available service categories
+                {t('guestCategories.chooseFromCategories')}
               </p>
             </div>
             <div className="hidden md:flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Hotel Rating</p>
+              <div className={`${isRTL ? 'text-left' : 'text-right'}`}>
+                <p className="text-sm text-gray-500">{t('guestCategories.hotelRating')}</p>
                 <div className="flex items-center">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <FaStar
@@ -194,7 +259,7 @@ const GuestCategorySelection = () => {
                       className={`text-sm ${star <= (hotel?.rating || 4) ? 'text-yellow-400' : 'text-gray-300'}`}
                     />
                   ))}
-                  <span className="ml-2 text-sm text-gray-600">
+                  <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-600`}>
                     ({hotel?.rating || 4.0})
                   </span>
                 </div>
@@ -210,20 +275,20 @@ const GuestCategorySelection = () => {
           <div className="text-center py-12">
             <FaShoppingBag className="text-6xl text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-gray-900 mb-2">
-              No Services Available
+              {t('guestCategories.noServicesAvailable')}
             </h3>
             <p className="text-gray-600">
-              This hotel doesn't have any active services at the moment.
+              {t('guestCategories.noActiveServices')}
             </p>
           </div>
         ) : (
           <>
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Available Service Categories
+                {t('guestCategories.availableServiceCategories')}
               </h2>
               <p className="text-gray-600">
-                Select a category to browse available services and make your booking
+                {t('guestCategories.selectCategoryToBrowse')}
               </p>
             </div>
 
@@ -244,9 +309,8 @@ const GuestCategorySelection = () => {
                     {/* Category Header */}
                     <div className={`${category.color} text-white p-6 rounded-t-lg`}>
                       <div className="flex items-center justify-between">
-                        <IconComponent className="text-3xl" />
-                        <span className="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">
-                          {category.serviceCount} service{category.serviceCount !== 1 ? 's' : ''}
+                        <IconComponent className="text-3xl" />                        <span className="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">
+                          {category.serviceCount} {category.serviceCount === 1 ? t('services.singleService') : t('services.multipleServices')}
                         </span>
                       </div>
                       <h3 className="text-xl font-bold mt-4 mb-2">
@@ -275,11 +339,10 @@ const GuestCategorySelection = () => {
                         </div>
                       </div>
 
-                      {/* Action Button */}
-                      <div className="mt-6 pt-4 border-t border-gray-100">
+                      {/* Action Button */}                      <div className="mt-6 pt-4 border-t border-gray-100">
                         <button className="w-full flex items-center justify-center text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                          <span>Browse Services</span>
-                          <FaArrowRight className="ml-2" />
+                          <span>{t('guestCategories.browseServices')}</span>
+                          <FaArrowRight className={`${isRTL ? 'mr-2' : 'ml-2'} ${isRTL ? 'transform rotate-180' : ''}`} />
                         </button>
                       </div>
                     </div>
@@ -291,11 +354,10 @@ const GuestCategorySelection = () => {
             {/* Popular Categories Note */}
             <div className="mt-12 bg-blue-50 rounded-lg p-6 text-center">
               <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                🌟 Most Popular Services
+                🌟 {t('guestCategories.mostPopularServices')}
               </h3>
               <p className="text-blue-700">
-                Laundry and Transportation are our most requested services.
-                Book early to secure your preferred time slot!
+                {t('guestCategories.popularServicesNote')}
               </p>
             </div>
           </>

@@ -10,7 +10,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Import middleware and utilities with correct paths
@@ -138,16 +137,8 @@ function createApp() {
       next();
     }
   });
-
-  // Rate limiting (reduced for serverless)
-  const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100,
-    message: {
-      error: 'Too many requests from this IP, please try again later'
-    }
-  });
-  app.use('/api/', limiter);
+  // Rate limiting disabled for serverless
+  console.log('Rate limiting disabled');
 
   // Body parsing
   app.use(express.json({ limit: '10mb' }));

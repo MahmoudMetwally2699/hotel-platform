@@ -31,22 +31,33 @@ class AuthService {
 
       console.log(`Making login request to ${endpoint} with role: ${role}`);
       console.log('API Base URL:', apiClient.defaults.baseURL);
-      console.log('Full URL:', `${apiClient.defaults.baseURL}${endpoint}`);
+      console.log('Full URL:', `${apiClient.defaults.baseURL}${endpoint}`);      const response = await apiClient.post(endpoint, { email, password, role });
+      console.log('Login response received:', response.data);
 
-      const response = await apiClient.post(endpoint, { email, password, role });
-      console.log('Login response received:', response.data);      // Store tokens and user data properly
-      if (response.data.data && response.data.data.token) {
-        // Store token in localStorage as backup (since cookies might not be working)
+      // Store tokens and user data properly
+      // The backend sends tokens in response.data.data.token and response.data.data.refreshToken
+      if (response.data?.data?.token) {
+        // Store token in localStorage as backup (since HTTP-only cookies can't be read by JS)
         localStorage.setItem('token', response.data.data.token);
-        console.log('Token stored in localStorage');
-      } else if (response.data.token) {
-        // Alternative location for token
-        localStorage.setItem('token', response.data.token);
-        console.log('Token stored in localStorage from response.data.token');
-      }      // Store user data and make sure role is included
-      if (response.data.data) {
-        response.data.data.role = role; // Explicitly set role from login form
+        console.log('✅ Token stored in localStorage:', response.data.data.token.substring(0, 20) + '...');
+      }
+
+      if (response.data?.data?.refreshToken) {
+        localStorage.setItem('refreshToken', response.data.data.refreshToken);
+        console.log('✅ Refresh token stored in localStorage');
+      }
+
+      // Store user data and make sure role is included
+      if (response.data?.data?.user) {
+        const userData = response.data.data.user;
+        userData.role = role; // Explicitly set role from login form
+        this.setUserData(userData);
+        console.log('✅ User data stored:', userData);
+      } else if (response.data?.data) {
+        // Fallback if user data is at a different level
+        response.data.data.role = role;
         this.setUserData(response.data.data);
+        console.log('✅ User data stored (fallback):', response.data.data);
       }
 
       return response.data;
