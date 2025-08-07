@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import apiClient from '../../services/api.service';
 
@@ -36,6 +37,8 @@ const Icon = ({ type, className = "" }) => {
 };
 
 const LaundryServiceCreator = () => {
+  const { t } = useTranslation();
+
   // Tab Management
   const [activeTab, setActiveTab] = useState('manage');
 
@@ -59,13 +62,13 @@ const LaundryServiceCreator = () => {
   // Individual laundry items with pricing and availability per service type
   const [laundryItems, setLaundryItems] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
-
   useEffect(() => {
     fetchCategoryTemplate();
     if (activeTab === 'manage') {
       fetchExistingServices();
-    }
-  }, [activeTab]);  /**
+    }  }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
    * Fetch existing laundry services for management
    */
   const fetchExistingServices = async () => {
@@ -92,10 +95,9 @@ const LaundryServiceCreator = () => {
       console.log('🔄 Extracted services:', services);
       console.log('🔄 Services count:', services.length);
 
-      setExistingServices(services);
-    } catch (error) {
+      setExistingServices(services);    } catch (error) {
       console.error('Error fetching existing services:', error);
-      toast.error('Failed to load existing services');
+      toast.error(t('serviceProvider.laundryManagement.messages.failedToLoadServices'));
       setExistingServices([]);
     } finally {
       setLoading(false);
@@ -127,15 +129,14 @@ const LaundryServiceCreator = () => {
    */
   const updateExistingService = async (serviceId) => {
     try {
-      setLoading(true);
-      // Use the correct service endpoint
+      setLoading(true);      // Use the correct service endpoint
       await apiClient.put(`/service/services/${serviceId}`, editFormData);
-      toast.success('Service updated successfully!');
+      toast.success(t('serviceProvider.laundryManagement.messages.serviceUpdatedSuccess'));
       fetchExistingServices();
       cancelEditing();
     } catch (error) {
       console.error('Error updating service:', error);
-      toast.error(error.response?.data?.message || 'Failed to update service');
+      toast.error(error.response?.data?.message || t('serviceProvider.laundryManagement.messages.failedToUpdateService'));
     } finally {
       setLoading(false);
     }
@@ -143,9 +144,8 @@ const LaundryServiceCreator = () => {
 
   /**
    * Delete existing service
-   */
-  const deleteExistingService = async (serviceId) => {
-    if (!window.confirm('Are you sure you want to delete this service? This action cannot be undone.')) {
+   */  const deleteExistingService = async (serviceId) => {
+    if (!window.confirm(t('serviceProvider.laundryManagement.messages.deleteConfirmation'))) {
       return;
     }
 
@@ -154,12 +154,12 @@ const LaundryServiceCreator = () => {
       // Try to delete, if endpoint doesn't exist, just deactivate
       try {
         await apiClient.delete(`/service/services/${serviceId}`);
-        toast.success('Service deleted successfully!');
+        toast.success(t('serviceProvider.laundryManagement.messages.serviceDeletedSuccess'));
       } catch (deleteError) {
         // If delete endpoint doesn't exist, deactivate instead
         if (deleteError.response?.status === 404 || deleteError.response?.status === 405) {
           await apiClient.put(`/service/services/${serviceId}`, { isActive: false });
-          toast.success('Service deactivated successfully!');
+          toast.success(t('serviceProvider.laundryManagement.messages.serviceDeactivatedSuccess'));
         } else {
           throw deleteError;
         }
@@ -167,7 +167,7 @@ const LaundryServiceCreator = () => {
       fetchExistingServices();
     } catch (error) {
       console.error('Error deleting service:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete service');
+      toast.error(error.response?.data?.message || t('serviceProvider.laundryManagement.messages.failedToDeleteService'));
     } finally {
       setLoading(false);
     }
@@ -178,16 +178,15 @@ const LaundryServiceCreator = () => {
    */
   const toggleServiceAvailability = async (serviceId, currentStatus) => {
     try {
-      setLoading(true);
-      // Use the correct service endpoint
+      setLoading(true);      // Use the correct service endpoint
       await apiClient.put(`/service/services/${serviceId}`, {
         isActive: !currentStatus
       });
-      toast.success(`Service ${!currentStatus ? 'activated' : 'deactivated'} successfully!`);
+      toast.success(t(`serviceProvider.laundryManagement.messages.service${!currentStatus ? 'Activated' : 'Deactivated'}Success`));
       fetchExistingServices();
     } catch (error) {
       console.error('Error toggling service availability:', error);
-      toast.error('Failed to update service availability');
+      toast.error(t('serviceProvider.laundryManagement.messages.failedToUpdateAvailability'));
     } finally {
       setLoading(false);
     }
@@ -234,10 +233,9 @@ const LaundryServiceCreator = () => {
       const response = await apiClient.get('/service/category-templates/laundry');
       const template = response.data.data.template;
       setCategoryTemplate(template);
-      setAvailableItems(template.items || []);
-    } catch (error) {
+      setAvailableItems(template.items || []);    } catch (error) {
       console.error('Error fetching category template:', error);
-      toast.error('Failed to load laundry template');
+      toast.error(t('serviceProvider.laundryManagement.messages.failedToLoadTemplate'));
     } finally {
       setLoading(false);
     }
@@ -250,11 +248,9 @@ const LaundryServiceCreator = () => {
     if (!itemName) return;
 
     const templateItem = availableItems.find(item => item.name === itemName);
-    if (!templateItem) return;
-
-    // Check if item already exists
+    if (!templateItem) return;    // Check if item already exists
     if (laundryItems.find(item => item.name === templateItem.name)) {
-      toast.warn('Item already added');
+      toast.warn(t('serviceProvider.laundryManagement.messages.itemAlreadyAdded'));
       return;
     }
 
@@ -270,18 +266,15 @@ const LaundryServiceCreator = () => {
         isAvailable: true
       })),
       notes: ''
-    };
-
-    setLaundryItems(prev => [...prev, newItem]);
-    toast.success(`${templateItem.name} added`);
+    };    setLaundryItems(prev => [...prev, newItem]);
+    toast.success(t('serviceProvider.laundryManagement.messages.itemAddedSuccess', { itemName: getTranslatedItemName(templateItem.name) }));
   };
 
   /**
    * Remove item from service
-   */
-  const removeItem = (itemName) => {
+   */  const removeItem = (itemName) => {
     setLaundryItems(prev => prev.filter(item => item.name !== itemName));
-    toast.info('Item removed');
+    toast.info(t('serviceProvider.laundryManagement.messages.itemRemoved'));
   };
 
   /**
@@ -333,24 +326,21 @@ const LaundryServiceCreator = () => {
   /**
    * Validate form before submission
    */
-  const validateForm = () => {
-    if (!serviceDetails.name.trim()) {
-      toast.error('Service name is required');
+  const validateForm = () => {    if (!serviceDetails.name.trim()) {
+      toast.error(t('serviceProvider.laundryManagement.form.serviceNameRequired'));
       return false;
     }
 
     if (laundryItems.length === 0) {
-      toast.error('Please add at least one laundry item');
+      toast.error(t('serviceProvider.laundryManagement.messages.addAtLeastOneItem'));
       return false;
     }
 
     // Check if at least one item has valid pricing
     const hasValidPricing = laundryItems.some(item =>
       item.isAvailable && item.serviceTypes.some(st => st.isAvailable && st.price > 0)
-    );
-
-    if (!hasValidPricing) {
-      toast.error('Please set at least one available service type with a price greater than 0');
+    );    if (!hasValidPricing) {
+      toast.error(t('serviceProvider.laundryManagement.messages.setPriceForAvailableService'));
       return false;
     }
 
@@ -378,11 +368,9 @@ const LaundryServiceCreator = () => {
           currency: 'USD'
         },
         isActive: true
-      };
+      };      await apiClient.post('/service/categories/laundry/items', serviceData);
 
-      await apiClient.post('/service/categories/laundry/items', serviceData);
-
-      toast.success('Laundry service created successfully!');
+      toast.success(t('serviceProvider.laundryManagement.messages.serviceCreatedSuccess'));
 
       // Reset form
       setServiceDetails({
@@ -391,16 +379,13 @@ const LaundryServiceCreator = () => {
         shortDescription: '',
         isActive: true
       });
-      setLaundryItems([]);
-
-    } catch (error) {
+      setLaundryItems([]);    } catch (error) {
       console.error('Error creating laundry service:', error);
-      toast.error(error.response?.data?.message || 'Failed to create laundry service');
+      toast.error(error.response?.data?.message || t('serviceProvider.laundryManagement.messages.failedToCreateService'));
     } finally {
       setLoading(false);
     }
   };
-
   /**
    * Get service type display name
    */
@@ -408,24 +393,42 @@ const LaundryServiceCreator = () => {
     const serviceType = categoryTemplate?.serviceTypes?.find(st => st.id === serviceTypeId);
     return serviceType?.name || serviceTypeId;
   };
-  if (loading && !categoryTemplate) {
-    return (
+
+  /**
+   * Get translated item name
+   */
+  const getTranslatedItemName = (itemName) => {
+    const translationKey = `categorySelection.laundryItems.${itemName}`;
+    const translated = t(translationKey);
+    // If translation key doesn't exist, fall back to original name
+    return translated !== translationKey ? translated : itemName;
+  };
+
+  /**
+   * Get translated category name
+   */
+  const getTranslatedCategoryName = (categoryName) => {
+    const translationKey = `categorySelection.laundryCategories.${categoryName}`;
+    const translated = t(translationKey);
+    // If translation key doesn't exist, fall back to original name
+    return translated !== translationKey ? translated : categoryName;
+  };
+  if (loading && !categoryTemplate) {    return (
       <div className="flex items-center justify-center p-8">
         <Icon type="package" className="text-4xl mr-2" />
-        <span>Loading laundry template...</span>
+        <span>{t('serviceProvider.laundryManagement.messages.loadingTemplate')}</span>
       </div>
     );
   }
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">
+      <div className="mb-8">        <h2 className="text-3xl font-bold text-gray-800 mb-2">
           <Icon type="tshirt" className="mr-2" />
-          Laundry Service Management
+          {t('serviceProvider.laundryManagement.title')}
         </h2>
         <p className="text-gray-600">
-          Manage your laundry services and add new items with individual pricing
+          {t('serviceProvider.laundryManagement.description')}
         </p>
       </div>
 
@@ -437,10 +440,9 @@ const LaundryServiceCreator = () => {
             activeTab === 'manage'
               ? 'border-blue-500 text-blue-600 bg-blue-50'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-          }`}
-        >
+          }`}        >
           <Icon type="list" className="mr-2" />
-          Manage Items
+          {t('serviceProvider.laundryManagement.tabs.manageItems')}
         </button>
         <button
           onClick={() => setActiveTab('add')}
@@ -451,7 +453,7 @@ const LaundryServiceCreator = () => {
           }`}
         >
           <Icon type="plus" className="mr-2" />
-          Add Items
+          {t('serviceProvider.laundryManagement.tabs.addItems')}
         </button>
       </div>
 
@@ -474,10 +476,9 @@ const LaundryServiceCreator = () => {
     }
 
     if (existingServices.length === 0) {
-      return (
-        <div className="text-center py-12">
+      return (        <div className="text-center py-12">
           <Icon type="tshirt" className="text-6xl text-gray-300 mb-4" />
-          <h3 className="text-xl font-semibold text-gray-600 mb-2">No Services Found</h3>
+          <h3 className="text-xl font-semibold text-gray-600 mb-2">{t('serviceProvider.laundryManagement.messages.noServicesFound')}</h3>
           <p className="text-gray-500 mb-6">You haven't created any laundry services yet.</p>
           <button
             onClick={() => setActiveTab('add')}
@@ -491,15 +492,14 @@ const LaundryServiceCreator = () => {
     }
 
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-xl font-semibold">Your Laundry Services ({existingServices.length})</h3>
+      <div className="space-y-6">        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-semibold">{t('serviceProvider.laundryManagement.servicesCount', { count: existingServices.length })}</h3>
           <button
             onClick={() => setActiveTab('add')}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
           >
             <Icon type="plus" className="mr-2" />
-            Add New Service
+            {t('serviceProvider.laundryManagement.addNewService')}
           </button>
         </div>
 
@@ -508,9 +508,8 @@ const LaundryServiceCreator = () => {
             <div key={service._id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               {editingService === service._id ? (
                 // Edit Mode
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Service Name</label>
+                <div className="space-y-4">                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('serviceProvider.laundryManagement.form.serviceName')}</label>
                     <input
                       type="text"
                       value={editFormData.name}
@@ -520,7 +519,7 @@ const LaundryServiceCreator = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('serviceProvider.laundryManagement.form.description')}</label>
                     <textarea
                       value={editFormData.description}
                       onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -530,15 +529,13 @@ const LaundryServiceCreator = () => {
                   </div>
 
                   {/* Items Pricing Edit */}
-                  {editFormData.laundryItems && editFormData.laundryItems.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-gray-800 mb-3">Items & Pricing</h4>
+                  {editFormData.laundryItems && editFormData.laundryItems.length > 0 && (                    <div>
+                      <h4 className="font-medium text-gray-800 mb-3">{t('serviceProvider.laundryManagement.form.itemsPricing')}</h4>
                       <div className="space-y-4 max-h-60 overflow-y-auto">
                         {editFormData.laundryItems.map((item, itemIndex) => (
-                          <div key={itemIndex} className="border border-gray-100 rounded-lg p-4">
-                            <div className="flex items-center mb-3">
+                          <div key={itemIndex} className="border border-gray-100 rounded-lg p-4">                            <div className="flex items-center mb-3">
                               <span className="text-xl mr-2">{item.icon}</span>
-                              <span className="font-medium">{item.name}</span>
+                              <span className="font-medium">{getTranslatedItemName(item.name)}</span>
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                               {item.serviceTypes && item.serviceTypes.map((serviceType, stIndex) => (
@@ -558,9 +555,8 @@ const LaundryServiceCreator = () => {
                                       min="0"
                                       step="0.01"
                                       value={serviceType.price}
-                                      onChange={(e) => updateEditingItemPrice(itemIndex, serviceType.serviceTypeId, e.target.value)}
-                                      className="w-full p-1 text-sm border border-gray-300 rounded"
-                                      placeholder="Price"
+                                      onChange={(e) => updateEditingItemPrice(itemIndex, serviceType.serviceTypeId, e.target.value)}                                      className="w-full p-1 text-sm border border-gray-300 rounded"
+                                      placeholder={t('serviceProvider.laundryManagement.form.pricePlaceholder')}
                                     />
                                   )}
                                 </div>
@@ -572,21 +568,20 @@ const LaundryServiceCreator = () => {
                     </div>
                   )}
 
-                  <div className="flex gap-3">
-                    <button
+                  <div className="flex gap-3">                    <button
                       onClick={() => updateExistingService(service._id)}
                       disabled={loading}
                       className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400"
                     >
                       <Icon type="save" className="mr-1" />
-                      Save
+                      {t('serviceProvider.laundryManagement.actions.save')}
                     </button>
                     <button
                       onClick={cancelEditing}
                       className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
                     >
                       <Icon type="times" className="mr-1" />
-                      Cancel
+                      {t('serviceProvider.laundryManagement.actions.cancel')}
                     </button>
                   </div>
                 </div>
@@ -597,12 +592,11 @@ const LaundryServiceCreator = () => {
                     <div>
                       <h4 className="text-lg font-semibold text-gray-800">{service.name}</h4>
                       <p className="text-sm text-gray-600 mt-1">{service.description}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
+                    </div>                    <div className="flex items-center gap-2">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         service.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
-                        {service.isActive ? 'Active' : 'Inactive'}
+                        {service.isActive ? t('serviceProvider.laundryManagement.status.active') : t('serviceProvider.laundryManagement.status.inactive')}
                       </span>
                     </div>
                   </div>
@@ -613,30 +607,28 @@ const LaundryServiceCreator = () => {
                       <div className="text-lg font-semibold text-blue-600">
                         {service.laundryItems ? service.laundryItems.length : 0}
                       </div>
-                      <div className="text-xs text-gray-600">Items</div>
+                      <div className="text-xs text-gray-600">{t('serviceProvider.laundryManagement.stats.items')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-lg font-semibold text-green-600">
                         {service.performance?.totalBookings || 0}
                       </div>
-                      <div className="text-xs text-gray-600">Bookings</div>
+                      <div className="text-xs text-gray-600">{t('serviceProvider.laundryManagement.stats.bookings')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-lg font-semibold text-purple-600">
                         ${service.performance?.totalRevenue || 0}
                       </div>
-                      <div className="text-xs text-gray-600">Revenue</div>
+                      <div className="text-xs text-gray-600">{t('serviceProvider.laundryManagement.stats.revenue')}</div>
                     </div>
-                  </div>
-
-                  {/* Action Buttons */}
+                  </div>{/* Action Buttons */}
                   <div className="flex gap-2">
                     <button
                       onClick={() => startEditingService(service)}
                       className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
                     >
                       <Icon type="edit" className="mr-1" />
-                      Edit
+                      {t('serviceProvider.laundryManagement.actions.edit')}
                     </button>
                     <button
                       onClick={() => toggleServiceAvailability(service._id, service.isActive)}
@@ -647,14 +639,14 @@ const LaundryServiceCreator = () => {
                       }`}
                     >
                       <Icon type="toggle" className="mr-1" />
-                      {service.isActive ? 'Deactivate' : 'Activate'}
+                      {service.isActive ? t('serviceProvider.laundryManagement.actions.deactivate') : t('serviceProvider.laundryManagement.actions.activate')}
                     </button>
                     <button
                       onClick={() => deleteExistingService(service._id)}
                       className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                     >
                       <Icon type="trash" className="mr-1" />
-                      Delete
+                      {t('serviceProvider.laundryManagement.actions.delete')}
                     </button>
                   </div>
                 </div>
@@ -670,70 +662,66 @@ const LaundryServiceCreator = () => {
    */
   function renderAddItemsTab() {
     return (
-      <div className="space-y-8">
-        {/* Service Details Form */}
+      <div className="space-y-8">        {/* Service Details Form */}
         <div className="p-6 bg-gray-50 rounded-lg">
-          <h3 className="text-xl font-semibold mb-4">Service Information</h3>
+          <h3 className="text-xl font-semibold mb-4">{t('serviceProvider.laundryManagement.form.serviceInformation')}</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Service Name *
+                {t('serviceProvider.laundryManagement.form.serviceName')} *
               </label>
               <input
                 type="text"
                 value={serviceDetails.name}
                 onChange={(e) => setServiceDetails(prev => ({ ...prev, name: e.target.value }))}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., Premium Laundry Service"
+                placeholder={t('serviceProvider.laundryManagement.form.serviceNamePlaceholder')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Short Description
+                {t('serviceProvider.laundryManagement.form.shortDescription')}
               </label>
               <input
                 type="text"
                 value={serviceDetails.shortDescription}
                 onChange={(e) => setServiceDetails(prev => ({ ...prev, shortDescription: e.target.value }))}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="Brief service description"
+                placeholder={t('serviceProvider.laundryManagement.form.shortDescriptionPlaceholder')}
               />
             </div>
           </div>
 
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Full Description
+              {t('serviceProvider.laundryManagement.form.fullDescription')}
             </label>
             <textarea
               value={serviceDetails.description}
               onChange={(e) => setServiceDetails(prev => ({ ...prev, description: e.target.value }))}
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
               rows="3"
-              placeholder="Detailed description of your laundry service"
+              placeholder={t('serviceProvider.laundryManagement.form.fullDescriptionPlaceholder')}
             />
           </div>
-        </div>
-
-        {/* Add Items Section */}
+        </div>        {/* Add Items Section */}
         <div className="p-6 bg-blue-50 rounded-lg">
           <h3 className="text-xl font-semibold mb-4">
             <Icon type="plus" className="mr-2" />
-            Add Laundry Items
+            {t('serviceProvider.laundryManagement.form.addLaundryItems')}
           </h3>
 
           <div className="flex items-center gap-4">
             <select
               onChange={(e) => addItemFromDropdown(e.target.value)}
               className="flex-1 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              value=""
-            >
-              <option value="">Select an item to add...</option>
+              value=""            >
+              <option value="">{t('serviceProvider.laundryManagement.form.selectItemToAdd')}</option>
               {availableItems.map((item, index) => (
                 <option key={index} value={item.name}>
-                  {item.icon} {item.name} ({item.category})
+                  {item.icon} {getTranslatedItemName(item.name)} ({getTranslatedCategoryName(item.category)})
                 </option>
               ))}
             </select>
@@ -742,10 +730,9 @@ const LaundryServiceCreator = () => {
 
         {/* Items List */}
         {laundryItems.length > 0 && (
-          <div>
-            <h3 className="text-xl font-semibold mb-4">
+          <div>            <h3 className="text-xl font-semibold mb-4">
               <Icon type="list" className="mr-2" />
-              Your Laundry Items ({laundryItems.length})
+              {t('serviceProvider.laundryManagement.form.yourLaundryItems', { count: laundryItems.length })}
             </h3>
 
             <div className="space-y-6">
@@ -754,10 +741,9 @@ const LaundryServiceCreator = () => {
                   {/* Item Header */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
-                      <span className="text-2xl mr-3">{item.icon}</span>
-                      <div>
-                        <h4 className="text-lg font-semibold">{item.name}</h4>
-                        <p className="text-sm text-gray-500">Category: {item.category}</p>
+                      <span className="text-2xl mr-3">{item.icon}</span>                      <div>
+                        <h4 className="text-lg font-semibold">{getTranslatedItemName(item.name)}</h4>
+                        <p className="text-sm text-gray-500">{t('serviceProvider.laundryManagement.form.category')}: {getTranslatedCategoryName(item.category)}</p>
                       </div>
                     </div>
 
@@ -769,10 +755,9 @@ const LaundryServiceCreator = () => {
                           checked={item.isAvailable}
                           onChange={(e) => updateItemAvailability(item.name, e.target.checked)}
                           className="mr-2"
-                        />
-                        <span className={`text-sm ${item.isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                        />                        <span className={`text-sm ${item.isAvailable ? 'text-green-600' : 'text-red-600'}`}>
                           <Icon type={item.isAvailable ? "available" : "unavailable"} className="mr-1" />
-                          {item.isAvailable ? 'Available' : 'Unavailable'}
+                          {t(`serviceProvider.laundryManagement.status.${item.isAvailable ? 'available' : 'unavailable'}`)}
                         </span>
                       </label>
 
@@ -806,9 +791,8 @@ const LaundryServiceCreator = () => {
                               </label>
                             </div>
 
-                            {serviceType.isAvailable && (
-                              <div>
-                                <label className="block text-xs text-gray-500 mb-1">Price ($)</label>
+                            {serviceType.isAvailable && (                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">{t('serviceProvider.laundryManagement.form.price')}</label>
                                 <input
                                   type="number"
                                   min="0"
@@ -816,7 +800,7 @@ const LaundryServiceCreator = () => {
                                   value={serviceType.price}
                                   onChange={(e) => updateServiceTypePrice(item.name, serviceType.serviceTypeId, e.target.value)}
                                   className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                                  placeholder="0.00"
+                                  placeholder={t('serviceProvider.laundryManagement.form.pricePlaceholder')}
                                 />
                               </div>
                             )}
@@ -824,17 +808,15 @@ const LaundryServiceCreator = () => {
                         );
                       })}
                     </div>
-                  )}
-
-                  {/* Item Notes */}
+                  )}                  {/* Item Notes */}
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Notes (optional)</label>
+                    <label className="block text-sm text-gray-600 mb-1">{t('serviceProvider.laundryManagement.form.notes')}</label>
                     <input
                       type="text"
                       value={item.notes}
                       onChange={(e) => updateItemNotes(item.name, e.target.value)}
                       className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                      placeholder="Special instructions or notes for this item"
+                      placeholder={t('serviceProvider.laundryManagement.form.notesPlaceholder')}
                     />
                   </div>
                 </div>
@@ -844,14 +826,13 @@ const LaundryServiceCreator = () => {
         )}
 
         {/* Create Service Button */}
-        <div className="flex justify-center">
-          <button
+        <div className="flex justify-center">          <button
             onClick={createService}
             disabled={loading || laundryItems.length === 0}
             className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
           >
             <Icon type="save" className="mr-2" />
-            {loading ? 'Creating Service...' : 'Create Laundry Service'}
+            {loading ? t('serviceProvider.laundryManagement.messages.creatingService') : t('serviceProvider.laundryManagement.messages.createLaundryService')}
           </button>
         </div>
       </div>    );

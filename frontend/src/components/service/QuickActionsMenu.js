@@ -4,12 +4,15 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const QuickActionsMenu = () => {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
       <div className="px-4 py-5 sm:px-6 bg-gray-50">
-        <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
+        <h3 className="text-lg font-medium text-gray-900">{t('serviceProvider.quickActions.title')}</h3>
       </div>
       <div className="px-4 py-5 sm:p-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -22,7 +25,7 @@ const QuickActionsMenu = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
             </div>
-            <span className="mt-2 text-sm font-medium text-gray-900">Add New Service</span>
+            <span className="mt-2 text-sm font-medium text-gray-900">{t('serviceProvider.quickActions.addService')}</span>
           </Link>
 
           <Link
@@ -34,7 +37,7 @@ const QuickActionsMenu = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <span className="mt-2 text-sm font-medium text-gray-900">Manage Orders</span>
+            <span className="mt-2 text-sm font-medium text-gray-900">{t('serviceProvider.orders.title')}</span>
           </Link>
 
           <Link
@@ -46,7 +49,7 @@ const QuickActionsMenu = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <span className="mt-2 text-sm font-medium text-gray-900">View Earnings</span>
+            <span className="mt-2 text-sm font-medium text-gray-900">{t('serviceProvider.earnings.title')}</span>
           </Link>
 
           <Link

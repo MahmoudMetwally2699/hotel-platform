@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FaTshirt,
   FaCar,
@@ -14,7 +15,7 @@ import {
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
-import { handleApiError, showErrorToast, showSuccessToast } from '../../utils/errorHandler';
+import { showErrorToast } from '../../utils/errorHandler';
 
 const categoryIcons = {
   laundry: FaTshirt,
@@ -28,13 +29,13 @@ const categoryIcons = {
 };
 
 const CategorySelectionDashboard = ({ onCategorySelect }) => {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState({});
-  const [activeCategories, setActiveCategories] = useState([]);  const [loading, setLoading] = useState(true);
+  const [activeCategories, setActiveCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(null);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const response = await apiClient.get('/service/categories');
       setCategories(response.data.data.availableCategories);
@@ -44,51 +45,56 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
       console.error('Error fetching categories:', error);
 
       // Fallback to local category data if API fails
-      const fallbackCategories = {
-        laundry: {
-          name: 'Laundry & Dry Cleaning',
-          description: 'Professional laundry and dry cleaning services',
+      const fallbackCategories = {        laundry: {
+          name: t('categorySelection.categories.laundry.name'),
+          description: t('categorySelection.categories.laundry.description'),
           items: [
-            { name: 'Shirts', category: 'clothing' },
-            { name: 'Pants', category: 'clothing' },
-            { name: 'Dresses', category: 'clothing' },
-            { name: 'Suits', category: 'formal' }
+            { name: t('categorySelection.sampleItems.shirts'), category: 'clothing' },
+            { name: t('categorySelection.sampleItems.pants'), category: 'clothing' },
+            { name: t('categorySelection.sampleItems.dresses'), category: 'clothing' },
+            { name: t('categorySelection.sampleItems.suits'), category: 'formal' }
           ]
         },
         transportation: {
-          name: 'Transportation',
-          description: 'Car rental, taxi, and airport transfer services',
+          name: t('categorySelection.categories.transportation.name'),
+          description: t('categorySelection.categories.transportation.description'),
           vehicleTypes: [
-            { name: 'Sedan', capacity: 4 },
-            { name: 'SUV', capacity: 7 },
-            { name: 'Van', capacity: 12 }
+            { name: t('categorySelection.sampleItems.sedan'), capacity: 4 },
+            { name: t('categorySelection.sampleItems.suv'), capacity: 7 },
+            { name: t('categorySelection.sampleItems.van'), capacity: 12 }
           ]
         },
         tours: {
-          name: 'Tours & Tourism',
-          description: 'Guided tours and travel experiences',
+          name: t('categorySelection.categories.tours.name'),
+          description: t('categorySelection.categories.tours.description'),
           tourTypes: [
-            { name: 'City Tour', duration: '4 hours' },
-            { name: 'Historical Tour', duration: '6 hours' },
-            { name: 'Nature Tour', duration: '8 hours' }
+            { name: t('categorySelection.sampleItems.cityTour'), duration: '4 hours' },
+            { name: t('categorySelection.sampleItems.historicalTour'), duration: '6 hours' },
+            { name: t('categorySelection.sampleItems.natureTour'), duration: '8 hours' }
           ]
         },
         spa: {
-          name: 'Spa & Wellness',
-          description: 'Relaxation and wellness services',
+          name: t('categorySelection.categories.spa.name'),
+          description: t('categorySelection.categories.spa.description'),
           items: [
-            { name: 'Massage', duration: '60 min' },
-            { name: 'Facial', duration: '45 min' }
+            { name: t('categorySelection.sampleItems.massage'), duration: '60 min' },
+            { name: t('categorySelection.sampleItems.facial'), duration: '45 min' }
           ]
         }
       };
 
       setCategories(fallbackCategories);
       setActiveCategories([]);
-      toast.warn('Using offline mode - some features may be limited');
+      toast.warn(t('categorySelection.offlineMode'));
       setLoading(false);
     }
-  };  const activateCategory = async (categoryKey) => {
+  }, [t]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  const activateCategory = async (categoryKey) => {
     setActivating(categoryKey);
     try {
       const response = await apiClient.post(`/service/categories/${categoryKey}/activate`);
@@ -105,18 +111,20 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
       // Fallback for offline mode - just activate locally
       if (error.response?.status === 404 || error.code === 'ERR_NETWORK') {
         setActiveCategories(prev => [...prev, categoryKey]);
-        toast.success(`${categories[categoryKey]?.name || categoryKey} activated locally (offline mode)`);
+        toast.success(`${categories[categoryKey]?.name || categoryKey} ${t('categorySelection.activatedLocally')}`);
 
         // Call the callback if provided
         if (onCategorySelect) {
           onCategorySelect(categoryKey, categories[categoryKey]);
-        }      } else {
-        showErrorToast(error, 'Failed to activate category');
+        }
+      } else {
+        showErrorToast(error, t('categorySelection.failedToActivate'));
       }
     } finally {
       setActivating(null);
     }
   };
+
   const deactivateCategory = async (categoryKey) => {
     setActivating(categoryKey);
     try {
@@ -129,8 +137,9 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
       // Fallback for offline mode
       if (error.response?.status === 404 || error.code === 'ERR_NETWORK') {
         setActiveCategories(prev => prev.filter(cat => cat !== categoryKey));
-        toast.success(`${categories[categoryKey]?.name || categoryKey} deactivated locally (offline mode)`);      } else {
-        showErrorToast(error, 'Failed to deactivate category');
+        toast.success(`${categories[categoryKey]?.name || categoryKey} ${t('categorySelection.deactivatedLocally')}`);
+      } else {
+        showErrorToast(error, t('categorySelection.failedToDeactivate'));
       }
     } finally {
       setActivating(null);
@@ -152,22 +161,19 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Service Categories</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('categorySelection.title')}</h1>
         <p className="text-gray-600 mb-6">
-          Select the service categories you want to offer. You can activate multiple categories and manage them independently.
+          {t('categorySelection.description')}
         </p>
 
         {activeCategories.length > 0 && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <h3 className="text-lg font-semibold text-green-800 mb-2">Active Categories</h3>
-            <div className="flex flex-wrap gap-2">
-              {activeCategories.map(categoryKey => {
-                const category = categories[categoryKey];
+            <h3 className="text-lg font-semibold text-green-800 mb-2">{t('categorySelection.activeCategories')}</h3>
+            <div className="flex flex-wrap gap-2">              {activeCategories.map(categoryKey => {
                 const IconComponent = categoryIcons[categoryKey];
-                return (
-                  <div key={categoryKey} className="flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                    <IconComponent className="mr-2" />
-                    {category?.name}
+                return (<div key={categoryKey} className="flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                    {IconComponent && <IconComponent className="mr-2" />}
+                    {t(`categorySelection.categories.${categoryKey}.name`)}
                     <FaCheck className="ml-2 text-green-600" />
                   </div>
                 );
@@ -210,17 +216,17 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
                       : 'bg-blue-100 text-blue-600'
                     }
                   `}>
-                    <IconComponent className="text-3xl" />
+                    {IconComponent && <IconComponent className="text-3xl" />}
                   </div>
-                </div>
-
-                <h3 className="text-xl font-bold text-center mb-2 text-gray-800">
-                  {category.name}
+                </div>                <h3 className="text-xl font-bold text-center mb-2 text-gray-800">
+                  {t(`categorySelection.categories.${categoryKey}.name`)}
                 </h3>
 
                 <p className="text-gray-600 text-center text-sm mb-4">
-                  {category.description}
-                </p>                {isActive ? (
+                  {t(`categorySelection.categories.${categoryKey}.description`)}
+                </p>
+
+                {isActive ? (
                   <button
                     disabled={isActivating}
                     className={`
@@ -238,12 +244,12 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
                     {isActivating ? (
                       <div className="flex items-center justify-center">
                         <FaSpinner className="animate-spin mr-2" />
-                        Deactivating...
+                        {t('categorySelection.deactivating')}
                       </div>
                     ) : (
                       <div className="flex items-center justify-center">
                         <FaCheck className="mr-2" />
-                        Deactivate
+                        {t('categorySelection.deactivate')}
                       </div>
                     )}
                   </button>
@@ -265,12 +271,12 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
                     {isActivating ? (
                       <div className="flex items-center justify-center">
                         <FaSpinner className="animate-spin mr-2" />
-                        Activating...
+                        {t('categorySelection.activating')}
                       </div>
                     ) : (
                       <div className="flex items-center justify-center">
                         <FaPlus className="mr-2" />
-                        Activate
+                        {t('categorySelection.activate')}
                       </div>
                     )}
                   </button>
@@ -279,7 +285,7 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
                 {/* Show sample items/services for preview */}
                 {category.items && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">Sample Services:</p>
+                    <p className="text-xs text-gray-500 mb-2">{t('categorySelection.sampleServices')}</p>
                     <div className="flex flex-wrap gap-1">
                       {category.items.slice(0, 3).map((item, index) => (
                         <span
@@ -291,7 +297,7 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
                       ))}
                       {category.items.length > 3 && (
                         <span className="text-gray-400 text-xs">
-                          +{category.items.length - 3} more
+                          +{category.items.length - 3} {t('categorySelection.more')}
                         </span>
                       )}
                     </div>
@@ -300,7 +306,7 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
 
                 {category.vehicleTypes && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">Vehicle Types:</p>
+                    <p className="text-xs text-gray-500 mb-2">{t('categorySelection.vehicleTypes')}</p>
                     <div className="flex flex-wrap gap-1">
                       {category.vehicleTypes.slice(0, 2).map((vehicle, index) => (
                         <span
@@ -312,7 +318,7 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
                       ))}
                       {category.vehicleTypes.length > 2 && (
                         <span className="text-gray-400 text-xs">
-                          +{category.vehicleTypes.length - 2} more
+                          +{category.vehicleTypes.length - 2} {t('categorySelection.more')}
                         </span>
                       )}
                     </div>
@@ -321,7 +327,7 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
 
                 {category.tourTypes && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">Tour Types:</p>
+                    <p className="text-xs text-gray-500 mb-2">{t('categorySelection.tourTypes')}</p>
                     <div className="flex flex-wrap gap-1">
                       {category.tourTypes.slice(0, 2).map((tour, index) => (
                         <span
@@ -333,7 +339,7 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
                       ))}
                       {category.tourTypes.length > 2 && (
                         <span className="text-gray-400 text-xs">
-                          +{category.tourTypes.length - 2} more
+                          +{category.tourTypes.length - 2} {t('categorySelection.more')}
                         </span>
                       )}
                     </div>
@@ -348,14 +354,14 @@ const CategorySelectionDashboard = ({ onCategorySelect }) => {
       {activeCategories.length > 0 && (
         <div className="mt-8 text-center">
           <p className="text-gray-600 mb-4">
-            Great! You've activated {activeCategories.length} categor{activeCategories.length === 1 ? 'y' : 'ies'}.
-            Now you can create services for each active category.
+            {t('categorySelection.successMessage')} {activeCategories.length} {activeCategories.length === 1 ? t('categorySelection.categorySingle') : t('categorySelection.categoryPlural')}.
+            {' '}{t('categorySelection.successDescription')}
           </p>
           <button
             onClick={() => window.location.href = '/service/services'}
             className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
           >
-            Manage Services
+            {t('categorySelection.manageServices')}
           </button>
         </div>
       )}

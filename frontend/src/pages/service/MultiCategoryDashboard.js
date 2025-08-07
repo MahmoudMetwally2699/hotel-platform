@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FaTh,
   FaChartLine,
@@ -17,14 +18,16 @@ import LaundryServiceCreator from '../../components/service/LaundryServiceCreato
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 
 const MultiCategoryDashboard = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('categories');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categoryTemplate, setCategoryTemplate] = useState(null);
+
   const tabs = [
-    { id: 'categories', name: 'Service Categories', icon: FaTh },
-    { id: 'manage-services', name: 'Manage Services', icon: FaCog },
-    { id: 'orders', name: 'Order Management', icon: FaClipboardList },
-    { id: 'analytics', name: 'Analytics', icon: FaChartLine }
+    { id: 'categories', name: t('serviceProvider.navigation.serviceCategories'), icon: FaTh },
+    { id: 'manage-services', name: t('serviceProvider.navigation.manageServices'), icon: FaCog },
+    { id: 'orders', name: t('serviceProvider.navigation.orderManagement'), icon: FaClipboardList },
+    { id: 'analytics', name: t('serviceProvider.navigation.analytics'), icon: FaChartLine }
   ];
 
   const handleCategorySelect = (category, template) => {

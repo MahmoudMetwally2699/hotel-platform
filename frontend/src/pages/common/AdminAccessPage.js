@@ -13,28 +13,7 @@ const AdminAccessPage = () => {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">Admin Portal Access</h1>
           <p className="text-xl text-gray-300">Choose your portal to continue</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Super Admin Portal */}
-          <Link
-            to="/superadmin/login"
-            className="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-8 text-center hover:bg-opacity-20 transition-all duration-300 transform hover:scale-105 border border-white border-opacity-20"
-          >
-            <div className="mb-6">
-              <div className="mx-auto h-16 w-16 bg-purple-600 rounded-full flex items-center justify-center mb-4">
-                <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Super Admin</h3>
-              <p className="text-gray-300 text-sm">Platform administration and management</p>
-            </div>
-            <div className="bg-purple-600 text-white py-3 px-6 rounded-lg font-medium">
-              Access Platform
-            </div>
-          </Link>
-
+        </div>        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Hotel Admin Portal */}
           <Link
             to="/hotel/login"
@@ -62,7 +41,7 @@ const AdminAccessPage = () => {
             <div className="mb-6">
               <div className="mx-auto h-16 w-16 bg-green-600 rounded-full flex items-center justify-center mb-4">
                 <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0H8m8 0h2a2 2 0 012 2v6.445" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6m8 0H8m8 0h2a2 2 0 012 2v6.445" />
                 </svg>
               </div>
               <h3 className="text-2xl font-bold text-white mb-2">Service Provider</h3>

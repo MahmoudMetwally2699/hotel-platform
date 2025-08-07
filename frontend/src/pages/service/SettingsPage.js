@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -66,6 +67,7 @@ const PaymentSchema = Yup.object().shape({
 });
 
 const SettingsPage = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const profile = useSelector(selectProviderProfile);
   const isLoading = useSelector(selectServiceLoading);

@@ -4,8 +4,11 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const UpcomingBookings = ({ bookings = [] }) => {
+  const { t } = useTranslation();
+
   // If no bookings are passed, show sample data
   const displayBookings = bookings.length > 0 ? bookings : [
     {
@@ -32,10 +35,9 @@ const UpcomingBookings = ({ bookings = [] }) => {
 
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="px-4 py-5 sm:px-6 bg-gray-50 flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-900">Upcoming Bookings</h3>
+      <div className="px-4 py-5 sm:px-6 bg-gray-50 flex justify-between items-center">        <h3 className="text-lg font-medium text-gray-900">{t('serviceProvider.upcomingBookings.title')}</h3>
         <Link to="/service/orders" className="text-sm text-blue-600 hover:text-blue-800">
-          View All
+          {t('serviceProvider.upcomingBookings.viewAll')}
         </Link>
       </div>
       <ul className="divide-y divide-gray-200">
@@ -69,18 +71,17 @@ const UpcomingBookings = ({ bookings = [] }) => {
                 </div>
               </div>
             </div>
-            <div className="mt-2 flex justify-end space-x-2">
-              <Link
+            <div className="mt-2 flex justify-end space-x-2">              <Link
                 to={`/service/orders/${booking._id}`}
                 className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
               >
-                Details
+                {t('serviceProvider.orders.viewDetails')}
               </Link>
               <button
                 type="button"
                 className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
               >
-                Check-in
+                {t('common.checkin')}
               </button>
             </div>
           </li>

@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import {
   fetchProviderOrders,
   updateOrderStatus,
@@ -13,7 +14,9 @@ import {
   selectServiceError
 } from '../../redux/slices/serviceSlice';
 
-const OrdersPage = () => {  const dispatch = useDispatch();
+const OrdersPage = () => {
+  const { t } = useTranslation();
+  const dispatch = useDispatch();
   const orders = useSelector(selectProviderOrders);
   const isLoading = useSelector(selectServiceLoading);
   const error = useSelector(selectServiceError);
@@ -119,7 +122,7 @@ const OrdersPage = () => {  const dispatch = useDispatch();
 
   return (
     <div className="py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-semibold text-gray-800 mb-6">Orders Management</h1>
+      <h1 className="text-2xl font-semibold text-gray-800 mb-6">{t('serviceProvider.orders.title')}</h1>
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -134,13 +137,12 @@ const OrdersPage = () => {  const dispatch = useDispatch();
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-            >
-              <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="in-progress">In Progress</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+            >              <option value="all">{t('serviceProvider.orders.allOrders')}</option>
+              <option value="pending">{t('common.pending')}</option>
+              <option value="confirmed">{t('common.confirmed')}</option>
+              <option value="in-progress">{t('serviceProvider.orders.inProgress')}</option>
+              <option value="completed">{t('serviceProvider.orders.completed')}</option>
+              <option value="cancelled">{t('serviceProvider.orders.cancelled')}</option>
             </select>
 
             <select
@@ -176,7 +178,7 @@ const OrdersPage = () => {  const dispatch = useDispatch();
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort('orderId')}
                   >
-                    Order ID
+                    {t('serviceProvider.orders.orderNumber')}
                     {sortConfig.key === 'orderId' && (
                       <span className="ml-1">
                         {sortConfig.direction === 'asc' ? '↑' : '↓'}
@@ -188,7 +190,7 @@ const OrdersPage = () => {  const dispatch = useDispatch();
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort('service.name')}
                   >
-                    Service
+                    {t('serviceProvider.orders.service')}
                     {sortConfig.key === 'service.name' && (
                       <span className="ml-1">
                         {sortConfig.direction === 'asc' ? '↑' : '↓'}
@@ -200,7 +202,7 @@ const OrdersPage = () => {  const dispatch = useDispatch();
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort('hotel.name')}
                   >
-                    Hotel
+                    {t('serviceProvider.orders.hotel')}
                     {sortConfig.key === 'hotel.name' && (
                       <span className="ml-1">
                         {sortConfig.direction === 'asc' ? '↑' : '↓'}
@@ -212,7 +214,7 @@ const OrdersPage = () => {  const dispatch = useDispatch();
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort('totalAmount')}
                   >
-                    Amount
+                    {t('serviceProvider.orders.amount')}
                     {sortConfig.key === 'totalAmount' && (
                       <span className="ml-1">
                         {sortConfig.direction === 'asc' ? '↑' : '↓'}
@@ -224,7 +226,7 @@ const OrdersPage = () => {  const dispatch = useDispatch();
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort('status')}
                   >
-                    Status
+                    {t('serviceProvider.orders.status')}
                     {sortConfig.key === 'status' && (
                       <span className="ml-1">
                         {sortConfig.direction === 'asc' ? '↑' : '↓'}
@@ -236,7 +238,7 @@ const OrdersPage = () => {  const dispatch = useDispatch();
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                     onClick={() => handleSort('createdAt')}
                   >
-                    Date
+                    {t('serviceProvider.orders.createdAt')}
                     {sortConfig.key === 'createdAt' && (
                       <span className="ml-1">
                         {sortConfig.direction === 'asc' ? '↑' : '↓'}
@@ -244,7 +246,7 @@ const OrdersPage = () => {  const dispatch = useDispatch();
                     )}
                   </th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t('serviceProvider.orders.actions')}
                   </th>
                 </tr>
               </thead>
@@ -281,19 +283,18 @@ const OrdersPage = () => {  const dispatch = useDispatch();
                         onClick={() => handleViewDetails(order)}
                         className="text-blue-600 hover:text-blue-900 mr-4"
                       >
-                        View
+                        {t('serviceProvider.orders.viewDetails')}
                       </button>
                       <select
                         value={order.status}
                         onChange={(e) => handleStatusChange(order._id, e.target.value)}
                         className="text-sm border-gray-300 focus:ring-blue-500 focus:border-blue-500 rounded-md"
                         disabled={order.status === 'cancelled' || order.status === 'completed'}
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirm</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="completed">Complete</option>
-                        <option value="cancelled">Cancel</option>
+                      >                        <option value="pending">{t('common.pending')}</option>
+                        <option value="confirmed">{t('serviceProvider.orders.confirmOrder')}</option>
+                        <option value="in-progress">{t('serviceProvider.orders.markInProgress')}</option>
+                        <option value="completed">{t('serviceProvider.orders.markCompleted')}</option>
+                        <option value="cancelled">{t('serviceProvider.orders.markCancelled')}</option>
                       </select>
                     </td>
                   </tr>
@@ -305,12 +306,11 @@ const OrdersPage = () => {  const dispatch = useDispatch();
           <div className="text-center py-10">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No orders found</h3>
+            </svg>            <h3 className="mt-2 text-sm font-medium text-gray-900">{t('serviceProvider.orders.noOrders')}</h3>
             <p className="mt-1 text-sm text-gray-500">
               {statusFilter !== 'all' || dateFilter !== 'all'
-                ? 'Try changing your filters to see more orders'
-                : 'There are no orders for your services yet.'}
+                ? t('serviceProvider.orders.noOrdersDescription')
+                : t('serviceProvider.orders.noOrdersDescription')}
             </p>
           </div>
         )}
