@@ -166,13 +166,21 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
           const servicesResponse = await apiClient.get(`/client/hotels/${hotelId}/services/laundry/items`);
 
           const responseData = servicesResponse.data.data;
-          const laundryServices = responseData?.services || [];
-
-          console.log('🔍 Laundry services response:', {
+          const laundryServices = responseData?.services || [];          console.log('🔍 Laundry services response:', {
             success: servicesResponse.data.success,
             totalServices: laundryServices.length,
             services: laundryServices.map(s => ({ id: s._id, name: s.name, category: s.category }))
-          });          if (laundryServices && laundryServices.length > 0) {
+          });
+
+          // Add detailed logging of the first service to see full structure
+          if (laundryServices.length > 0) {
+            console.log('🧺 Full first service structure:', laundryServices[0]);
+            console.log('🧺 Service has laundryItems:', !!laundryServices[0].laundryItems);
+            console.log('🧺 LaundryItems count:', laundryServices[0].laundryItems?.length || 0);
+            if (laundryServices[0].laundryItems?.length > 0) {
+              console.log('🧺 First laundry item:', laundryServices[0].laundryItems[0]);
+            }
+          }if (laundryServices && laundryServices.length > 0) {
             // Store all available services
             setServices(laundryServices);
             // Keep the first service as primary for backwards compatibility
@@ -443,12 +451,18 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
 
                 {/* Only show categories if items are available */}
                 {getAvailableLaundryItems().length > 0 && (
-                  <>
-                    {/* Categories */}
-                    {['clothing', 'outerwear', 'undergarments', 'linens', 'home'].map(category => {
+                  <>                    {/* Categories - Dynamically generated from available items */}
+                    {(() => {
                       const availableItems = getAvailableLaundryItems();
-                      const categoryItems = availableItems.filter(item => item.category === category);
-                      if (categoryItems.length === 0) return null;                  return (
+
+                      // Get unique categories from all available items
+                      const availableCategories = [...new Set(availableItems.map(item => item.category))];
+                      console.log('🔍 Dynamic categories found:', availableCategories);
+
+                      return availableCategories.map(category => {
+                        const categoryItems = availableItems.filter(item => item.category === category);
+                        console.log(`🔍 Category: ${category}, Items found: ${categoryItems.length}`, categoryItems.map(i => i.name));
+                        if (categoryItems.length === 0) return null;return (
                     <div key={category} className="mb-8">
                       <h3 className="text-lg font-semibold text-gray-800 mb-4">
                         {getCategoryName(category)}
@@ -508,11 +522,13 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                                 </button>
                               </div>
                             </div>
-                          );
-                        })}
-                      </div>                    </div>
+                          );                        })}
+                      </div>
+
+                    </div>
                   );
-                })}
+                      });
+                    })()}
                   </>
                 )}
               </div>

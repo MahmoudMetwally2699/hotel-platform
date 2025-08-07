@@ -9,8 +9,9 @@
  * 5. Complete the booking with scheduling
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import {
   FaTshirt,
@@ -21,9 +22,7 @@ import {
   FaClock,
   FaMapMarkerAlt,
   FaCalendarAlt,
-  FaSpinner,
-  FaCheck,
-  FaStar,
+  FaSpinner,  FaCheck,
   FaShoppingCart
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
@@ -31,6 +30,7 @@ import apiClient from '../../services/api.service';
 const LaundryBookingInterface = () => {
   const { hotelId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // State management
   const [loading, setLoading] = useState(true);
@@ -45,36 +45,47 @@ const LaundryBookingInterface = () => {
     pickupLocation: '',
     deliveryLocation: '',
     specialRequests: ''
-  });
-  const [bookingStep, setBookingStep] = useState(1); // 1: Items, 2: Schedule, 3: Confirm
+  });  const [bookingStep, setBookingStep] = useState(1); // 1: Items, 2: Schedule, 3: Confirm
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (hotelId) {
-      fetchLaundryServices();
-    }
-  }, [hotelId]);
 
   /**
    * Fetch available laundry services for the hotel
    */
-  const fetchLaundryServices = async () => {
+  const fetchLaundryServices = useCallback(async () => {
     try {
       setLoading(true);
 
       // Fetch hotel details
       const hotelResponse = await apiClient.get(`/client/hotels/${hotelId}`);
-      setHotel(hotelResponse.data.data);
-
-      // Fetch laundry services
+      setHotel(hotelResponse.data.data);      // Fetch laundry services
       const servicesResponse = await apiClient.get(`/client/hotels/${hotelId}/services/laundry/items`);
       console.log('🧺 Laundry services response:', servicesResponse.data);
+      console.log('🧺 Services count:', servicesResponse.data.data.services?.length);
+      console.log('🧺 Full response structure:', JSON.stringify(servicesResponse.data, null, 2));
+      console.log('🧺 Services details:', servicesResponse.data.data.services?.map(s => ({
+        id: s._id,
+        name: s.name,
+        laundryItemsCount: s.laundryItems?.length || 0,
+        hasLaundryItems: !!s.laundryItems && s.laundryItems.length > 0,
+        firstItem: s.laundryItems?.[0] ? {
+          name: s.laundryItems[0].name,
+          category: s.laundryItems[0].category
+        } : null
+      })));
 
       setLaundryServices(servicesResponse.data.data.services || []);
 
-      // Auto-select the first service if available
-      if (servicesResponse.data.data.services?.length > 0) {
+      // Auto-select the first service that has laundry items
+      const serviceWithItems = servicesResponse.data.data.services?.find(service =>
+        service.laundryItems && service.laundryItems.length > 0
+      );
+
+      if (serviceWithItems) {
+        setSelectedService(serviceWithItems);
+        console.log('🎯 Selected service:', serviceWithItems.name, 'with', serviceWithItems.laundryItems.length, 'items');
+      } else if (servicesResponse.data.data.services?.length > 0) {
         setSelectedService(servicesResponse.data.data.services[0]);
+        console.log('⚠️ No services with items found, selected first service:', servicesResponse.data.data.services[0].name);
       }
 
     } catch (error) {
@@ -83,7 +94,13 @@ const LaundryBookingInterface = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [hotelId]);
+
+  useEffect(() => {
+    if (hotelId) {
+      fetchLaundryServices();
+    }
+  }, [hotelId, fetchLaundryServices]);
 
   /**
    * Add item to cart with service type selection
@@ -208,7 +225,6 @@ const LaundryBookingInterface = () => {
       </div>
     );
   }
-
   if (laundryServices.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -226,6 +242,33 @@ const LaundryBookingInterface = () => {
       </div>
     );
   }
+
+  // Check if any services have laundry items
+  const servicesWithItems = laundryServices.filter(service =>
+    service.laundryItems && service.laundryItems.length > 0
+  );
+
+  if (servicesWithItems.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <FaTshirt className="text-6xl text-gray-300 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Laundry Items Not Available</h2>
+          <p className="text-gray-600 mb-2">
+            This hotel has {laundryServices.length} laundry service provider(s), but none have configured their laundry items yet.
+          </p>
+          <div className="text-sm text-gray-500 mb-4">
+            Available services: {laundryServices.map(s => s.name).join(', ')}
+          </div>
+          <button
+            onClick={() => navigate(`/hotels/${hotelId}/services`)}
+            className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
+          >
+            Browse Other Services
+          </button>
+        </div>
+      </div>
+    );  }
 
   const pricing = calculateTotal();
 
@@ -258,10 +301,8 @@ const LaundryBookingInterface = () => {
           <div className="lg:col-span-2">
             {bookingStep === 1 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold mb-6">Select Laundry Items</h2>
-
-                {/* Service Provider Selection */}
-                {laundryServices.length > 1 && (
+                <h2 className="text-2xl font-bold mb-6">Select Laundry Items</h2>                {/* Service Provider Selection */}
+                {servicesWithItems.length > 1 && (
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Choose Service Provider
@@ -269,80 +310,155 @@ const LaundryBookingInterface = () => {
                     <select
                       value={selectedService?._id || ''}
                       onChange={(e) => {
-                        const service = laundryServices.find(s => s._id === e.target.value);
+                        const service = servicesWithItems.find(s => s._id === e.target.value);
                         setSelectedService(service);
+                        console.log('🔄 Selected service changed:', service?.name, 'Items:', service?.laundryItems?.length || 0);
                       }}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     >
-                      {laundryServices.map(service => (
+                      {servicesWithItems.map(service => (
                         <option key={service._id} value={service._id}>
                           {service.name} - {service.providerId?.businessName}
                           {service.providerId?.rating && (
-                            <span> ⭐ {service.providerId.rating}</span>
+                            ` ⭐ ${service.providerId.rating}`
                           )}
+                          {` (${service.laundryItems?.length || 0} items)`}
                         </option>
                       ))}
                     </select>
                   </div>
-                )}
-
-                {/* Items Grid */}
-                {selectedService && (
+                )}                {/* Debug Info */}
+                {process.env.NODE_ENV === 'development' && selectedService && (
+                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm">
+                    <p><strong>Debug Info:</strong></p>
+                    <p>Selected Service: {selectedService.name}</p>
+                    <p>Laundry Items Count: {selectedService.laundryItems?.length || 0}</p>
+                    <p>Total Services Available: {laundryServices.length}</p>
+                    <p>Services with Items: {servicesWithItems.length}</p>
+                    <p>Services without Items: {laundryServices.length - servicesWithItems.length}</p>
+                    {selectedService.laundryItems && selectedService.laundryItems.length > 0 && (
+                      <div className="mt-2">
+                        <p><strong>Items by Category:</strong></p>
+                        {Object.entries(
+                          selectedService.laundryItems.reduce((grouped, item) => {
+                            const category = item.category || 'other';
+                            if (!grouped[category]) grouped[category] = [];
+                            grouped[category].push(item.name);
+                            return grouped;
+                          }, {})
+                        ).map(([category, items]) => (
+                          <p key={category} className="ml-2 text-xs">
+                            • <strong>{category}:</strong> {items.join(', ')}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {laundryServices.length - servicesWithItems.length > 0 && (
+                      <p className="text-red-600">
+                        Services without items: {laundryServices.filter(s => !s.laundryItems || s.laundryItems.length === 0).map(s => s.name).join(', ')}
+                      </p>
+                    )}
+                  </div>
+                )}                {/* Items Grid */}
+                {selectedService && selectedService.laundryItems && (
                   <div className="space-y-6">
-                    {selectedService.selectedItems?.map((item, itemIndex) => (
-                      <div key={itemIndex} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-semibold">
-                            {item.icon} {item.name}
-                          </h3>
-                          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            {item.category}
-                          </span>
-                        </div>
+                    {/* Template items info banner */}{/* Group items by category */}
+                    {Object.entries(
+                      selectedService.laundryItems.reduce((grouped, item) => {
+                        const category = item.category || 'other';
+                        if (!grouped[category]) grouped[category] = [];
+                        grouped[category].push(item);
+                        return grouped;
+                      }, {})
+                    ).map(([category, categoryItems]) => {
+                      console.log('🔍 Rendering category:', category, 'Items:', categoryItems.length, 'Items:', categoryItems.map(i => i.name));
 
-                        {/* Service Type Options */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {Object.entries(selectedService.servicePricing?.[item.id] || {}).map(([serviceTypeId, pricing]) => {
-                            if (!pricing.enabled || pricing.price <= 0) return null;
+                      return (
+                      <div key={category} className="space-y-4">
+                        <h3 className="text-xl font-semibold capitalize text-gray-800 border-b border-gray-200 pb-2">
+                          {t(`laundryBooking.itemCategories.${category}`, category.replace('_', ' '))}
+                        </h3>                          {categoryItems.map((item, itemIndex) => {
+                            console.log(`🔍 Processing item: ${item.name} (${item.category})`);
+                            console.log(`🔍 Item serviceTypes:`, item.serviceTypes);
 
-                            // Find service type details from the service combinations
-                            const serviceTypeDetails = selectedService.serviceCombinations?.find(
-                              combo => combo.id === serviceTypeId
-                            ) || {
-                              name: serviceTypeId.replace('_', ' ').toUpperCase(),
-                              icon: '🧼',
-                              description: 'Service type'
-                            };
+                            // Check if item has any valid service types
+                            const validServiceTypes = item.serviceTypes?.filter(st => st.isAvailable && st.price > 0) || [];
+                            console.log(`🔍 Valid serviceTypes for ${item.name}:`, validServiceTypes.length);
 
-                            return (
-                              <div
-                                key={serviceTypeId}
-                                className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
-                              >
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="font-medium">
-                                    {serviceTypeDetails.icon} {serviceTypeDetails.name}
-                                  </span>
-                                  <span className="text-lg font-bold text-blue-600">
-                                    ${pricing.finalPrice || pricing.price}
-                                  </span>
+                            if (validServiceTypes.length === 0) {
+                              console.log(`❌ No valid service types for item: ${item.name}`);
+                              return (
+                                <div key={`${category}-${itemIndex}`} className="border border-red-200 rounded-lg p-4 bg-red-50">
+                                  <p className="text-red-600">
+                                    <strong>{item.icon} {item.name}</strong> - No valid service types configured
+                                  </p>
+                                  <p className="text-sm text-red-500">Service types: {JSON.stringify(item.serviceTypes)}</p>
                                 </div>
-                                <p className="text-sm text-gray-600 mb-3">
-                                  {serviceTypeDetails.description}
-                                </p>
-                                <button
-                                  onClick={() => addItemToCart(item, serviceTypeDetails, pricing.finalPrice || pricing.price)}
-                                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-                                >
-                                  <FaPlus className="inline mr-2" />
-                                  Add to Cart
-                                </button>
-                              </div>
+                              );
+                            }
+
+                            return (                          <div key={`${category}-${itemIndex}`} className="border border-gray-200 rounded-lg p-4 relative">
+                            <div className="flex items-center justify-between mb-4">
+                              <h4 className="text-lg font-semibold">
+                                {item.icon} {item.name}
+                              </h4>
+                              <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                {item.category}
+                              </span>
+                            </div>                            {/* Service Type Options */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {item.serviceTypes?.map((serviceType, serviceIndex) => {
+                                console.log(`🔍 ServiceType for ${item.name}:`, serviceType, 'Available:', serviceType.isAvailable, 'Price:', serviceType.price);
+
+                                if (!serviceType.isAvailable || serviceType.price <= 0) {
+                                  console.log(`❌ Filtering out service type for ${item.name}:`, serviceType.serviceTypeId, 'Available:', serviceType.isAvailable, 'Price:', serviceType.price);
+                                  return null;
+                                }
+
+                                // Calculate final price with hotel markup
+                                const markup = hotel?.markup || 15;
+                                const finalPrice = Math.round((serviceType.price * (1 + markup / 100)) * 100) / 100;
+
+                                // Find service type details from the service combinations
+                                const serviceTypeDetails = selectedService.serviceCombinations?.find(
+                                  combo => combo.id === serviceType.serviceTypeId
+                                ) || {
+                                  id: serviceType.serviceTypeId,
+                                  name: serviceType.serviceTypeId.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                                  icon: '🧼',
+                                  description: 'Professional laundry service'
+                                };
+
+                                return (
+                                  <div
+                                    key={`${serviceType.serviceTypeId}-${serviceIndex}`}
+                                    className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
+                                  >
+                                    <div className="flex items-center justify-between mb-2">
+                                      <span className="font-medium">
+                                        {serviceTypeDetails.icon} {serviceTypeDetails.name}
+                                      </span>                                      <span className="text-lg font-bold text-blue-600">
+                                        SAR {finalPrice}
+                                      </span>
+                                    </div>                                    <p className="text-sm text-gray-600 mb-3">
+                                      {serviceTypeDetails.description}
+                                    </p>
+                                    <button
+                                      onClick={() => addItemToCart(item, serviceTypeDetails, finalPrice)}
+                                      className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                                    >
+                                      <FaPlus className="inline mr-2" />
+                                      Add to Cart
+                                    </button>
+                                  </div>
+                                );
+                              })}                            </div>
+                          </div>
                             );
                           })}
-                        </div>
                       </div>
-                    ))}
+                      );
+                    })}
 
                     {/* Express Service Option */}
                     {selectedService.expressSurcharge?.enabled && (
@@ -365,7 +481,7 @@ const LaundryBookingInterface = () => {
                             </label>
                           </div>
                           <span className="text-lg font-bold text-orange-600">
-                            +${selectedService.expressSurcharge.finalRate}
+                            +SAR {selectedService.expressSurcharge.finalRate}
                           </span>
                         </div>
                         <p className="text-sm text-gray-600 mt-2 ml-6">
@@ -373,6 +489,20 @@ const LaundryBookingInterface = () => {
                           ({selectedService.expressSurcharge.duration?.value} {selectedService.expressSurcharge.duration?.unit})
                         </p>
                       </div>
+                    )}
+                  </div>
+                )}                {/* No items message */}
+                {selectedService && (!selectedService.laundryItems || selectedService.laundryItems.length === 0) && (
+                  <div className="text-center py-8">
+                    <FaTshirt className="text-4xl text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-2">No laundry items available for this service.</p>
+                    <p className="text-sm text-gray-500">
+                      The service provider "{selectedService.name}" hasn't configured any laundry items yet.
+                    </p>
+                    {laundryServices.filter(s => s.laundryItems?.length > 0).length > 0 && (
+                      <p className="text-sm text-blue-600 mt-2">
+                        Try selecting a different service provider above.
+                      </p>
                     )}
                   </div>
                 )}

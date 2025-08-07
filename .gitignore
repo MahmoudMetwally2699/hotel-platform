@@ -150,6 +150,7 @@ coverage/
 .stylelintcache
 *.tgz
 *.tar.gz
+*.md
 
 # ==============================
 # Stripe and Payment Files

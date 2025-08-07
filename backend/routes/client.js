@@ -866,16 +866,18 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
       isActive: true
     })
     .populate('providerId', 'businessName rating contactEmail contactPhone')
-    .sort({ 'performance.totalBookings': -1 });
-
-    console.log('🔍 Laundry services query for hotel:', {
+    .sort({ 'performance.totalBookings': -1 });    console.log('🔍 Laundry services query for hotel:', {
       hotelId,
       query: { hotelId, category: 'laundry', isActive: true },
       servicesFound: laundryServices.length,
-      serviceNames: laundryServices.map(s => s.name)
-    });
-
-    // Apply hotel markup to pricing
+      serviceNames: laundryServices.map(s => s.name),
+      servicesWithItems: laundryServices.map(s => ({
+        name: s.name,
+        hasLaundryItems: !!(s.laundryItems && s.laundryItems.length > 0),
+        itemCount: s.laundryItems?.length || 0
+      }))
+    });// Apply hotel markup to pricing and provide fallback template items
+    const categoryTemplates = require('../config/categoryTemplates');
     const servicesWithMarkup = laundryServices.map(service => {
       const serviceObj = service.toObject();
       let markup = hotel.markupSettings?.default || 15; // Default 15% markup
@@ -884,7 +886,12 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
       if (hotel.markupSettings?.categories &&
           hotel.markupSettings.categories['laundry'] !== undefined) {
         markup = hotel.markupSettings.categories['laundry'];
-      }
+      }      // Skip template fallback - only show services with actual configured items
+      console.log(`🔍 Service "${serviceObj.name}" laundryItems:`, {
+        hasItems: !!(serviceObj.laundryItems && serviceObj.laundryItems.length > 0),
+        itemCount: serviceObj.laundryItems?.length || 0,
+        categories: serviceObj.laundryItems ? [...new Set(serviceObj.laundryItems.map(item => item.category))] : []
+      });
 
       // Apply markup to service combinations
       if (serviceObj.serviceCombinations) {
@@ -892,11 +899,26 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
           ...combo,
           finalPrice: Math.round((combo.price * (1 + markup / 100)) * 100) / 100
         }));
+      } else {
+        // If no service combinations, create default ones from templates
+        serviceObj.serviceCombinations = categoryTemplates.laundry.serviceCombinations.map(combo => ({
+          ...combo,
+          price: 10, // Default base price
+          finalPrice: Math.round((10 * (1 + markup / 100)) * 100) / 100
+        }));
       }
 
       // Apply markup to express surcharge if enabled
       if (serviceObj.expressSurcharge?.enabled) {
         serviceObj.expressSurcharge.finalRate = Math.round((serviceObj.expressSurcharge.rate * (1 + markup / 100)) * 100) / 100;
+      } else if (!serviceObj.expressSurcharge) {
+        // Add default express surcharge from template
+        serviceObj.expressSurcharge = {
+          ...categoryTemplates.laundry.expressSurcharge,
+          enabled: false,
+          rate: 5,
+          finalRate: Math.round((5 * (1 + markup / 100)) * 100) / 100
+        };
       }
 
       // Set final pricing for the service
@@ -904,6 +926,21 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
       serviceObj.markup = markup;
 
       return serviceObj;
+    });    // Filter out services without actual laundryItems
+    const servicesWithActualItems = servicesWithMarkup.filter(service => {
+      const hasItems = service.laundryItems && service.laundryItems.length > 0;
+      console.log(`🔍 Service "${service.name}" - hasItems: ${hasItems}, itemCount: ${service.laundryItems?.length || 0}`);
+      return hasItems;
+    });
+
+    console.log('🔍 Final services with items:', {
+      totalServices: laundryServices.length,
+      servicesWithItems: servicesWithActualItems.length,
+      filteredServices: servicesWithActualItems.map(s => ({
+        name: s.name,
+        itemCount: s.laundryItems?.length || 0,
+        categories: [...new Set(s.laundryItems?.map(item => item.category) || [])]
+      }))
     });
 
     res.json({
@@ -914,7 +951,7 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
           name: hotel.name,
           markup: hotel.markupSettings?.categories?.laundry || hotel.markupSettings?.default || 15
         },
-        services: servicesWithMarkup
+        services: servicesWithActualItems
       }
     });
   } catch (error) {

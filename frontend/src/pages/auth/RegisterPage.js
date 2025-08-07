@@ -6,37 +6,17 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import useRTL from '../../hooks/useRTL';
+import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { register, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole } from '../../redux/slices/authSlice';
 import hotelService from '../../services/hotel.service';
 
-// Validation schema
-const validationSchema = Yup.object({
-  firstName: Yup.string().required('First name is required'),
-  lastName: Yup.string().required('Last name is required'),
-  email: Yup.string().email('Invalid email address').required('Email is required'),
-  phone: Yup.string().required('Phone number is required'),
-  selectedHotelId: Yup.string().required('Please select a hotel'),
-  roomNumber: Yup.string().required('Room number is required'),
-  checkInDate: Yup.date().required('Check-in date is required'),
-  checkOutDate: Yup.date()
-    .min(Yup.ref('checkInDate'), 'Check-out date must be after check-in date')
-    .required('Check-out date is required'),
-  password: Yup.string()
-    .min(8, 'Password must be at least 8 characters')
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-    )
-    .required('Password is required'),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password'), null], 'Passwords must match')
-    .required('Confirm password is required'),
-  acceptTerms: Yup.boolean().oneOf([true], 'You must accept the terms and conditions')
-});
-
 const RegisterPage = () => {
+  const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
@@ -44,9 +24,35 @@ const RegisterPage = () => {
   const isLoading = useSelector(selectAuthLoading);
   const role = useSelector(selectAuthRole);
 
-  const [showError, setShowError] = useState(false);
-  const [hotels, setHotels] = useState([]);
-  const [loadingHotels, setLoadingHotels] = useState(true);  // Fetch available hotels
+  const [showError, setShowError] = useState(false);  const [hotels, setHotels] = useState([]);
+  const [loadingHotels, setLoadingHotels] = useState(true);
+
+  // Validation schema with translations
+  const validationSchema = Yup.object({
+    firstName: Yup.string().required(t('register.validation.firstNameRequired')),
+    lastName: Yup.string().required(t('register.validation.lastNameRequired')),
+    email: Yup.string()
+      .email(t('register.validation.emailInvalid'))
+      .required(t('register.validation.emailRequired')),
+    phone: Yup.string().required(t('register.validation.phoneRequired')),
+    selectedHotelId: Yup.string().required(t('register.validation.hotelRequired')),
+    roomNumber: Yup.string().required(t('register.validation.roomNumberRequired')),
+    checkInDate: Yup.date().required(t('register.validation.checkInDateRequired')),
+    checkOutDate: Yup.date()
+      .min(Yup.ref('checkInDate'), t('register.validation.checkOutAfterCheckIn'))
+      .required(t('register.validation.checkOutDateRequired')),
+    password: Yup.string()
+      .min(8, t('register.validation.passwordMinLength'))
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+        t('register.validation.passwordComplexity')
+      )
+      .required(t('register.validation.passwordRequired')),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref('password'), null], t('register.validation.passwordsMatch'))
+      .required(t('register.validation.confirmPasswordRequired')),
+    acceptTerms: Yup.boolean().oneOf([true], t('register.validation.acceptTermsRequired'))
+  });// Fetch available hotels
   useEffect(() => {
     const fetchHotels = async () => {
       try {
@@ -125,20 +131,23 @@ const RegisterPage = () => {
 
     dispatch(register({ userData, role: values.role }));
   };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">        <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">Create Your Account</h2>
-          <p className="text-gray-600 mt-2">Register for your hotel stay</p>
+    <div className={`min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+        {/* Language Switcher */}
+        <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'} mb-4`}>
+          <LanguageSwitcher className="scale-90" />
+        </div>
+
+        <div className="text-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">{t('register.createYourAccount')}</h2>
+          <p className="text-gray-600 mt-2">{t('register.registerForYourHotelStay')}</p>
         </div>
 
         {showError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span className="block sm:inline">{authError}</span>
-            <span className="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onClick={() => setShowError(false)}>
+            <span className="block sm:inline">{authError}</span>            <span className="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onClick={() => setShowError(false)}>
               <svg className="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <title>Close</title>
+                <title>{t('register.close')}</title>
                 <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
               </svg>
             </span>
@@ -151,60 +160,57 @@ const RegisterPage = () => {
           onSubmit={handleSubmit}
         >
           {({ isSubmitting }) => (
-            <Form className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <Form className="space-y-4">              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                    First Name
+                    {t('register.firstName')}
                   </label>
                   <Field
                     type="text"
                     name="firstName"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="First name"
+                    placeholder={t('register.firstNamePlaceholder')}
                   />
                   <ErrorMessage name="firstName" component="div" className="mt-1 text-sm text-red-600" />
                 </div>
 
                 <div>
                   <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Last Name
+                    {t('register.lastName')}
                   </label>
                   <Field
                     type="text"
                     name="lastName"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Last name"
+                    placeholder={t('register.lastNamePlaceholder')}
                   />
                   <ErrorMessage name="lastName" component="div" className="mt-1 text-sm text-red-600" />
                 </div>
               </div>              <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
+                  {t('register.emailAddress')}
                 </label>
                 <Field
                   type="email"
                   name="email"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your email"
+                  placeholder={t('register.enterYourEmail')}
                 />
                 <ErrorMessage name="email" component="div" className="mt-1 text-sm text-red-600" />
-              </div>
-
-              <div>
+              </div>              <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
+                  {t('register.phoneNumber')}
                 </label>
                 <Field
                   type="tel"
                   name="phone"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your phone number"
+                  placeholder={t('register.enterYourPhoneNumber')}
                 />
                 <ErrorMessage name="phone" component="div" className="mt-1 text-sm text-red-600" />
               </div>              <div>
                 <label htmlFor="selectedHotelId" className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Hotel
+                  {t('register.selectHotel')}
                 </label>
                 <Field
                   as="select"
@@ -213,7 +219,7 @@ const RegisterPage = () => {
                   disabled={loadingHotels}
                 >
                   <option value="">
-                    {loadingHotels ? 'Loading hotels...' : 'Choose a hotel'}
+                    {loadingHotels ? t('register.loadingHotels') : t('register.chooseAHotel')}
                   </option>
                   {hotels.map((hotel) => (
                     <option key={hotel._id || hotel.id} value={hotel._id || hotel.id}>
@@ -223,27 +229,23 @@ const RegisterPage = () => {
                 </Field>
                 <ErrorMessage name="selectedHotelId" component="div" className="mt-1 text-sm text-red-600" />
                 {hotels.length === 0 && !loadingHotels && (
-                  <p className="mt-1 text-sm text-yellow-600">No hotels available at the moment.</p>
+                  <p className="mt-1 text-sm text-yellow-600">{t('register.noHotelsAvailable')}</p>
                 )}
-              </div>
-
-              <div>
+              </div>              <div>
                 <label htmlFor="roomNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                  Room Number
+                  {t('register.roomNumber')}
                 </label>
                 <Field
                   type="text"
                   name="roomNumber"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your room number"
+                  placeholder={t('register.enterYourRoomNumber')}
                 />
                 <ErrorMessage name="roomNumber" component="div" className="mt-1 text-sm text-red-600" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              </div>              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="checkInDate" className="block text-sm font-medium text-gray-700 mb-1">
-                    Check-in Date
+                    {t('register.checkInDate')}
                   </label>
                   <Field
                     type="date"
@@ -255,7 +257,7 @@ const RegisterPage = () => {
 
                 <div>
                   <label htmlFor="checkOutDate" className="block text-sm font-medium text-gray-700 mb-1">
-                    Check-out Date
+                    {t('register.checkOutDate')}
                   </label>
                   <Field
                     type="date"
@@ -264,47 +266,41 @@ const RegisterPage = () => {
                   />
                   <ErrorMessage name="checkOutDate" component="div" className="mt-1 text-sm text-red-600" />
                 </div>
-              </div>
-
-              <div>
+              </div>              <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
+                  {t('register.password')}
                 </label>
                 <Field
                   type="password"
                   name="password"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Create password"
+                  placeholder={t('register.createPassword')}
                 />
                 <ErrorMessage name="password" component="div" className="mt-1 text-sm text-red-600" />
               </div>
 
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm Password
+                  {t('register.confirmPassword')}
                 </label>
                 <Field
                   type="password"
                   name="confirmPassword"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Confirm password"
+                  placeholder={t('register.confirmPasswordPlaceholder')}
                 />
                 <ErrorMessage name="confirmPassword" component="div" className="mt-1 text-sm text-red-600" />
-              </div>
-
-              <div className="flex items-center">
+              </div>              <div className="flex items-center">
                 <Field
                   type="checkbox"
                   name="acceptTerms"
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-700">
-                  I accept the <a href="/terms" className="font-medium text-blue-600 hover:text-blue-500">Terms and Conditions</a>
+                  {t('register.acceptTerms')} <a href="/terms" className="font-medium text-blue-600 hover:text-blue-500">{t('register.termsAndConditions')}</a>
                 </label>
               </div>
-              <ErrorMessage name="acceptTerms" component="div" className="mt-1 text-sm text-red-600" />
-
-              <button
+              <ErrorMessage name="acceptTerms" component="div" className="mt-1 text-sm text-red-600" />              <button
                 type="submit"
                 disabled={isSubmitting || isLoading}
                 className="w-full bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -315,21 +311,19 @@ const RegisterPage = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Creating Account...</span>
+                    <span>{t('register.creatingAccount')}</span>
                   </div>
                 ) : (
-                  'Create Account'
+                  t('register.createAccount')
                 )}
               </button>
             </Form>
           )}
-        </Formik>
-
-        <div className="mt-6 text-center">
+        </Formik>        <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Already have an account?{' '}
+            {t('register.alreadyHaveAccount')}{' '}
             <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Sign in here
+              {t('register.signInHere')}
             </Link>
           </p>
         </div>

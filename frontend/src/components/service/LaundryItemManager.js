@@ -7,25 +7,6 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import apiClient from '../../services/api.service';
 
-// Import predefined laundry items from category templates
-const PREDEFINED_LAUNDRY_ITEMS = [
-  { name: 'T-Shirt', category: 'clothing', icon: '👕' },
-  { name: 'Dress Shirt', category: 'clothing', icon: '👔' },
-  { name: 'Pants/Trousers', category: 'clothing', icon: '👖' },
-  { name: 'Dress', category: 'clothing', icon: '👗' },
-  { name: 'Suit Jacket', category: 'clothing', icon: '🧥' },
-  { name: 'Coat/Jacket', category: 'outerwear', icon: '🧥' },
-  { name: 'Sweater', category: 'clothing', icon: '🧶' },
-  { name: 'Jeans', category: 'clothing', icon: '👖' },
-  { name: 'Underwear (per piece)', category: 'undergarments', icon: '🩲' },
-  { name: 'Socks (per pair)', category: 'undergarments', icon: '🧦' },
-  { name: 'Bedsheet (single)', category: 'linens', icon: '🛏️' },
-  { name: 'Bedsheet (double)', category: 'linens', icon: '🛏️' },
-  { name: 'Pillowcase', category: 'linens', icon: '🛏️' },
-  { name: 'Towel', category: 'linens', icon: '🏖️' },
-  { name: 'Curtains', category: 'home', icon: '🪟' }
-];
-
 // Icon component using emoji fallbacks
 const Icon = ({ type, className = "" }) => {
   const icons = {
@@ -54,6 +35,8 @@ const LaundryItemManager = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [editFormData, setEditFormData] = useState(null);
+  const [categoryTemplate, setCategoryTemplate] = useState(null);
+  const [availableItems, setAvailableItems] = useState([]);
   const [newItem, setNewItem] = useState({
     name: '',
     description: '',
@@ -68,8 +51,24 @@ const LaundryItemManager = () => {
   });
 
   useEffect(() => {
+    fetchCategoryTemplate();
     fetchItems();
   }, []);
+
+  /**
+   * Fetch laundry category template from backend
+   */
+  const fetchCategoryTemplate = async () => {
+    try {
+      const response = await apiClient.get('/service/category-templates/laundry');
+      const template = response.data.data.template;
+      setCategoryTemplate(template);
+      setAvailableItems(template.items || []);
+    } catch (error) {
+      console.error('Error fetching category template:', error);
+      toast.error('Failed to load laundry template');
+    }
+  };
 
   const fetchItems = async () => {
     try {
@@ -277,11 +276,11 @@ const LaundryItemManager = () => {
       toast.error('Failed to migrate item structure');
     }
   };
-
-  if (loading) {
+  if (loading || !categoryTemplate) {
     return (
       <div className="flex justify-center items-center py-8">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <span className="ml-3">Loading laundry template...</span>
       </div>
     );
   }
@@ -332,11 +331,10 @@ const LaundryItemManager = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-                    <select
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>                    <select
                       value={newItem.name}
                       onChange={(e) => {
-                        const selectedItem = PREDEFINED_LAUNDRY_ITEMS.find(item => item.name === e.target.value);
+                        const selectedItem = availableItems.find(item => item.name === e.target.value);
                         setNewItem(prev => ({
                           ...prev,
                           name: e.target.value,
@@ -347,7 +345,7 @@ const LaundryItemManager = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="">Select a laundry item...</option>
-                      {PREDEFINED_LAUNDRY_ITEMS.map((item, index) => (
+                      {availableItems.map((item, index) => (
                         <option key={index} value={item.name}>
                           {item.icon} {item.name}
                         </option>
@@ -593,11 +591,10 @@ const LaundryItemManager = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-                                <select
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>                                <select
                                   value={editFormData.name}
                                   onChange={(e) => {
-                                    const selectedItem = PREDEFINED_LAUNDRY_ITEMS.find(item => item.name === e.target.value);
+                                    const selectedItem = availableItems.find(item => item.name === e.target.value);
                                     setEditFormData(prev => ({
                                       ...prev,
                                       name: e.target.value,
@@ -608,7 +605,7 @@ const LaundryItemManager = () => {
                                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 >
                                   <option value="">Select a laundry item...</option>
-                                  {PREDEFINED_LAUNDRY_ITEMS.map((item, index) => (
+                                  {availableItems.map((item, index) => (
                                     <option key={index} value={item.name}>
                                       {item.icon} {item.name}
                                     </option>

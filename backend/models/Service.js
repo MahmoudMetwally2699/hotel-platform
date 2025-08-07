@@ -106,10 +106,23 @@ const serviceSchema = new mongoose.Schema({
       type: String,
       required: true,
       trim: true
-    },
-    category: {
+    },    category: {
       type: String,
-      enum: ['clothing', 'outerwear', 'undergarments', 'linens', 'home'],
+      enum: [
+        'clothing',
+        'formal',
+        'sportswear',
+        'uniforms',
+        'workwear',
+        'outerwear',
+        'traditional',
+        'religious',
+        'accessories',
+        'undergarments',
+        'sleepwear',
+        'linens',
+        'home'
+      ],
       required: true
     },
     icon: {
