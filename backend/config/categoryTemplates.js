@@ -11,119 +11,115 @@ const categoryTemplates = {
     icon: 'washing-machine',
     description: 'Professional laundry and dry cleaning services',    items: [
       // Regular Clothing
-      { name: 'T-Shirt', category: 'clothing', icon: '👕' },
-      { name: 'Dress Shirt', category: 'clothing', icon: '👔' },
-      { name: 'Short Sleeve Shirt', category: 'clothing', icon: '👔' },
-      { name: 'Long Sleeve Shirt', category: 'clothing', icon: '👔' },
-      { name: 'Pants/Trousers', category: 'clothing', icon: '👖' },
-      { name: 'Long Trousers', category: 'clothing', icon: '👖' },
-      { name: 'Shorts', category: 'clothing', icon: '🩳' },
-      { name: 'Jeans', category: 'clothing', icon: '👖' },
-      { name: 'Dress', category: 'clothing', icon: '👗' },
-      { name: 'Skirt', category: 'clothing', icon: '👗' },
-      { name: 'Blouse', category: 'clothing', icon: '👚' },
-      { name: 'Sports T-Shirt', category: 'sportswear', icon: '🏃' },
-      { name: 'Military T-Shirt', category: 'uniforms', icon: '🎖️' },
-      { name: 'Undershirt', category: 'undergarments', icon: '👕' },
+      { name: 'T-Shirt', category: 'clothing' },
+      { name: 'Dress Shirt', category: 'clothing' },
+      { name: 'Short Sleeve Shirt', category: 'clothing' },
+      { name: 'Long Sleeve Shirt', category: 'clothing' },
+      { name: 'Pants/Trousers', category: 'clothing' },
+      { name: 'Long Trousers', category: 'clothing' },
+      { name: 'Shorts', category: 'clothing' },
+      { name: 'Jeans', category: 'clothing' },
+      { name: 'Dress', category: 'clothing' },
+      { name: 'Skirt', category: 'clothing' },
+      { name: 'Blouse', category: 'clothing' },
+      { name: 'Sports T-Shirt', category: 'sportswear' },
+      { name: 'Military T-Shirt', category: 'uniforms' },
+      { name: 'Undershirt', category: 'undergarments' },
 
       // Suits and Formal Wear
-      { name: 'Formal Suit', category: 'formal', icon: '🤵' },
-      { name: 'Regular Suit', category: 'formal', icon: '👔' },
-      { name: 'Suit Jacket', category: 'formal', icon: '🧥' },
-      { name: 'Pakistani Uniform', category: 'uniforms', icon: '👳' },
-      { name: 'Military Uniform', category: 'uniforms', icon: '🎖️' },
-      { name: 'Work Uniform', category: 'uniforms', icon: '👷' },
+      { name: 'Formal Suit', category: 'formal' },
+      { name: 'Regular Suit', category: 'formal' },
+      { name: 'Suit Jacket', category: 'formal' },
+      { name: 'Pakistani Uniform', category: 'uniforms' },
+      { name: 'Military Uniform', category: 'uniforms' },
+      { name: 'Work Uniform', category: 'uniforms' },
 
       // Outerwear
-      { name: 'Coat', category: 'outerwear', icon: '🧥' },
-      { name: 'Overcoat', category: 'outerwear', icon: '🧥' },
-      { name: 'Jacket', category: 'outerwear', icon: '🧥' },
-      { name: 'Leather Jacket', category: 'outerwear', icon: '🧥' },
-      { name: 'Tracksuit', category: 'sportswear', icon: '🏃' },
-      { name: 'Sports Tracksuit', category: 'sportswear', icon: '🏃' },
-      { name: 'Sweatshirt', category: 'sportswear', icon: '👕' },
-      { name: 'Hoodie', category: 'sportswear', icon: '🧥' },
-      { name: 'Overalls', category: 'workwear', icon: '👷' },
-      { name: 'Jumpsuit', category: 'workwear', icon: '👷' },
+      { name: 'Coat', category: 'outerwear' },
+      { name: 'Overcoat', category: 'outerwear' },
+      { name: 'Jacket', category: 'outerwear' },
+      { name: 'Leather Jacket', category: 'outerwear' },
+      { name: 'Tracksuit', category: 'sportswear' },
+      { name: 'Sports Tracksuit', category: 'sportswear' },
+      { name: 'Sweatshirt', category: 'sportswear' },
+      { name: 'Hoodie', category: 'sportswear' },
+      { name: 'Overalls', category: 'workwear' },
+      { name: 'Jumpsuit', category: 'workwear' },
 
       // Traditional and Religious Wear
-      { name: 'Thobe', category: 'traditional', icon: '🕌' },
-      { name: 'Embroidered Thobe', category: 'traditional', icon: '🕌' },
-      { name: 'Wool Thobe', category: 'traditional', icon: '🕌' },
-      { name: 'Kandura', category: 'traditional', icon: '🕌' },
-      { name: 'Dishdasha', category: 'traditional', icon: '🕌' },
-      { name: 'Jalabia', category: 'traditional', icon: '🕌' },
-      { name: 'Abaya', category: 'traditional', icon: '�' },
-      { name: 'Embroidered Abaya', category: 'traditional', icon: '🧕' },
-      { name: 'Bisht', category: 'traditional', icon: '🕌' },
-      { name: 'Cloak', category: 'traditional', icon: '🕌' },
-      { name: 'Ihram', category: 'religious', icon: '🕌' },
+      { name: 'Thobe', category: 'traditional' },      { name: 'Embroidered Thobe', category: 'traditional' },
+      { name: 'Wool Thobe', category: 'traditional' },
+      { name: 'Kandura', category: 'traditional' },
+      { name: 'Dishdasha', category: 'traditional' },
+      { name: 'Jalabia', category: 'traditional' },
+      { name: 'Abaya', category: 'traditional' },
+      { name: 'Embroidered Abaya', category: 'traditional' },
+      { name: 'Bisht', category: 'traditional' },
+      { name: 'Cloak', category: 'traditional' },
+      { name: 'Ihram', category: 'religious' },
 
       // Accessories and Headwear
-      { name: 'Shemagh', category: 'accessories', icon: '🧢' },
-      { name: 'Ghutra', category: 'accessories', icon: '🧢' },
-      { name: 'Igal', category: 'accessories', icon: '🧢' },
-      { name: 'Cap', category: 'accessories', icon: '🧢' },
-      { name: 'Kufi', category: 'accessories', icon: '🧢' },
-      { name: 'Skullcap', category: 'accessories', icon: '🧢' },
-      { name: 'Headscarf', category: 'accessories', icon: '🧕' },
+      { name: 'Shemagh', category: 'accessories' },
+      { name: 'Ghutra', category: 'accessories' },
+      { name: 'Igal', category: 'accessories' },
+      { name: 'Cap', category: 'accessories' },
+      { name: 'Kufi', category: 'accessories' },
+      { name: 'Skullcap', category: 'accessories' },
+      { name: 'Headscarf', category: 'accessories' },
 
       // Undergarments and Sleepwear
-      { name: 'Underwear (per piece)', category: 'undergarments', icon: '🩲' },
-      { name: 'Socks (per pair)', category: 'undergarments', icon: '🧦' },
-      { name: 'Pajamas', category: 'sleepwear', icon: '😴' },
+      { name: 'Underwear (per piece)', category: 'undergarments' },
+      { name: 'Socks (per pair)', category: 'undergarments' },
+      { name: 'Pajamas', category: 'sleepwear' },
 
       // Linens and Home Items
-      { name: 'Bedsheet (single)', category: 'linens', icon: '🛏️' },
-      { name: 'Bedsheet (double)', category: 'linens', icon: '🛏️' },
-      { name: 'Bed Sheets', category: 'linens', icon: '🛏️' },
-      { name: 'Light Sheet', category: 'linens', icon: '🛏️' },
-      { name: 'Pillowcase', category: 'linens', icon: '🛏️' },
-      { name: 'Duvet', category: 'linens', icon: '🛏️' },
-      { name: 'Blanket', category: 'linens', icon: '🛏️' },
-      { name: 'Towel', category: 'linens', icon: '🏖️' },
-      { name: 'Curtains', category: 'home', icon: '🪟' },
-      { name: 'Rug', category: 'home', icon: '🏠' },
-      { name: 'Sofa Cover', category: 'home', icon: '🛋️' },
-      { name: 'Chair Cover', category: 'home', icon: '🪑' },
-      { name: 'Furnishings', category: 'home', icon: '🏠' }
-    ],// Simplified base service types (no fixed pricing multipliers)
+      { name: 'Bedsheet (single)', category: 'linens' },
+      { name: 'Bedsheet (double)', category: 'linens' },
+      { name: 'Bed Sheets', category: 'linens' },
+      { name: 'Light Sheet', category: 'linens' },
+      { name: 'Pillowcase', category: 'linens' },
+      { name: 'Duvet', category: 'linens' },
+      { name: 'Blanket', category: 'linens' },
+      { name: 'Towel', category: 'linens' },
+      { name: 'Curtains', category: 'home' },
+      { name: 'Rug', category: 'home' },
+      { name: 'Sofa Cover', category: 'home' },
+      { name: 'Chair Cover', category: 'home' },      { name: 'Furnishings', category: 'home' }
+    ],
+
+    // Simplified base service types (no fixed pricing multipliers)
     serviceTypes: [
       {
         id: 'wash_only',
         name: 'Wash Only',
         description: 'Machine wash with appropriate detergent',
-        duration: { value: 24, unit: 'hours' },
-        icon: '🧼'
+        duration: { value: 24, unit: 'hours' }
       },
       {
         id: 'iron_only',
         name: 'Iron Only',
         description: 'Professional ironing and pressing',
-        duration: { value: 12, unit: 'hours' },
-        icon: '👕'
+        duration: { value: 12, unit: 'hours' }
       },
       {
         id: 'wash_iron',
         name: 'Wash + Iron',
         description: 'Complete wash and iron service',
         duration: { value: 24, unit: 'hours' },
-        icon: '⭐',
         isPopular: true
       },
       {
         id: 'dry_cleaning',
         name: 'Dry Cleaning',
         description: 'Professional dry cleaning service',
-        duration: { value: 48, unit: 'hours' },
-        icon: '✨'
-      }
-    ],// Express surcharge configuration (service providers set their own rate)
+        duration: { value: 48, unit: 'hours' }
+      }    ],
+
+    // Express surcharge configuration (service providers set their own rate)
     expressSurcharge: {
       name: 'Express Service',
       description: 'Rush 4-hour delivery service',
       duration: { value: 4, unit: 'hours' },
-      icon: '⚡',
       isOptional: true // Service providers can choose to offer this
     },    // Simplified service combinations for package services (no fixed pricing)
     serviceCombinations: [
@@ -133,7 +129,6 @@ const categoryTemplates = {
         description: 'Machine wash with appropriate detergent',
         serviceTypes: ['wash_only'],
         duration: { value: 24, unit: 'hours' },
-        icon: '🧼',
         isPopular: false
       },
       {
@@ -142,7 +137,6 @@ const categoryTemplates = {
         description: 'Professional ironing and pressing',
         serviceTypes: ['iron_only'],
         duration: { value: 12, unit: 'hours' },
-        icon: '👕',
         isPopular: false
       },
       {
@@ -151,7 +145,6 @@ const categoryTemplates = {
         description: 'Complete wash and iron service',
         serviceTypes: ['wash_iron'],
         duration: { value: 24, unit: 'hours' },
-        icon: '⭐',
         isPopular: true
       },
       {
@@ -160,7 +153,6 @@ const categoryTemplates = {
         description: 'Professional dry cleaning service',
         serviceTypes: ['dry_cleaning'],
         duration: { value: 48, unit: 'hours' },
-        icon: '✨',
         isPopular: false
       }
     ]

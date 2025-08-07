@@ -89,16 +89,14 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
     const availableItems = getAvailableLaundryItems();
     const currentItem = availableItems.find(item => item.id === itemId);
 
-    if (currentItem && currentItem.serviceTypes) {
-      return currentItem.serviceTypes
+    if (currentItem && currentItem.serviceTypes) {      return currentItem.serviceTypes
         .filter(st => st.isAvailable && st.price > 0)
         .map(st => ({
           id: st.serviceTypeId,
           name: getServiceTypeName(st.serviceTypeId),
           price: st.price,
           description: getServiceTypeDescription(st.serviceTypeId),
-          duration: getServiceTypeDuration(st.serviceTypeId),
-          icon: getServiceTypeIcon(st.serviceTypeId)
+          duration: getServiceTypeDuration(st.serviceTypeId)
         }));
     }
 
@@ -118,17 +116,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
   const getServiceTypeDuration = (serviceTypeId) => {
     return t(`laundryBooking.serviceTypeDurations.${serviceTypeId}`, {
       defaultValue: t('laundryBooking.serviceTypeDurations.default')
-    });
-  };
-  const getServiceTypeIcon = (serviceTypeId) => {
-    const icons = {
-      'wash_only': '🧼',
-      'iron_only': '👕',
-      'wash_iron': '⭐',
-      'dry_cleaning': '✨'
-    };
-    return icons[serviceTypeId] || '🧼';
-  };
+    });  };
 
   // Helper functions to translate category and item names
   const getCategoryName = (category) => {
@@ -259,21 +247,13 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
         basePrice: selectedServiceType?.price || 0, // Original service provider price
         itemPrice: itemPrice
       };
-    });
-
-    const expressCharge = expressService ? subtotal * 0.5 : 0; // 50% surcharge for express
-    const subtotalWithExpress = subtotal + expressCharge;
-
-    // Apply hotel markup (assume 15% for demo)
-    const markup = 0.15;
-    const markupAmount = subtotalWithExpress * markup;
-    const total = subtotalWithExpress + markupAmount;
+    });    const expressCharge = expressService ? subtotal * 0.5 : 0; // 50% surcharge for express
+    const total = subtotal + expressCharge; // Backend prices already include hotel markup
 
     return {
       itemCalculations,
       subtotal,
       expressCharge,
-      markupAmount,
       total
     };
   };
@@ -286,17 +266,14 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
       setSubmitting(true);      const bookingData = {
         serviceId: pricing.itemCalculations[0]?.serviceId || service?._id, // Use the service ID of the first item
         hotelId,
-        laundryItems: pricing.itemCalculations.map(item => ({
-          itemId: item.id,
+        laundryItems: pricing.itemCalculations.map(item => ({          itemId: item.id,
           itemName: item.name,
           itemCategory: item.category,
-          itemIcon: item.icon,
           quantity: item.quantity,
           serviceTypeId: item.serviceType.id,
           serviceTypeName: item.serviceType.name,
           serviceTypeDescription: item.serviceType.description,
           serviceTypeDuration: item.serviceType.duration,
-          serviceTypeIcon: item.serviceType.icon,
           basePrice: item.basePrice,
           totalPrice: item.itemPrice
         })),
@@ -481,10 +458,9 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                                   ? 'border-gray-200 hover:border-blue-300'
                                   : 'border-gray-200 bg-gray-50 opacity-60'
                               }`}
-                            >
-                              <div className="flex items-center">
-                                <span className="text-2xl mr-3">{item.icon}</span>
-                                <div>                                  <h4 className={`font-medium ${isAvailable && hasAvailableServices ? 'text-gray-900' : 'text-gray-500'}`}>
+                            >                              <div className="flex items-center">
+                                <div>
+                                  <h4 className={`font-medium ${isAvailable && hasAvailableServices ? 'text-gray-900' : 'text-gray-500'}`}>
                                     {getItemName(item.name)}
                                     {!isAvailable && (
                                       <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
@@ -540,9 +516,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
 
                 <div className="space-y-6">
                   {selectedItems.map(item => (
-                    <div key={item.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center mb-4">
-                        <span className="text-xl mr-3">{item.icon}</span>
+                    <div key={item.id} className="border border-gray-200 rounded-lg p-4">                      <div className="flex items-center mb-4">
                         <div>
                           <h4 className="font-medium text-gray-900">{getItemName(item.name)}</h4>
                           <p className="text-sm text-gray-600">{t('laundryBooking.quantity')}: {item.quantity}</p>
@@ -558,8 +532,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                             }`}
                             onClick={() => handleServiceTypeChange(item.id, serviceType.id)}
                           >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center">                                <span className="text-lg mr-2">{serviceType.icon}</span>
+                            <div className="flex items-center justify-between">                              <div className="flex items-center">
                                 <div>
                                   <h5 className="font-medium text-gray-900">
                                     {serviceType.name}
@@ -708,9 +681,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('laundryBooking.orderSummary')}</h3>
                     <div className="space-y-3">
                       {pricing.itemCalculations.map(item => (
-                        <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-100">
-                          <div className="flex items-center">
-                            <span className="text-lg mr-3">{item.icon}</span>
+                        <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-100">                          <div className="flex items-center">
                             <div>
                               <span className="font-medium">{getItemName(item.name)}</span>
                               <span className="text-gray-500 ml-2">×{item.quantity}</span>
@@ -760,13 +731,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                       {t('laundryBooking.expressService')}
                     </span>
                     <span>+{formatPriceByLanguage(pricing.expressCharge, i18n.language)}</span>
-                  </div>
-                )}
-
-                <div className="flex justify-between text-gray-600">
-                  <span>{t('laundryBooking.hotelServiceFee')}</span>
-                  <span>+{formatPriceByLanguage(pricing.markupAmount, i18n.language)}</span>
-                </div>
+                  </div>                )}
 
                 <hr />
 

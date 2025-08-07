@@ -88,15 +88,10 @@ const serviceSchema = new mongoose.Schema({
       type: Number,
       required: true,
       min: [0, 'Price cannot be negative']
-    },
-    duration: String, // e.g., '24 hours', '4 hours', '12 hours'
-    icon: {
-      type: String,
-      default: '🧼' // Emoji icon for display
-    },
+    },    duration: String, // e.g., '24 hours', '4 hours', '12 hours'
     isPopular: {
       type: Boolean,
-      default: false    },
+      default: false},
     features: [String]
   }],
 
@@ -121,13 +116,8 @@ const serviceSchema = new mongoose.Schema({
         'undergarments',
         'sleepwear',
         'linens',
-        'home'
-      ],
+        'home'      ],
       required: true
-    },
-    icon: {
-      type: String,
-      default: '👕'
     },
     price: {
       type: Number,

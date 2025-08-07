@@ -5,7 +5,7 @@
  * 1. Select multiple laundry items with quantities
  * 2. Choose service types for each item
  * 3. Add express service if needed
- * 4. See real-time price calculation with hotel markup
+ * 4. See real-time price calculation (hotel markup already included by backend)
  * 5. Complete the booking with scheduling
  */
 
@@ -106,17 +106,14 @@ const LaundryBookingInterface = () => {
    * Add item to cart with service type selection
    */
   const addItemToCart = (item, serviceType, price) => {
-    const cartItem = {
-      id: `${item.name}_${serviceType.id}_${Date.now()}`,
+    const cartItem = {      id: `${item.name}_${serviceType.id}_${Date.now()}`,
       itemName: item.name,
       itemId: item.id || item.name.toLowerCase().replace(/\s+/g, '_'),
       itemCategory: item.category,
-      itemIcon: item.icon,
       serviceTypeId: serviceType.id,
       serviceTypeName: serviceType.name,
       serviceTypeDescription: serviceType.description,
       serviceTypeDuration: serviceType.duration,
-      serviceTypeIcon: serviceType.icon,
       basePrice: price,
       quantity: 1,
       totalPrice: price
@@ -390,7 +387,7 @@ const LaundryBookingInterface = () => {
                               return (
                                 <div key={`${category}-${itemIndex}`} className="border border-red-200 rounded-lg p-4 bg-red-50">
                                   <p className="text-red-600">
-                                    <strong>{item.icon} {item.name}</strong> - No valid service types configured
+                                    <strong>{item.name}</strong> - No valid service types configured
                                   </p>
                                   <p className="text-sm text-red-500">Service types: {JSON.stringify(item.serviceTypes)}</p>
                                 </div>
@@ -398,9 +395,8 @@ const LaundryBookingInterface = () => {
                             }
 
                             return (                          <div key={`${category}-${itemIndex}`} className="border border-gray-200 rounded-lg p-4 relative">
-                            <div className="flex items-center justify-between mb-4">
-                              <h4 className="text-lg font-semibold">
-                                {item.icon} {item.name}
+                            <div className="flex items-center justify-between mb-4">                              <h4 className="text-lg font-semibold">
+                                {item.name}
                               </h4>
                               <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
                                 {item.category}
@@ -413,19 +409,14 @@ const LaundryBookingInterface = () => {
                                 if (!serviceType.isAvailable || serviceType.price <= 0) {
                                   console.log(`❌ Filtering out service type for ${item.name}:`, serviceType.serviceTypeId, 'Available:', serviceType.isAvailable, 'Price:', serviceType.price);
                                   return null;
-                                }
-
-                                // Calculate final price with hotel markup
-                                const markup = hotel?.markup || 15;
-                                const finalPrice = Math.round((serviceType.price * (1 + markup / 100)) * 100) / 100;
+                                }                                // Use the price directly from backend (markup already applied)
+                                const finalPrice = serviceType.price;
 
                                 // Find service type details from the service combinations
                                 const serviceTypeDetails = selectedService.serviceCombinations?.find(
-                                  combo => combo.id === serviceType.serviceTypeId
-                                ) || {
+                                  combo => combo.id === serviceType.serviceTypeId                                ) || {
                                   id: serviceType.serviceTypeId,
                                   name: serviceType.serviceTypeId.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                                  icon: '🧼',
                                   description: 'Professional laundry service'
                                 };
 
@@ -434,10 +425,9 @@ const LaundryBookingInterface = () => {
                                     key={`${serviceType.serviceTypeId}-${serviceIndex}`}
                                     className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
                                   >
-                                    <div className="flex items-center justify-between mb-2">
-                                      <span className="font-medium">
-                                        {serviceTypeDetails.icon} {serviceTypeDetails.name}
-                                      </span>                                      <span className="text-lg font-bold text-blue-600">
+                                    <div className="flex items-center justify-between mb-2">                                      <span className="font-medium">
+                                        {serviceTypeDetails.name}
+                                      </span><span className="text-lg font-bold text-blue-600">
                                         SAR {finalPrice}
                                       </span>
                                     </div>                                    <p className="text-sm text-gray-600 mb-3">
@@ -604,7 +594,7 @@ const LaundryBookingInterface = () => {
                     <div key={item.id} className="flex justify-between items-center py-2">
                       <div>
                         <span className="font-medium">
-                          {item.itemIcon} {item.itemName} ({item.serviceTypeName})
+                          {item.itemName} ({item.serviceTypeName})
                         </span>
                         <span className="text-gray-600 ml-2">× {item.quantity}</span>
                       </div>
@@ -674,7 +664,7 @@ const LaundryBookingInterface = () => {
                     <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                       <div className="flex-1">
                         <p className="font-medium text-sm">
-                          {item.itemIcon} {item.itemName}
+                          {item.itemName}
                         </p>
                         <p className="text-xs text-gray-600">{item.serviceTypeName}</p>
                         <p className="text-sm font-medium text-blue-600">${item.totalPrice}</p>

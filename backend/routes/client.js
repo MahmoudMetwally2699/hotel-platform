@@ -893,6 +893,28 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
         categories: serviceObj.laundryItems ? [...new Set(serviceObj.laundryItems.map(item => item.category))] : []
       });
 
+      // Apply markup to individual laundry items and their service types
+      if (serviceObj.laundryItems && serviceObj.laundryItems.length > 0) {
+        serviceObj.laundryItems = serviceObj.laundryItems.map(item => {
+          const updatedItem = { ...item };
+
+          // Apply markup to service types within each item
+          if (updatedItem.serviceTypes) {
+            updatedItem.serviceTypes = updatedItem.serviceTypes.map(st => ({
+              ...st,
+              price: Math.round((st.price * (1 + markup / 100)) * 100) / 100
+            }));
+          }
+
+          // Apply markup to base item price if it exists
+          if (updatedItem.price) {
+            updatedItem.price = Math.round((updatedItem.price * (1 + markup / 100)) * 100) / 100;
+          }
+
+          return updatedItem;
+        });
+      }
+
       // Apply markup to service combinations
       if (serviceObj.serviceCombinations) {
         serviceObj.serviceCombinations = serviceObj.serviceCombinations.map(combo => ({
@@ -919,11 +941,8 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
           rate: 5,
           finalRate: Math.round((5 * (1 + markup / 100)) * 100) / 100
         };
-      }
-
-      // Set final pricing for the service
+      }      // Set final pricing for the service
       serviceObj.pricing.finalPrice = serviceObj.pricing.basePrice * (1 + markup / 100);
-      serviceObj.markup = markup;
 
       return serviceObj;
     });    // Filter out services without actual laundryItems
@@ -941,15 +960,12 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
         itemCount: s.laundryItems?.length || 0,
         categories: [...new Set(s.laundryItems?.map(item => item.category) || [])]
       }))
-    });
-
-    res.json({
+    });    res.json({
       success: true,
       data: {
         hotel: {
           id: hotel._id,
-          name: hotel.name,
-          markup: hotel.markupSettings?.categories?.laundry || hotel.markupSettings?.default || 15
+          name: hotel.name
         },
         services: servicesWithActualItems
       }
