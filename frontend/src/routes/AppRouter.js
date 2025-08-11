@@ -30,6 +30,8 @@ const HotelCategoryServicesPage = lazy(() => import('../pages/client/HotelCatego
 const LaundryBookingPage = lazy(() => import('../pages/client/LaundryBookingPage'));
 const SimpleTransportationBooking = lazy(() => import('../pages/client/SimpleTransportationBooking'));
 const GuestTransportationBookings = lazy(() => import('../pages/guest/GuestTransportationBookings'));
+const PaymentSuccess = lazy(() => import('../pages/guest/PaymentSuccess'));
+const PaymentFailed = lazy(() => import('../pages/guest/PaymentFailed'));
 const ProfilePage = lazy(() => import('../pages/common/ProfilePage'));
 const AdminAccessPage = lazy(() => import('../pages/common/AdminAccessPage'));
 
@@ -92,6 +94,8 @@ const AppRouter = () => {
         <Route path="/hotels/:hotelId/categories" element={<TailwindLayout><HotelCategoryServicesPage /></TailwindLayout>} />        <Route path="/hotels/:hotelId/services/:category" element={<TailwindLayout><HotelCategoryServicesPage /></TailwindLayout>} />
         <Route path="/hotels/:hotelId/services/laundry/booking" element={<TailwindLayout><LaundryBookingPage /></TailwindLayout>} />
         <Route path="/hotels/:hotelId/services/transportation/booking" element={<TailwindLayout><SimpleTransportationBooking /></TailwindLayout>} />
+        <Route path="/guest/payment-success" element={<TailwindLayout><PaymentSuccess /></TailwindLayout>} />
+        <Route path="/guest/payment-failed" element={<TailwindLayout><PaymentFailed /></TailwindLayout>} />
         <Route path="/services/:category" element={<ServiceListPage />} />
         <Route path="/services/details/:id" element={<ServiceDetailsPage />} />
 

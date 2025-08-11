@@ -296,7 +296,7 @@ router.post('/webhook', async (req, res) => {
 
   } catch (error) {
     logger.error('Kashier webhook processing error:', error);
-    
+
     // Still respond with 200 to prevent retries for processing errors
     res.status(200).json({
       success: false,
@@ -527,7 +527,7 @@ function verifyKashierWebhookSignature(data, receivedSignature) {
   try {
     // Sort the signature keys alphabetically as per documentation
     const sortedKeys = [...data.signatureKeys].sort();
-    
+
     // Pick only the keys specified in signatureKeys from data
     const signaturePayload = {};
     sortedKeys.forEach(key => {

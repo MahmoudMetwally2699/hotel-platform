@@ -543,7 +543,7 @@ transportationBookingSchema.methods.createKashierPaymentSession = function(kashi
 transportationBookingSchema.methods.processKashierPayment = function(webhookData) {
   // Store the complete webhook data
   this.payment.kashier.webhookData = webhookData;
-  
+
   // Extract transaction details based on new webhook format
   this.payment.kashier.transactionId = webhookData.transactionId;
   this.payment.kashier.paymentReference = webhookData.kashierOrderId || webhookData.orderReference;
@@ -585,22 +585,22 @@ transportationBookingSchema.methods.processKashierPayment = function(webhookData
     });
   } else if (webhookData.status === 'FAILED' || webhookData.status === 'ERROR') {
     this.payment.status = 'failed';
-    
+
     // Store failure reason
     this.payment.kashier.failureReason = webhookData.transactionResponseMessage || 'Payment failed';
-    
+
     // Add communication log for failure
     this.communications.push({
       sender: 'system',
       message: `Payment failed. Reason: ${this.payment.kashier.failureReason}`,
       messageType: 'info'
     });
-    
+
     // Keep booking status as payment_pending to allow retry
   } else {
     // Handle other statuses (PENDING, PROCESSING, etc.)
     this.payment.status = webhookData.status?.toLowerCase() || 'pending';
-    
+
     this.communications.push({
       sender: 'system',
       message: `Payment status updated: ${webhookData.status}`,
