@@ -348,6 +348,211 @@ router.get('/status/:bookingId', protect, restrictTo('guest'), async (req, res) 
 });
 
 /**
+ * @desc    Confirm payment success from redirect
+ * @route   POST /api/payments/kashier/confirm-payment/:bookingId
+ * @access  Private/Guest
+ */
+router.post('/confirm-payment/:bookingId', protect, restrictTo('guest'), async (req, res) => {
+  try {
+    const { paymentData } = req.body;
+    const { bookingId } = req.params;
+
+    console.log('🔵 Payment confirmation request:', { bookingId, userId: req.user._id, paymentData });
+
+    // Find the booking
+    const booking = await TransportationBooking.findOne({
+      _id: bookingId,
+      guestId: req.user._id
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    // Check if payment is already completed
+    if (booking.bookingStatus === 'payment_completed') {
+      return res.json({
+        success: true,
+        message: 'Payment already confirmed',
+        data: { booking: booking }
+      });
+    }
+
+    // Process the payment confirmation
+    if (paymentData.paymentStatus === 'SUCCESS') {
+      // Create webhook-style data for processing
+      const webhookData = {
+        event: 'pay',
+        status: 'SUCCESS',
+        transactionId: paymentData.transactionId,
+        kashierOrderId: paymentData.orderReference,
+        orderReference: paymentData.orderReference,
+        merchantOrderId: paymentData.merchantOrderId,
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        method: 'card',
+        creationDate: new Date().toISOString(),
+        transactionResponseCode: '00',
+        transactionResponseMessage: {
+          en: 'Approved',
+          ar: 'تمت الموافقة'
+        },
+        card: {
+          cardInfo: {
+            cardBrand: paymentData.cardBrand,
+            maskedCard: paymentData.maskedCard
+          }
+        }
+      };
+
+      // Process the payment
+      await booking.processKashierPayment(webhookData);
+
+      logger.info('Payment confirmed via redirect', {
+        bookingId: booking._id,
+        bookingReference: booking.bookingReference,
+        transactionId: paymentData.transactionId,
+        amount: paymentData.amount,
+        currency: paymentData.currency
+      });
+
+      res.json({
+        success: true,
+        message: 'Payment confirmed successfully',
+        data: {
+          booking: booking,
+          paymentStatus: booking.payment.status,
+          bookingStatus: booking.bookingStatus
+        }
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Payment not successful',
+        data: { paymentStatus: paymentData.paymentStatus }
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Payment confirmation error:', error);
+    logger.error('Payment confirmation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while confirming payment'
+    });
+  }
+});
+
+/**
+ * @desc    Confirm payment success from redirect (public endpoint)
+ * @route   POST /api/payments/kashier/confirm-payment-public/:bookingId
+ * @access  Public (for redirect handling)
+ */
+router.post('/confirm-payment-public/:bookingId', async (req, res) => {
+  try {
+    const { paymentData } = req.body;
+    const { bookingId } = req.params;
+
+    console.log('🔵 Public payment confirmation request:', { bookingId, paymentData });
+
+    // Find the booking (no user restriction for public endpoint)
+    const booking = await TransportationBooking.findById(bookingId);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    // Verify the merchantOrderId matches for security
+    if (paymentData.merchantOrderId !== booking.bookingReference) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment data'
+      });
+    }
+
+    // Check if payment is already completed
+    if (booking.bookingStatus === 'payment_completed') {
+      return res.json({
+        success: true,
+        message: 'Payment already confirmed',
+        data: { 
+          bookingStatus: booking.bookingStatus,
+          paymentStatus: booking.payment.status 
+        }
+      });
+    }
+
+    // Process the payment confirmation
+    if (paymentData.paymentStatus === 'SUCCESS') {
+      // Create webhook-style data for processing
+      const webhookData = {
+        event: 'pay',
+        status: 'SUCCESS',
+        transactionId: paymentData.transactionId,
+        kashierOrderId: paymentData.orderReference,
+        orderReference: paymentData.orderReference,
+        merchantOrderId: paymentData.merchantOrderId,
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        method: 'card',
+        creationDate: new Date().toISOString(),
+        transactionResponseCode: '00',
+        transactionResponseMessage: {
+          en: 'Approved',
+          ar: 'تمت الموافقة'
+        },
+        card: {
+          cardInfo: {
+            cardBrand: paymentData.cardBrand,
+            maskedCard: paymentData.maskedCard
+          }
+        }
+      };
+
+      // Process the payment
+      await booking.processKashierPayment(webhookData);
+
+      logger.info('Payment confirmed via public redirect', {
+        bookingId: booking._id,
+        bookingReference: booking.bookingReference,
+        transactionId: paymentData.transactionId,
+        amount: paymentData.amount,
+        currency: paymentData.currency
+      });
+
+      res.json({
+        success: true,
+        message: 'Payment confirmed successfully',
+        data: {
+          bookingStatus: booking.bookingStatus,
+          paymentStatus: booking.payment.status
+        }
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Payment not successful',
+        data: { paymentStatus: paymentData.paymentStatus }
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Public payment confirmation error:', error);
+    logger.error('Public payment confirmation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while confirming payment'
+    });
+  }
+});
+
+/**
  * @desc    Retry failed payment
  * @route   POST /api/payments/kashier/retry/:bookingId
  * @access  Private/Guest

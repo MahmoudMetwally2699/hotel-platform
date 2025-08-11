@@ -23,12 +23,60 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     if (bookingId) {
-      fetchBookingDetails();
+      // Check if we have payment success parameters from Kashier
+      const paymentStatus = searchParams.get('paymentStatus');
+      const transactionId = searchParams.get('transactionId');
+      
+      if (paymentStatus === 'SUCCESS' && transactionId) {
+        // Update booking status first, then fetch details
+        updateBookingStatusFromPayment();
+      } else {
+        fetchBookingDetails();
+      }
     } else {
       setError('No booking ID provided');
       setLoading(false);
     }
-  }, [bookingId]);
+  }, [bookingId, searchParams]); // Add searchParams to dependencies
+
+  const updateBookingStatusFromPayment = async () => {
+    try {
+      setLoading(true);
+      
+      // Extract payment details from URL parameters
+      const paymentData = {
+        paymentStatus: searchParams.get('paymentStatus'),
+        transactionId: searchParams.get('transactionId'),
+        orderReference: searchParams.get('orderReference'),
+        merchantOrderId: searchParams.get('merchantOrderId'),
+        amount: parseFloat(searchParams.get('amount')),
+        currency: searchParams.get('currency'),
+        cardBrand: searchParams.get('cardBrand'),
+        maskedCard: searchParams.get('maskedCard'),
+        signature: searchParams.get('signature')
+      };
+
+      console.log('🔵 Updating booking status with payment data:', paymentData);
+
+      // Call backend to update booking status with payment success
+      const response = await apiClient.post(`/payments/kashier/confirm-payment-public/${bookingId}`, {
+        paymentData
+      });
+
+      if (response.data.success) {
+        console.log('✅ Booking status updated successfully');
+        // Now fetch the updated booking details
+        await fetchBookingDetails();
+      } else {
+        console.log('⚠️ Failed to update booking status, fetching current details');
+        await fetchBookingDetails();
+      }
+    } catch (error) {
+      console.error('❌ Error updating booking status:', error);
+      // Still try to fetch booking details even if update fails
+      await fetchBookingDetails();
+    }
+  };
 
   const fetchBookingDetails = async () => {
     try {
