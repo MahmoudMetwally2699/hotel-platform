@@ -171,6 +171,9 @@ function createApp() {
     app.use('/api/service', require('../routes/service'));
     app.use('/api/client', require('../routes/client'));
     app.use('/api/payments', require('../routes/payments'));
+    app.use('/api/payments/kashier', require('../routes/kashierPayments'));
+    app.use('/api/transportation-bookings', require('../routes/transportationBookings'));
+    console.log('All routes loaded successfully for serverless deployment');
   } catch (error) {
     console.error('Error loading routes:', error);
   }
