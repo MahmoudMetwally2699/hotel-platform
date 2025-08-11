@@ -547,7 +547,25 @@ transportationBookingSchema.methods.processKashierPayment = function(webhookData
   // Extract transaction details based on new webhook format
   this.payment.kashier.transactionId = webhookData.transactionId;
   this.payment.kashier.paymentReference = webhookData.kashierOrderId || webhookData.orderReference;
-  this.payment.method = webhookData.method; // card, wallet, etc.
+
+  // Map Kashier payment methods to our schema enum values
+  const mapPaymentMethod = (kashierMethod) => {
+    const methodMap = {
+      'card': 'credit-card',
+      'credit-card': 'credit-card',
+      'debit-card': 'debit-card',
+      'wallet': 'wallet',
+      'bank-transfer': 'bank-transfer',
+      'fawry': 'wallet',
+      'instapay': 'wallet',
+      'vodafone-cash': 'wallet',
+      'orange-cash': 'wallet',
+      'etisalat-cash': 'wallet'
+    };
+    return methodMap[kashierMethod] || 'credit-card'; // Default to credit-card
+  };
+
+  this.payment.method = mapPaymentMethod(webhookData.method);
 
   // Store additional payment details
   if (webhookData.card) {
