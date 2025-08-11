@@ -13,7 +13,7 @@ const logger = require('../utils/logger');
 
 // Kashier.io configuration
 const KASHIER_CONFIG = {
-  apiUrl: process.env.KASHIER_API_URL || 'https://checkout.kashier.io',
+  apiUrl: process.env.KASHIER_API_URL || 'https://payments.kashier.io',
   merchantId: process.env.KASHIER_MERCHANT_ID,
   apiKey: process.env.KASHIER_API_KEY,
   secretKey: process.env.KASHIER_SECRET_KEY,
@@ -78,20 +78,26 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
 
     // Prepare payment session data for Kashier.io
     const paymentAmount = booking.payment.totalAmount || booking.quote.finalPrice; // Use payment.totalAmount first
+
+    // Get URLs with fallbacks
+    const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://hotel-platform-teud.vercel.app';
+    const backendUrl = process.env.BACKEND_URL || frontendUrl; // Use same as frontend if backend URL not set
+
+    console.log('🌐 URLs being used:', { frontendUrl, backendUrl });
+
     const paymentData = {
-      mid: KASHIER_CONFIG.merchantId,
+      merchantId: KASHIER_CONFIG.merchantId,
+      orderId: booking.bookingReference,
       amount: paymentAmount,
       currency: KASHIER_CONFIG.currency,
-      orderId: booking.bookingReference,
-      merchantRedirect: `${process.env.FRONTEND_URL}/bookings/${booking._id}/payment-success`,
-      failureRedirect: `${process.env.FRONTEND_URL}/bookings/${booking._id}/payment-failed`,
-      webhookUrl: `${process.env.BACKEND_URL}/api/payments/kashier/webhook`,
-      displayCurrencyIso: KASHIER_CONFIG.currency,
-      mode: KASHIER_CONFIG.mode
+      mode: KASHIER_CONFIG.mode,
+      merchantRedirect: `${frontendUrl}/guest/payment-success?booking=${booking._id}`,
+      failureRedirect: `${frontendUrl}/guest/payment-failed?booking=${booking._id}`,
+      serverWebhook: `${backendUrl}/api/payments/kashier/webhook`
     };
 
     console.log('💰 Payment data prepared:', {
-      mid: paymentData.mid,
+      merchantId: paymentData.merchantId,
       amount: paymentData.amount,
       currency: paymentData.currency,
       orderId: paymentData.orderId,
@@ -437,30 +443,26 @@ router.get('/transactions', protect, restrictTo('hotel-admin', 'service-provider
 // Helper functions
 
 /**
- * Generate hash for Kashier.io API requests
- * Based on Kashier documentation: hash = SHA256(mid + amount + currency + orderId + secret)
+ * Generate hash for Kashier.io Hosted Payment Page
+ * Based on Kashier documentation: HMAC SHA256 with path format
  */
 function generateKashierHash(data) {
-  if (!KASHIER_CONFIG.secretKey) {
-    logger.warn('Kashier secret key not configured');
+  if (!KASHIER_CONFIG.apiKey) {
+    logger.warn('Kashier API key not configured');
     return null;
   }
 
-  // Extract the path and secret from the secret key
-  const secretParts = KASHIER_CONFIG.secretKey.split('$');
-  const path = secretParts[0];
-  const secret = secretParts[1];
-
-  // Create the hash string according to Kashier documentation
-  const hashString = `${data.mid}${data.amount}${data.currency}${data.orderId}${path}`;
+  // Create the path according to Kashier documentation
+  // Format: /?payment=merchantId.orderId.amount.currency
+  const path = `/?payment=${data.merchantId}.${data.orderId}.${data.amount}.${data.currency}`;
 
   const hash = crypto
-    .createHash('sha256')
-    .update(hashString)
+    .createHmac('sha256', KASHIER_CONFIG.apiKey)
+    .update(path)
     .digest('hex');
 
   logger.info('Generated Kashier hash', {
-    hashString: hashString.substring(0, 50) + '...', // Log partial string for debugging
+    path: path,
     hash: hash
   });
 
@@ -471,15 +473,15 @@ function generateKashierHash(data) {
  * Verify Kashier.io webhook hash
  */
 function verifyKashierHash(payload, receivedHash) {
-  if (!KASHIER_CONFIG.secretKey || !receivedHash) {
+  if (!KASHIER_CONFIG.apiKey || !receivedHash) {
     return false;
   }
 
   const expectedHash = generateKashierHash({
-    mid: payload.mid || KASHIER_CONFIG.merchantId,
+    merchantId: payload.merchantId || KASHIER_CONFIG.merchantId,
+    orderId: payload.orderId,
     amount: payload.amount,
-    currency: payload.currency,
-    orderId: payload.orderId
+    currency: payload.currency
   });
 
   return crypto.timingSafeEqual(
