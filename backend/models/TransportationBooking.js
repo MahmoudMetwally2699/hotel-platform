@@ -541,20 +541,38 @@ transportationBookingSchema.methods.createKashierPaymentSession = function(kashi
 };
 
 transportationBookingSchema.methods.processKashierPayment = function(webhookData) {
+  // Store the complete webhook data
   this.payment.kashier.webhookData = webhookData;
-  this.payment.kashier.transactionId = webhookData.transaction_id;
-  this.payment.kashier.paymentReference = webhookData.payment_reference;
+  
+  // Extract transaction details based on new webhook format
+  this.payment.kashier.transactionId = webhookData.transactionId;
+  this.payment.kashier.paymentReference = webhookData.kashierOrderId || webhookData.orderReference;
+  this.payment.method = webhookData.method; // card, wallet, etc.
+
+  // Store additional payment details
+  if (webhookData.card) {
+    this.payment.kashier.cardInfo = {
+      cardBrand: webhookData.card.cardInfo?.cardBrand,
+      maskedCard: webhookData.card.cardInfo?.maskedCard,
+      cardHolderName: webhookData.card.cardInfo?.cardHolderName
+    };
+  }
 
   if (webhookData.status === 'SUCCESS') {
     this.payment.status = 'completed';
-    this.payment.paidAmount = this.payment.totalAmount;
-    this.payment.paymentDate = new Date();
+    this.payment.paidAmount = webhookData.amount || this.payment.totalAmount;
+    this.payment.currency = webhookData.currency || this.payment.currency;
+    this.payment.paymentDate = webhookData.creationDate ? new Date(webhookData.creationDate) : new Date();
     this.bookingStatus = 'payment_completed';
+
+    // Store transaction response details
+    this.payment.kashier.transactionResponseCode = webhookData.transactionResponseCode;
+    this.payment.kashier.transactionResponseMessage = webhookData.transactionResponseMessage;
 
     // Calculate payment breakdown
     this.payment.breakdown = {
-      serviceProviderAmount: this.quote.basePrice,
-      hotelCommission: this.hotelMarkup.amount,
+      serviceProviderAmount: this.quote?.basePrice || 0,
+      hotelCommission: this.hotelMarkup?.amount || 0,
       platformFee: 0, // Can be calculated if needed
       taxAmount: 0    // Can be calculated if needed
     };
@@ -562,12 +580,32 @@ transportationBookingSchema.methods.processKashierPayment = function(webhookData
     // Add communication log
     this.communications.push({
       sender: 'system',
-      message: `Payment completed successfully. Amount: $${this.payment.paidAmount}`,
+      message: `Payment completed successfully. Amount: ${this.payment.paidAmount} ${this.payment.currency}. Transaction ID: ${webhookData.transactionId}`,
       messageType: 'info'
     });
-  } else {
+  } else if (webhookData.status === 'FAILED' || webhookData.status === 'ERROR') {
     this.payment.status = 'failed';
+    
+    // Store failure reason
+    this.payment.kashier.failureReason = webhookData.transactionResponseMessage || 'Payment failed';
+    
+    // Add communication log for failure
+    this.communications.push({
+      sender: 'system',
+      message: `Payment failed. Reason: ${this.payment.kashier.failureReason}`,
+      messageType: 'info'
+    });
+    
     // Keep booking status as payment_pending to allow retry
+  } else {
+    // Handle other statuses (PENDING, PROCESSING, etc.)
+    this.payment.status = webhookData.status?.toLowerCase() || 'pending';
+    
+    this.communications.push({
+      sender: 'system',
+      message: `Payment status updated: ${webhookData.status}`,
+      messageType: 'info'
+    });
   }
 
   return this.save();

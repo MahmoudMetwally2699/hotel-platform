@@ -189,20 +189,22 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
  */
 router.post('/webhook', async (req, res) => {
   try {
-    const webhookData = req.body;
-    const signature = req.get('X-Kashier-Signature');
+    const { event, data } = req.body;
+    const kashierSignature = req.get('x-kashier-signature');
 
     logger.info('Kashier webhook received', {
-      orderId: webhookData.orderId,
-      status: webhookData.status,
-      transactionId: webhookData.transactionId
+      event: event,
+      merchantOrderId: data?.merchantOrderId,
+      status: data?.status,
+      transactionId: data?.transactionId,
+      amount: data?.amount
     });
 
-    // Verify webhook signature (if configured)
-    if (KASHIER_CONFIG.secretKey && !verifyKashierHash(req.body, signature)) {
-      logger.error('Kashier webhook hash verification failed', {
-        orderId: webhookData.orderId,
-        signature: signature
+    // Verify webhook signature
+    if (KASHIER_CONFIG.apiKey && !verifyKashierWebhookSignature(data, kashierSignature)) {
+      logger.error('Kashier webhook signature verification failed', {
+        merchantOrderId: data?.merchantOrderId,
+        receivedSignature: kashierSignature
       });
       return res.status(401).json({
         success: false,
@@ -210,57 +212,95 @@ router.post('/webhook', async (req, res) => {
       });
     }
 
-    // Find the booking by order ID (booking reference)
-    const booking = await TransportationBooking.findOne({
-      bookingReference: webhookData.orderId
-    });
-
-    if (!booking) {
-      logger.error('Booking not found for Kashier webhook', {
-        orderId: webhookData.orderId
+    // Handle different event types
+    if (event === 'pay' || event === 'authorize') {
+      // Find the booking by merchant order ID (booking reference)
+      const booking = await TransportationBooking.findOne({
+        bookingReference: data.merchantOrderId
       });
-      return res.status(404).json({
-        success: false,
-        message: 'Booking not found'
+
+      if (!booking) {
+        logger.error('Booking not found for Kashier webhook', {
+          merchantOrderId: data.merchantOrderId,
+          event: event
+        });
+        return res.status(404).json({
+          success: false,
+          message: 'Booking not found'
+        });
+      }
+
+      // Process the payment based on webhook data
+      await booking.processKashierPayment({
+        event: event,
+        status: data.status,
+        transactionId: data.transactionId,
+        kashierOrderId: data.kashierOrderId,
+        orderReference: data.orderReference,
+        amount: data.amount,
+        currency: data.currency,
+        method: data.method,
+        creationDate: data.creationDate,
+        transactionResponseCode: data.transactionResponseCode,
+        transactionResponseMessage: data.transactionResponseMessage,
+        card: data.card,
+        merchantDetails: data.merchantDetails
+      });
+
+      // Send appropriate notifications based on payment status
+      if (data.status === 'SUCCESS') {
+        logger.info('Payment completed successfully via webhook', {
+          bookingId: booking._id,
+          bookingReference: booking.bookingReference,
+          transactionId: data.transactionId,
+          amount: data.amount,
+          currency: data.currency
+        });
+
+        // TODO: Send payment success email to guest
+        // TODO: Send payment notification to service provider
+        // TODO: Update hotel revenue tracking
+      } else if (data.status === 'FAILED' || data.status === 'ERROR') {
+        logger.error('Payment failed via webhook', {
+          bookingId: booking._id,
+          bookingReference: booking.bookingReference,
+          transactionId: data.transactionId,
+          status: data.status,
+          responseCode: data.transactionResponseCode,
+          responseMessage: data.transactionResponseMessage
+        });
+
+        // TODO: Send payment failure notification to guest
+      }
+    } else if (event === 'refund') {
+      // Handle refund events
+      logger.info('Refund event received', {
+        merchantOrderId: data.merchantOrderId,
+        amount: data.amount,
+        status: data.status
+      });
+
+      // TODO: Implement refund handling logic
+    } else {
+      logger.warn('Unknown webhook event type', {
+        event: event,
+        merchantOrderId: data?.merchantOrderId
       });
     }
 
-    // Process the payment based on webhook status
-    await booking.processKashierPayment(webhookData);
-
-    // Send appropriate notifications based on payment status
-    if (webhookData.status === 'SUCCESS' || webhookData.status === 'PAID') {
-      logger.info('Payment completed successfully', {
-        bookingId: booking._id,
-        bookingReference: booking.bookingReference,
-        transactionId: webhookData.transactionId,
-        amount: booking.payment.totalAmount
-      });
-
-      // TODO: Send payment success email to guest
-      // TODO: Send payment notification to service provider
-      // TODO: Update hotel revenue tracking
-    } else if (webhookData.status === 'FAILED' || webhookData.status === 'ERROR') {
-      logger.error('Payment failed', {
-        bookingId: booking._id,
-        bookingReference: booking.bookingReference,
-        transactionId: webhookData.transactionId,
-        failureReason: webhookData.failureReason || webhookData.error
-      });
-
-      // TODO: Send payment failure notification to guest
-    }
-
-    res.json({
+    // Always respond with 200 to acknowledge receipt
+    res.status(200).json({
       success: true,
       message: 'Webhook processed successfully'
     });
 
   } catch (error) {
     logger.error('Kashier webhook processing error:', error);
-    res.status(500).json({
+    
+    // Still respond with 200 to prevent retries for processing errors
+    res.status(200).json({
       success: false,
-      message: 'Webhook processing failed'
+      message: 'Webhook processing failed but acknowledged'
     });
   }
 });
@@ -467,6 +507,62 @@ function generateKashierHash(data) {
   });
 
   return hash;
+}
+
+/**
+ * Verify Kashier.io webhook signature
+ * Based on official documentation: https://developers.kashier.io/payment/webhook
+ */
+function verifyKashierWebhookSignature(data, receivedSignature) {
+  if (!KASHIER_CONFIG.apiKey || !receivedSignature || !data || !data.signatureKeys) {
+    logger.warn('Missing requirements for signature verification', {
+      hasApiKey: !!KASHIER_CONFIG.apiKey,
+      hasSignature: !!receivedSignature,
+      hasData: !!data,
+      hasSignatureKeys: !!data?.signatureKeys
+    });
+    return false;
+  }
+
+  try {
+    // Sort the signature keys alphabetically as per documentation
+    const sortedKeys = [...data.signatureKeys].sort();
+    
+    // Pick only the keys specified in signatureKeys from data
+    const signaturePayload = {};
+    sortedKeys.forEach(key => {
+      if (data.hasOwnProperty(key)) {
+        signaturePayload[key] = data[key];
+      }
+    });
+
+    // Convert to query string format
+    const queryString = require('querystring');
+    const payloadString = queryString.stringify(signaturePayload);
+
+    // Generate HMAC SHA256 signature using API key
+    const expectedSignature = crypto
+      .createHmac('sha256', KASHIER_CONFIG.apiKey)
+      .update(payloadString)
+      .digest('hex');
+
+    logger.info('Webhook signature verification', {
+      sortedKeys: sortedKeys,
+      payloadString: payloadString.substring(0, 100) + '...',
+      expectedSignature: expectedSignature,
+      receivedSignature: receivedSignature,
+      match: expectedSignature === receivedSignature
+    });
+
+    return crypto.timingSafeEqual(
+      Buffer.from(expectedSignature, 'hex'),
+      Buffer.from(receivedSignature, 'hex')
+    );
+
+  } catch (error) {
+    logger.error('Error verifying webhook signature:', error);
+    return false;
+  }
 }
 
 /**
