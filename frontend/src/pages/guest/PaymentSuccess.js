@@ -26,7 +26,7 @@ const PaymentSuccess = () => {
       // Check if we have payment success parameters from Kashier
       const paymentStatus = searchParams.get('paymentStatus');
       const transactionId = searchParams.get('transactionId');
-      
+
       if (paymentStatus === 'SUCCESS' && transactionId) {
         // Update booking status first, then fetch details
         updateBookingStatusFromPayment();
@@ -42,7 +42,7 @@ const PaymentSuccess = () => {
   const updateBookingStatusFromPayment = async () => {
     try {
       setLoading(true);
-      
+
       // Extract payment details from URL parameters
       const paymentData = {
         paymentStatus: searchParams.get('paymentStatus'),

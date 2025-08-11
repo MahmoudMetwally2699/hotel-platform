@@ -481,9 +481,9 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
       return res.json({
         success: true,
         message: 'Payment already confirmed',
-        data: { 
+        data: {
           bookingStatus: booking.bookingStatus,
-          paymentStatus: booking.payment.status 
+          paymentStatus: booking.payment.status
         }
       });
     }
