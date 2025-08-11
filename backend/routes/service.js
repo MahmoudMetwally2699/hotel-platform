@@ -1772,10 +1772,355 @@ router.delete('/categories/laundry/items/:serviceId', catchAsync(async (req, res
   }
 
   await Service.findByIdAndDelete(serviceId);
-
   res.status(200).json({
     status: 'success',
     message: 'Laundry service deleted successfully'  });
+}));
+
+/**
+ * @route   POST /api/service/categories/transportation/vehicles
+ * @desc    Add a new transportation service with vehicles
+ * @access  Private/ServiceProvider
+ */
+router.post('/categories/transportation/vehicles', catchAsync(async (req, res) => {
+  console.log('🚗 ENDPOINT HIT: POST /categories/transportation/vehicles');
+
+  // For service providers, use the serviceProviderId from the populated user
+  const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
+  const hotelId = req.user.hotelId;
+  console.log('🚗 Debug - POST /categories/transportation/vehicles received:', {
+    userId: req.user._id,
+    providerId,
+    hotelId,
+    userRole: req.user.role,
+    body: req.body
+  });
+
+  // Validate that the user has a serviceProviderId
+  if (!providerId) {
+    console.log('❌ Validation failed: User does not have a serviceProviderId');
+    return res.status(400).json({
+      status: 'fail',
+      message: 'User is not associated with a service provider'
+    });
+  }
+
+  const {
+    name,
+    description,
+    shortDescription,
+    transportationItems
+  } = req.body;
+
+  // Validation
+  if (!name) {
+    console.log('❌ Validation failed: Service name is required');
+    return res.status(400).json({
+      status: 'fail',
+      message: 'Service name is required'
+    });
+  }
+
+  if (!transportationItems || transportationItems.length === 0) {
+    console.log('❌ Validation failed: No transportation vehicles provided', { transportationItems });
+    return res.status(400).json({
+      status: 'fail',
+      message: 'At least one transportation vehicle must be provided'
+    });
+  }
+  // Validate individual vehicles - transportation items don't need service types with pricing
+  // They are just vehicle specifications, pricing is handled at the service level
+  const hasValidVehicles = transportationItems.some(vehicle => {
+    const hasBasicInfo = vehicle.isAvailable && vehicle.vehicleType;
+    const hasCapacity = vehicle.capacity && vehicle.capacity.passengers > 0;
+    return hasBasicInfo && hasCapacity;
+  });
+
+  if (!hasValidVehicles) {
+    console.log('❌ Validation failed: No valid vehicles provided', {
+      transportationItems,
+      hasValidVehicles,
+      sampleVehicle: transportationItems[0],
+      detailedCheck: transportationItems.map(v => ({
+        isAvailable: v.isAvailable,
+        vehicleType: v.vehicleType,
+        hasCapacity: !!v.capacity,
+        passengers: v.capacity?.passengers,
+        validationResult: v.isAvailable && v.vehicleType && v.capacity && v.capacity.passengers > 0
+      }))
+    });
+    return res.status(400).json({
+      status: 'fail',
+      message: 'At least one vehicle must be available with valid specifications (vehicle type and passenger capacity required)'
+    });
+  }
+
+  try {
+    // Check if the service provider already has a transportation service for this hotel
+    const existingService = await Service.findOne({
+      providerId: providerId,
+      hotelId: hotelId,
+      category: 'transportation',
+      isActive: true
+    });
+
+    let service;    if (existingService) {
+      console.log('🔄 Updating existing transportation service:', existingService._id);
+      // Update existing service
+      existingService.name = name;
+      existingService.description = description;
+      existingService.shortDescription = shortDescription;
+      existingService.transportationItems = transportationItems;
+      existingService.updatedAt = new Date();
+
+      service = await existingService.save();
+    } else {
+      console.log('➕ Creating new transportation service');
+      // Create new service with all required fields
+      service = new Service({
+        name,
+        description,
+        shortDescription,
+        category: 'transportation',
+        subcategory: 'vehicle_rental', // Required field
+        serviceType: 'vehicle_service', // Required field
+        providerId: providerId,
+        hotelId: hotelId,
+        transportationItems: transportationItems,
+
+        // Required pricing fields (set defaults)
+        pricing: {
+          basePrice: 25, // Default base price, will be overridden by individual vehicle pricing
+          pricingType: 'per-item', // Transportation is priced per vehicle/service
+          currency: 'USD'
+        },
+
+        // Required specifications fields
+        specifications: {
+          duration: {
+            estimated: 120, // Default 2 hours
+            unit: 'minutes'
+          },
+          capacity: {
+            maxPeople: 8, // Maximum capacity across all vehicles
+            maxDistance: 1000 // Maximum distance in km
+          },
+          inclusions: ['Driver', 'Fuel', 'Insurance'],
+          exclusions: ['Tolls', 'Parking fees', 'Food']
+        },
+
+        // Availability settings
+        availability: {
+          isAvailable: true,
+          schedule: {
+            monday: { isAvailable: true, timeSlots: [{ startTime: '06:00', endTime: '23:00', maxBookings: 10 }] },
+            tuesday: { isAvailable: true, timeSlots: [{ startTime: '06:00', endTime: '23:00', maxBookings: 10 }] },
+            wednesday: { isAvailable: true, timeSlots: [{ startTime: '06:00', endTime: '23:00', maxBookings: 10 }] },
+            thursday: { isAvailable: true, timeSlots: [{ startTime: '06:00', endTime: '23:00', maxBookings: 10 }] },
+            friday: { isAvailable: true, timeSlots: [{ startTime: '06:00', endTime: '23:00', maxBookings: 10 }] },
+            saturday: { isAvailable: true, timeSlots: [{ startTime: '06:00', endTime: '23:00', maxBookings: 10 }] },
+            sunday: { isAvailable: true, timeSlots: [{ startTime: '06:00', endTime: '23:00', maxBookings: 10 }] }
+          }
+        },
+
+        // Delivery/Pickup settings for transportation
+        delivery: {
+          isPickupAvailable: true,
+          isDeliveryAvailable: true,
+          pickupCharge: 0,
+          deliveryCharge: 0,
+          deliveryRadius: 50, // 50km radius
+          estimatedPickupTime: 15, // 15 minutes
+          estimatedDeliveryTime: 15
+        },
+
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      service = await service.save();
+    }
+
+    console.log('✅ Transportation service saved successfully:', service._id);
+
+    res.status(200).json({
+      status: 'success',
+      message: existingService ? 'Transportation service updated successfully' : 'Transportation service created successfully',
+      data: {
+        service
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error saving transportation service:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to save transportation service',
+      error: error.message
+    });
+  }
+}));
+
+/**
+ * @route   GET /api/service/categories/transportation/vehicles
+ * @desc    Get transportation service with vehicles for the service provider
+ * @access  Private/ServiceProvider
+ */
+router.get('/categories/transportation/vehicles', catchAsync(async (req, res) => {
+  console.log('🚗 ENDPOINT HIT: GET /categories/transportation/vehicles');
+
+  const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
+  const hotelId = req.user.hotelId;
+
+  console.log('🚗 Debug - GET /categories/transportation/vehicles:', {
+    providerId,
+    hotelId,
+    userRole: req.user.role
+  });
+
+  if (!providerId) {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'User is not associated with a service provider'
+    });
+  }
+
+  try {
+    // Get transportation service for this provider and hotel
+    const service = await Service.findOne({
+      providerId: providerId,
+      hotelId: hotelId,
+      category: 'transportation',
+      isActive: true
+    }).populate('providerId', 'businessName contactEmail phone');
+
+    if (!service) {
+      console.log('📋 No transportation service found, returning empty service with templates');
+
+      // Get transportation templates for initialization
+      const templates = categoryTemplates.transportation;
+
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          service: null,
+          templates: templates,
+          message: 'No transportation service found. Use templates to create one.'
+        }
+      });
+    }
+
+    console.log('✅ Transportation service found:', service._id, 'with', service.transportationItems?.length || 0, 'vehicles');
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        service,
+        templates: categoryTemplates.transportation
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching transportation service:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch transportation service',
+      error: error.message
+    });
+  }
+}));
+
+/**
+ * @route   PUT /api/service/categories/transportation/vehicles/:serviceId
+ * @desc    Update a transportation service
+ * @access  Private/ServiceProvider
+ */
+router.put('/categories/transportation/vehicles/:serviceId', catchAsync(async (req, res) => {
+  const { serviceId } = req.params;
+  const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
+
+  const {
+    name,
+    description,
+    shortDescription,
+    transportationItems
+  } = req.body;
+
+  // Find and verify ownership
+  const service = await Service.findOne({
+    _id: serviceId,
+    providerId: providerId,
+    category: 'transportation'
+  });
+
+  if (!service) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Transportation service not found'
+    });
+  }
+
+  // Update service
+  service.name = name || service.name;
+  service.description = description || service.description;
+  service.shortDescription = shortDescription || service.shortDescription;
+  service.transportationItems = transportationItems || service.transportationItems;
+  service.updatedAt = new Date();
+
+  await service.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Transportation service updated successfully',
+    data: {
+      service
+    }
+  });
+}));
+
+/**
+ * @route   DELETE /api/service/categories/transportation/vehicles/:serviceId
+ * @desc    Delete a transportation service
+ * @access  Private/ServiceProvider
+ */
+router.delete('/categories/transportation/vehicles/:serviceId', catchAsync(async (req, res) => {
+  const { serviceId } = req.params;
+  const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
+
+  // Find and verify ownership
+  const service = await Service.findOne({
+    _id: serviceId,
+    providerId: providerId,
+    category: 'transportation'
+  });
+
+  if (!service) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Transportation service not found'
+    });
+  }
+
+  // Check if there are any active bookings
+  const activeBookings = await Booking.countDocuments({
+    serviceId: serviceId,
+    status: { $nin: ['completed', 'cancelled', 'refunded'] }
+  });
+
+  if (activeBookings > 0) {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'Cannot delete service with active bookings'
+    });
+  }
+
+  await Service.findByIdAndDelete(serviceId);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Transportation service deleted successfully'
+  });
 }));
 
 module.exports = router;

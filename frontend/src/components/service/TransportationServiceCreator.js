@@ -1,608 +1,777 @@
-import React, { useState, useEffect } from 'react';
-import api from '../../services/api.service';
-import { toast } from 'react-toastify';
-
 /**
- * Transportation Service Creator Component
- * Allows service providers to create transportation services dynamically
+ * Enhanced Transportation Service Management System
+ *
+ * Tabbed interface for complete transportation service management:
+ * 1. Manage Items Tab - View, edit, and manage existing transportation services
+ * 2. Add Items Tab - Create new transportation services with individual vehicle pricing
  */
+
+import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import apiClient from '../../services/api.service';
+
+// Icon component using emoji fallbacks
+const Icon = ({ type, className = "" }) => {
+  const icons = {
+    plus: "➕",
+    edit: "✏️",
+    trash: "🗑️",
+    save: "💾",
+    times: "✕",
+    car: "🚗",
+    clock: "⏰",
+    dollar: "💰",
+    package: "📦",
+    list: "📋",
+    check: "✅",
+    star: "⭐",
+    toggle: "🔘",
+    available: "✅",
+    unavailable: "❌",
+    taxi: "🚕",
+    suv: "🚙",
+    van: "🚐",
+    luxury: "🏎️",
+    eco: "🌱",
+    wheelchair: "♿",
+    info: "ℹ️"
+  };
+
+  return <span className={className}>{icons[type] || "❓"}</span>;
+};
+
 const TransportationServiceCreator = () => {
-  const [services, setServices] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [templates, setTemplates] = useState(null);
-  const [activeForm, setActiveForm] = useState(null);
-  const [formData, setFormData] = useState({
+  // Tab Management
+  const [activeTab, setActiveTab] = useState('manage');
+
+  // Common state management
+  const [loading, setLoading] = useState(false);
+  const [categoryTemplate, setCategoryTemplate] = useState(null);
+
+  // Manage Items Tab State
+  const [existingServices, setExistingServices] = useState([]);
+  const [editingService, setEditingService] = useState(null);
+  const [editFormData, setEditFormData] = useState(null);
+
+  // Add Items Tab State
+  const [serviceDetails, setServiceDetails] = useState({
     name: '',
     description: '',
-    basePrice: '',
-    vehicleType: '',
-    capacity: '',
-    serviceType: '',
-    priceStructure: 'flat', // flat, hourly, distance
-    hourlyRate: '',
-    perKmRate: '',
-    minimumCharge: '',
-    features: [],
-    availableHours: {
-      start: '',
-      end: ''
-    },
-    bookingAdvanceHours: 24
+    shortDescription: '',
+    isActive: true
   });
 
-  // Load transportation templates and existing services
+  // Individual transportation items with pricing and availability per service type
+  const [transportationItems, setTransportationItems] = useState([]);
+  const [availableVehicles, setAvailableVehicles] = useState([]);
+
   useEffect(() => {
-    loadTemplates();
-    loadServices();
-  }, []);
-  const loadTemplates = async () => {
-    try {
-      console.log('Loading transportation templates...');
-      const response = await api.get('/service/category-templates/transportation');
-      console.log('Templates response:', response.data);
-      setTemplates(response.data.data.template);
-    } catch (error) {
-      console.error('Error loading templates:', error);
-      toast.error('Failed to load transportation templates');
+    fetchCategoryTemplate();
+    if (activeTab === 'manage') {
+      fetchExistingServices();
     }
-  };
+  }, [activeTab]);
 
-  const loadServices = async () => {
+  /**
+   * Fetch existing transportation services for management
+   */
+  const fetchExistingServices = async () => {
     try {
-      console.log('Loading transportation services...');
-      const response = await api.get('/service/services-by-category/transportation');
-      console.log('Services response:', response.data);
-      setServices(response.data.data.services || []);
-    } catch (error) {
-      console.error('Error loading services:', error);
-      toast.error('Failed to load existing services');
-    }
-  };
+      setLoading(true);
+      const response = await apiClient.get('/service/services?category=transportation');
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value
-        }
-      }));
-    } else if (name === 'features') {
-      setFormData(prev => ({
-        ...prev,
-        features: checked
-          ? [...prev.features, value]
-          : prev.features.filter(f => f !== value)
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value
-      }));
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      basePrice: '',
-      vehicleType: '',
-      capacity: '',
-      serviceType: '',
-      priceStructure: 'flat',
-      hourlyRate: '',
-      perKmRate: '',
-      minimumCharge: '',
-      features: [],
-      availableHours: {
-        start: '',
-        end: ''
-      },
-      bookingAdvanceHours: 24
-    });
-    setActiveForm(null);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      // Prepare service combinations based on price structure
-      const serviceCombinations = [];
-
-      if (formData.priceStructure === 'flat') {
-        serviceCombinations.push({
-          name: formData.name,
-          basePrice: parseFloat(formData.basePrice),
-          attributes: {
-            vehicleType: formData.vehicleType,
-            capacity: parseInt(formData.capacity),
-            serviceType: formData.serviceType,
-            features: formData.features
-          }
-        });
-      } else if (formData.priceStructure === 'hourly') {
-        serviceCombinations.push({
-          name: `${formData.name} (Hourly)`,
-          basePrice: parseFloat(formData.hourlyRate),
-          priceType: 'per_hour',
-          minimumCharge: parseFloat(formData.minimumCharge) || 0,
-          attributes: {
-            vehicleType: formData.vehicleType,
-            capacity: parseInt(formData.capacity),
-            serviceType: formData.serviceType,
-            features: formData.features
-          }
-        });
-      } else if (formData.priceStructure === 'distance') {
-        serviceCombinations.push({
-          name: `${formData.name} (Per KM)`,
-          basePrice: parseFloat(formData.perKmRate),
-          priceType: 'per_km',
-          minimumCharge: parseFloat(formData.minimumCharge) || 0,
-          attributes: {
-            vehicleType: formData.vehicleType,
-            capacity: parseInt(formData.capacity),
-            serviceType: formData.serviceType,
-            features: formData.features
-          }
-        });
+      let services = [];
+      if (response.data.data?.services) {
+        services = response.data.data.services;
+      } else if (response.data.services) {
+        services = response.data.services;
+      } else if (Array.isArray(response.data.data)) {
+        services = response.data.data;
+      } else if (Array.isArray(response.data)) {
+        services = response.data;
       }
 
-      const serviceData = {
-        category: 'transportation',
-        name: formData.name,
-        description: formData.description,
-        serviceCombinations,
-        availability: {
-          hours: formData.availableHours,
-          advanceBookingHours: parseInt(formData.bookingAdvanceHours)
-        },
-        settings: {
-          vehicleType: formData.vehicleType,
-          capacity: parseInt(formData.capacity),
-          serviceType: formData.serviceType,
-          priceStructure: formData.priceStructure
-        }
-      };
-
-      await api.post('/service/create-service', serviceData);
-
-      // Reload services and reset form
-      await loadServices();
-      resetForm();
-      alert('Transportation service created successfully!');
+      console.log('🚗 Transportation services:', services);
+      setExistingServices(services);
     } catch (error) {
-      console.error('Error creating service:', error);
-      alert('Error creating service. Please try again.');
+      console.error('Error fetching existing transportation services:', error);
+      toast.error('Failed to load transportation services');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
+  /**
+   * Toggle service availability
+   */
+  const toggleServiceAvailability = async (serviceId, currentStatus) => {
+    try {
+      await apiClient.patch(`/service/services/${serviceId}`, {
+        isActive: !currentStatus
+      });
+
+      setExistingServices(prev =>
+        prev.map(service =>
+          service._id === serviceId
+            ? { ...service, isActive: !currentStatus }
+            : service
+        )
+      );
+
+      toast.success(`Service ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+    } catch (error) {
+      console.error('Error toggling service availability:', error);
+      toast.error('Failed to update service status');
+    }
+  };
+
+  /**
+   * Start editing a service
+   */
+  const startEditingService = (service) => {
+    setEditingService(service._id);
+    setEditFormData({
+      name: service.name,
+      description: service.description,
+      transportationItems: service.transportationItems || []
+    });
+  };
+
+  /**
+   * Cancel editing
+   */
+  const cancelEditing = () => {
+    setEditingService(null);
+    setEditFormData(null);
+  };
+
+  /**
+   * Save edited service
+   */
+  const saveEditedService = async (serviceId) => {
+    try {
+      setLoading(true);
+
+      await apiClient.put(`/service/services/${serviceId}`, {
+        name: editFormData.name,
+        description: editFormData.description,
+        transportationItems: editFormData.transportationItems,
+        category: 'transportation'
+      });
+
+      toast.success('Service updated successfully');
+      setEditingService(null);
+      setEditFormData(null);
+      fetchExistingServices();
+    } catch (error) {
+      console.error('Error updating service:', error);
+      toast.error(error.response?.data?.message || 'Failed to update service');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Delete a service
+   */
   const deleteService = async (serviceId) => {
-    if (!window.confirm('Are you sure you want to delete this service?')) return;
+    if (!window.confirm('Are you sure you want to delete this transportation service?')) return;
 
     try {
-      await api.delete(`/service/services/${serviceId}`);
-      await loadServices();
+      await apiClient.delete(`/service/services/${serviceId}`);
+      setExistingServices(prev => prev.filter(service => service._id !== serviceId));
+      toast.success('Transportation service deleted successfully');
     } catch (error) {
       console.error('Error deleting service:', error);
-      alert('Error deleting service. Please try again.');
+      toast.error('Failed to delete service');
     }
   };
 
-  if (!templates) {
+  /**
+   * Fetch transportation category template from backend
+   */
+  const fetchCategoryTemplate = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('/service/category-templates/transportation');
+      const template = response.data.data.template;
+      setCategoryTemplate(template);
+      setAvailableVehicles(template.vehicleTypes || []);
+    } catch (error) {
+      console.error('Error fetching category template:', error);
+      toast.error('Failed to load transportation template');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Add vehicle from dropdown selection
+   */
+  const addVehicleFromDropdown = (vehicleTypeId) => {
+    if (!vehicleTypeId) return;
+
+    const vehicleTemplate = availableVehicles.find(v => v.id === vehicleTypeId);
+    if (!vehicleTemplate) return;
+
+    // Check if vehicle already exists
+    const exists = transportationItems.some(item => item.vehicleType === vehicleTypeId);
+    if (exists) {
+      toast.error('This vehicle type is already added');
+      return;
+    }
+
+    // Create service types based on category template (quote-based, no pricing)
+    const serviceTypes = categoryTemplate.serviceTypes.map(st => ({
+      serviceTypeId: st.id,
+      name: st.name,
+      description: st.description,
+      pricingModel: st.pricingModel,
+      availability: {
+        days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        hours: { start: '06:00', end: '23:00' }
+      },
+      advanceBooking: {
+        required: st.advanceRequired || false,
+        minimumHours: st.minimumHours || 0,
+        maximumDays: 30
+      },
+      isPopular: st.isPopular || false,
+      isAvailable: true
+    }));
+
+    const newVehicleItem = {
+      vehicleType: vehicleTypeId,
+      name: vehicleTemplate.name,
+      description: vehicleTemplate.description,
+      capacity: vehicleTemplate.capacity,
+      features: vehicleTemplate.features,
+      isAvailable: true,
+      serviceTypes: serviceTypes,
+      notes: '',
+      dateAdded: new Date()
+    };
+
+    setTransportationItems(prev => [...prev, newVehicleItem]);
+    toast.success(`${vehicleTemplate.name} added successfully`);
+  };
+
+  /**
+   * Remove transportation item
+   */
+  const removeTransportationItem = (index) => {
+    setTransportationItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  /**
+   * Toggle transportation item service type availability
+   */
+  const toggleItemServiceTypeAvailability = (itemIndex, serviceTypeId, isAvailable) => {
+    setTransportationItems(prev => prev.map((item, index) =>
+      index === itemIndex ? {
+        ...item,
+        serviceTypes: item.serviceTypes.map(st =>
+          st.serviceTypeId === serviceTypeId ? { ...st, isAvailable } : st
+        )
+      } : item
+    ));
+  };
+
+  /**
+   * Form validation for quote-based transportation service
+   */
+  const validateForm = () => {
+    if (!serviceDetails.name.trim()) {
+      toast.error('Service name is required');
+      return false;
+    }
+
+    if (!serviceDetails.description.trim()) {
+      toast.error('Service description is required');
+      return false;
+    }
+
+    if (transportationItems.length === 0) {
+      toast.error('Please add at least one vehicle type');
+      return false;
+    }
+
+    // Check if at least one vehicle has available service types
+    const hasAvailableServices = transportationItems.some(item =>
+      item.isAvailable && item.serviceTypes.some(st => st.isAvailable)
+    );
+
+    if (!hasAvailableServices) {
+      toast.error('Please enable at least one service type for your vehicles');
+      return false;
+    }
+
+    return true;
+  };
+
+  /**
+   * Create the quote-based transportation service
+   */
+  const createService = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setLoading(true);
+
+      const serviceData = {
+        ...serviceDetails,
+        category: 'transportation',
+        subcategory: 'vehicle_based',
+        serviceType: 'transportation_vehicles',
+        transportationItems: transportationItems,
+        pricing: {
+          basePrice: 0, // Quote-based pricing
+          pricingType: 'quote-based',
+          currency: 'USD'
+        },
+        isActive: true
+      };
+
+      await apiClient.post('/service/categories/transportation/vehicles', serviceData);
+
+      toast.success('Quote-based transportation service created successfully');
+
+      // Reset form
+      setServiceDetails({
+        name: '',
+        description: '',
+        shortDescription: '',
+        isActive: true
+      });
+      setTransportationItems([]);
+
+      // Switch to manage tab to see the created service
+      setActiveTab('manage');
+      fetchExistingServices();
+
+    } catch (error) {
+      console.error('Error creating transportation service:', error);
+      toast.error(error.response?.data?.message || 'Failed to create transportation service');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Get vehicle icon by type
+   */
+  const getVehicleIcon = (vehicleType) => {
+    const iconMap = {
+      'economy_sedan': 'car',
+      'comfort_sedan': 'car',
+      'premium_suv': 'suv',
+      'luxury_vehicle': 'luxury',
+      'eco_vehicle': 'eco',
+      'accessible_vehicle': 'wheelchair',
+      'van_large': 'van',
+      'local_taxi': 'taxi',
+      'shared_ride': 'car'
+    };
+    return iconMap[vehicleType] || 'car';
+  };
+
+  /**
+   * Render Manage Items Tab
+   */
+  function renderManageItemsTab() {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center p-8">
+          <Icon type="package" className="text-4xl mr-2" />
+          <span>Loading transportation services...</span>
+        </div>
+      );
+    }
+
+    if (existingServices.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <Icon type="car" className="text-6xl text-gray-300 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-600 mb-2">No Transportation Services Found</h3>
+          <p className="text-gray-500 mb-6">You haven't created any transportation services yet.</p>
+          <button
+            onClick={() => setActiveTab('add')}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+          >
+            <Icon type="plus" className="mr-2" />
+            Create Transportation Service
+          </button>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h3 className="text-2xl font-bold text-gray-900">Manage Transportation Services</h3>
+          <button
+            onClick={() => setActiveTab('add')}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Icon type="plus" className="mr-2" />
+            Add New Service
+          </button>
+        </div>
+
+        {existingServices.map(service => (
+          <div key={service._id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            {editingService === service._id ? (
+              // Edit Mode
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Service Name</label>
+                  <input
+                    type="text"
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <textarea
+                    value={editFormData.description}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    rows="3"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => saveEditedService(service._id)}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    disabled={loading}
+                  >
+                    <Icon type="save" className="mr-1" />
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                  <button
+                    onClick={cancelEditing}
+                    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                  >
+                    <Icon type="times" className="mr-1" />
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // View Mode
+              <div>
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-800">{service.name}</h4>
+                    <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      service.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {service.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Service Statistics */}
+                <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-blue-600">
+                      {service.transportationItems ? service.transportationItems.length : 0}
+                    </div>
+                    <div className="text-xs text-gray-600">Vehicle Types</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-green-600">
+                      {service.performance?.totalBookings || 0}
+                    </div>
+                    <div className="text-xs text-gray-600">Bookings</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-purple-600">
+                      ${service.performance?.totalRevenue || 0}
+                    </div>
+                    <div className="text-xs text-gray-600">Revenue</div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => startEditingService(service)}
+                    className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                  >
+                    <Icon type="edit" className="mr-1" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => toggleServiceAvailability(service._id, service.isActive)}
+                    className={`px-3 py-2 text-white rounded text-sm ${
+                      service.isActive
+                        ? 'bg-orange-600 hover:bg-orange-700'
+                        : 'bg-green-600 hover:bg-green-700'
+                    }`}
+                  >
+                    <Icon type="toggle" className="mr-1" />
+                    {service.isActive ? 'Deactivate' : 'Activate'}
+                  </button>
+                  <button
+                    onClick={() => deleteService(service._id)}
+                    className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                  >
+                    <Icon type="trash" className="mr-1" />
+                    Delete
+                  </button>
+                </div>
+
+                {/* Vehicle Types Overview */}
+                {service.transportationItems && service.transportationItems.length > 0 && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <h5 className="font-medium text-blue-800 mb-2">Available Vehicle Types:</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {service.transportationItems.map((vehicle, idx) => (
+                        <span key={idx} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                          <Icon type={getVehicleIcon(vehicle.vehicleType)} className="mr-1" />
+                          {vehicle.name}
+                          <span className="ml-1 text-blue-600">
+                            ({vehicle.capacity.passengers}p)
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  /**
+   * Render Add Items Tab
+   */
+  function renderAddItemsTab() {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center p-8">
+          <Icon type="package" className="text-4xl mr-2" />
+          <span>Loading template...</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-8">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">Create Transportation Service</h3>
+
+          {/* Service Details */}
+          <div className="space-y-4 mb-8">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Service Name *
+              </label>
+              <input
+                type="text"
+                value={serviceDetails.name}
+                onChange={(e) => setServiceDetails(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., Premium Transportation Service"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Description *
+              </label>
+              <textarea
+                value={serviceDetails.description}
+                onChange={(e) => setServiceDetails(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                rows="3"
+                placeholder="Describe your transportation services..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Short Description
+              </label>
+              <input
+                type="text"
+                value={serviceDetails.shortDescription}
+                onChange={(e) => setServiceDetails(prev => ({ ...prev, shortDescription: e.target.value }))}
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                placeholder="Brief description for listings"
+              />
+            </div>
+          </div>
+
+          {/* Add Vehicle Types */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-lg font-semibold text-gray-800">Available Vehicle Types</h4>
+              <div className="flex items-center space-x-4">
+                <select
+                  onChange={(e) => addVehicleFromDropdown(e.target.value)}
+                  className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  value=""
+                >
+                  <option value="">Add Vehicle Type...</option>
+                  {availableVehicles.map(vehicle => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.name} ({vehicle.capacity.passengers} passengers)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center mb-2">
+                <Icon type="info" className="text-blue-500 mr-2" />
+                <h5 className="font-medium text-blue-800">Quote-Based Transportation Service</h5>
+              </div>
+              <p className="text-sm text-blue-700">
+                This transportation service operates on a quote-based system. Add the vehicle types you offer,
+                and when guests request bookings, you'll create custom quotes based on their specific needs
+                (distance, time, special requirements, etc.).
+              </p>
+            </div>
+
+            {/* Added Transportation Items */}
+            {transportationItems.length > 0 && (
+              <div className="space-y-4">
+                {transportationItems.map((vehicle, vehicleIndex) => (
+                  <div key={vehicleIndex} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center">
+                        <Icon type={getVehicleIcon(vehicle.vehicleType)} className="text-2xl mr-3" />
+                        <div>
+                          <h5 className="font-semibold text-gray-800">{vehicle.name}</h5>
+                          <p className="text-sm text-gray-600">{vehicle.description}</p>
+                          <p className="text-xs text-blue-600 mt-1">
+                            Capacity: {vehicle.capacity.passengers} passengers, {vehicle.capacity.luggage} luggage
+                          </p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {vehicle.features.map((feature, idx) => (
+                              <span key={idx} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                                {feature}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeTransportationItem(vehicleIndex)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Remove Vehicle"
+                      >
+                        <Icon type="trash" className="text-xl" />
+                      </button>
+                    </div>
+
+                    {/* Available Service Types */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {vehicle.serviceTypes.map((serviceType, stIndex) => (
+                        <div key={stIndex} className="border border-gray-200 rounded p-3 bg-white">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium text-sm">{serviceType.name}</span>
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={serviceType.isAvailable}
+                                onChange={(e) => toggleItemServiceTypeAvailability(vehicleIndex, serviceType.serviceTypeId, e.target.checked)}
+                                className="form-checkbox h-4 w-4 text-blue-600"
+                              />
+                              <span className="ml-1 text-xs">Available</span>
+                            </label>
+                          </div>
+
+                          <p className="text-xs text-gray-600 mb-2">{serviceType.description}</p>
+                          <p className="text-xs text-blue-600">Model: {serviceType.pricingModel.replace('_', ' ')}</p>
+
+                          {serviceType.isPopular && (
+                            <div className="text-xs text-yellow-600 font-medium flex items-center mt-2">
+                              <Icon type="star" className="mr-1" />
+                              Popular Choice
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {transportationItems.length === 0 && (
+              <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                <Icon type="car" className="text-4xl text-gray-400 mb-2" />
+                <p className="text-gray-600">No vehicle types added yet.</p>
+                <p className="text-sm text-gray-500">Use the dropdown above to add vehicle types.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={createService}
+              disabled={loading || transportationItems.length === 0}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              <Icon type="save" className="mr-2" />
+              {loading ? 'Creating Quote-Based Service...' : 'Create Transportation Service'}
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Transportation Services</h2>
-        <button
-          onClick={() => setActiveForm('create')}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Add New Service
-        </button>
-      </div>
-
-      {/* Create/Edit Form */}
-      {activeForm && (
-        <div className="bg-white p-6 rounded-lg shadow-md border">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Create Transportation Service</h3>
+    <div className="max-w-7xl mx-auto p-6">
+      {/* Tab Navigation */}
+      <div className="mb-8">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
             <button
-              onClick={resetForm}
-              className="text-gray-500 hover:text-gray-700"
+              onClick={() => setActiveTab('manage')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                activeTab === 'manage'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
             >
-              ✕
+              <Icon type="list" className="mr-2" />
+              Manage Transportation Services
             </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Service Name *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Airport Transfer, City Tour"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Service Type *
-                </label>
-                <select
-                  name="serviceType"
-                  value={formData.serviceType}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select service type</option>
-                  {templates.serviceTypes?.map((type, index) => (
-                    <option key={index} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Vehicle Type *
-                </label>
-                <select
-                  name="vehicleType"
-                  value={formData.vehicleType}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select vehicle type</option>
-                  {templates.vehicleTypes?.map((type, index) => (
-                    <option key={index} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Capacity (Number of passengers) *
-                </label>
-                <input
-                  type="number"
-                  name="capacity"
-                  value={formData.capacity}
-                  onChange={handleInputChange}
-                  required
-                  min="1"
-                  max="50"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Describe your transportation service..."
-              />
-            </div>
-
-            {/* Pricing Structure */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Pricing Structure *
-              </label>
-              <div className="space-y-2">
-                <div>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="priceStructure"
-                      value="flat"
-                      checked={formData.priceStructure === 'flat'}
-                      onChange={handleInputChange}
-                      className="mr-2"
-                    />
-                    Flat Rate (Fixed price)
-                  </label>
-                </div>
-                <div>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="priceStructure"
-                      value="hourly"
-                      checked={formData.priceStructure === 'hourly'}
-                      onChange={handleInputChange}
-                      className="mr-2"
-                    />
-                    Hourly Rate
-                  </label>
-                </div>
-                <div>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="priceStructure"
-                      value="distance"
-                      checked={formData.priceStructure === 'distance'}
-                      onChange={handleInputChange}
-                      className="mr-2"
-                    />
-                    Distance-based (Per KM)
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Price Fields based on structure */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {formData.priceStructure === 'flat' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Base Price *
-                  </label>
-                  <input
-                    type="number"
-                    name="basePrice"
-                    value={formData.basePrice}
-                    onChange={handleInputChange}
-                    required
-                    min="0"
-                    step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              )}
-
-              {formData.priceStructure === 'hourly' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Hourly Rate *
-                    </label>
-                    <input
-                      type="number"
-                      name="hourlyRate"
-                      value={formData.hourlyRate}
-                      onChange={handleInputChange}
-                      required
-                      min="0"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Minimum Charge
-                    </label>
-                    <input
-                      type="number"
-                      name="minimumCharge"
-                      value={formData.minimumCharge}
-                      onChange={handleInputChange}
-                      min="0"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </>
-              )}
-
-              {formData.priceStructure === 'distance' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Rate per KM *
-                    </label>
-                    <input
-                      type="number"
-                      name="perKmRate"
-                      value={formData.perKmRate}
-                      onChange={handleInputChange}
-                      required
-                      min="0"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Minimum Charge
-                    </label>
-                    <input
-                      type="number"
-                      name="minimumCharge"
-                      value={formData.minimumCharge}
-                      onChange={handleInputChange}
-                      min="0"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Features */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Features (Select all that apply)
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {templates.features?.map((feature, index) => (
-                  <label key={index} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="features"
-                      value={feature}
-                      checked={formData.features.includes(feature)}
-                      onChange={handleInputChange}
-                      className="mr-2"
-                    />
-                    {feature}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Available Hours */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Available From
-                </label>
-                <input
-                  type="time"
-                  name="availableHours.start"
-                  value={formData.availableHours.start}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Available Until
-                </label>
-                <input
-                  type="time"
-                  name="availableHours.end"
-                  value={formData.availableHours.end}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Advance Booking (Hours)
-                </label>
-                <input
-                  type="number"
-                  name="bookingAdvanceHours"
-                  value={formData.bookingAdvanceHours}
-                  onChange={handleInputChange}
-                  min="1"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-              >
-                {isLoading ? 'Creating...' : 'Create Service'}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Services List */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Your Transportation Services</h3>
-        </div>
-        <div className="p-6">
-          {services.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
-              No transportation services created yet. Click "Add New Service" to get started.
-            </p>
-          ) : (
-            <div className="grid gap-4">
-              {services.map((service) => (
-                <div key={service._id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h4 className="text-lg font-semibold text-gray-900">{service.name}</h4>
-                      <p className="text-gray-600 mt-1">{service.description}</p>
-                      <div className="mt-3 space-y-2">
-                        {service.serviceCombinations?.map((combo, index) => (
-                          <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded">
-                            <div>
-                              <span className="font-medium">{combo.name}</span>
-                              {combo.attributes && (
-                                <div className="text-sm text-gray-600 mt-1">
-                                  {combo.attributes.vehicleType} • {combo.attributes.capacity} passengers
-                                  {combo.attributes.features && combo.attributes.features.length > 0 && (
-                                    <span> • {combo.attributes.features.join(', ')}</span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                            <div className="text-right">
-                              <span className="text-lg font-semibold text-green-600">
-                                ${combo.basePrice}
-                                {combo.priceType === 'per_hour' && '/hour'}
-                                {combo.priceType === 'per_km' && '/km'}
-                              </span>
-                              {combo.minimumCharge > 0 && (
-                                <div className="text-sm text-gray-500">
-                                  Min: ${combo.minimumCharge}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <button
-                        onClick={() => deleteService(service._id)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Delete service"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+            <button
+              onClick={() => setActiveTab('add')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                activeTab === 'add'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Icon type="plus" className="mr-2" />
+              Add New Service
+            </button>
+          </nav>
         </div>
       </div>
+
+      {/* Tab Content */}
+      {activeTab === 'manage' && renderManageItemsTab()}
+      {activeTab === 'add' && renderAddItemsTab()}
     </div>
   );
 };

@@ -354,6 +354,158 @@ const categoryTemplates = {
         capacity: { min: 15, max: 100 },
         basePrice: 400
       }
+    ]  },
+
+  transportation: {
+    name: 'Transportation Services',
+    icon: 'car',
+    description: 'Vehicle rental and ride services',
+
+    vehicleTypes: [
+      {
+        id: 'economy_sedan',
+        name: 'Economy Sedan',
+        description: 'Standard, affordable option for solo or small group rides',
+        capacity: { passengers: 4, luggage: 2 },
+        features: ['AC', 'Music System', 'Phone Charging'],
+        category: 'economy',
+        isPopular: true
+      },
+      {
+        id: 'comfort_sedan',
+        name: 'Comfort Sedan',
+        description: 'Newer cars with extra legroom and premium features',
+        capacity: { passengers: 4, luggage: 2 },
+        features: ['AC', 'Premium Interior', 'Extra Legroom', 'WiFi', 'Phone Charging'],
+        category: 'comfort'
+      },
+      {
+        id: 'premium_suv',
+        name: 'Premium SUV',
+        description: 'Spacious SUV for larger groups',
+        capacity: { passengers: 6, luggage: 4 },
+        features: ['AC', 'Premium Interior', 'Extra Space', 'WiFi', 'Refreshments'],
+        category: 'premium'
+      },
+      {
+        id: 'luxury_vehicle',
+        name: 'Luxury Vehicle',
+        description: 'High-end luxury cars with professional chauffeur',
+        capacity: { passengers: 4, luggage: 3 },
+        features: ['Premium Interior', 'Professional Chauffeur', 'Complimentary Drinks', 'WiFi', 'Climate Control'],
+        category: 'luxury'
+      },
+      {
+        id: 'eco_vehicle',
+        name: 'Eco-Friendly Vehicle',
+        description: 'Electric or hybrid vehicles for sustainable travel',
+        capacity: { passengers: 4, luggage: 2 },
+        features: ['Electric/Hybrid', 'AC', 'Phone Charging', 'Eco-Friendly'],
+        category: 'eco'
+      },
+      {
+        id: 'accessible_vehicle',
+        name: 'Accessible Vehicle',
+        description: 'Wheelchair-accessible vehicles with special equipment',
+        capacity: { passengers: 4, luggage: 2 },
+        features: ['Wheelchair Accessible', 'Special Equipment', 'AC', 'Trained Driver'],
+        category: 'accessible'
+      },
+      {
+        id: 'van_large',
+        name: 'Large Van',
+        description: 'For larger groups, accommodating up to 8 passengers',
+        capacity: { passengers: 8, luggage: 6 },
+        features: ['AC', 'Extra Space', 'Multiple Stops', 'Group Travel'],
+        category: 'large'
+      },
+      {
+        id: 'local_taxi',
+        name: 'Local Taxi',
+        description: 'Access to local taxi services',
+        capacity: { passengers: 4, luggage: 2 },
+        features: ['Local Driver', 'AC', 'City Knowledge'],
+        category: 'standard'
+      },
+      {
+        id: 'shared_ride',
+        name: 'Shared Ride',
+        description: 'Cost-sharing option with other passengers',
+        capacity: { passengers: 4, luggage: 1 },
+        features: ['Cost Sharing', 'AC', 'Eco-Friendly'],
+        category: 'shared'
+      }
+    ],
+
+    serviceTypes: [
+      {
+        id: 'standard',
+        name: 'Standard Ride',
+        description: 'Basic transportation service',
+        pricingModel: 'per_km',
+        baseMultiplier: 1.0
+      },
+      {
+        id: 'comfort',
+        name: 'Comfort Ride',
+        description: 'Enhanced comfort with premium vehicles',
+        pricingModel: 'per_km',
+        baseMultiplier: 1.3,
+        isPopular: true
+      },
+      {
+        id: 'premium',
+        name: 'Premium Service',
+        description: 'High-end vehicles with professional service',
+        pricingModel: 'per_km',
+        baseMultiplier: 1.8
+      },
+      {
+        id: 'eco',
+        name: 'Eco-Friendly',
+        description: 'Sustainable transportation option',
+        pricingModel: 'per_km',
+        baseMultiplier: 1.1
+      },
+      {
+        id: 'accessible',
+        name: 'Wheelchair Accessible',
+        description: 'Special accommodation for mobility needs',
+        pricingModel: 'per_km',
+        baseMultiplier: 1.2
+      },
+      {
+        id: 'advance_booking',
+        name: 'Advance Booking',
+        description: 'Reserve rides in advance',
+        pricingModel: 'fixed',
+        baseMultiplier: 1.0,
+        advanceRequired: true
+      },
+      {
+        id: 'hourly_rental',
+        name: 'Hourly Rental',
+        description: 'Rent vehicle by the hour',
+        pricingModel: 'per_hour',
+        baseMultiplier: 1.0,
+        minimumHours: 2
+      },
+      {
+        id: 'airport_transfer',
+        name: 'Airport Transfer',
+        description: 'Specialized airport pickup/dropoff service',
+        pricingModel: 'fixed',
+        baseMultiplier: 1.5,
+        isPopular: true
+      },
+      {
+        id: 'city_tour',
+        name: 'City Tour',
+        description: 'Guided sightseeing with driver',
+        pricingModel: 'per_hour',
+        baseMultiplier: 2.0,
+        minimumHours: 3
+      }
     ]
   },
 

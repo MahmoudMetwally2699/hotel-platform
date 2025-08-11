@@ -126,11 +126,15 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
         default:
           return 0;
       }
-    });
-  const handleServiceSelect = (service) => {
+    });  const handleServiceSelect = (service) => {
     if (category === 'laundry') {
       // Navigate to enhanced laundry booking interface
       navigate(`/hotels/${hotelId}/services/laundry/booking`, {
+        state: { service, hotel }
+      });
+    } else if (category === 'transportation') {
+      // Navigate to enhanced transportation booking interface
+      navigate(`/hotels/${hotelId}/services/transportation/booking`, {
         state: { service, hotel }
       });
     } else {

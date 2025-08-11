@@ -7,34 +7,57 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import useAuth from '../../hooks/useAuth';
-import { tokenHasRole, getRoleFromToken } from '../../utils/tokenHelper';
 
 const ProtectedRoute = ({ children, allowedRoles, redirectPath = '/login' }) => {
-  const { isAuthenticated, hasRole, role } = useAuth();
-  const location = useLocation();  // If not authenticated, redirect to login
+  const { isAuthenticated, role } = useAuth();
+  const location = useLocation();
+
+  console.log('🛡️ ProtectedRoute Check:', {
+    path: location.pathname,
+    isAuthenticated,
+    userRole: role,
+    allowedRoles,
+    roleType: typeof role,
+    allowedRolesType: typeof allowedRoles
+  });
+
+  // If not authenticated, redirect to login
   if (!isAuthenticated) {
+    console.log('❌ Not authenticated, redirecting to login');
     return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
 
   // If roles are specified, check if user has required role
   if (allowedRoles) {
-    // First try using Redux state role
-    const userRole = role;
-    let hasRequiredRole = Array.isArray(allowedRoles)
-      ? allowedRoles.includes(userRole)
-      : userRole === allowedRoles;
+    // Convert both to strings and trim any whitespace
+    const userRole = String(role || '').trim();
+    const allowedRolesArray = Array.isArray(allowedRoles)
+      ? allowedRoles.map(r => String(r).trim())
+      : [String(allowedRoles).trim()];
 
-    // Fallback to checking the token directly if Redux state fails
-    if (!hasRequiredRole) {
-      const tokenRole = getRoleFromToken();      hasRequiredRole = Array.isArray(allowedRoles)
-        ? allowedRoles.includes(tokenRole)
-        : tokenRole === allowedRoles;
-    }
+    console.log('🔍 Role check details:', {
+      userRole,
+      allowedRolesArray,
+      userRoleLength: userRole.length,
+      allowedRolesLength: allowedRolesArray.map(r => r.length)
+    });
+
+    const hasRequiredRole = allowedRolesArray.includes(userRole);
+
+    console.log('🔍 Role check result:', {
+      hasRequiredRole,
+      comparison: allowedRolesArray.map(r => ({ role: r, matches: r === userRole }))
+    });
 
     if (!hasRequiredRole) {
+      console.log('❌ Access denied - Role mismatch');
       // User doesn't have required role, redirect to forbidden
       return <Navigate to="/forbidden" state={{ from: location }} replace />;
+    } else {
+      console.log('✅ Access granted - Role matches');
     }
+  } else {
+    console.log('✅ Access granted - No role restriction');
   }
 
   // User is authenticated and has required role, render the children

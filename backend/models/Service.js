@@ -151,6 +151,169 @@ const serviceSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
+
+  // Transportation Items (for transportation services without pricing)
+  transportationItems: [{
+    vehicleType: {
+      type: String,
+      required: true,
+      enum: ['economy_sedan', 'comfort_sedan', 'premium_suv', 'luxury_vehicle', 'eco_vehicle', 'accessible_vehicle', 'van_large', 'local_taxi', 'shared_ride', 'sedan', 'suv', 'van', 'hatchback', 'luxury_car', 'minibus', 'pickup_truck'],
+      trim: true
+    },
+    name: {
+      type: String,
+      required: false,
+      trim: true
+    },
+    comfortLevel: {
+      type: String,
+      required: false,
+      enum: ['economy', 'comfort', 'premium'],
+      default: 'economy'
+    },
+    capacity: {
+      passengers: {
+        type: Number,
+        required: true,
+        min: [1, 'Passenger capacity must be at least 1'],
+        max: [50, 'Passenger capacity cannot exceed 50']
+      },
+      luggage: {
+        type: Number,
+        default: 2,
+        min: [0, 'Luggage capacity cannot be negative']
+      }
+    },
+    // Keep vehicleCapacity for backward compatibility
+    vehicleCapacity: {
+      passengers: {
+        type: Number,
+        min: [1, 'Passenger capacity must be at least 1'],
+        max: [50, 'Passenger capacity cannot exceed 50']
+      },
+      luggage: {
+        type: Number,
+        default: 2,
+        min: [0, 'Luggage capacity cannot be negative']
+      }
+    },
+    features: [String], // e.g., 'AC', 'WiFi', 'Phone charger', 'Water bottles'
+    amenities: [String], // e.g., 'AC', 'WiFi', 'Phone charger', 'Water bottles'
+    description: {
+      type: String,
+      maxlength: [500, 'Vehicle description cannot exceed 500 characters']
+    },
+    isAvailable: {
+      type: Boolean,
+      default: true
+    },
+    serviceArea: {
+      coverage: {
+        type: String,
+        enum: ['local', 'city', 'regional', 'national'],
+        default: 'local'
+      },
+      maxDistance: {
+        type: Number,
+        default: 100, // kilometers
+        min: [1, 'Max distance must be at least 1 km']
+      }
+    },
+    // Service types for this vehicle (each with its own pricing and configuration)
+    serviceTypes: [{
+      serviceTypeId: {
+        type: String,
+        required: false // e.g., 'standard', 'comfort', 'premium', 'eco'
+      },
+      name: {
+        type: String,
+        required: false
+      },
+      description: {
+        type: String,
+        required: false
+      },
+      pricingModel: {
+        type: String,
+        enum: ['per_km', 'per_hour', 'fixed'],
+        default: 'per_km'
+      },
+      baseMultiplier: {
+        type: Number,
+        default: 1.0,
+        min: [0, 'Base multiplier cannot be negative']
+      },
+      isAvailable: {
+        type: Boolean,
+        default: true
+      },
+      // Pricing information for this service type
+      price: {
+        type: Number,
+        min: [0, 'Service type price cannot be negative']
+      },
+      pricing: {
+        basePrice: {
+          type: Number,
+          min: [0, 'Base price cannot be negative']
+        },
+        pricePerKm: {
+          type: Number,
+          min: [0, 'Price per km cannot be negative']
+        },
+        pricePerHour: {
+          type: Number,
+          min: [0, 'Price per hour cannot be negative']
+        }
+      }
+    }],
+    // Availability schedule specific to this vehicle
+    availability: {
+      schedule: {
+        monday: {
+          isAvailable: { type: Boolean, default: true },
+          startTime: { type: String, default: '06:00' },
+          endTime: { type: String, default: '22:00' }
+        },
+        tuesday: {
+          isAvailable: { type: Boolean, default: true },
+          startTime: { type: String, default: '06:00' },
+          endTime: { type: String, default: '22:00' }
+        },
+        wednesday: {
+          isAvailable: { type: Boolean, default: true },
+          startTime: { type: String, default: '06:00' },
+          endTime: { type: String, default: '22:00' }
+        },
+        thursday: {
+          isAvailable: { type: Boolean, default: true },
+          startTime: { type: String, default: '06:00' },
+          endTime: { type: String, default: '22:00' }
+        },
+        friday: {
+          isAvailable: { type: Boolean, default: true },
+          startTime: { type: String, default: '06:00' },
+          endTime: { type: String, default: '22:00' }
+        },
+        saturday: {
+          isAvailable: { type: Boolean, default: true },
+          startTime: { type: String, default: '06:00' },
+          endTime: { type: String, default: '22:00' }
+        },
+        sunday: {
+          isAvailable: { type: Boolean, default: false },
+          startTime: { type: String, default: '08:00' },
+          endTime: { type: String, default: '20:00' }
+        }
+      }
+    },
+    notes: String,
+    dateAdded: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+
   // Pricing Information
   pricing: {
     basePrice: {
@@ -176,8 +339,8 @@ const serviceSchema = new mongoose.Schema({
       type: String,
       required: [true, 'Pricing type is required'],
       enum: {
-        values: ['fixed', 'per-item', 'per-hour', 'per-day', 'per-km', 'per-person'],
-        message: 'Pricing type must be one of: fixed, per-item, per-hour, per-day, per-km, per-person'
+        values: ['fixed', 'per-item', 'per-hour', 'per-day', 'per-km', 'per-person', 'quote-based'],
+        message: 'Pricing type must be one of: fixed, per-item, per-hour, per-day, per-km, per-person, quote-based'
       }
     },
 
@@ -642,6 +805,26 @@ serviceSchema.pre('save', function(next) {
       .toLowerCase()
       .replace(/[^\w ]+/g, '')
       .replace(/ +/g, '-');
+  }
+
+  // Handle transportation items data transformation
+  if (this.transportationItems && this.transportationItems.length > 0) {
+    this.transportationItems.forEach(item => {
+      // If capacity is provided but vehicleCapacity is not, copy capacity to vehicleCapacity
+      if (item.capacity && !item.vehicleCapacity) {
+        item.vehicleCapacity = {
+          passengers: item.capacity.passengers,
+          luggage: item.capacity.luggage || 2
+        };
+      }
+      // If vehicleCapacity is provided but capacity is not, copy vehicleCapacity to capacity
+      else if (item.vehicleCapacity && !item.capacity) {
+        item.capacity = {
+          passengers: item.vehicleCapacity.passengers,
+          luggage: item.vehicleCapacity.luggage || 2
+        };
+      }
+    });
   }
 
   // Auto-populate hotel from provider

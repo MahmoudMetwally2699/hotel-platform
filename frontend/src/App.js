@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
-import { useTranslation } from 'react-i18next';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-toastify/dist/ReactToastify.minimal.css';
 import AppRouter from './routes/AppRouter';
@@ -24,7 +23,8 @@ const PUBLIC_ROUTES = [
   '/hotels',
   '/services',
   '/about',
-  '/contact'
+  '/contact',
+  '/forbidden' // Add forbidden page as public route to prevent loops
 ];
 
 // Route guard component
@@ -33,6 +33,9 @@ const AuthGuard = () => {
   const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const role = useSelector(selectAuthRole);
+
+  console.log('🛡️ AuthGuard - Current path:', location.pathname);
+  console.log('🛡️ AuthGuard - Auth state:', { isAuthenticated, role });
 
   useEffect(() => {
     // Check if current path is a public route
@@ -43,40 +46,81 @@ const AuthGuard = () => {
       return location.pathname.startsWith(route);
     });
 
-    // Skip auth logic for public routes
-    if (isPublicRoute) {
+    console.log('🛡️ AuthGuard - Route check:', {
+      currentPath: location.pathname,
+      isPublicRoute,
+      isAuthenticated,
+      role
+    });
+
+    // Special handling for forbidden page - redirect authenticated users with proper roles
+    if (location.pathname === '/forbidden') {
+      if (isAuthenticated && role) {
+        console.log('🔄 Redirecting authenticated user away from forbidden page');
+        // Redirect based on role
+        switch (role) {
+          case 'service':
+            navigate('/service/dashboard');
+            break;
+          case 'hotel':
+            navigate('/hotel/dashboard');
+            break;
+          case 'superadmin':
+            navigate('/superadmin/dashboard');
+            break;
+          default:
+            navigate('/');
+            break;
+        }
+        return;
+      }
+    }
+
+    // Skip auth logic for other public routes
+    if (isPublicRoute && location.pathname !== '/forbidden') {
       console.log(`🌐 Public route accessed: ${location.pathname}`);
       return;
     }
 
-    // Temporarily disable automatic redirects to debug the component error
-    /*
-    // If authenticated, at root path, and has a role, redirect to appropriate dashboard
-    if (isAuthenticated && location.pathname === '/') {
-      switch (role) {
-        case 'superadmin':
-          console.log('AuthGuard: Redirecting superadmin to dashboard');
-          navigate('/superadmin/dashboard');
-          break;
-        case 'hotel':
-          navigate('/hotel/dashboard');
-          break;
-        case 'service':
-          navigate('/service/dashboard');
-          break;
-        default:
-          // For guests, stay on homepage
-          break;
-      }
+    // If not authenticated, don't check roles
+    if (!isAuthenticated) {
+      console.log('⏳ Not authenticated yet, skipping role check');
+      return;
     }
-    */
+
+    // If authenticated but no role yet, wait for role to be loaded
+    if (!role) {
+      console.log('⏳ Authenticated but no role yet, waiting...');
+      return;
+    }
+
+    // Now check role-based access
+    if (location.pathname.startsWith('/service/') && role !== 'service') {
+      console.log('❌ AuthGuard - Access denied to service route, role:', role);
+      navigate('/forbidden');
+      return;
+    }
+
+    if (location.pathname.startsWith('/hotel/') && role !== 'hotel') {
+      console.log('❌ AuthGuard - Access denied to hotel route, role:', role);
+      navigate('/forbidden');
+      return;
+    }
+
+    if (location.pathname.startsWith('/superadmin/') && role !== 'superadmin') {
+      console.log('❌ AuthGuard - Access denied to superadmin route, role:', role);
+      navigate('/forbidden');
+      return;
+    }
+
+    console.log('✅ AuthGuard - Route access granted');
+
   }, [isAuthenticated, role, location.pathname, navigate]);
 
   return <AppRouter />;
 };
 
 function App() {
-  const { i18n } = useTranslation();
   const dispatch = useDispatch();
   const { user, isAuthenticated, isLoading, error } = useSelector(state => state.auth);
 

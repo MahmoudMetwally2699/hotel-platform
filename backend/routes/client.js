@@ -1231,4 +1231,355 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
   }
 });
 
+/**
+ * @desc    Get available transportation services with vehicles for a hotel
+ * @route   GET /api/client/hotels/:hotelId/services/transportation/vehicles
+ * @access  Public
+ */
+router.get('/hotels/:hotelId/services/transportation/vehicles', async (req, res) => {
+  try {
+    const { hotelId } = req.params;
+
+    // Check if hotel exists and is active
+    const hotel = await Hotel.findOne({ _id: hotelId, isActive: true, isPublished: true });
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: 'Hotel not found or not available'
+      });
+    }
+
+    // Find all transportation services for this hotel
+    const transportationServices = await Service.find({
+      hotelId: hotelId,
+      category: 'transportation',
+      isActive: true
+    })
+    .populate('providerId', 'businessName rating contactEmail contactPhone')
+    .sort({ 'performance.totalBookings': -1 });
+
+    console.log('🚗 Transportation services query for hotel:', {
+      hotelId,
+      query: { hotelId, category: 'transportation', isActive: true },
+      servicesFound: transportationServices.length,
+      serviceNames: transportationServices.map(s => s.name),
+      servicesWithVehicles: transportationServices.map(s => ({
+        name: s.name,
+        hasTransportationItems: !!(s.transportationItems && s.transportationItems.length > 0),
+        vehicleCount: s.transportationItems?.length || 0
+      }))
+    });
+
+    // Apply hotel markup to pricing
+    const categoryTemplates = require('../config/categoryTemplates');
+    const servicesWithMarkup = transportationServices.map(service => {
+      const serviceObj = service.toObject();
+      let markup = hotel.markupSettings?.default || 15; // Default 15% markup
+
+      // Check if there's a category-specific markup for transportation
+      if (hotel.markupSettings?.categories &&
+          hotel.markupSettings.categories['transportation'] !== undefined) {
+        markup = hotel.markupSettings.categories['transportation'];
+      }
+
+      console.log(`🚗 Service "${serviceObj.name}" transportationItems:`, {
+        hasVehicles: !!(serviceObj.transportationItems && serviceObj.transportationItems.length > 0),
+        vehicleCount: serviceObj.transportationItems?.length || 0,
+        categories: serviceObj.transportationItems ? [...new Set(serviceObj.transportationItems.map(vehicle => vehicle.category))] : []
+      });
+
+      // Apply markup to individual transportation vehicles and their service types
+      if (serviceObj.transportationItems && serviceObj.transportationItems.length > 0) {
+        serviceObj.transportationItems = serviceObj.transportationItems.map(vehicle => {
+          const updatedVehicle = { ...vehicle };          // Apply markup to service types within each vehicle
+          if (updatedVehicle.serviceTypes) {
+            updatedVehicle.serviceTypes = updatedVehicle.serviceTypes.map(st => {
+              const updatedServiceType = { ...st };
+
+              // Handle both pricing structures
+              if (st.price && st.price > 0) {
+                // Simple price structure
+                updatedServiceType.price = Math.round((st.price * (1 + markup / 100)) * 100) / 100;
+              } else if (st.pricing && st.pricing.basePrice > 0) {
+                // Complex pricing structure
+                updatedServiceType.pricing = {
+                  ...st.pricing,
+                  basePrice: Math.round((st.pricing.basePrice * (1 + markup / 100)) * 100) / 100
+                };
+                // Also set a simple price field for frontend compatibility
+                updatedServiceType.price = updatedServiceType.pricing.basePrice;
+              }
+
+              return updatedServiceType;
+            });
+          }
+
+          // Apply markup to base vehicle price if it exists
+          if (updatedVehicle.price) {
+            updatedVehicle.price = Math.round((updatedVehicle.price * (1 + markup / 100)) * 100) / 100;
+          }
+
+          return updatedVehicle;
+        });
+      }
+
+      // Apply markup to express surcharge if enabled
+      if (serviceObj.expressSurcharge?.enabled) {
+        serviceObj.expressSurcharge.finalRate = Math.round((serviceObj.expressSurcharge.rate * (1 + markup / 100)) * 100) / 100;
+      } else if (!serviceObj.expressSurcharge) {
+        // Add default express surcharge from template
+        serviceObj.expressSurcharge = {
+          ...categoryTemplates.transportation.expressSurcharge,
+          enabled: false,
+          rate: 10,
+          finalRate: Math.round((10 * (1 + markup / 100)) * 100) / 100
+        };
+      }
+
+      // Set final pricing for the service
+      serviceObj.pricing.finalPrice = serviceObj.pricing.basePrice * (1 + markup / 100);
+
+      return serviceObj;
+    });
+
+    // Filter out services without actual transportationItems
+    const servicesWithActualVehicles = servicesWithMarkup.filter(service => {
+      const hasVehicles = service.transportationItems && service.transportationItems.length > 0;
+      console.log(`🚗 Service "${service.name}" - hasVehicles: ${hasVehicles}, vehicleCount: ${service.transportationItems?.length || 0}`);
+      return hasVehicles;
+    });
+
+    console.log('🚗 Final services with vehicles:', {
+      totalServices: transportationServices.length,
+      servicesWithVehicles: servicesWithActualVehicles.length,
+      filteredServices: servicesWithActualVehicles.map(s => ({
+        name: s.name,
+        vehicleCount: s.transportationItems?.length || 0,
+        categories: [...new Set(s.transportationItems?.map(vehicle => vehicle.category) || [])]
+      }))
+    });
+
+    res.json({
+      success: true,
+      data: {
+        hotel: {
+          id: hotel._id,
+          name: hotel.name
+        },
+        services: servicesWithActualVehicles
+      }
+    });
+  } catch (error) {
+    logger.error('Get transportation services error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+/**
+ * @desc    Create a new transportation booking with multiple vehicles
+ * @route   POST /api/client/bookings/transportation
+ * @access  Private/Guest
+ */
+router.post('/bookings/transportation', protect, restrictTo('guest'), async (req, res) => {
+  try {
+    const {
+      serviceId,
+      hotelId,
+      transportationItems,
+      expressSurcharge,
+      schedule,
+      guestDetails,
+      location
+    } = req.body;
+
+    console.log('🚗 Transportation booking data received:', {
+      serviceId,
+      hotelId,
+      transportationItemsCount: transportationItems?.length,
+      schedule: schedule,
+      pickupDate: schedule?.pickupDate,
+      pickupTime: schedule?.pickupTime
+    });
+
+    // Validate required fields
+    if (!serviceId || !hotelId || !transportationItems || transportationItems.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Service ID, hotel ID, and transportation items are required'
+      });
+    }
+
+    // Validate service exists and is active
+    const service = await Service.findOne({
+      _id: serviceId,
+      hotelId: hotelId,
+      category: 'transportation',
+      isActive: true
+    }).populate('providerId', 'businessName email');
+
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transportation service not found or not available'
+      });
+    }
+
+    // Get hotel markup settings
+    const hotel = await Hotel.findById(hotelId).select('markupSettings name');
+    let markup = hotel.markupSettings?.default || 15;
+
+    if (hotel.markupSettings?.categories &&
+        hotel.markupSettings.categories['transportation'] !== undefined) {
+      markup = hotel.markupSettings.categories['transportation'];
+    }
+
+    // Calculate pricing
+    const vehiclesTotal = transportationItems.reduce((total, vehicle) => total + vehicle.totalPrice, 0);
+    const expressTotal = expressSurcharge?.enabled ? expressSurcharge.rate : 0;
+    const subtotal = vehiclesTotal + expressTotal;
+
+    // Apply hotel markup
+    const totalBeforeMarkup = subtotal;
+    const markupAmount = (totalBeforeMarkup * markup) / 100;
+    const totalAmount = totalBeforeMarkup + markupAmount;
+    const providerEarnings = totalBeforeMarkup;
+    const hotelEarnings = markupAmount;
+
+    // Generate booking number
+    const bookingNumber = `TR${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+
+    // Create booking with parsed date
+    const scheduledDate = new Date(`${schedule.pickupDate}T${schedule.pickupTime}:00.000Z`);
+
+    const booking = new Booking({
+      bookingId: bookingNumber,
+      serviceId: service._id,
+      guestId: req.user._id,
+      hotelId: hotelId,
+      serviceName: service.name,
+      category: 'transportation',
+      transportationItems: transportationItems.map(vehicle => ({
+        vehicleType: vehicle.vehicleType,
+        vehicleCategory: vehicle.vehicleCategory,
+        quantity: vehicle.quantity || 1,
+        serviceType: {
+          id: vehicle.serviceTypeId,
+          name: vehicle.serviceTypeName,
+          description: vehicle.serviceTypeDescription,
+          duration: vehicle.serviceTypeDuration
+        },
+        basePrice: vehicle.basePrice,
+        totalPrice: vehicle.totalPrice
+      })),
+      expressSurcharge: expressSurcharge || { enabled: false, rate: 0 },
+      schedule: {
+        pickupDate: schedule.pickupDate,
+        pickupTime: schedule.pickupTime,
+        returnDate: schedule.returnDate,
+        returnTime: schedule.returnTime
+      },
+      guestDetails: {
+        passengerCount: guestDetails.passengerCount || 1,
+        luggageCount: guestDetails.luggageCount || 0,
+        specialRequests: guestDetails.specialRequests || ''
+      },
+      location: {
+        pickupLocation: location.pickupLocation,
+        dropoffLocation: location.dropoffLocation,
+        pickupInstructions: location.pickupInstructions || ''
+      },
+      scheduledDate,
+      totalAmount,
+      providerEarnings,
+      hotelEarnings,
+      markupPercentage: markup,
+      paymentStatus: 'pending',
+      status: 'pending',
+      notes: guestDetails.specialRequests || ''
+    });
+
+    await booking.save();
+
+    console.log('🚗 Transportation booking created:', {
+      bookingId: booking.bookingId,
+      totalAmount: booking.totalAmount,
+      vehicleCount: transportationItems.length
+    });
+
+    // Send email notifications
+    try {
+      // Guest confirmation email
+      await sendEmail({
+        to: req.user.email,
+        subject: `Transportation Booking Confirmation - ${bookingNumber}`,
+        template: 'transportation-booking-confirmation',
+        templateData: {
+          guestName: `${req.user.firstName} ${req.user.lastName}`,
+          bookingNumber: bookingNumber,
+          hotelName: hotel.name,
+          serviceName: service.name,
+          vehicles: transportationItems,
+          schedule: {
+            pickupDate: schedule.pickupDate,
+            pickupTime: schedule.pickupTime,
+            returnDate: schedule.returnDate,
+            returnTime: schedule.returnTime
+          },
+          location: location,
+          totalAmount: totalAmount,
+          bookingDate: new Date().toLocaleDateString()
+        }
+      });
+
+      // Service provider notification email
+      await sendEmail({
+        to: service.providerId.email,
+        subject: `New Transportation Booking - ${bookingNumber}`,
+        template: 'transportation-booking-provider',
+        templateData: {
+          providerName: service.providerId.businessName,
+          bookingNumber: bookingNumber,
+          guestName: `${req.user.firstName} ${req.user.lastName}`,
+          hotelName: hotel.name,
+          vehicles: transportationItems,
+          schedule: schedule,
+          location: location,
+          totalAmount: totalAmount,
+          providerEarnings: providerEarnings,
+          bookingDate: new Date().toLocaleDateString()
+        }
+      });
+
+    } catch (emailError) {
+      console.error('Email notification error:', emailError);
+      // Don't fail the booking if email fails
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Transportation booking created successfully',
+      data: {
+        booking: {
+          id: booking._id,
+          bookingId: booking.bookingId,
+          totalAmount: booking.totalAmount,
+          scheduledDate: booking.scheduledDate,
+          status: booking.status,
+          providerName: service.providerId.businessName
+        }
+      }
+    });
+
+  } catch (error) {
+    logger.error('Create transportation booking error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 module.exports = router;

@@ -135,54 +135,54 @@ export const useAuth = () => {
    * @param {Array<string>} allowedRoles - Array of allowed roles
    * @returns {boolean} - Whether user has required role
    */  const hasRole = (allowedRoles) => {
-    console.log('hasRole check:', { userRole: role, allowedRoles });
-    console.log('Current auth state:', { isAuthenticated, role, currentUser });
+    console.log('🔍 hasRole check in useAuth:', { userRole: role, allowedRoles });
+    console.log('🔍 Current auth state:', { isAuthenticated, role, currentUser });
 
     // If not authenticated, don't even bother checking
     if (!isAuthenticated) {
-      console.log('Not authenticated, role check failed');
+      console.log('❌ Not authenticated, role check failed');
       return false;
     }
 
     // If no role in Redux state, try to get it from token
     if (!role) {
-      console.log('No role in Redux state, checking token...');
+      console.log('⚠️ No role in Redux state, checking token...');
       try {
         const token = cookieHelper.getAuthToken();
         if (token) {
           const decoded = jwt_decode(token);
           if (decoded.role) {
-            console.log('Found role in token:', decoded.role);
+            console.log('🔍 Found role in token:', decoded.role);
 
             // Check with token role
             if (Array.isArray(allowedRoles)) {
               const result = allowedRoles.includes(decoded.role);
-              console.log('Token role array check result:', result);
+              console.log('🔍 Token role array check result:', result);
               return result;
             } else {
               const result = decoded.role === allowedRoles;
-              console.log('Token role direct match result:', result);
+              console.log('🔍 Token role direct match result:', result);
               return result;
             }
           }
         }
       } catch (error) {
-        console.error('Failed to extract role from token:', error);
+        console.error('❌ Failed to extract role from token:', error);
       }
 
-      console.log('No role found in Redux or token');
+      console.log('❌ No role found in Redux or token');
       return false;
     }
 
     // We have a role in Redux state, check normally
     if (Array.isArray(allowedRoles)) {
       const result = allowedRoles.includes(role);
-      console.log('Array check result:', result);
+      console.log('🔍 Array check result:', { role, allowedRoles, result });
       return result;
     }
 
     const result = role === allowedRoles;
-    console.log('Direct match result:', result);
+    console.log('🔍 Direct match result:', { role, allowedRoles, result });
     return result;
   };
   /**

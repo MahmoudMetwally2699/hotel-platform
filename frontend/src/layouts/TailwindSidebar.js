@@ -12,6 +12,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
   const { t, i18n } = useTranslation();
   const { role } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState({});
 
   // Check if current language is RTL
   const isRTL = i18n.language === 'ar';
@@ -19,7 +20,14 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
   const toggleCollapse = () => {
     setCollapsed(!collapsed);
   };
-  // Define navigation items based on user role
+
+  const toggleMenu = (menuKey) => {
+    setExpandedMenus(prev => ({
+      ...prev,
+      [menuKey]: !prev[menuKey]
+    }));
+  };
+  // Define navigation items based on user role with hierarchical structure
   const getNavigationItems = () => {
     switch (role) {
       case 'superadmin':
@@ -43,12 +51,24 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         return [
           { name: t('navigation.dashboard'), path: '/service/dashboard', icon: 'home' },
           { name: t('navigation.orders'), path: '/service/orders', icon: 'shopping-bag' },
+          {
+            name: 'Manage Services',
+            icon: 'cog-services',
+            isExpandable: true,
+            key: 'manage-services',
+            children: [
+              { name: '👕 Laundry Service Management', path: '/service/services?category=laundry', icon: 'laundry' },
+              { name: '🚗 Transportation Service Management', path: '/service/services?category=transportation', icon: 'truck' },
+              { name: '📋 Transportation Bookings', path: '/service/transportation-bookings', icon: 'truck' }
+            ]
+          },
           { name: t('navigation.earnings'), path: '/service/earnings', icon: 'cash' },
           { name: t('navigation.settings'), path: '/service/settings', icon: 'cog' }
         ];
       case 'guest':
         return [
           { name: t('navigation.hotelServices'), path: '/my-hotel-services', icon: 'server' },
+          { name: 'My Bookings', path: '/my-bookings', icon: 'clipboard-list' },
           { name: t('navigation.myOrders'), path: '/my-orders', icon: 'shopping-bag' }
         ];
       default:
@@ -120,6 +140,49 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         );
+      case 'credit-card':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+        );
+      case 'clipboard-list':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v1c0 8.284 6.716 15 15 15h1a2 2 0 002-2V9a2 2 0 00-2-2H9zM9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          </svg>
+        );
+      case 'truck':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+          </svg>
+        );
+      case 'cog-services':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        );
+      case 'laundry':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+          </svg>
+        );
+      case 'chevron-down':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        );
+      case 'chevron-right':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        );
       default:
         return (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -164,16 +227,61 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         <nav className="mt-5">
           <ul>
             {navigationItems.map((item) => (
-              <li key={item.path} className="px-2 py-1">
-                <NavLink
-                  to={item.path}                  className={({ isActive }) => `
-                    flex items-center px-4 py-2 rounded-md transition-colors min-h-[48px]
-                    ${isActive ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
-                  `}
-                >
-                  <span className={`${isRTL ? 'ml-3' : 'mr-3'}`}>{getIcon(item.icon)}</span>
-                  <span className={`${collapsed ? 'hidden' : ''}`}>{item.name}</span>
-                </NavLink>
+              <li key={item.path || item.key} className="px-2 py-1">
+                {item.isExpandable ? (
+                  // Expandable parent menu
+                  <>
+                    <button
+                      onClick={() => toggleMenu(item.key)}
+                      className={`w-full flex items-center justify-between px-4 py-2 rounded-md transition-colors min-h-[48px] ${
+                        expandedMenus[item.key]
+                          ? 'bg-gray-900 text-white'
+                          : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <span className={`${isRTL ? 'ml-3' : 'mr-3'}`}>{getIcon(item.icon)}</span>
+                        <span className={`${collapsed ? 'hidden' : ''}`}>{item.name}</span>
+                      </div>
+                      {!collapsed && (
+                        <span className="ml-auto">
+                          {expandedMenus[item.key] ? getIcon('chevron-down') : getIcon('chevron-right')}
+                        </span>
+                      )}
+                    </button>
+                    {/* Submenu */}
+                    {expandedMenus[item.key] && !collapsed && (
+                      <ul className="mt-1 ml-4 space-y-1">
+                        {item.children?.map((child, childIndex) => (
+                          <li key={childIndex} className="px-2 py-1">
+                            <NavLink
+                              to={child.path}
+                              className={({ isActive }) => `
+                                flex items-center px-4 py-2 rounded-md transition-colors min-h-[40px]
+                                ${isActive ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white'}
+                              `}
+                            >
+                              <span className={`${isRTL ? 'ml-3' : 'mr-3'}`}>{getIcon(child.icon)}</span>
+                              <span>{child.name}</span>
+                            </NavLink>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                ) : (
+                  // Regular menu item
+                  <NavLink
+                    to={item.path}
+                    className={({ isActive }) => `
+                      flex items-center px-4 py-2 rounded-md transition-colors min-h-[48px]
+                      ${isActive ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+                    `}
+                  >
+                    <span className={`${isRTL ? 'ml-3' : 'mr-3'}`}>{getIcon(item.icon)}</span>
+                    <span className={`${collapsed ? 'hidden' : ''}`}>{item.name}</span>
+                  </NavLink>
+                )}
               </li>
             ))}
           </ul>

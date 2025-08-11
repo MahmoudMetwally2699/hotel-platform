@@ -28,6 +28,8 @@ const MyOrdersPage = lazy(() => import('../pages/client/MyOrdersPage'));
 const HotelListPage = lazy(() => import('../pages/client/HotelListPage'));
 const HotelCategoryServicesPage = lazy(() => import('../pages/client/HotelCategoryServicesPage'));
 const LaundryBookingPage = lazy(() => import('../pages/client/LaundryBookingPage'));
+const SimpleTransportationBooking = lazy(() => import('../pages/client/SimpleTransportationBooking'));
+const GuestTransportationBookings = lazy(() => import('../pages/guest/GuestTransportationBookings'));
 const ProfilePage = lazy(() => import('../pages/common/ProfilePage'));
 const AdminAccessPage = lazy(() => import('../pages/common/AdminAccessPage'));
 
@@ -64,8 +66,10 @@ const ServiceProviderProcessBookingsPage = lazy(() => import('../pages/service/P
 const ServiceProviderEarningsPage = lazy(() => import('../pages/service/EarningsPage'));
 const ServiceProviderMetricsPage = lazy(() => import('../pages/service/MetricsPage'));
 const ServiceProviderSettingsPage = lazy(() => import('../pages/service/SettingsPage'));
+const TransportationBookingManagement = lazy(() => import('../pages/service/TransportationBookingManagement'));
 const CategorySelectionDashboard = lazy(() => import('../components/service/CategorySelectionDashboard'));
 const ServiceProviderAnalytics = lazy(() => import('../components/service/ServiceProviderAnalytics'));
+const ServiceProviderServicesPage = lazy(() => import('../pages/service/ServicesPage'));
 
 // Error Pages
 const NotFoundPage = lazy(() => import('../pages/errors/NotFoundPage'));
@@ -85,11 +89,23 @@ const AppRouter = () => {
         {/* Client/Guest Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/hotels" element={<HotelListPage />} />
-        <Route path="/hotels/:hotelId/categories" element={<TailwindLayout><HotelCategoryServicesPage /></TailwindLayout>} />
-        <Route path="/hotels/:hotelId/services/:category" element={<TailwindLayout><HotelCategoryServicesPage /></TailwindLayout>} />
+        <Route path="/hotels/:hotelId/categories" element={<TailwindLayout><HotelCategoryServicesPage /></TailwindLayout>} />        <Route path="/hotels/:hotelId/services/:category" element={<TailwindLayout><HotelCategoryServicesPage /></TailwindLayout>} />
         <Route path="/hotels/:hotelId/services/laundry/booking" element={<TailwindLayout><LaundryBookingPage /></TailwindLayout>} />
+        <Route path="/hotels/:hotelId/services/transportation/booking" element={<TailwindLayout><SimpleTransportationBooking /></TailwindLayout>} />
         <Route path="/services/:category" element={<ServiceListPage />} />
-        <Route path="/services/details/:id" element={<ServiceDetailsPage />} />{/* Protected Client/Guest Routes */}
+        <Route path="/services/details/:id" element={<ServiceDetailsPage />} />
+
+        {/* Protected Client/Guest Routes */}
+        <Route
+          path="/my-bookings"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <GuestTransportationBookings />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/my-hotel-services"
           element={
@@ -367,6 +383,16 @@ const AppRouter = () => {
           }
         />
         <Route
+          path="/service/services"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <ServiceProviderServicesPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/service/earnings"
           element={
             <ProtectedRoute allowedRoles="service">
@@ -391,6 +417,16 @@ const AppRouter = () => {
             <ProtectedRoute allowedRoles="service">
               <TailwindLayout>
                 <ServiceProviderMetricsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/transportation-bookings"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <TransportationBookingManagement />
               </TailwindLayout>
             </ProtectedRoute>
           }
