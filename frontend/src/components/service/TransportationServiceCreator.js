@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import apiClient from '../../services/api.service';
 
@@ -41,6 +42,8 @@ const Icon = ({ type, className = "" }) => {
 };
 
 const TransportationServiceCreator = () => {
+  const { t } = useTranslation();
+
   // Tab Management
   const [activeTab, setActiveTab] = useState('manage');
 
@@ -95,7 +98,7 @@ const TransportationServiceCreator = () => {
       setExistingServices(services);
     } catch (error) {
       console.error('Error fetching existing transportation services:', error);
-      toast.error('Failed to load transportation services');
+      toast.error(t('serviceProvider.transportation.services.messages.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -118,10 +121,10 @@ const TransportationServiceCreator = () => {
         )
       );
 
-      toast.success(`Service ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+      toast.success(t(`serviceProvider.transportation.services.messages.service${!currentStatus ? 'Activated' : 'Deactivated'}`));
     } catch (error) {
       console.error('Error toggling service availability:', error);
-      toast.error('Failed to update service status');
+      toast.error(t('serviceProvider.transportation.services.messages.statusUpdateFailed'));
     }
   };
 
@@ -159,13 +162,13 @@ const TransportationServiceCreator = () => {
         category: 'transportation'
       });
 
-      toast.success('Service updated successfully');
+      toast.success(t('serviceProvider.transportation.services.messages.serviceUpdated'));
       setEditingService(null);
       setEditFormData(null);
       fetchExistingServices();
     } catch (error) {
       console.error('Error updating service:', error);
-      toast.error(error.response?.data?.message || 'Failed to update service');
+      toast.error(error.response?.data?.message || t('serviceProvider.transportation.services.messages.updateFailed'));
     } finally {
       setLoading(false);
     }
@@ -175,15 +178,15 @@ const TransportationServiceCreator = () => {
    * Delete a service
    */
   const deleteService = async (serviceId) => {
-    if (!window.confirm('Are you sure you want to delete this transportation service?')) return;
+    if (!window.confirm(t('serviceProvider.transportation.services.messages.confirmDeleteService'))) return;
 
     try {
       await apiClient.delete(`/service/services/${serviceId}`);
       setExistingServices(prev => prev.filter(service => service._id !== serviceId));
-      toast.success('Transportation service deleted successfully');
+      toast.success(t('serviceProvider.transportation.services.messages.serviceDeleted'));
     } catch (error) {
       console.error('Error deleting service:', error);
-      toast.error('Failed to delete service');
+      toast.error(t('serviceProvider.transportation.services.messages.deleteFailed'));
     }
   };
 
@@ -199,7 +202,7 @@ const TransportationServiceCreator = () => {
       setAvailableVehicles(template.vehicleTypes || []);
     } catch (error) {
       console.error('Error fetching category template:', error);
-      toast.error('Failed to load transportation template');
+      toast.error(t('serviceProvider.transportation.services.messages.templateLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -217,7 +220,7 @@ const TransportationServiceCreator = () => {
     // Check if vehicle already exists
     const exists = transportationItems.some(item => item.vehicleType === vehicleTypeId);
     if (exists) {
-      toast.error('This vehicle type is already added');
+      toast.error(t('serviceProvider.transportation.services.messages.vehicleAlreadyAdded'));
       return;
     }
 
@@ -253,7 +256,7 @@ const TransportationServiceCreator = () => {
     };
 
     setTransportationItems(prev => [...prev, newVehicleItem]);
-    toast.success(`${vehicleTemplate.name} added successfully`);
+    toast.success(`${vehicleTemplate.name} ${t('serviceProvider.transportation.services.messages.vehicleAddedSuccessfully')}`);
   };
 
   /**
@@ -282,17 +285,17 @@ const TransportationServiceCreator = () => {
    */
   const validateForm = () => {
     if (!serviceDetails.name.trim()) {
-      toast.error('Service name is required');
+      toast.error(t('serviceProvider.transportation.services.messages.serviceNameRequired'));
       return false;
     }
 
     if (!serviceDetails.description.trim()) {
-      toast.error('Service description is required');
+      toast.error(t('serviceProvider.transportation.services.messages.descriptionRequired'));
       return false;
     }
 
     if (transportationItems.length === 0) {
-      toast.error('Please add at least one vehicle type');
+      toast.error(t('serviceProvider.transportation.services.messages.addAtLeastOneVehicle'));
       return false;
     }
 
@@ -302,7 +305,7 @@ const TransportationServiceCreator = () => {
     );
 
     if (!hasAvailableServices) {
-      toast.error('Please enable at least one service type for your vehicles');
+      toast.error(t('serviceProvider.transportation.services.messages.enableAtLeastOneService'));
       return false;
     }
 
@@ -334,7 +337,7 @@ const TransportationServiceCreator = () => {
 
       await apiClient.post('/service/categories/transportation/vehicles', serviceData);
 
-      toast.success('Quote-based transportation service created successfully');
+      toast.success(t('serviceProvider.transportation.services.messages.quoteServiceCreatedSuccessfully'));
 
       // Reset form
       setServiceDetails({
@@ -351,7 +354,7 @@ const TransportationServiceCreator = () => {
 
     } catch (error) {
       console.error('Error creating transportation service:', error);
-      toast.error(error.response?.data?.message || 'Failed to create transportation service');
+      toast.error(error.response?.data?.message || t('serviceProvider.transportation.services.messages.failedToCreateService'));
     } finally {
       setLoading(false);
     }
@@ -383,7 +386,7 @@ const TransportationServiceCreator = () => {
       return (
         <div className="flex items-center justify-center p-8">
           <Icon type="package" className="text-4xl mr-2" />
-          <span>Loading transportation services...</span>
+          <span>{t('serviceProvider.transportation.services.messages.loadingServices')}</span>
         </div>
       );
     }
@@ -392,14 +395,14 @@ const TransportationServiceCreator = () => {
       return (
         <div className="text-center py-12">
           <Icon type="car" className="text-6xl text-gray-300 mb-4" />
-          <h3 className="text-xl font-semibold text-gray-600 mb-2">No Transportation Services Found</h3>
-          <p className="text-gray-500 mb-6">You haven't created any transportation services yet.</p>
+          <h3 className="text-xl font-semibold text-gray-600 mb-2">{t('serviceProvider.transportation.services.noServicesFound')}</h3>
+          <p className="text-gray-500 mb-6">{t('serviceProvider.transportation.services.noServicesDescription')}</p>
           <button
             onClick={() => setActiveTab('add')}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
           >
             <Icon type="plus" className="mr-2" />
-            Create Transportation Service
+            {t('serviceProvider.transportation.services.createTransportationService')}
           </button>
         </div>
       );
@@ -408,13 +411,13 @@ const TransportationServiceCreator = () => {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h3 className="text-2xl font-bold text-gray-900">Manage Transportation Services</h3>
+          <h3 className="text-2xl font-bold text-gray-900">{t('serviceProvider.transportation.services.manageTitle')}</h3>
           <button
             onClick={() => setActiveTab('add')}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <Icon type="plus" className="mr-2" />
-            Add New Service
+            {t('serviceProvider.transportation.services.addNewService')}
           </button>
         </div>
 
@@ -424,7 +427,7 @@ const TransportationServiceCreator = () => {
               // Edit Mode
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Service Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('serviceProvider.transportation.services.serviceName')}</label>
                   <input
                     type="text"
                     value={editFormData.name}
@@ -434,7 +437,7 @@ const TransportationServiceCreator = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('serviceProvider.transportation.services.description')}</label>
                   <textarea
                     value={editFormData.description}
                     onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -450,7 +453,7 @@ const TransportationServiceCreator = () => {
                     disabled={loading}
                   >
                     <Icon type="save" className="mr-1" />
-                    {loading ? 'Saving...' : 'Save Changes'}
+                    {loading ? t('common.loading') : t('serviceProvider.transportation.services.save')}
                   </button>
                   <button
                     onClick={cancelEditing}
@@ -484,19 +487,19 @@ const TransportationServiceCreator = () => {
                     <div className="text-lg font-semibold text-blue-600">
                       {service.transportationItems ? service.transportationItems.length : 0}
                     </div>
-                    <div className="text-xs text-gray-600">Vehicle Types</div>
+                    <div className="text-xs text-gray-600">{t('serviceProvider.transportation.services.vehicleTypes')}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-lg font-semibold text-green-600">
                       {service.performance?.totalBookings || 0}
                     </div>
-                    <div className="text-xs text-gray-600">Bookings</div>
+                    <div className="text-xs text-gray-600">{t('serviceProvider.transportation.services.bookings')}</div>
                   </div>
                   <div className="text-center">
                     <div className="text-lg font-semibold text-purple-600">
                       ${service.performance?.totalRevenue || 0}
                     </div>
-                    <div className="text-xs text-gray-600">Revenue</div>
+                    <div className="text-xs text-gray-600">{t('serviceProvider.transportation.services.revenue')}</div>
                   </div>
                 </div>
 
@@ -532,7 +535,7 @@ const TransportationServiceCreator = () => {
                 {/* Vehicle Types Overview */}
                 {service.transportationItems && service.transportationItems.length > 0 && (
                   <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                    <h5 className="font-medium text-blue-800 mb-2">Available Vehicle Types:</h5>
+                    <h5 className="font-medium text-blue-800 mb-2">{t('serviceProvider.transportation.services.availableVehicleTypes')}:</h5>
                     <div className="flex flex-wrap gap-2">
                       {service.transportationItems.map((vehicle, idx) => (
                         <span key={idx} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
@@ -570,46 +573,46 @@ const TransportationServiceCreator = () => {
     return (
       <div className="space-y-8">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">Create Transportation Service</h3>
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">{t('serviceProvider.transportation.services.createTitle')}</h3>
 
           {/* Service Details */}
           <div className="space-y-4 mb-8">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Service Name *
+                {t('serviceProvider.transportation.services.serviceNameRequired')}
               </label>
               <input
                 type="text"
                 value={serviceDetails.name}
                 onChange={(e) => setServiceDetails(prev => ({ ...prev, name: e.target.value }))}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="e.g., Premium Transportation Service"
+                placeholder={t('serviceProvider.transportation.services.serviceNamePlaceholder')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description *
+                {t('serviceProvider.transportation.services.descriptionRequired')}
               </label>
               <textarea
                 value={serviceDetails.description}
                 onChange={(e) => setServiceDetails(prev => ({ ...prev, description: e.target.value }))}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                 rows="3"
-                placeholder="Describe your transportation services..."
+                placeholder={t('serviceProvider.transportation.services.descriptionPlaceholder')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Short Description
+                {t('serviceProvider.transportation.services.shortDescription')}
               </label>
               <input
                 type="text"
                 value={serviceDetails.shortDescription}
                 onChange={(e) => setServiceDetails(prev => ({ ...prev, shortDescription: e.target.value }))}
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                placeholder="Brief description for listings"
+                placeholder={t('serviceProvider.transportation.services.shortDescriptionPlaceholder')}
               />
             </div>
           </div>
@@ -617,17 +620,17 @@ const TransportationServiceCreator = () => {
           {/* Add Vehicle Types */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h4 className="text-lg font-semibold text-gray-800">Available Vehicle Types</h4>
+              <h4 className="text-lg font-semibold text-gray-800">{t('serviceProvider.transportation.services.availableVehicleTypes')}</h4>
               <div className="flex items-center space-x-4">
                 <select
                   onChange={(e) => addVehicleFromDropdown(e.target.value)}
                   className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   value=""
                 >
-                  <option value="">Add Vehicle Type...</option>
+                  <option value="">{t('serviceProvider.transportation.services.addVehicleType')}</option>
                   {availableVehicles.map(vehicle => (
                     <option key={vehicle.id} value={vehicle.id}>
-                      {vehicle.name} ({vehicle.capacity.passengers} passengers)
+                      {t(`transportation.vehicleTypes.${vehicle.id}`)} ({typeof vehicle.capacity === 'object' ? vehicle.capacity.passengers : vehicle.capacity} {t('serviceProvider.transportation.services.passengers')})
                     </option>
                   ))}
                 </select>
@@ -637,12 +640,10 @@ const TransportationServiceCreator = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <div className="flex items-center mb-2">
                 <Icon type="info" className="text-blue-500 mr-2" />
-                <h5 className="font-medium text-blue-800">Quote-Based Transportation Service</h5>
+                <h5 className="font-medium text-blue-800">{t('serviceProvider.transportation.services.quoteBased')}</h5>
               </div>
               <p className="text-sm text-blue-700">
-                This transportation service operates on a quote-based system. Add the vehicle types you offer,
-                and when guests request bookings, you'll create custom quotes based on their specific needs
-                (distance, time, special requirements, etc.).
+                {t('serviceProvider.transportation.services.quoteBasedDescription')}
               </p>
             </div>
 
@@ -701,7 +702,7 @@ const TransportationServiceCreator = () => {
                           {serviceType.isPopular && (
                             <div className="text-xs text-yellow-600 font-medium flex items-center mt-2">
                               <Icon type="star" className="mr-1" />
-                              Popular Choice
+                              {t('serviceProvider.transportation.services.popularChoice')}
                             </div>
                           )}
                         </div>
@@ -715,8 +716,8 @@ const TransportationServiceCreator = () => {
             {transportationItems.length === 0 && (
               <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
                 <Icon type="car" className="text-4xl text-gray-400 mb-2" />
-                <p className="text-gray-600">No vehicle types added yet.</p>
-                <p className="text-sm text-gray-500">Use the dropdown above to add vehicle types.</p>
+                <p className="text-gray-600">{t('serviceProvider.transportation.services.noVehicleTypesAdded')}</p>
+                <p className="text-sm text-gray-500">{t('serviceProvider.transportation.services.useDropdownToAdd')}</p>
               </div>
             )}
           </div>
@@ -729,7 +730,7 @@ const TransportationServiceCreator = () => {
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               <Icon type="save" className="mr-2" />
-              {loading ? 'Creating Quote-Based Service...' : 'Create Transportation Service'}
+              {loading ? t('serviceProvider.transportation.services.messages.creatingService') : t('serviceProvider.transportation.services.createTransportationService')}
             </button>
           </div>
         </div>
@@ -752,7 +753,7 @@ const TransportationServiceCreator = () => {
               }`}
             >
               <Icon type="list" className="mr-2" />
-              Manage Transportation Services
+              {t('serviceProvider.transportation.services.manageTitle')}
             </button>
             <button
               onClick={() => setActiveTab('add')}
@@ -763,7 +764,7 @@ const TransportationServiceCreator = () => {
               }`}
             >
               <Icon type="plus" className="mr-2" />
-              Add New Service
+              {t('serviceProvider.transportation.services.addNewService')}
             </button>
           </nav>
         </div>

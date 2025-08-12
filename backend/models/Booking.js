@@ -399,7 +399,7 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
   payment: {
     method: {
       type: String,
-      enum: ['credit-card', 'debit-card', 'paypal', 'stripe', 'cash'],
+      enum: ['credit-card', 'debit-card', 'paypal', 'stripe', 'cash', 'wallet', 'bank-transfer'],
       required: [true, 'Payment method is required']
     },
 
@@ -412,6 +412,33 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     transactionId: String,
     paymentIntentId: String, // Stripe payment intent ID
 
+    // Kashier.io specific fields
+    kashier: {
+      sessionId: String,
+      paymentUrl: String,
+      transactionId: String,
+      merchantOrderId: String,
+      paymentReference: String,
+      webhookData: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {}
+      },
+      cardInfo: {
+        cardBrand: String,
+        maskedCard: String,
+        cardLast4: String
+      },
+      transactionResponseCode: String,
+      transactionResponseMessage: mongoose.Schema.Types.Mixed,
+      failureReason: String
+    },
+
+    // Payment amounts
+    totalAmount: {
+      type: Number,
+      min: [0, 'Total amount cannot be negative']
+    },
+
     paidAmount: {
       type: Number,
       default: 0,
@@ -422,6 +449,12 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
       type: Number,
       default: 0,
       min: [0, 'Refunded amount cannot be negative']
+    },
+
+    currency: {
+      type: String,
+      default: 'EGP',
+      enum: ['EGP', 'USD', 'EUR', 'GBP', 'SAR']
     },
 
     paymentDate: Date,
@@ -657,6 +690,8 @@ bookingSchema.index({ serviceProviderId: 1, status: 1, createdAt: -1 });
 bookingSchema.index({ serviceId: 1, createdAt: -1 });
 bookingSchema.index({ 'schedule.preferredDate': 1, status: 1 });
 bookingSchema.index({ 'payment.status': 1, 'payment.paymentDate': -1 });
+bookingSchema.index({ 'payment.kashier.sessionId': 1 });
+bookingSchema.index({ 'payment.kashier.transactionId': 1 });
 
 // Virtual fields
 bookingSchema.virtual('guest', {
@@ -819,6 +854,89 @@ bookingSchema.methods.addRating = function(ratingData) {
   this.feedback.guestRating = ratingData.rating;
   this.feedback.guestReview = ratingData.review;
   this.feedback.guestReview.submittedAt = new Date();
+
+  return this.save();
+};
+
+// Kashier.io payment methods
+bookingSchema.methods.createKashierPaymentSession = function(kashierSessionId, paymentUrl) {
+  this.payment.kashier.sessionId = kashierSessionId;
+  this.payment.kashier.paymentUrl = paymentUrl;
+  this.payment.totalAmount = this.pricing.total;
+  this.payment.status = 'pending';
+  this.status = 'payment_pending';
+
+  return this.save();
+};
+
+bookingSchema.methods.processKashierPayment = function(webhookData) {
+  // Store the complete webhook data
+  this.payment.kashier.webhookData = webhookData;
+
+  // Extract transaction details based on new webhook format
+  this.payment.kashier.transactionId = webhookData.transactionId;
+  this.payment.kashier.paymentReference = webhookData.kashierOrderId || webhookData.orderReference;
+
+  // Map Kashier payment methods to our schema enum values
+  const mapPaymentMethod = (kashierMethod) => {
+    const methodMap = {
+      'card': 'credit-card',
+      'credit-card': 'credit-card',
+      'debit-card': 'debit-card',
+      'wallet': 'wallet',
+      'bank-transfer': 'bank-transfer',
+      'fawry': 'wallet',
+      'instapay': 'wallet',
+      'vodafone-cash': 'wallet',
+      'orange-cash': 'wallet',
+      'etisalat-cash': 'wallet'
+    };
+    return methodMap[kashierMethod] || 'credit-card'; // Default to credit-card
+  };
+
+  this.payment.method = mapPaymentMethod(webhookData.method);
+
+  // Store additional payment details
+  if (webhookData.card && webhookData.card.cardInfo) {
+    this.payment.kashier.cardInfo = {
+      cardBrand: webhookData.card.cardInfo.cardBrand,
+      maskedCard: webhookData.card.cardInfo.maskedCard,
+      cardLast4: webhookData.card.cardInfo.maskedCard ? webhookData.card.cardInfo.maskedCard.slice(-4) : null
+    };
+
+    // Also update legacy paymentDetails for compatibility
+    this.payment.paymentDetails.cardBrand = webhookData.card.cardInfo.cardBrand;
+    this.payment.paymentDetails.cardLast4 = this.payment.kashier.cardInfo.cardLast4;
+  }
+
+  this.payment.kashier.transactionResponseCode = webhookData.transactionResponseCode;
+  this.payment.kashier.transactionResponseMessage = webhookData.transactionResponseMessage;
+
+  // Process payment based on status
+  if (webhookData.status === 'SUCCESS') {
+    this.payment.status = 'completed';
+    this.payment.paymentDate = new Date();
+    this.payment.paidAmount = parseFloat(webhookData.amount);
+    this.payment.currency = webhookData.currency || 'EGP';
+    this.status = 'confirmed';
+
+    // Calculate platform fee and earnings (if needed)
+    if (this.pricing) {
+      // Platform fee calculation - can be customized
+      this.payment.platformFee = 0; // Can be calculated if needed
+      this.payment.taxAmount = 0;    // Can be calculated if needed
+    }
+  } else if (webhookData.status === 'FAILED' || webhookData.status === 'ERROR') {
+    this.payment.status = 'failed';
+
+    // Store failure reason
+    this.payment.kashier.failureReason = webhookData.transactionResponseMessage || 'Payment failed';
+
+    // Keep booking status as payment_pending to allow retry
+  } else {
+    // Handle other statuses (PENDING, PROCESSING, etc.)
+    this.payment.status = 'processing';
+  }
 
   return this.save();
 };

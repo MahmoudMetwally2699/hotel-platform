@@ -551,11 +551,22 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
  */
 router.get('/bookings', protect, restrictTo('guest'), async (req, res) => {
   try {
-    const { status, page = 1, limit = 10 } = req.query;
+    const { status, category, page = 1, limit = 10 } = req.query;
 
     const query = { guestId: req.user.id }; // Fixed: use guestId instead of userId
 
     if (status) query.status = status;
+
+    // Add category filtering for laundry bookings
+    if (category === 'laundry') {
+      // Find services with laundry category
+      const laundryServices = await Service.find({ category: 'laundry' }).select('_id');
+      query.serviceId = { $in: laundryServices.map(s => s._id) };
+    } else if (category === 'transportation') {
+      // Find services with transportation category
+      const transportServices = await Service.find({ category: 'transportation' }).select('_id');
+      query.serviceId = { $in: transportServices.map(s => s._id) };
+    }
 
     const skip = (page - 1) * limit;
 
@@ -571,11 +582,13 @@ router.get('/bookings', protect, restrictTo('guest'), async (req, res) => {
 
     res.json({
       success: true,
-      data: bookings,
-      pagination: {
-        page: parseInt(page),
-        pages: Math.ceil(total / limit),
-        total
+      data: {
+        bookings,
+        pagination: {
+          page: parseInt(page),
+          pages: Math.ceil(total / limit),
+          total
+        }
       }
     });
   } catch (error) {

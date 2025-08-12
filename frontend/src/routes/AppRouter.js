@@ -30,6 +30,7 @@ const HotelCategoryServicesPage = lazy(() => import('../pages/client/HotelCatego
 const LaundryBookingPage = lazy(() => import('../pages/client/LaundryBookingPage'));
 const SimpleTransportationBooking = lazy(() => import('../pages/client/SimpleTransportationBooking'));
 const GuestTransportationBookings = lazy(() => import('../pages/guest/GuestTransportationBookings'));
+const GuestLaundryBookings = lazy(() => import('../pages/guest/GuestLaundryBookings'));
 const PaymentSuccess = lazy(() => import('../pages/guest/PaymentSuccess'));
 const PaymentFailed = lazy(() => import('../pages/guest/PaymentFailed'));
 const ProfilePage = lazy(() => import('../pages/common/ProfilePage'));
@@ -106,6 +107,16 @@ const AppRouter = () => {
             <ProtectedRoute allowedRoles="guest">
               <TailwindLayout>
                 <GuestTransportationBookings />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-laundry-bookings"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <GuestLaundryBookings />
               </TailwindLayout>
             </ProtectedRoute>
           }

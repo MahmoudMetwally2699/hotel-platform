@@ -31,9 +31,8 @@ const TransportationBookingManagement = () => {
   // Tab configuration
   const tabs = [
     { id: 'pending_quote', label: t('transportation.tabs.pendingQuotes'), icon: FaQuoteLeft },
-    { id: 'payment_pending', label: t('transportation.tabs.pendingPayment') || 'Pending Payment', icon: FaClock },
-    { id: 'payment_completed', label: t('transportation.tabs.confirmed'), icon: FaCheck },
-    { id: 'completed', label: t('transportation.tabs.completed'), icon: FaCheck },
+    { id: 'payment_pending', label: t('transportation.tabs.pendingPayment'), icon: FaClock },
+    { id: 'payment_completed', label: t('transportation.tabs.confirmed'), icon: FaCheck }
   ];
 
   useEffect(() => {
@@ -129,24 +128,24 @@ const TransportationBookingManagement = () => {
         </div>
         <div className="flex items-center text-sm text-gray-600">
           <FaUser className="mr-2" />
-          {booking.tripDetails.passengerCount} {t('transportation.passengers')}
+          {booking.tripDetails.passengerCount} {t('transportation.labels.passengers')}
         </div>
       </div>
 
       <div className="space-y-2 mb-4">
         <div className="flex items-center text-sm text-gray-600">
           <FaMapMarkerAlt className="mr-2 text-green-500" />
-          <span className="font-medium">{t('transportation.pickup')}:</span>
+          <span className="font-medium">{t('transportation.labels.pickup')}:</span>
           <span className="ml-2">{booking.tripDetails.pickupLocation}</span>
         </div>
         <div className="flex items-center text-sm text-gray-600">
           <FaMapMarkerAlt className="mr-2 text-red-500" />
-          <span className="font-medium">{t('transportation.destination')}:</span>
+          <span className="font-medium">{t('transportation.labels.destination')}:</span>
           <span className="ml-2">{booking.tripDetails.destination}</span>
         </div>
         <div className="flex items-center text-sm text-gray-600">
           <FaCalendarAlt className="mr-2" />
-          <span className="font-medium">{t('transportation.scheduledTime')}:</span>
+          <span className="font-medium">{t('transportation.labels.scheduledTime')}:</span>
           <span className="ml-2">
             {new Date(booking.tripDetails.scheduledDateTime).toLocaleString()}
           </span>
@@ -156,7 +155,7 @@ const TransportationBookingManagement = () => {
       {booking.quote && (
         <div className="bg-gray-50 rounded-md p-3 mb-4">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-700">{t('transportation.quotedPrice')}:</span>
+            <span className="text-sm font-medium text-gray-700">{t('transportation.labels.quotedPrice')}:</span>
             <span className="text-lg font-bold text-green-600">
               {formatPriceByLanguage(booking.quote.finalPrice, i18n.language)}
             </span>
@@ -309,14 +308,14 @@ const TransportationBookingManagement = () => {
                 <h4 className="font-medium text-gray-900 mb-3">{t('transportation.tripDetails')}</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium">{t('transportation.vehicle')}:</span>
+                    <span className="font-medium">{t('transportation.labels.vehicle')}:</span>
                     <p className="text-gray-600">
                       {t(`transportation.vehicleTypes.${selectedBooking.vehicleDetails.vehicleType}`)} -
                       {t(`transportation.comfortLevels.${selectedBooking.vehicleDetails.comfortLevel}`)}
                     </p>
                   </div>
                   <div>
-                    <span className="font-medium">{t('transportation.passengers')}:</span>
+                    <span className="font-medium">{t('transportation.labels.passengers')}:</span>
                     <p className="text-gray-600">{selectedBooking.tripDetails.passengerCount}</p>
                   </div>
                   <div className="col-span-2">
@@ -326,7 +325,7 @@ const TransportationBookingManagement = () => {
                     </p>
                   </div>
                   <div className="col-span-2">
-                    <span className="font-medium">{t('transportation.scheduledTime')}:</span>
+                    <span className="font-medium">{t('transportation.labels.scheduledTime')}:</span>
                     <p className="text-gray-600">
                       {new Date(selectedBooking.tripDetails.scheduledDateTime).toLocaleString()}
                     </p>
@@ -450,11 +449,11 @@ const TransportationBookingManagement = () => {
                   <div className="bg-gray-50 rounded-md p-4 grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="font-medium">{t('transportation.name')}:</span>
-                      <p className="text-gray-600">{selectedBooking.guest?.firstName} {selectedBooking.guest?.lastName}</p>
+                      <p className="text-gray-600">{selectedBooking.guestId?.firstName} {selectedBooking.guestId?.lastName}</p>
                     </div>
                     <div>
                       <span className="font-medium">{t('transportation.email')}:</span>
-                      <p className="text-gray-600">{selectedBooking.guest?.email}</p>
+                      <p className="text-gray-600">{selectedBooking.guestId?.email}</p>
                     </div>
                   </div>
                 </div>
@@ -465,27 +464,27 @@ const TransportationBookingManagement = () => {
                   <div className="bg-gray-50 rounded-md p-4 space-y-3 text-sm">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <span className="font-medium">{t('transportation.vehicle')}:</span>
+                        <span className="font-medium">{t('transportation.labels.vehicle')}:</span>
                         <p className="text-gray-600">
                           {t(`transportation.vehicleTypes.${selectedBooking.vehicleDetails.vehicleType}`)} -
                           {t(`transportation.comfortLevels.${selectedBooking.vehicleDetails.comfortLevel}`)}
                         </p>
                       </div>
                       <div>
-                        <span className="font-medium">{t('transportation.passengers')}:</span>
+                        <span className="font-medium">{t('transportation.labels.passengers')}:</span>
                         <p className="text-gray-600">{selectedBooking.tripDetails.passengerCount}</p>
                       </div>
                     </div>
                     <div>
-                      <span className="font-medium">{t('transportation.pickup')}:</span>
+                      <span className="font-medium">{t('transportation.labels.pickup')}:</span>
                       <p className="text-gray-600">{selectedBooking.tripDetails.pickupLocation}</p>
                     </div>
                     <div>
-                      <span className="font-medium">{t('transportation.destination')}:</span>
+                      <span className="font-medium">{t('transportation.labels.destination')}:</span>
                       <p className="text-gray-600">{selectedBooking.tripDetails.destination}</p>
                     </div>
                     <div>
-                      <span className="font-medium">{t('transportation.scheduledTime')}:</span>
+                      <span className="font-medium">{t('transportation.labels.scheduledTime')}:</span>
                       <p className="text-gray-600">
                         {new Date(selectedBooking.tripDetails.scheduledDateTime).toLocaleString()}
                       </p>

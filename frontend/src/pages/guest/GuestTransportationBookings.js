@@ -31,10 +31,9 @@ const GuestTransportationBookings = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
 
   const tabs = [
-    { id: 'pending_quote', label: 'Waiting for Quote', icon: FaClock },
-    { id: 'payment_pending', label: 'Ready for Payment', icon: FaMoneyBillWave },
-    { id: 'payment_completed', label: 'Confirmed', icon: FaCheck },
-    { id: 'completed', label: 'Completed', icon: FaCheck }
+    { id: 'pending_quote', label: t('transportation.labels.waitingForQuote'), icon: FaClock },
+    { id: 'payment_pending', label: t('transportation.labels.readyForPayment'), icon: FaMoneyBillWave },
+    { id: 'payment_completed', label: t('transportation.labels.confirmed'), icon: FaCheck }
   ];
 
   useEffect(() => {
@@ -117,7 +116,7 @@ const GuestTransportationBookings = () => {
         </div>
         <div className="text-right">
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.bookingStatus)}`}>
-            {booking.bookingStatus.replace('_', ' ').toUpperCase()}
+            {t(`transportation.status.${booking.bookingStatus}`)}
           </span>
           <p className="text-xs text-gray-500 mt-1">
             {new Date(booking.createdAt).toLocaleDateString()}
@@ -129,22 +128,23 @@ const GuestTransportationBookings = () => {
         <div className="space-y-2">
           <div className="flex items-center text-sm text-gray-600">
             <FaCar className="mr-2" />
-            {booking.vehicleDetails?.vehicleType} - {booking.vehicleDetails?.comfortLevel}
+            {t(`transportation.vehicleTypes.${booking.vehicleDetails?.vehicleType}`)} - {t(`transportation.comfortLevels.${booking.vehicleDetails?.comfortLevel}`)}
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <FaCalendarAlt className="mr-2" />
-            {new Date(booking.tripDetails?.scheduledDateTime).toLocaleString()}
+            <span className="font-medium">{t('transportation.labels.scheduledTime')}:</span>
+            <span className="ml-1">{new Date(booking.tripDetails?.scheduledDateTime).toLocaleString()}</span>
           </div>
         </div>
         <div className="space-y-2">
           <div className="flex items-center text-sm text-gray-600">
             <FaMapMarkerAlt className="mr-2 text-green-500" />
-            <span className="font-medium">From:</span>
+            <span className="font-medium">{t('transportation.labels.pickup')}:</span>
             <span className="ml-1 truncate">{booking.tripDetails?.pickupLocation}</span>
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <FaMapMarkerAlt className="mr-2 text-red-500" />
-            <span className="font-medium">To:</span>
+            <span className="font-medium">{t('transportation.labels.destination')}:</span>
             <span className="ml-1 truncate">{booking.tripDetails?.destination}</span>
           </div>
         </div>
@@ -154,7 +154,7 @@ const GuestTransportationBookings = () => {
       {booking.quote && (
         <div className="bg-gray-50 rounded-md p-3 mb-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">Quoted Price:</span>
+            <span className="text-sm font-medium text-gray-700">{t('transportation.labels.quotedPrice')}:</span>
             <span className="text-xl font-bold text-green-600">
               {formatPriceByLanguage(booking.quote.finalPrice, i18n.language)}
             </span>
@@ -165,15 +165,15 @@ const GuestTransportationBookings = () => {
           )}
 
           <div className="flex justify-between text-xs text-gray-500">
-            <span>Quoted: {new Date(booking.quote.quotedAt).toLocaleString()}</span>
-            <span>Expires: {new Date(booking.quote.expiresAt).toLocaleString()}</span>
+            <span>{t('transportation.labels.quotedAt')}: {new Date(booking.quote.quotedAt).toLocaleString()}</span>
+            <span>{t('transportation.labels.expiresAt')}: {new Date(booking.quote.expiresAt).toLocaleString()}</span>
           </div>
 
           {booking.isQuoteExpired && (
             <div className="mt-2">
               <span className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded-full">
                 <FaExclamationTriangle className="inline mr-1" />
-                Quote Expired
+                {t('transportation.status.quote_rejected')}
               </span>
             </div>
           )}
@@ -187,7 +187,7 @@ const GuestTransportationBookings = () => {
           className="px-4 py-2 text-blue-600 hover:text-blue-800 border border-blue-300 rounded-md hover:bg-blue-50 transition-colors"
         >
           <FaEye className="inline mr-2" />
-          View Details
+          {t('transportation.labels.viewDetails')}
         </button>
 
         {/* Show Pay Now button for payment_pending status (simplified workflow) */}
@@ -197,7 +197,7 @@ const GuestTransportationBookings = () => {
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             <FaMoneyBillWave className="inline mr-2" />
-            Pay Now
+            {t('transportation.labels.payNow')}
           </button>
         )}
       </div>
@@ -209,9 +209,9 @@ const GuestTransportationBookings = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
           <FaCar className="inline mr-3" />
-          My Transportation Bookings
+          {t('transportation.myBookings')}
         </h1>
-        <p className="mt-2 text-gray-600">View and manage your transportation requests and bookings</p>
+        <p className="mt-2 text-gray-600">{t('transportation.bookingsSubtitle')}</p>
       </div>
 
       {/* Tabs */}
@@ -238,7 +238,7 @@ const GuestTransportationBookings = () => {
       {loading ? (
         <div className="text-center py-12">
           <FaSpinner className="text-4xl text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading bookings...</p>
+          <p className="text-gray-600">{t('transportation.labels.processing')}</p>
         </div>
       ) : bookings.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -248,16 +248,16 @@ const GuestTransportationBookings = () => {
         <div className="text-center py-12">
           <FaCar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No bookings found
+            {t('transportation.noBookings')}
           </h3>
           <p className="text-gray-500 mb-4">
-            You don't have any transportation bookings in this category yet.
+            {t('transportation.noBookingsDescription')}
           </p>
           <button
             onClick={() => navigate('/hotels')}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
-            Book Transportation
+            {t('transportation.bookTransportation')}
           </button>
         </div>
       )}
@@ -269,7 +269,7 @@ const GuestTransportationBookings = () => {
             <div className="mt-3">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">
-                  Booking Details - {selectedBooking.bookingReference}
+                  {t('transportation.bookingDetails')} - {selectedBooking.bookingReference}
                 </h3>
                 <button
                   onClick={() => setSelectedBooking(null)}

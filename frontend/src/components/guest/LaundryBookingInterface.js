@@ -197,19 +197,36 @@ const LaundryBookingInterface = () => {
           pickupLocation: scheduling.pickupLocation,
           deliveryLocation: scheduling.deliveryLocation || scheduling.pickupLocation,
           pickupInstructions: scheduling.specialRequests
+        },
+        pricing: {
+          subtotal: calculateTotal().subtotal,
+          expressCharge: expressService.enabled ? expressService.rate : 0,
+          total: calculateTotal().total
         }
       };
 
-      const response = await apiClient.post('/client/bookings/laundry', bookingData);
+      console.log('🔵 Creating direct payment session for laundry booking');
 
-      toast.success('Laundry booking created successfully!');
+      // Create payment session directly without creating booking first
+      const paymentResponse = await apiClient.post('/payments/kashier/create-payment-session', {
+        bookingData,
+        bookingType: 'laundry',
+        amount: calculateTotal().total,
+        currency: 'EGP'
+      });
 
-      // Redirect to booking confirmation or dashboard
-      navigate(`/bookings/${response.data.data.booking.id}`);
+      if (paymentResponse.data.success) {
+        const { paymentUrl } = paymentResponse.data.data;
+        toast.success('Redirecting to payment...');
+        // Redirect to Kashier payment page
+        window.location.href = paymentUrl;
+      } else {
+        throw new Error(paymentResponse.data.message || 'Failed to create payment session');
+      }
 
     } catch (error) {
-      console.error('Error creating booking:', error);
-      toast.error(error.response?.data?.message || 'Failed to create booking');
+      console.error('❌ Booking submission error:', error);
+      toast.error(error.response?.data?.message || error.message || 'Failed to create booking');
     } finally {
       setSubmitting(false);
     }

@@ -8,12 +8,13 @@ const router = express.Router();
 const axios = require('axios');
 const crypto = require('crypto');
 const TransportationBooking = require('../models/TransportationBooking');
+const Booking = require('../models/Booking'); // Add laundry booking model
 const { protect, restrictTo } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
 // Kashier.io configuration
 const KASHIER_CONFIG = {
-  apiUrl: process.env.KASHIER_API_URL || 'https://payments.kashier.io',
+  apiUrl: process.env.KASHIER_API_URL || 'https://checkout.kashier.io',
   merchantId: process.env.KASHIER_MERCHANT_ID,
   apiKey: process.env.KASHIER_API_KEY,
   secretKey: process.env.KASHIER_SECRET_KEY,
@@ -28,9 +29,9 @@ const KASHIER_CONFIG = {
  */
 router.post('/create-session', protect, restrictTo('guest'), async (req, res) => {
   try {
-    const { bookingId } = req.body;
+    const { bookingId, bookingType = 'transportation' } = req.body;
 
-    console.log('🔵 Create Kashier session request:', { bookingId, userId: req.user._id });
+    console.log('🔵 Create Kashier session request:', { bookingId, bookingType, userId: req.user._id });
 
     if (!bookingId) {
       console.log('❌ Booking ID missing');
@@ -40,20 +41,36 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
       });
     }
 
-    // Find the booking
-    const booking = await TransportationBooking.findOne({
-      _id: bookingId,
-      guestId: req.user._id,
-      bookingStatus: { $in: ['quote_accepted', 'payment_pending'] } // Support both statuses
-    }).populate('guest', 'firstName lastName email phone')
-      .populate('hotel', 'name');
+    let booking;
+    let BookingModel;
+
+    // Determine which model to use based on booking type
+    if (bookingType === 'laundry') {
+      BookingModel = Booking;
+      booking = await Booking.findOne({
+        _id: bookingId,
+        guestId: req.user._id,
+        status: { $in: ['pending', 'payment_pending'] }
+      }).populate('guestId', 'firstName lastName email phone')
+        .populate('hotelId', 'name');
+    } else {
+      // Default to transportation
+      BookingModel = TransportationBooking;
+      booking = await TransportationBooking.findOne({
+        _id: bookingId,
+        guestId: req.user._id,
+        bookingStatus: { $in: ['quote_accepted', 'payment_pending'] }
+      }).populate('guest', 'firstName lastName email phone')
+        .populate('hotel', 'name');
+    }
 
     console.log('🔍 Booking lookup result:', {
       found: !!booking,
       bookingId: bookingId,
       userId: req.user._id,
-      bookingStatus: booking?.bookingStatus,
-      hasQuote: !!booking?.quote
+      bookingStatus: booking?.bookingStatus || booking?.status,
+      hasQuote: !!booking?.quote,
+      hasPricing: !!booking?.pricing
     });
 
     if (!booking) {
@@ -64,20 +81,35 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
       });
     }
 
-    if (!booking.quote || (!booking.payment.totalAmount && !booking.quote.finalPrice)) {
-      console.log('❌ No valid quote or payment amount found:', {
-        hasQuote: !!booking.quote,
-        finalPrice: booking.quote?.finalPrice,
-        totalAmount: booking.payment?.totalAmount
-      });
-      return res.status(400).json({
-        success: false,
-        message: 'No valid quote or payment amount found for this booking'
-      });
+    // Validate payment amount based on booking type
+    let paymentAmount;
+    if (bookingType === 'laundry') {
+      if (!booking.pricing || !booking.pricing.total) {
+        console.log('❌ No valid pricing found for laundry booking:', {
+          hasPricing: !!booking.pricing,
+          total: booking.pricing?.total
+        });
+        return res.status(400).json({
+          success: false,
+          message: 'No valid pricing found for this booking'
+        });
+      }
+      paymentAmount = booking.pricing.total;
+    } else {
+      // Transportation booking
+      if (!booking.quote || (!booking.payment.totalAmount && !booking.quote.finalPrice)) {
+        console.log('❌ No valid quote or payment amount found:', {
+          hasQuote: !!booking.quote,
+          finalPrice: booking.quote?.finalPrice,
+          totalAmount: booking.payment?.totalAmount
+        });
+        return res.status(400).json({
+          success: false,
+          message: 'No valid quote or payment amount found for this booking'
+        });
+      }
+      paymentAmount = booking.payment.totalAmount || booking.quote.finalPrice;
     }
-
-    // Prepare payment session data for Kashier.io
-    const paymentAmount = booking.payment.totalAmount || booking.quote.finalPrice; // Use payment.totalAmount first
 
     // Get URLs with fallbacks
     const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://hotel-platform-teud.vercel.app';
@@ -183,6 +215,109 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
 });
 
 /**
+ * @desc    Create Kashier payment session with booking data (pay-first flow)
+ * @route   POST /api/payments/kashier/create-payment-session
+ * @access  Private/Guest
+ */
+router.post('/create-payment-session', protect, restrictTo('guest'), async (req, res) => {
+  try {
+    const { bookingData, bookingType = 'laundry', amount, currency = 'EGP' } = req.body;
+
+    console.log('🔵 Create direct payment session request:', { bookingType, amount, userId: req.user._id });
+
+    if (!bookingData || !amount) {
+      console.log('❌ Booking data or amount missing');
+      return res.status(400).json({
+        success: false,
+        message: 'Booking data and amount are required'
+      });
+    }
+
+    // Generate a temporary booking reference for payment tracking
+    const tempBookingRef = `TEMP_${bookingType.toUpperCase()}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Construct URLs with proper fallbacks
+    const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://hotel-platform-teud.vercel.app';
+    const backendUrl = process.env.BACKEND_URL || process.env.API_BASE_URL || frontendUrl;
+
+    console.log('🌐 URLs being used for payment session:', { frontendUrl, backendUrl });
+
+    // Create Kashier payment payload (match EXACTLY the working transportation format)
+    const paymentData = {
+      merchantId: KASHIER_CONFIG.merchantId,
+      orderId: tempBookingRef,
+      amount: amount,
+      currency: currency,
+      mode: KASHIER_CONFIG.mode,
+      merchantRedirect: `${frontendUrl}/guest/payment-success?bookingRef=${tempBookingRef}`,
+      failureRedirect: `${frontendUrl}/guest/payment-failed?bookingRef=${tempBookingRef}`,
+      serverWebhook: `${backendUrl}/api/payments/kashier/webhook`
+      // REMOVED: customerName, customerEmail, customerPhone, description, customFields
+      // These extra parameters were causing Kashier to reject the URL
+    };
+
+    // Store the booking data separately for webhook processing
+    // We'll store this in memory or a temporary storage since we can't pass it in the URL
+    global.tempBookingData = global.tempBookingData || {};
+    global.tempBookingData[tempBookingRef] = {
+      bookingType,
+      bookingData,
+      guestId: req.user._id,
+      tempBookingRef
+    };
+
+    console.log('💰 Payment data prepared:', {
+      merchantId: paymentData.merchantId,
+      amount: paymentData.amount,
+      currency: paymentData.currency,
+      orderId: paymentData.orderId,
+      mode: paymentData.mode
+    });
+
+    // Generate hash signature for Kashier.io
+    const hash = generateKashierHash(paymentData);
+    paymentData.hash = hash;
+
+    console.log('🔒 Hash generated:', { hash: hash ? 'Generated' : 'Failed' });
+
+    // Try using the simple URL construction like the original working version
+    const paymentUrl = `${KASHIER_CONFIG.apiUrl}?${new URLSearchParams(paymentData).toString()}`;
+
+    console.log('💳 Generated direct payment URL:', paymentUrl);
+
+    logger.info('Kashier direct payment session created', {
+      tempBookingRef,
+      bookingType,
+      amount,
+      currency,
+      paymentUrl
+    });
+
+    res.json({
+      success: true,
+      message: 'Payment session created successfully',
+      data: {
+        sessionId: tempBookingRef,
+        paymentUrl: paymentUrl,
+        amount: amount,
+        currency: currency,
+        tempBookingRef
+      }
+    });
+
+  } catch (error) {
+    console.log('❌ Create direct payment session error:', error);
+    logger.error('Create direct payment session error:', error);
+
+    res.status(500).json({
+      success: false,
+      message: 'Server error while creating payment session',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
  * @desc    Handle Kashier webhook notifications
  * @route   POST /api/payments/kashier/webhook
  * @access  Public (but secured with signature verification)
@@ -214,10 +349,87 @@ router.post('/webhook', async (req, res) => {
 
     // Handle different event types
     if (event === 'pay' || event === 'authorize') {
+      // Check if this is a temporary booking reference (pay-first flow)
+      if (data.merchantOrderId && data.merchantOrderId.startsWith('TEMP_')) {
+        try {
+          // Get booking data from temporary storage (since we can't pass custom_fields in URL)
+          global.tempBookingData = global.tempBookingData || {};
+          const tempData = global.tempBookingData[data.merchantOrderId];
+
+          if (tempData && tempData.bookingData && data.status === 'SUCCESS') {
+            console.log('🔵 Processing pay-first booking creation for:', data.merchantOrderId);
+
+            const { bookingData, bookingType, guestId } = tempData;
+            let newBooking;
+
+            if (bookingType === 'laundry') {
+              // Create the actual laundry booking after successful payment
+              newBooking = new Booking({
+                ...bookingData,
+                guestId: guestId,
+                status: 'payment_completed',
+                bookingNumber: `LAU${Date.now()}`,
+                payment: {
+                  method: 'credit-card',
+                  status: 'completed',
+                  paidAmount: data.amount,
+                  paymentDate: new Date(),
+                  transactionId: data.transactionId
+                },
+                kashier: {
+                  sessionId: data.merchantOrderId,
+                  transactionId: data.transactionId,
+                  webhookData: data
+                }
+              });
+
+              await newBooking.save();
+
+              logger.info('Laundry booking created after payment', {
+                bookingId: newBooking._id,
+                bookingNumber: newBooking.bookingNumber,
+                amount: data.amount,
+                transactionId: data.transactionId
+              });
+
+              // Update booking status to confirmed
+              newBooking.status = 'confirmed';
+              await newBooking.save();
+
+              // Clean up temporary booking data
+              delete global.tempBookingData[data.merchantOrderId];
+            }
+
+            return res.json({
+              success: true,
+              message: 'Payment processed and booking created successfully'
+            });
+          }
+        } catch (error) {
+          logger.error('Error processing pay-first booking:', error);
+          return res.status(500).json({
+            success: false,
+            message: 'Error creating booking after payment'
+          });
+        }
+      }
+
+      // Original booking lookup logic for existing bookings
       // Find the booking by merchant order ID (booking reference)
-      const booking = await TransportationBooking.findOne({
+      // First try transportation booking
+      let booking = await TransportationBooking.findOne({
         bookingReference: data.merchantOrderId
       });
+
+      let bookingType = 'transportation';
+
+      // If not found in transportation bookings, try laundry bookings
+      if (!booking) {
+        booking = await Booking.findOne({
+          bookingNumber: data.merchantOrderId
+        });
+        bookingType = 'laundry';
+      }
 
       if (!booking) {
         logger.error('Booking not found for Kashier webhook', {
@@ -229,6 +441,14 @@ router.post('/webhook', async (req, res) => {
           message: 'Booking not found'
         });
       }
+
+      logger.info('Processing Kashier webhook payment', {
+        bookingId: booking._id,
+        bookingType: bookingType,
+        merchantOrderId: data.merchantOrderId,
+        status: data.status,
+        amount: data.amount
+      });
 
       // Process the payment based on webhook data
       await booking.processKashierPayment({
@@ -354,16 +574,25 @@ router.get('/status/:bookingId', protect, restrictTo('guest'), async (req, res) 
  */
 router.post('/confirm-payment/:bookingId', protect, restrictTo('guest'), async (req, res) => {
   try {
-    const { paymentData } = req.body;
+    const { paymentData, bookingType = 'transportation' } = req.body;
     const { bookingId } = req.params;
 
-    console.log('🔵 Payment confirmation request:', { bookingId, userId: req.user._id, paymentData });
+    console.log('🔵 Payment confirmation request:', { bookingId, bookingType, userId: req.user._id, paymentData });
 
-    // Find the booking
-    const booking = await TransportationBooking.findOne({
-      _id: bookingId,
-      guestId: req.user._id
-    });
+    let booking;
+
+    // Find the booking based on type
+    if (bookingType === 'laundry') {
+      booking = await Booking.findOne({
+        _id: bookingId,
+        guestId: req.user._id
+      });
+    } else {
+      booking = await TransportationBooking.findOne({
+        _id: bookingId,
+        guestId: req.user._id
+      });
+    }
 
     if (!booking) {
       return res.status(404).json({
@@ -373,7 +602,11 @@ router.post('/confirm-payment/:bookingId', protect, restrictTo('guest'), async (
     }
 
     // Check if payment is already completed
-    if (booking.bookingStatus === 'payment_completed') {
+    const isCompleted = bookingType === 'laundry'
+      ? booking.status === 'confirmed' && booking.payment.status === 'completed'
+      : booking.bookingStatus === 'payment_completed';
+
+    if (isCompleted) {
       return res.json({
         success: true,
         message: 'Payment already confirmed',

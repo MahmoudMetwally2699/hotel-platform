@@ -53,16 +53,20 @@ const MyOrdersPage = () => {
 
       console.log('🔍 MyOrdersPage: Response status:', response.status);
       const data = await response.json();
-      console.log('🔍 MyOrdersPage: Response data:', data);      if (data.success) {
-        setBookings(data.data);
-        console.log('🔍 MyOrdersPage: Bookings set:', data.data);
+      console.log('🔍 MyOrdersPage: Response data:', data);
+
+      if (data.success) {
+        // Handle the new response structure with bookings array inside data
+        const bookingsData = data.data.bookings || data.data;
+        setBookings(Array.isArray(bookingsData) ? bookingsData : []);
+        console.log('🔍 MyOrdersPage: Bookings set:', bookingsData);
         // Log the structure of the first booking to understand the data format
-        if (data.data.length > 0) {
-          console.log('🔍 MyOrdersPage: First booking structure:', data.data[0]);
-          console.log('🔍 MyOrdersPage: First booking keys:', Object.keys(data.data[0]));
-          console.log('🔍 MyOrdersPage: Schedule:', data.data[0].schedule);
-          console.log('🔍 MyOrdersPage: Pricing:', data.data[0].pricing);
-          console.log('🔍 MyOrdersPage: Service Details:', data.data[0].serviceDetails);
+        if (bookingsData && bookingsData.length > 0) {
+          console.log('🔍 MyOrdersPage: First booking structure:', bookingsData[0]);
+          console.log('🔍 MyOrdersPage: First booking keys:', Object.keys(bookingsData[0]));
+          console.log('🔍 MyOrdersPage: Schedule:', bookingsData[0].schedule);
+          console.log('🔍 MyOrdersPage: Pricing:', bookingsData[0].pricing);
+          console.log('🔍 MyOrdersPage: Service Details:', bookingsData[0].serviceDetails);
         }
       } else {
         setError(data.message);
@@ -93,10 +97,10 @@ const MyOrdersPage = () => {
   };
   // Tab configuration
   const tabs = [
-    { key: 'all', label: t('myOrders.tabs.allOrders'), count: bookings.length },
-    { key: 'pending', label: t('myOrders.tabs.pending'), count: bookings.filter(b => b.status === 'pending').length },
-    { key: 'confirmed', label: t('myOrders.tabs.confirmed'), count: bookings.filter(b => b.status === 'confirmed').length },
-    { key: 'completed', label: t('myOrders.tabs.completed'), count: bookings.filter(b => b.status === 'completed').length }
+    { key: 'all', label: t('myOrders.tabs.allOrders'), count: Array.isArray(bookings) ? bookings.length : 0 },
+    { key: 'pending', label: t('myOrders.tabs.pending'), count: Array.isArray(bookings) ? bookings.filter(b => b.status === 'pending').length : 0 },
+    { key: 'confirmed', label: t('myOrders.tabs.confirmed'), count: Array.isArray(bookings) ? bookings.filter(b => b.status === 'confirmed').length : 0 },
+    { key: 'completed', label: t('myOrders.tabs.completed'), count: Array.isArray(bookings) ? bookings.filter(b => b.status === 'completed').length : 0 }
   ];
 
   const handleViewDetails = (booking) => {
@@ -183,20 +187,22 @@ const MyOrdersPage = () => {
         )}
 
         {/* Bookings List */}
-        {bookings.length === 0 ? (
+        {!Array.isArray(bookings) || bookings.length === 0 ? (
           <div className="text-center py-12">
             <div className="mx-auto h-12 w-12 text-gray-400">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
-            </div>            <h3 className="mt-2 text-lg font-medium text-gray-900">{t('myOrders.noOrdersFound')}</h3>
+            </div>
+            <h3 className="mt-2 text-lg font-medium text-gray-900">{t('myOrders.noOrdersFound')}</h3>
             <p className="mt-1 text-sm text-gray-500">
               {activeTab === 'all'
                 ? t('myOrders.noBookingsYet')
                 : t('myOrders.noOrdersInCategory', { category: activeTab })
               }
             </p>
-          </div>        ) : (
+          </div>
+        ) : (
           <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <ul className="divide-y divide-gray-200">
               {bookings.map((booking) => (
