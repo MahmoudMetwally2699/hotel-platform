@@ -1,15 +1,15 @@
 /**
  * Currency Utility
- * Handles currency formatting for Saudi Riyal (SAR)
+ * Handles currency formatting for Egyptian Pound (EGP)
  */
 
 /**
- * Format price with Saudi Riyal currency
+ * Format price with Egyptian Pound currency
  * @param {number} price - The price to format
- * @param {string} locale - The locale to use for formatting (default: 'ar-SA' for Arabic Saudi Arabia)
+ * @param {string} locale - The locale to use for formatting (default: 'ar-EG' for Arabic Egypt)
  * @returns {string} - Formatted price string
  */
-export const formatPrice = (price, locale = 'ar-SA') => {
+export const formatPrice = (price, locale = 'ar-EG') => {
   if (price === null || price === undefined || isNaN(price)) {
     return 'غير محدد'; // "Not specified" in Arabic
   }
@@ -17,21 +17,21 @@ export const formatPrice = (price, locale = 'ar-SA') => {
   const numericPrice = parseFloat(price);
 
   try {
-    // Format with Saudi Riyal currency
+    // Format with Egyptian Pound currency
     return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'SAR',
+      currency: 'EGP',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(numericPrice);
   } catch (error) {
     // Fallback formatting if Intl is not supported
-    return `${numericPrice.toFixed(2)} ر.س`;
+    return `${numericPrice.toFixed(2)} ج.م`;
   }
 };
 
 /**
- * Format price with Saudi Riyal currency for English locale
+ * Format price with Egyptian Pound currency for English locale
  * @param {number} price - The price to format
  * @returns {string} - Formatted price string
  */
@@ -43,16 +43,16 @@ export const formatPriceEn = (price) => {
   const numericPrice = parseFloat(price);
 
   try {
-    // Format with Saudi Riyal currency for English
-    return new Intl.NumberFormat('en-SA', {
+    // Format with Egyptian Pound currency for English
+    return new Intl.NumberFormat('en-EG', {
       style: 'currency',
-      currency: 'SAR',
+      currency: 'EGP',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(numericPrice);
   } catch (error) {
     // Fallback formatting
-    return `SAR ${numericPrice.toFixed(2)}`;
+    return `EGP ${numericPrice.toFixed(2)}`;
   }
 };
 
@@ -64,7 +64,7 @@ export const formatPriceEn = (price) => {
  */
 export const formatPriceByLanguage = (price, language = 'ar') => {
   if (language === 'ar') {
-    return formatPrice(price, 'ar-SA');
+    return formatPrice(price, 'ar-EG');
   } else {
     return formatPriceEn(price);
   }
@@ -76,17 +76,17 @@ export const formatPriceByLanguage = (price, language = 'ar') => {
  * @returns {string} - Currency symbol
  */
 export const getCurrencySymbol = (language = 'ar') => {
-  return language === 'ar' ? 'ر.س' : 'SAR';
+  return language === 'ar' ? 'ج.م' : 'EGP';
 };
 
 /**
- * Convert USD to SAR (approximate conversion)
+ * Convert USD to EGP (approximate conversion)
  * This should ideally be replaced with real-time exchange rates
  * @param {number} usdAmount - Amount in USD
- * @param {number} exchangeRate - USD to SAR exchange rate (default: 3.75)
- * @returns {number} - Amount in SAR
+ * @param {number} exchangeRate - USD to EGP exchange rate (default: 30)
+ * @returns {number} - Amount in EGP
  */
-export const convertUsdToSar = (usdAmount, exchangeRate = 3.75) => {
+export const convertUsdToEgp = (usdAmount, exchangeRate = 30) => {
   if (!usdAmount || isNaN(usdAmount)) return 0;
   return parseFloat(usdAmount) * exchangeRate;
 };
@@ -96,7 +96,7 @@ const currencyUtils = {
   formatPriceEn,
   formatPriceByLanguage,
   getCurrencySymbol,
-  convertUsdToSar
+  convertUsdToEgp
 };
 
 export default currencyUtils;

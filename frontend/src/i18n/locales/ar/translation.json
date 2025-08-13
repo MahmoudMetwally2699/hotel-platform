@@ -288,6 +288,9 @@
       "orderManagement": "إدارة الطلبات",
       "analytics": "التحليلات"
     },
+    "laundry": {
+      "subtitle": "إدارة جميع خدمات الغسيل والتسعير والحجوزات في مكان واحد."
+    },
     "orders": {
       "title": "إدارة الطلبات",
       "allOrders": "جميع الطلبات",
@@ -615,6 +618,11 @@
     "categorySingle": "فئة",
     "categoryPlural": "فئات",
     "successDescription": "يمكنك الآن إنشاء خدمات لكل فئة نشطة.",    "manageServices": "إدارة الخدمات",
+    "sidebar": {
+      "laundryManagement": "إدارة خدمات الغسيل",
+      "transportationManagement": "إدارة خدمات المواصلات",
+      "transportationBookings": "حجوزات المواصلات"
+    },
     "offlineMode": "استخدام الوضع غير المتصل - قد تكون بعض الميزات محدودة",
     "activatedLocally": "تم التفعيل محلياً (وضع غير متصل)",
     "deactivatedLocally": "تم إلغاء التفعيل محلياً (وضع غير متصل)",

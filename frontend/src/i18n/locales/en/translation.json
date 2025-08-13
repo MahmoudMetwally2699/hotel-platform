@@ -288,6 +288,9 @@
       "orderManagement": "Order Management",
       "analytics": "Analytics"
     },
+    "laundry": {
+      "subtitle": "Manage your laundry services, pricing, and bookings all in one place."
+    },
     "orders": {
       "title": "Orders Management",
       "allOrders": "All Orders",
@@ -552,6 +555,11 @@
     "categorySingle": "category",
     "categoryPlural": "categories",
     "successDescription": "Now you can create services for each active category.",    "manageServices": "Manage Services",
+    "sidebar": {
+      "laundryManagement": "Laundry Service Management",
+      "transportationManagement": "Transportation Service Management",
+      "transportationBookings": "Transportation Bookings"
+    },
     "offlineMode": "Using offline mode - some features may be limited",
     "activatedLocally": "activated locally (offline mode)",
     "deactivatedLocally": "deactivated locally (offline mode)",

@@ -52,14 +52,14 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           { name: t('navigation.dashboard'), path: '/service/dashboard', icon: 'home' },
           { name: t('navigation.orders'), path: '/service/orders', icon: 'shopping-bag' },
           {
-            name: 'Manage Services',
+            name: t('categorySelection.manageServices'),
             icon: 'cog-services',
             isExpandable: true,
             key: 'manage-services',
             children: [
-              { name: '👕 Laundry Service Management', path: '/service/services?category=laundry', icon: 'laundry' },
-              { name: '🚗 Transportation Service Management', path: '/service/services?category=transportation', icon: 'truck' },
-              { name: '📋 Transportation Bookings', path: '/service/transportation-bookings', icon: 'truck' }
+              { name: `👕 ${t('categorySelection.sidebar.laundryManagement')}`, path: '/service/services?category=laundry', icon: 'laundry' },
+              { name: `🚗 ${t('categorySelection.sidebar.transportationManagement')}`, path: '/service/services?category=transportation', icon: 'truck' },
+              { name: `📋 ${t('categorySelection.sidebar.transportationBookings')}`, path: '/service/transportation-bookings', icon: 'truck' }
             ]
           },
           { name: t('navigation.earnings'), path: '/service/earnings', icon: 'cash' },
