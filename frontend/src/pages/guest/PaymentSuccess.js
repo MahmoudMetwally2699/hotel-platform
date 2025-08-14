@@ -3,23 +3,20 @@
  * Displays confirmation when payment is completed successfully
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { FaCheckCircle, FaCar, FaCalendarAlt, FaMapMarkerAlt, FaMoneyBillWave, FaReceipt, FaHome } from 'react-icons/fa';
-import { toast } from 'react-toastify';
+import { FaCheckCircle, FaCar, FaCalendarAlt, FaMapMarkerAlt, FaMoneyBillWave, FaReceipt, FaHome, FaTshirt } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { formatPriceByLanguage } from '../../utils/currency';
-import { useTranslation } from 'react-i18next';
 
 const PaymentSuccess = () => {
-  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const bookingId = searchParams.get('booking');
+  const bookingId = searchParams.get('booking') || searchParams.get('bookingRef') || searchParams.get('merchantOrderId');
 
   useEffect(() => {
     if (bookingId) {
@@ -37,9 +34,10 @@ const PaymentSuccess = () => {
       setError('No booking ID provided');
       setLoading(false);
     }
-  }, [bookingId, searchParams]); // Add searchParams to dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingId, searchParams]); // Functions are stable, no need to include them
 
-  const updateBookingStatusFromPayment = async () => {
+  const updateBookingStatusFromPayment = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -76,34 +74,65 @@ const PaymentSuccess = () => {
       // Still try to fetch booking details even if update fails
       await fetchBookingDetails();
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingId, searchParams]);
 
-  const fetchBookingDetails = async () => {
+  const fetchBookingDetails = useCallback(async () => {
     try {
       setLoading(true);
       let response;
+      let bookingType = 'unknown';
 
-      // Try transportation bookings first
-      response = await apiClient.get(`/transportation-bookings/${bookingId}`);
+      // Determine booking type from booking reference
+      if (bookingId && bookingId.includes('LAUNDRY')) {
+        bookingType = 'laundry';
+      } else if (bookingId && bookingId.includes('TRANSPORT')) {
+        bookingType = 'transportation';
+      }
 
-      if (response.data && response.data.success) {
-        setBooking(response.data.data.booking);
-      } else {
-        // Try client bookings (laundry)
-        const laundryResponse = await apiClient.get(`/client/bookings/${bookingId}`);
-        if (laundryResponse.data && laundryResponse.data.success) {
-          setBooking(laundryResponse.data.data.booking);
-        } else {
-          setError('Failed to fetch booking details');
+      // Try the appropriate endpoint first based on booking type
+      if (bookingType === 'laundry') {
+        try {
+          response = await apiClient.get(`/client/bookings/${bookingId}`);
+          if (response.data && response.data.success) {
+            setBooking({ ...response.data.data.booking, bookingType: 'laundry' });
+            return;
+          }
+        } catch (err) {
+          console.log('Laundry booking not found, trying transportation...');
         }
       }
+
+      // Try transportation booking
+      try {
+        response = await apiClient.get(`/transportation-bookings/${bookingId}`);
+        if (response.data && response.data.success) {
+          setBooking({ ...response.data.data.booking, bookingType: 'transportation' });
+          return;
+        }
+      } catch (err) {
+        console.log('Transportation booking not found, trying laundry...');
+      }
+
+      // If transportation failed, try laundry booking
+      try {
+        const laundryResponse = await apiClient.get(`/client/bookings/${bookingId}`);
+        if (laundryResponse.data && laundryResponse.data.success) {
+          setBooking({ ...laundryResponse.data.data.booking, bookingType: 'laundry' });
+          return;
+        }
+      } catch (err) {
+        console.log('Laundry booking also not found');
+      }
+
+      setError('Failed to fetch booking details');
     } catch (error) {
       console.error('Error fetching booking details:', error);
       setError('Failed to load booking information');
     } finally {
       setLoading(false);
     }
-  };
+  }, [bookingId]);
 
   const handleViewBookings = () => {
     navigate('/guest/bookings');
@@ -166,7 +195,9 @@ const PaymentSuccess = () => {
             Payment Successful!
           </h1>
           <p className="text-xl text-gray-600">
-            Your transportation booking has been confirmed
+            {booking.bookingType === 'laundry' 
+              ? 'Your laundry order has been confirmed' 
+              : 'Your transportation booking has been confirmed'}
           </p>
         </div>
 
@@ -176,63 +207,111 @@ const PaymentSuccess = () => {
           <div className="bg-green-600 text-white p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold mb-1">Booking Confirmed</h2>
-                <p className="text-green-100">Reference: {booking.bookingReference}</p>
+                <h2 className="text-2xl font-bold mb-1">
+                  {booking.bookingType === 'laundry' ? 'Order Confirmed' : 'Booking Confirmed'}
+                </h2>
+                <p className="text-green-100">
+                  Reference: {booking.bookingNumber || booking.bookingReference}
+                </p>
               </div>
-              <FaCar className="text-4xl text-green-200" />
+              {booking.bookingType === 'laundry' ? (
+                <FaTshirt className="text-4xl text-green-200" />
+              ) : (
+                <FaCar className="text-4xl text-green-200" />
+              )}
             </div>
           </div>
 
           {/* Booking Information */}
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Trip Details */}
+              {/* Order/Trip Details - Conditional Rendering */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <FaCar className="mr-2 text-blue-500" />
-                  Trip Details
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    <FaMapMarkerAlt className="mr-3 text-green-500 mt-1" />
-                    <div>
-                      <p className="font-medium text-gray-900">From</p>
-                      <p className="text-gray-600">{booking.tripDetails.pickupLocation}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <FaMapMarkerAlt className="mr-3 text-red-500 mt-1" />
-                    <div>
-                      <p className="font-medium text-gray-900">To</p>
-                      <p className="text-gray-600">{booking.tripDetails.destination}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <FaCalendarAlt className="mr-3 text-blue-500 mt-1" />
-                    <div>
-                      <p className="font-medium text-gray-900">Date & Time</p>
-                      <p className="text-gray-600">
-                        {new Date(booking.tripDetails.scheduledDateTime).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 rounded-md p-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                {booking.bookingType === 'laundry' ? (
+                  // Laundry Order Details
+                  <>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <FaTshirt className="mr-2 text-blue-500" />
+                      Order Details
+                    </h3>
+                    <div className="space-y-4">
                       <div>
-                        <p className="font-medium text-gray-700">Vehicle Type</p>
-                        <p className="text-gray-600 capitalize">{booking.vehicleDetails.vehicleType}</p>
+                        <p className="font-medium text-gray-900">Items</p>
+                        <div className="bg-gray-50 rounded-md p-3 mt-2">
+                          {booking.laundryItems?.map((item, idx) => (
+                            <div key={idx} className="flex justify-between text-sm py-1">
+                              <div>
+                                <p className="font-medium">{item.itemName} <span className="text-gray-500">({item.serviceTypeName})</span></p>
+                                <p className="text-gray-500 text-xs">Qty: {item.quantity}</p>
+                              </div>
+                              <div className="text-right font-medium">{formatPriceByLanguage(item.totalPrice || item.price || 0, 'en')}</div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-700">Comfort Level</p>
-                        <p className="text-gray-600 capitalize">{booking.vehicleDetails.comfortLevel}</p>
+
+                      {booking.schedule && (
+                        <div>
+                          <p className="font-medium text-gray-700">Schedule</p>
+                          <div className="bg-gray-50 rounded-md p-3 mt-2 text-sm">
+                            <p>Pickup Date: {booking.schedule?.preferredDate}</p>
+                            <p>Pickup Time: {booking.schedule?.preferredTime}</p>
+                            <p>Pickup Location: {booking.guestDetails?.roomNumber || booking.guestDetails?.pickupLocation || 'N/A'}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  // Transportation Trip Details
+                  <>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <FaCar className="mr-2 text-blue-500" />
+                      Trip Details
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-start">
+                        <FaMapMarkerAlt className="mr-3 text-green-500 mt-1" />
+                        <div>
+                          <p className="font-medium text-gray-900">From</p>
+                          <p className="text-gray-600">{booking.tripDetails?.pickupLocation}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-700">Passengers</p>
-                        <p className="text-gray-600">{booking.tripDetails.passengerCount}</p>
+                      <div className="flex items-start">
+                        <FaMapMarkerAlt className="mr-3 text-red-500 mt-1" />
+                        <div>
+                          <p className="font-medium text-gray-900">To</p>
+                          <p className="text-gray-600">{booking.tripDetails?.destination}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <FaCalendarAlt className="mr-3 text-blue-500 mt-1" />
+                        <div>
+                          <p className="font-medium text-gray-900">Date & Time</p>
+                          <p className="text-gray-600">
+                            {booking.tripDetails?.scheduledDateTime && new Date(booking.tripDetails.scheduledDateTime).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="bg-gray-50 rounded-md p-4">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="font-medium text-gray-700">Vehicle Type</p>
+                            <p className="text-gray-600 capitalize">{booking.vehicleDetails?.vehicleType}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-700">Comfort Level</p>
+                            <p className="text-gray-600 capitalize">{booking.vehicleDetails?.comfortLevel}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-700">Passengers</p>
+                            <p className="text-gray-600">{booking.tripDetails?.passengerCount}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  </>
+                )}
               </div>
 
               {/* Payment Details */}
@@ -246,9 +325,15 @@ const PaymentSuccess = () => {
                     <div className="text-center">
                       <p className="text-sm text-green-600 font-medium">Amount Paid</p>
                       <p className="text-3xl font-bold text-green-700">
-                        {formatPriceByLanguage(booking.payment.paidAmount || booking.payment.totalAmount, i18n.language)}
+                        {formatPriceByLanguage(
+                          booking.payment?.paidAmount || 
+                          booking.payment?.totalAmount || 
+                          booking.pricing?.total || 
+                          0, 
+                          'en'
+                        )}
                       </p>
-                      <p className="text-sm text-green-600">{booking.payment.currency}</p>
+                      <p className="text-sm text-green-600">{booking.payment?.currency || 'EGP'}</p>
                     </div>
                   </div>
 
@@ -328,24 +413,41 @@ const PaymentSuccess = () => {
             <div className="mt-8 pt-6 border-t">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">What's Next?</h3>
               <div className="bg-blue-50 rounded-md p-4">
-                <ul className="space-y-2 text-sm text-blue-800">
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                    You will receive a confirmation email shortly
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                    The service provider will contact you with driver details
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                    You can view this booking in your booking history
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                    Be ready at your pickup location 10 minutes before the scheduled time
-                  </li>
-                </ul>
+                {booking.bookingType === 'laundry' ? (
+                  <ul className="space-y-2 text-sm text-blue-800">
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                      You will receive a confirmation SMS or email shortly
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                      The hotel staff will contact you if any clarification is required
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                      You can view this order in your laundry bookings history
+                    </li>
+                  </ul>
+                ) : (
+                  <ul className="space-y-2 text-sm text-blue-800">
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                      You will receive a confirmation email shortly
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                      The service provider will contact you with driver details
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                      You can view this booking in your booking history
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                      Be ready at your pickup location 10 minutes before the scheduled time
+                    </li>
+                  </ul>
+                )}
               </div>
             </div>
           </div>
@@ -365,7 +467,7 @@ const PaymentSuccess = () => {
             className="flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-lg font-medium"
           >
             <FaHome className="mr-2" />
-            Back to Home
+            {booking.bookingType === 'laundry' ? 'Explore More Services' : 'Book Another Trip'}
           </button>
         </div>
 

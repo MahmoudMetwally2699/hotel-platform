@@ -20,7 +20,7 @@ const LaundryPaymentFailed = () => {
   const [error, setError] = useState(null);
   const [retrying, setRetrying] = useState(false);
 
-  const bookingId = searchParams.get('booking');
+  const bookingId = searchParams.get('booking') || searchParams.get('bookingRef') || searchParams.get('merchantOrderId');
   const errorCode = searchParams.get('error');
   const errorMessage = searchParams.get('message');
 

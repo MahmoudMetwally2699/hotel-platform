@@ -19,7 +19,7 @@ const LaundryPaymentSuccess = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const bookingId = searchParams.get('booking');
+  const bookingId = searchParams.get('booking') || searchParams.get('bookingRef') || searchParams.get('merchantOrderId');
 
   useEffect(() => {
     if (bookingId) {
