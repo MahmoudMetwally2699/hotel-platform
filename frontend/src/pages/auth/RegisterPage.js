@@ -30,17 +30,11 @@ const RegisterPage = () => {
   // Validation schema with translations
   const validationSchema = Yup.object({
     firstName: Yup.string().required(t('register.validation.firstNameRequired')),
-    lastName: Yup.string().required(t('register.validation.lastNameRequired')),
     email: Yup.string()
       .email(t('register.validation.emailInvalid'))
       .required(t('register.validation.emailRequired')),
     phone: Yup.string().required(t('register.validation.phoneRequired')),
     selectedHotelId: Yup.string().required(t('register.validation.hotelRequired')),
-    roomNumber: Yup.string().required(t('register.validation.roomNumberRequired')),
-    checkInDate: Yup.date().required(t('register.validation.checkInDateRequired')),
-    checkOutDate: Yup.date()
-      .min(Yup.ref('checkInDate'), t('register.validation.checkOutAfterCheckIn'))
-      .required(t('register.validation.checkOutDateRequired')),
     password: Yup.string()
       .min(8, t('register.validation.passwordMinLength'))
       .matches(
@@ -104,13 +98,9 @@ const RegisterPage = () => {
   }, [authError]);  // Initial form values
   const initialValues = {
     firstName: '',
-    lastName: '',
     email: '',
     phone: '',
     selectedHotelId: '',
-    roomNumber: '',
-    checkInDate: '',
-    checkOutDate: '',
     password: '',
     confirmPassword: '',
     role: 'guest', // Fixed role for client registration
@@ -119,14 +109,10 @@ const RegisterPage = () => {
   const handleSubmit = (values) => {
     const userData = {
       firstName: values.firstName,
-      lastName: values.lastName,
       email: values.email,
       phone: values.phone,
       password: values.password,
       selectedHotelId: values.selectedHotelId,
-      roomNumber: values.roomNumber,
-      checkInDate: values.checkInDate,
-      checkOutDate: values.checkOutDate,
     };
 
     dispatch(register({ userData, role: values.role }));
@@ -160,32 +146,17 @@ const RegisterPage = () => {
           onSubmit={handleSubmit}
         >
           {({ isSubmitting }) => (
-            <Form className="space-y-4">              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('register.firstName')}
-                  </label>
-                  <Field
-                    type="text"
-                    name="firstName"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={t('register.firstNamePlaceholder')}
-                  />
-                  <ErrorMessage name="firstName" component="div" className="mt-1 text-sm text-red-600" />
-                </div>
-
-                <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('register.lastName')}
-                  </label>
-                  <Field
-                    type="text"
-                    name="lastName"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={t('register.lastNamePlaceholder')}
-                  />
-                  <ErrorMessage name="lastName" component="div" className="mt-1 text-sm text-red-600" />
-                </div>
+            <Form className="space-y-4">              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('register.firstName')}
+                </label>
+                <Field
+                  type="text"
+                  name="firstName"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={t('register.firstNamePlaceholder')}
+                />
+                <ErrorMessage name="firstName" component="div" className="mt-1 text-sm text-red-600" />
               </div>              <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('register.emailAddress')}
@@ -231,41 +202,6 @@ const RegisterPage = () => {
                 {hotels.length === 0 && !loadingHotels && (
                   <p className="mt-1 text-sm text-yellow-600">{t('register.noHotelsAvailable')}</p>
                 )}
-              </div>              <div>
-                <label htmlFor="roomNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('register.roomNumber')}
-                </label>
-                <Field
-                  type="text"
-                  name="roomNumber"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={t('register.enterYourRoomNumber')}
-                />
-                <ErrorMessage name="roomNumber" component="div" className="mt-1 text-sm text-red-600" />
-              </div>              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="checkInDate" className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('register.checkInDate')}
-                  </label>
-                  <Field
-                    type="date"
-                    name="checkInDate"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <ErrorMessage name="checkInDate" component="div" className="mt-1 text-sm text-red-600" />
-                </div>
-
-                <div>
-                  <label htmlFor="checkOutDate" className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('register.checkOutDate')}
-                  </label>
-                  <Field
-                    type="date"
-                    name="checkOutDate"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <ErrorMessage name="checkOutDate" component="div" className="mt-1 text-sm text-red-600" />
-                </div>
               </div>              <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('register.password')}

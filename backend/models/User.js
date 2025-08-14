@@ -22,7 +22,10 @@ const userSchema = new mongoose.Schema({
 
   lastName: {
     type: String,
-    required: [true, 'Last name is required'],
+    required: function() {
+      // Only require lastName for service providers and admins, make it optional for guests
+      return this.role !== 'guest';
+    },
     trim: true,
     maxlength: [50, 'Last name cannot exceed 50 characters']
   },
@@ -276,15 +279,21 @@ userSchema.pre('save', async function(next) {
 userSchema.pre('save', function(next) {
   // Validate role-specific requirements
   if (this.role === 'guest') {
-    if (!this.selectedHotelId || !this.checkInDate || !this.checkOutDate || !this.roomNumber ||
-        (typeof this.roomNumber === 'string' && this.roomNumber.trim() === '')) {
-      console.log('Guest validation failed:', {
+    // Only require hotel selection during registration
+    if (!this.selectedHotelId) {
+      console.log('Guest validation failed: missing selectedHotelId');
+      return next(new Error('Guest users must select a hotel'));
+    }
+    // Check-in/out dates and room number are only required when hasActiveBooking is true
+    if (this.hasActiveBooking && (!this.checkInDate || !this.checkOutDate || !this.roomNumber ||
+        (typeof this.roomNumber === 'string' && this.roomNumber.trim() === ''))) {
+      console.log('Guest booking validation failed:', {
         selectedHotelId: this.selectedHotelId,
         checkInDate: this.checkInDate,
         checkOutDate: this.checkOutDate,
         roomNumber: this.roomNumber
       });
-      return next(new Error('Guest users must have hotel selection, check-in/out dates, and room number'));
+      return next(new Error('Guest users with active bookings must have check-in/out dates and room number'));
     }
   }
 

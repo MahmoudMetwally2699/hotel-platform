@@ -107,24 +107,16 @@ router.get('/me', protect, catchAsync(async (req, res, next) => {
 router.post('/register', catchAsync(async (req, res, next) => {
   const {
     firstName,
-    lastName,
     email,
     password,
     phone,
-    roomNumber,
-    checkInDate,
-    checkOutDate,
     selectedHotelId
   } = req.body;
 
   console.log('Registration data received:', {
     firstName,
-    lastName,
     email,
     phone,
-    roomNumber,
-    checkInDate,
-    checkOutDate,
     selectedHotelId
   });
 
@@ -140,16 +132,12 @@ router.post('/register', catchAsync(async (req, res, next) => {
   if (!hotel || !hotel.isActive) {
     return next(new AppError('Invalid hotel selection', 400));
   }
-  // Create new guest user with all required information
+  // Create new guest user with required information only
   const newUser = await User.create({
     firstName,
-    lastName,
     email: email.toLowerCase(),
     password,
     phone,
-    roomNumber,
-    checkInDate: new Date(checkInDate),
-    checkOutDate: new Date(checkOutDate),
     role: 'guest',
     selectedHotelId,
     isActive: true

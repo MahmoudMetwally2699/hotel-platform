@@ -81,12 +81,21 @@ const PaymentSuccess = () => {
   const fetchBookingDetails = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`/transportation-bookings/${bookingId}`);
+      let response;
 
-      if (response.data.success) {
+      // Try transportation bookings first
+      response = await apiClient.get(`/transportation-bookings/${bookingId}`);
+
+      if (response.data && response.data.success) {
         setBooking(response.data.data.booking);
       } else {
-        setError('Failed to fetch booking details');
+        // Try client bookings (laundry)
+        const laundryResponse = await apiClient.get(`/client/bookings/${bookingId}`);
+        if (laundryResponse.data && laundryResponse.data.success) {
+          setBooking(laundryResponse.data.data.booking);
+        } else {
+          setError('Failed to fetch booking details');
+        }
       }
     } catch (error) {
       console.error('Error fetching booking details:', error);

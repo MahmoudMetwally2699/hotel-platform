@@ -324,14 +324,17 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       serviceCombination // Add service combination support
     } = req.body;
 
-    // Get user details including room number
+    // Get user details
     const user = await User.findById(req.user.id)
       .select('firstName lastName email phone roomNumber selectedHotelId checkInDate checkOutDate');
 
-    if (!user.roomNumber) {
+    // Room number can be provided in the booking request if not in user profile
+    const roomNumber = user.roomNumber || req.body.roomNumber;
+
+    if (!roomNumber) {
       return res.status(400).json({
         success: false,
-        message: 'Room number is required. Please update your profile before booking.'
+        message: 'Room number is required for booking. Please provide your room number.'
       });
     }    // Get service details
     const service = await Service.findOne({
@@ -382,10 +385,10 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       // Guest details for easy access
       guestDetails: {
         firstName: user.firstName,
-        lastName: user.lastName,
+        lastName: user.lastName || '', // Make lastName optional
         email: user.email,
         phone: user.phone,
-        roomNumber: user.roomNumber
+        roomNumber: roomNumber
       },
 
       // Service details
@@ -475,7 +478,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           - Service: ${service.name}
           - Date: ${new Date(bookingDate).toLocaleDateString()}
           - Time: ${selectedTime || 'To be confirmed'}
-          - Room: ${user.roomNumber}
+          - Room: ${roomNumber}
           - Quantity: ${quantity}
           - Total Amount: $${finalPrice} ${service.pricing.currency || 'USD'}
 
@@ -502,8 +505,8 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           You have received a new booking!
 
           Guest Details:
-          - Name: ${user.firstName} ${user.lastName}
-          - Room Number: ${user.roomNumber}
+          - Name: ${user.firstName} ${user.lastName || ''}
+          - Room Number: ${roomNumber}
           - Phone: ${user.phone}
           - Email: ${user.email}
           - Hotel: ${hotel.name}
@@ -1100,10 +1103,10 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
       // Guest details
       guestDetails: {
         firstName: user.firstName,
-        lastName: user.lastName,
+        lastName: user.lastName || '',
         email: user.email,
         phone: user.phone,
-        roomNumber: guestDetails?.roomNumber || user.roomNumber || ''
+        roomNumber: guestDetails?.roomNumber || user.roomNumber || roomNumber || ''
       },
 
       // Service details
