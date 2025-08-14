@@ -1,24 +1,3 @@
-/**
- * Hotel Service Management Platform - Main Server File
- *
- * This is the entry point for the Express.js backend server
- * Handles all middleware setup, route c  try {
-    app.use('/api/payments/kashier', require('./routes/kashierPayments'));
-    console.log('✅ Kashier payment routes loaded');
-  } catch (error) {
-    console.error('❌ Kashier payment routes failed:', error.message);
-  }
-
-  try {
-    app.use('/api/transportation-bookings', require('./routes/transportationBookings'));
-    console.log('✅ Transportation booking routes loaded');
-  } catch (error) {
-    console.error('❌ Transportation booking routes failed:', error.message);
-  }
-
-  console.log('✅ All routes configured');tion, and server initialization
- */
-
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
