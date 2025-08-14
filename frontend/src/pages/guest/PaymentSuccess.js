@@ -85,14 +85,14 @@ const PaymentSuccess = () => {
 
       // Check if this looks like a temporary merchant order ID (TEMP_ prefix or long alphanumeric)
       const isTempId = bookingId.startsWith('TEMP_') || (bookingId.length > 24 && !bookingId.match(/^[0-9a-fA-F]{24}$/));
-      
+
       if (isTempId) {
         // For temporary IDs, use the merchant order endpoint
         try {
           response = await apiClient.get(`/client/bookings/by-merchant-order/${bookingId}`);
           if (response.data && response.data.success) {
             const bookingData = response.data.data;
-            
+
             // Determine booking type from the data structure
             if (bookingData.laundryItems && bookingData.laundryItems.length > 0) {
               bookingData.bookingType = 'laundry';
@@ -101,7 +101,7 @@ const PaymentSuccess = () => {
             } else {
               bookingData.bookingType = bookingData.category === 'laundry' ? 'laundry' : 'transportation';
             }
-            
+
             setBooking(bookingData);
             return;
           } else if (response.status === 202) {
@@ -114,7 +114,10 @@ const PaymentSuccess = () => {
             setError('Your booking is being processed. Please refresh the page in a moment.');
             return;
           }
-          console.log('Merchant order lookup failed, trying standard endpoints...');
+          console.log('Merchant order lookup failed:', err.message);
+          // For temp IDs, don't fall back to standard endpoints - they will fail
+          setError('Unable to retrieve booking details. The booking may still be processing.');
+          return;
         }
       }
 
@@ -230,8 +233,8 @@ const PaymentSuccess = () => {
             Payment Successful!
           </h1>
           <p className="text-xl text-gray-600">
-            {booking.bookingType === 'laundry' 
-              ? 'Your laundry order has been confirmed' 
+            {booking.bookingType === 'laundry'
+              ? 'Your laundry order has been confirmed'
               : 'Your transportation booking has been confirmed'}
           </p>
         </div>
@@ -361,10 +364,10 @@ const PaymentSuccess = () => {
                       <p className="text-sm text-green-600 font-medium">Amount Paid</p>
                       <p className="text-3xl font-bold text-green-700">
                         {formatPriceByLanguage(
-                          booking.payment?.paidAmount || 
-                          booking.payment?.totalAmount || 
-                          booking.pricing?.total || 
-                          0, 
+                          booking.payment?.paidAmount ||
+                          booking.payment?.totalAmount ||
+                          booking.pricing?.total ||
+                          0,
                           'en'
                         )}
                       </p>

@@ -643,15 +643,23 @@ router.get('/bookings/:id', protect, restrictToOwnBookings, async (req, res) => 
 router.get('/bookings/by-merchant-order/:merchantOrderId', async (req, res) => {
   try {
     const { merchantOrderId } = req.params;
-    
+
     let booking = null;
-    
+
     // First try to find in regular bookings by bookingNumber (for laundry)
     booking = await Booking.findOne({ bookingNumber: merchantOrderId })
       .populate('serviceId', 'name description category images')
       .populate('hotelId', 'name address contactPhone contactEmail')
       .populate('serviceProviderId', 'businessName contactPhone contactEmail');
-    
+
+    // If not found by bookingNumber, try to find by payment.kashier.sessionId for temp laundry bookings
+    if (!booking) {
+      booking = await Booking.findOne({ 'payment.kashier.sessionId': merchantOrderId })
+        .populate('serviceId', 'name description category images')
+        .populate('hotelId', 'name address contactPhone contactEmail')
+        .populate('serviceProviderId', 'businessName contactPhone contactEmail');
+    }
+
     if (!booking) {
       // Try TransportationBooking by bookingReference
       const TransportationBooking = require('../models/TransportationBooking');
@@ -660,7 +668,7 @@ router.get('/bookings/by-merchant-order/:merchantOrderId', async (req, res) => {
         .populate('hotelId', 'name address contactPhone contactEmail')
         .populate('serviceProviderId', 'businessName contactPhone contactEmail');
     }
-    
+
     if (!booking) {
       // Check if this is still a temporary booking that hasn't been created yet
       const tempData = global.tempBookingData && global.tempBookingData[merchantOrderId];
@@ -671,7 +679,7 @@ router.get('/bookings/by-merchant-order/:merchantOrderId', async (req, res) => {
           isProcessing: true
         });
       }
-      
+
       return res.status(404).json({
         success: false,
         message: 'Booking not found'

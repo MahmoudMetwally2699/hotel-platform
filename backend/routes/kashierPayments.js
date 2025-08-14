@@ -7,8 +7,10 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const TransportationBooking = require('../models/TransportationBooking');
 const Booking = require('../models/Booking'); // Add laundry booking model
+const User = require('../models/User'); // Add user model for guest details
 const { protect, restrictTo } = require('../middleware/auth');
 const logger = require('../utils/logger');
 
@@ -691,8 +693,213 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
 
     console.log('🔵 Public payment confirmation request:', { bookingId, paymentData });
 
-    // Find the booking (no user restriction for public endpoint)
-    const booking = await TransportationBooking.findById(bookingId);
+    // Find the booking (try both transportation and laundry models)
+    let booking = null;
+    let bookingType = 'transportation';
+
+    // Check if it's a temporary laundry booking ID
+    if (bookingId.startsWith('TEMP_LAUNDRY_')) {
+      // For temporary laundry bookings, look in the Booking model by bookingNumber
+      booking = await Booking.findOne({ bookingNumber: bookingId });
+      bookingType = 'laundry';
+      console.log('🧺 Looking for laundry booking with temp ID:', bookingId);
+
+      // If booking not found, check if we need to create it from temp data
+      if (!booking) {
+        global.tempBookingData = global.tempBookingData || {};
+        const tempData = global.tempBookingData[bookingId];
+
+        console.log('🔍 Temp data lookup for:', bookingId);
+        console.log('📊 Available temp booking keys:', Object.keys(global.tempBookingData));
+        console.log('📋 Temp data found:', tempData ? 'Yes' : 'No');
+
+        if (tempData && paymentData.paymentStatus === 'SUCCESS') {
+          console.log('🏗️ Creating laundry booking from temp data for:', bookingId);
+          console.log('📋 Available temp data:', tempData);
+
+          // Get user details for missing fields
+          const user = await User.findById(tempData.guestId);
+
+          if (!user) {
+            console.log('❌ User not found for temp booking:', tempData.guestId);
+            return res.status(404).json({
+              success: false,
+              message: 'User not found for booking'
+            });
+          }
+
+          // Generate proper booking number
+          const bookingNumber = `LAU${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+
+          // Create booking with all required fields, using defaults where necessary
+          const bookingData = tempData.bookingData || {};
+
+          booking = new Booking({
+            bookingNumber,
+            guestId: tempData.guestId,
+            serviceId: bookingData.serviceId,
+            serviceProviderId: bookingData.serviceProviderId || tempData.serviceProviderId || new mongoose.Types.ObjectId(), // Provide default ObjectId
+            hotelId: bookingData.hotelId,
+
+            // Guest details - use user data with fallbacks
+            guestDetails: {
+              firstName: user.firstName || 'Guest',
+              lastName: user.lastName || 'User', // Cannot be empty
+              email: user.email,
+              phone: user.phone || '',
+              roomNumber: bookingData.guestDetails?.roomNumber || user.roomNumber || '101' // Cannot be empty
+            },
+
+            // Service details
+            serviceDetails: {
+              name: bookingData.serviceDetails?.name || 'Laundry Service',
+              category: 'laundry',
+              subcategory: bookingData.serviceDetails?.subcategory || 'general',
+              description: bookingData.serviceDetails?.description || 'Laundry service booking'
+            },
+
+            // Booking configuration
+            bookingConfig: {
+              quantity: bookingData.laundryItems?.length || 1,
+              laundryItems: (bookingData.laundryItems || []).length > 0
+                ? bookingData.laundryItems.map(item => ({
+                    ...item,
+                    finalPrice: item.finalPrice || item.totalPrice || parseFloat(paymentData.amount) || 0,
+                    serviceType: {
+                      id: item.serviceType?.id || 'default-service-type',
+                      name: item.serviceType?.name || 'Standard Laundry Service',
+                      description: item.serviceType?.description || 'Professional laundry service',
+                      duration: item.serviceType?.duration || {
+                        value: 24,
+                        unit: 'hours'
+                      },
+                      icon: item.serviceType?.icon || 'wash'
+                    }
+                  }))
+                : [{
+                    itemName: 'Default Laundry Item',
+                    itemId: 'default-item',
+                    itemCategory: 'general',
+                    itemIcon: 'shirt',
+                    quantity: 1,
+                    serviceType: {
+                      id: 'default-service-type',
+                      name: 'Standard Laundry Service',
+                      description: 'Professional laundry service',
+                      duration: {
+                        value: 24,
+                        unit: 'hours'
+                      },
+                      icon: 'wash'
+                    },
+                    basePrice: parseFloat(paymentData.amount) || 0,
+                    finalPrice: parseFloat(paymentData.amount) || 0
+                  }],
+              isExpressService: bookingData.isExpressService || false,
+              specialRequests: bookingData.specialRequests || ''
+            },
+
+            // Scheduling - use current date if not provided
+            schedule: {
+              preferredDate: bookingData.schedule?.preferredDate ? new Date(bookingData.schedule.preferredDate) : new Date(),
+              preferredTime: bookingData.schedule?.preferredTime || '09:00',
+              estimatedDuration: {
+                value: 24,
+                unit: 'hours'
+              }
+            },
+
+            // Location
+            location: {
+              pickupLocation: bookingData.location?.pickupLocation || user.roomNumber || '',
+              deliveryLocation: bookingData.location?.deliveryLocation || user.roomNumber || '',
+              pickupInstructions: bookingData.location?.pickupInstructions || ''
+            },
+
+            // Pricing - calculate from payment amount
+            pricing: {
+              basePrice: parseFloat(paymentData.amount) || 0,
+              quantity: bookingData.laundryItems?.length || 1,
+              subtotal: parseFloat(paymentData.amount) || 0,
+              expressSurcharge: 0,
+              markup: {
+                percentage: 15, // Default markup
+                amount: (parseFloat(paymentData.amount) * 0.15) || 0
+              },
+              tax: {
+                rate: 0,
+                amount: 0
+              },
+              totalBeforeMarkup: (parseFloat(paymentData.amount) / 1.15) || 0,
+              totalAmount: parseFloat(paymentData.amount) || 0,
+              currency: 'USD', // Use valid enum value instead of EGP
+              providerEarnings: (parseFloat(paymentData.amount) / 1.15) || 0,
+              hotelEarnings: (parseFloat(paymentData.amount) * 0.15 / 1.15) || 0
+            },
+
+            status: 'confirmed',
+
+            // Payment information
+            payment: {
+              method: 'credit-card',
+              status: 'completed',
+              paidAmount: parseFloat(paymentData.amount) || 0,
+              paymentDate: new Date(),
+              transactionId: paymentData.transactionId,
+
+              // Kashier payment details
+              kashier: {
+                sessionId: bookingId,
+                transactionId: paymentData.transactionId,
+                paymentReference: paymentData.orderReference,
+                webhookData: paymentData
+              }
+            }
+          });
+
+          try {
+            await booking.save();
+
+            console.log('🔍 Booking saved with kashier data:', {
+              sessionId: booking.payment?.kashier?.sessionId,
+              transactionId: booking.payment?.kashier?.transactionId,
+              bookingNumber: booking.bookingNumber
+            });
+
+            logger.info('Laundry booking created from payment confirmation', {
+              bookingId: booking._id,
+              bookingNumber: booking.bookingNumber,
+              tempId: bookingId,
+              amount: paymentData.amount,
+              transactionId: paymentData.transactionId
+            });
+
+            // Clean up temporary booking data
+            delete global.tempBookingData[bookingId];
+
+            console.log('✅ Laundry booking created successfully:', booking.bookingNumber);
+          } catch (saveError) {
+            console.error('❌ Error saving laundry booking:', saveError);
+            return res.status(500).json({
+              success: false,
+              message: 'Failed to create booking after payment',
+              error: saveError.message
+            });
+          }
+        }
+      }
+    } else {
+      // Try transportation booking first
+      try {
+        booking = await TransportationBooking.findById(bookingId);
+        bookingType = 'transportation';
+      } catch (error) {
+        console.log('🚗 Not a valid transportation booking ID, trying laundry...');
+        // If not found in transportation, try laundry bookings
+        booking = await Booking.findById(bookingId);
+        bookingType = 'laundry';
+      }
+    }
 
     if (!booking) {
       return res.status(404).json({
@@ -701,22 +908,50 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
       });
     }
 
+    console.log(`📋 Found ${bookingType} booking:`, booking._id);
+
     // Verify the merchantOrderId matches for security
-    if (paymentData.merchantOrderId !== booking.bookingReference) {
+    let expectedReference = bookingType === 'laundry' ? booking.bookingNumber : booking.bookingReference;
+
+    // For laundry bookings created from temp data, the merchantOrderId will be the temp ID
+    // But the booking has a generated booking number, so we need to check the Kashier session ID instead
+    if (bookingType === 'laundry' && booking.payment?.kashier?.sessionId) {
+      expectedReference = booking.payment.kashier.sessionId;
+    }
+
+    if (paymentData.merchantOrderId !== expectedReference) {
+      console.log('❌ Merchant order ID mismatch:', {
+        provided: paymentData.merchantOrderId,
+        expected: expectedReference,
+        bookingType,
+        bookingNumber: booking.bookingNumber,
+        kashierSessionId: booking.payment?.kashier?.sessionId
+      });
       return res.status(400).json({
         success: false,
-        message: 'Invalid payment data'
+        message: 'Invalid payment data - merchant order ID mismatch',
+        debug: {
+          provided: paymentData.merchantOrderId,
+          expected: expectedReference,
+          bookingType
+        }
       });
     }
 
-    // Check if payment is already completed
-    if (booking.bookingStatus === 'payment_completed') {
+    console.log('✅ Merchant order ID verified:', paymentData.merchantOrderId);
+
+    // Check if payment is already completed (handle both booking types)
+    const isPaymentCompleted = bookingType === 'laundry'
+      ? booking.status === 'payment_completed' || booking.paymentStatus === 'completed'
+      : booking.bookingStatus === 'payment_completed';
+
+    if (isPaymentCompleted) {
       return res.json({
         success: true,
         message: 'Payment already confirmed',
         data: {
-          bookingStatus: booking.bookingStatus,
-          paymentStatus: booking.payment.status
+          bookingStatus: bookingType === 'laundry' ? booking.status : booking.bookingStatus,
+          paymentStatus: bookingType === 'laundry' ? booking.paymentStatus : booking.payment?.status
         }
       });
     }
@@ -748,12 +983,13 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
         }
       };
 
-      // Process the payment
+      // Process the payment (both booking types have this method)
       await booking.processKashierPayment(webhookData);
 
       logger.info('Payment confirmed via public redirect', {
         bookingId: booking._id,
-        bookingReference: booking.bookingReference,
+        bookingReference: bookingType === 'laundry' ? booking.bookingNumber : booking.bookingReference,
+        bookingType,
         transactionId: paymentData.transactionId,
         amount: paymentData.amount,
         currency: paymentData.currency
@@ -763,8 +999,9 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
         success: true,
         message: 'Payment confirmed successfully',
         data: {
-          bookingStatus: booking.bookingStatus,
-          paymentStatus: booking.payment.status
+          bookingType,
+          bookingStatus: bookingType === 'laundry' ? booking.status : booking.bookingStatus,
+          paymentStatus: bookingType === 'laundry' ? booking.paymentStatus : booking.payment?.status
         }
       });
     } else {
