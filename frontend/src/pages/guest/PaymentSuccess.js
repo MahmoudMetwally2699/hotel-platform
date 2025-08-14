@@ -83,7 +83,42 @@ const PaymentSuccess = () => {
       let response;
       let bookingType = 'unknown';
 
-      // Determine booking type from booking reference
+      // Check if this looks like a temporary merchant order ID (TEMP_ prefix or long alphanumeric)
+      const isTempId = bookingId.startsWith('TEMP_') || (bookingId.length > 24 && !bookingId.match(/^[0-9a-fA-F]{24}$/));
+      
+      if (isTempId) {
+        // For temporary IDs, use the merchant order endpoint
+        try {
+          response = await apiClient.get(`/client/bookings/by-merchant-order/${bookingId}`);
+          if (response.data && response.data.success) {
+            const bookingData = response.data.data;
+            
+            // Determine booking type from the data structure
+            if (bookingData.laundryItems && bookingData.laundryItems.length > 0) {
+              bookingData.bookingType = 'laundry';
+            } else if (bookingData.pickupLocation || bookingData.dropoffLocation) {
+              bookingData.bookingType = 'transportation';
+            } else {
+              bookingData.bookingType = bookingData.category === 'laundry' ? 'laundry' : 'transportation';
+            }
+            
+            setBooking(bookingData);
+            return;
+          } else if (response.status === 202) {
+            // Booking is still being processed
+            setError('Your booking is being processed. Please refresh the page in a moment.');
+            return;
+          }
+        } catch (err) {
+          if (err.response?.status === 202) {
+            setError('Your booking is being processed. Please refresh the page in a moment.');
+            return;
+          }
+          console.log('Merchant order lookup failed, trying standard endpoints...');
+        }
+      }
+
+      // Determine booking type from booking reference for standard lookups
       if (bookingId && bookingId.includes('LAUNDRY')) {
         bookingType = 'laundry';
       } else if (bookingId && bookingId.includes('TRANSPORT')) {

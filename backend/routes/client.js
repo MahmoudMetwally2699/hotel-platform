@@ -636,6 +636,62 @@ router.get('/bookings/:id', protect, restrictToOwnBookings, async (req, res) => 
 });
 
 /**
+ * @desc    Get booking details by merchant order ID (for temporary bookings)
+ * @route   GET /api/client/bookings/by-merchant-order/:merchantOrderId
+ * @access  Public (for payment success pages)
+ */
+router.get('/bookings/by-merchant-order/:merchantOrderId', async (req, res) => {
+  try {
+    const { merchantOrderId } = req.params;
+    
+    let booking = null;
+    
+    // First try to find in regular bookings by bookingNumber (for laundry)
+    booking = await Booking.findOne({ bookingNumber: merchantOrderId })
+      .populate('serviceId', 'name description category images')
+      .populate('hotelId', 'name address contactPhone contactEmail')
+      .populate('serviceProviderId', 'businessName contactPhone contactEmail');
+    
+    if (!booking) {
+      // Try TransportationBooking by bookingReference
+      const TransportationBooking = require('../models/TransportationBooking');
+      booking = await TransportationBooking.findOne({ bookingReference: merchantOrderId })
+        .populate('serviceId', 'name description category images')
+        .populate('hotelId', 'name address contactPhone contactEmail')
+        .populate('serviceProviderId', 'businessName contactPhone contactEmail');
+    }
+    
+    if (!booking) {
+      // Check if this is still a temporary booking that hasn't been created yet
+      const tempData = global.tempBookingData && global.tempBookingData[merchantOrderId];
+      if (tempData) {
+        return res.status(202).json({
+          success: false,
+          message: 'Booking is still being processed. Please try again in a few moments.',
+          isProcessing: true
+        });
+      }
+      
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: booking
+    });
+  } catch (error) {
+    logger.error('Get booking by merchant order error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+/**
  * @desc    Cancel booking
  * @route   PUT /api/client/bookings/:id/cancel
  * @access  Private (Guest)
