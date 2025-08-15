@@ -14,8 +14,6 @@ import { useTranslation } from 'react-i18next';
 import {
   FaCar,
   FaArrowLeft,
-  FaPlus,
-  FaMinus,
   FaSpinner,
   FaCheck,
   FaClock,
@@ -62,11 +60,8 @@ const TransportationBookingPage = () => {
     passengerCount: 1,
     luggageCount: 0
   });
+  const [selectedVehicleTypeId, setSelectedVehicleTypeId] = useState('');
   // Helper functions to translate vehicle category and type names
-  const getVehicleCategoryName = (category) => {
-    return t(`transportationBooking.vehicleCategories.${category}`, { defaultValue: category });
-  };
-
   const getVehicleTypeName = (vehicleType) => {
     // Convert vehicle type to key format (lowercase, handle special characters)
     const vehicleKey = vehicleType
@@ -82,6 +77,35 @@ const TransportationBookingPage = () => {
     console.log(`🚗 Translation result: "${translated}"`);
 
     return translated;
+  };
+
+  // Add helpers to translate serviceType name and description coming from the API
+  const normalizeKey = (raw) => {
+    if (!raw) return '';
+    return String(raw)
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/[()]/g, '_')
+      .replace(/-/g, '_')
+      .replace(/[^a-z0-9_]/g, '')
+      .replace(/_{2,}/g, '_')
+      .replace(/^_|_$/g, '');
+  };
+
+  const getServiceTypeKey = (serviceType) => {
+    // Prefer an explicit id if present, otherwise normalize the name
+    const candidate = serviceType?.id || serviceType?.name || '';
+    return normalizeKey(candidate);
+  };
+
+  const getServiceTypeName = (serviceType) => {
+    const key = getServiceTypeKey(serviceType);
+    return t(`transportationBooking.serviceTypeNames.${key}`, { defaultValue: serviceType?.name || '' });
+  };
+
+  const getServiceTypeDescription = (serviceType) => {
+    const key = getServiceTypeKey(serviceType);
+    return t(`transportationBooking.serviceTypeDescriptions.${key}`, { defaultValue: serviceType?.description || '' });
   };
 
   useEffect(() => {
@@ -160,6 +184,7 @@ const TransportationBookingPage = () => {
             .filter(vehicle => vehicle.isAvailable)
             .map(vehicle => ({
               ...vehicle,
+              category: vehicle.category || 'other',
               id: `${svc._id}_${vehicle.vehicleType.toLowerCase().replace(/\s+/g, '_')}`, // Unique ID with service prefix
               serviceId: svc._id, // Track which service this vehicle belongs to
               serviceName: svc.name,
@@ -175,6 +200,7 @@ const TransportationBookingPage = () => {
         .filter(vehicle => vehicle.isAvailable)
         .map(vehicle => ({
           ...vehicle,
+          category: vehicle.category || 'other',
           id: `${service._id}_${vehicle.vehicleType.toLowerCase().replace(/\s+/g, '_')}`,
           serviceId: service._id,
           serviceName: service.name,
@@ -192,146 +218,102 @@ const TransportationBookingPage = () => {
 
     if (!vehicle) return [];
 
-    return vehicle.serviceTypes?.filter(st => st.isAvailable && st.price > 0) || [];
-  };
-
-  // Vehicle selection handlers
-  const handleVehicleAdd = (vehicle) => {
-    const existingVehicle = selectedVehicles.find(selected => selected.id === vehicle.id);
-    if (existingVehicle) {
-      setSelectedVehicles(prev =>
-        prev.map(selected =>
-          selected.id === vehicle.id
-            ? { ...selected, quantity: selected.quantity + 1 }
-            : selected
-        )
-      );
-    } else {
-      setSelectedVehicles(prev => [...prev, { ...vehicle, quantity: 1 }]);
-    }
-
-    // Set default service type
-    if (!serviceTypes[vehicle.id]) {
-      const availableServiceTypes = getAvailableServiceTypes(vehicle.id);
-      if (availableServiceTypes.length > 0) {
-        setServiceTypes(prev => ({ ...prev, [vehicle.id]: availableServiceTypes[0].id }));
-      }
-    }
-  };
-
-  const handleVehicleRemove = (vehicleId) => {
-    const existingVehicle = selectedVehicles.find(selected => selected.id === vehicleId);
-    if (existingVehicle && existingVehicle.quantity > 1) {
-      setSelectedVehicles(prev =>
-        prev.map(selected =>
-          selected.id === vehicleId
-            ? { ...selected, quantity: selected.quantity - 1 }
-            : selected
-        )
-      );
-    } else {
-      setSelectedVehicles(prev => prev.filter(selected => selected.id !== vehicleId));
-      setServiceTypes(prev => {
-        const newTypes = { ...prev };
-        delete newTypes[vehicleId];
-        return newTypes;
-      });
-    }
+    // Return all service types, don't filter by price since user doesn't want to see prices
+    return vehicle.serviceTypes || [];
   };
 
   const handleServiceTypeChange = (vehicleId, serviceType) => {
     setServiceTypes(prev => ({ ...prev, [vehicleId]: serviceType }));
   };
 
-  // Calculate pricing with real service prices
-  const calculatePricing = () => {
-    let subtotal = 0;
+  // Choose a vehicle type from dropdown (single-selection quick add)
+  const handleVehicleTypeChoose = (vehicleId) => {
+    setSelectedVehicleTypeId(vehicleId);
+    if (!vehicleId) {
+      setSelectedVehicles([]);
+      setServiceTypes({});
+      return;
+    }
 
-    const vehicleCalculations = selectedVehicles.map(vehicle => {
-      const availableServiceTypes = getAvailableServiceTypes(vehicle.id);
-      const selectedServiceType = availableServiceTypes.find(st => st.id === serviceTypes[vehicle.id]);
+    const allVehicles = getAvailableTransportationVehicles();
+    const vehicle = allVehicles.find(v => v.id === vehicleId);
+    if (!vehicle) return;
 
-      if (!selectedServiceType) {
-        console.warn('No service type selected for vehicle:', vehicle.vehicleType);
-        return {
-          ...vehicle,
-          serviceType: null,
-          basePrice: 0,
-          vehiclePrice: 0
-        };
-      }
+    // Select the chosen vehicle with quantity 1
+    setSelectedVehicles([{ ...vehicle, quantity: 1 }]);
 
-      const vehiclePrice = (selectedServiceType?.price || 0) * vehicle.quantity;
-      subtotal += vehiclePrice;
-
-      return {
-        ...vehicle,
-        serviceType: selectedServiceType,
-        basePrice: selectedServiceType?.price || 0, // Original service provider price
-        vehiclePrice: vehiclePrice
-      };
-    });
-
-    const expressCharge = expressSurcharge ? subtotal * 0.2 : 0; // 20% surcharge for express
-    const total = subtotal + expressCharge; // Backend prices already include hotel markup
-
-    return {
-      vehicleCalculations,
-      subtotal,
-      expressCharge,
-      total
-    };
+    // Set default service type for selected vehicle
+    const available = getAvailableServiceTypes(vehicle.id);
+    if (available.length > 0) {
+      setServiceTypes({ [vehicle.id]: available[0].id });
+    } else {
+      setServiceTypes({});
+    }
   };
-
-  const pricing = calculatePricing();
 
   // Handle booking submission
   const handleBookingSubmit = async () => {
     try {
       setSubmitting(true);
 
-      const bookingData = {
-        serviceId: pricing.vehicleCalculations[0]?.serviceId || service?._id, // Use the service ID of the first vehicle
-        hotelId,
-        transportationItems: pricing.vehicleCalculations.map(vehicle => ({
-          vehicleId: vehicle.id,
-          vehicleType: vehicle.vehicleType,
-          vehicleCategory: vehicle.category,
-          quantity: vehicle.quantity,
-          serviceTypeId: vehicle.serviceType.id,
-          serviceTypeName: vehicle.serviceType.name,
-          serviceTypeDescription: vehicle.serviceType.description,
-          serviceTypeDuration: vehicle.serviceType.duration,
-          basePrice: vehicle.basePrice,
-          totalPrice: vehicle.vehiclePrice
-        })),
-        expressSurcharge: {
-          enabled: expressSurcharge,
-          rate: pricing.expressCharge
-        },
-        schedule: {
-          pickupDate: bookingDetails.pickupDate,
-          pickupTime: bookingDetails.pickupTime,
-          returnDate: bookingDetails.returnDate,
-          returnTime: bookingDetails.returnTime
-        },
-        location: {
-          pickupLocation: bookingDetails.pickupLocation,
-          dropoffLocation: bookingDetails.dropoffLocation,
-          pickupInstructions: bookingDetails.specialRequests
-        },
-        guestDetails: {
-          passengerCount: bookingDetails.passengerCount,
-          luggageCount: bookingDetails.luggageCount,
-          specialRequests: bookingDetails.specialRequests
-        },
-        paymentMethod: 'credit-card' // Default payment method
+      // Get the first selected vehicle for the booking request
+      const selectedVehicle = selectedVehicles[0];
+      if (!selectedVehicle) {
+        toast.error('Please select a vehicle first');
+        return;
+      }
+
+      // Map frontend vehicle types to backend enum values
+      const mapVehicleType = (frontendType) => {
+        const typeMapping = {
+          'economy_sedan': 'sedan',
+          'comfort_sedan': 'sedan',
+          'premium_sedan': 'sedan',
+          'economy_suv': 'suv',
+          'comfort_suv': 'suv',
+          'premium_suv': 'suv',
+          'van': 'van',
+          'minibus': 'minibus',
+          'hatchback': 'hatchback',
+          'luxury_car': 'luxury_car',
+          'pickup_truck': 'pickup_truck'
+        };
+        return typeMapping[frontendType] || 'sedan'; // Default to sedan
       };
 
-      await apiClient.post('/client/bookings/transportation', bookingData);
+      // Map frontend categories to backend comfort levels
+      const mapComfortLevel = (category) => {
+        const comfortMapping = {
+          'economy': 'economy',
+          'comfort': 'comfort',
+          'premium': 'premium',
+          'other': 'economy' // Default fallback
+        };
+        return comfortMapping[category] || 'economy'; // Default to economy
+      };
 
-      toast.success(t('transportationBooking.bookingSuccess'));
-      navigate(`/my-orders`);
+      const bookingData = {
+        serviceId: service?._id,
+        hotelId,
+        tripDetails: {
+          pickupLocation: bookingDetails.pickupLocation || 'Hotel lobby',
+          destination: bookingDetails.dropoffLocation,
+          scheduledDateTime: `${bookingDetails.pickupDate}T${bookingDetails.pickupTime}:00.000Z`,
+          passengerCount: bookingDetails.passengerCount || 1,
+          luggageCount: bookingDetails.luggageCount || 0
+        },
+        vehicleDetails: {
+          vehicleType: mapVehicleType(selectedVehicle.vehicleType),
+          comfortLevel: mapComfortLevel(selectedVehicle.category || 'economy')
+        },
+        guestNotes: bookingDetails.specialRequests || ''
+      };
+
+      // Use the transportation booking endpoint
+      await apiClient.post('/transportation-bookings/guest', bookingData);
+
+      toast.success(t('transportationBooking.bookingRequestSuccess'));
+  navigate('/my-bookings?tab=waitingForQuote');
 
     } catch (error) {
       console.error('Error creating booking:', error);
@@ -421,6 +403,7 @@ const TransportationBookingPage = () => {
               )}
             </React.Fragment>
           ))}
+
         </div>
 
         <div className="flex justify-center mt-2">
@@ -443,6 +426,8 @@ const TransportationBookingPage = () => {
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">
                   {t('transportationBooking.selectTransportationVehicles')}
                 </h2>
+
+                {/* Vehicle Type Dropdown - New Feature */}
 
                 {/* Check if any vehicles are available */}
                 {(() => {
@@ -470,95 +455,33 @@ const TransportationBookingPage = () => {
                   return null;
                 })()}
 
-                {/* Only show categories if vehicles are available */}
+                {/* Two separate dropdowns for vehicle and service type */}
                 {getAvailableTransportationVehicles().length > 0 && (
-                  <>
-                    {/* Categories - Dynamically generated from available vehicles */}
-                    {(() => {
-                      const availableVehicles = getAvailableTransportationVehicles();
+                  <div className="space-y-4">
+                    {/* Vehicle Selection Dropdown */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          {t('transportationBooking.selectVehicleType')}
+                        </label>
+                        <select
+                          value={selectedVehicleTypeId}
+                          onChange={(e) => handleVehicleTypeChoose(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">{t('transportationBooking.chooseVehicleTypePlaceholder')}</option>
+                          {getAvailableTransportationVehicles().map(vehicle => {
+                            const capacity = vehicle.capacity ? (typeof vehicle.capacity === 'object' ? vehicle.capacity.passengers : vehicle.capacity) : 'N/A';
 
-                      // Get unique categories from all available vehicles
-                      const availableCategories = [...new Set(availableVehicles.map(vehicle => vehicle.category))];
-                      console.log('🚗 Dynamic categories found:', availableCategories);
+                            return (
+                              <option key={vehicle.id} value={vehicle.id}>
+                                {getVehicleTypeName(vehicle.vehicleType)} - {capacity} passengers
+                              </option>
+                            );
+                          })}
+                        </select>
+                    </div>
 
-                      return availableCategories.map(category => {
-                        const categoryVehicles = availableVehicles.filter(vehicle => vehicle.category === category);
-                        console.log(`🚗 Category: ${category}, Vehicles found: ${categoryVehicles.length}`, categoryVehicles.map(v => v.vehicleType));
-                        if (categoryVehicles.length === 0) return null;
-
-                        return (
-                          <div key={category} className="mb-8">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                              {getVehicleCategoryName(category)}
-                            </h3>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {categoryVehicles.map(vehicle => {
-                                const selectedVehicle = selectedVehicles.find(selected => selected.id === vehicle.id);
-                                const quantity = selectedVehicle ? selectedVehicle.quantity : 0;
-                                const isAvailable = vehicle.isAvailable !== false;
-                                const availableServiceTypes = getAvailableServiceTypes(vehicle.id);
-                                const hasAvailableServices = availableServiceTypes.length > 0;
-
-                                return (
-                                  <div
-                                    key={vehicle.id}
-                                    className={`flex items-center justify-between p-4 border rounded-lg transition-colors ${
-                                      isAvailable && hasAvailableServices
-                                        ? 'border-gray-200 hover:border-blue-300'
-                                        : 'border-gray-200 bg-gray-50 opacity-60'
-                                    }`}
-                                  >
-                                    <div className="flex items-center">
-                                      <div>
-                                        <h4 className={`font-medium ${isAvailable && hasAvailableServices ? 'text-gray-900' : 'text-gray-500'}`}>
-                                          {getVehicleTypeName(vehicle.vehicleType)}
-                                          {!isAvailable && (
-                                            <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
-                                              {t('transportationBooking.unavailable')}
-                                            </span>
-                                          )}
-                                          {isAvailable && !hasAvailableServices && (
-                                            <span className="ml-2 text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded">
-                                              {t('transportationBooking.noServiceTypes')}
-                                            </span>
-                                          )}
-                                        </h4>
-                                        <p className={`text-sm ${isAvailable && hasAvailableServices ? 'text-gray-600' : 'text-gray-400'}`}>
-                                          {availableServiceTypes.length > 0
-                                            ? `From ${formatPriceByLanguage(Math.min(...availableServiceTypes.map(st => st.price)), i18n.language)}`
-                                            : vehicle.basePrice ? formatPriceByLanguage(vehicle.basePrice, i18n.language) : t('transportationBooking.priceNotSet')
-                                          }
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <button
-                                        onClick={() => handleVehicleRemove(vehicle.id)}
-                                        disabled={quantity === 0 || !isAvailable || !hasAvailableServices}
-                                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                      >
-                                        <FaMinus className="text-xs" />
-                                      </button>
-                                      <span className="w-8 text-center font-medium">{quantity}</span>
-                                      <button
-                                        onClick={() => handleVehicleAdd(vehicle)}
-                                        disabled={!isAvailable || !hasAvailableServices}
-                                        className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                      >
-                                        <FaPlus className="text-xs" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-
-                          </div>
-                        );
-                      });
-                    })()}
-                  </>
+                  </div>
                 )}
               </div>
             )}
@@ -594,49 +517,30 @@ const TransportationBookingPage = () => {
                               <div className="flex items-center">
                                 <div>
                                   <h5 className="font-medium text-gray-900">
-                                    {serviceType.name}
+                                    {getServiceTypeName(serviceType)}
                                   </h5>
-                                  <p className="text-xs text-gray-600">{serviceType.description}</p>
+                                  <p className="text-xs text-gray-600">{getServiceTypeDescription(serviceType)}</p>
                                   <p className="text-xs text-gray-500">
                                     <FaClock className="inline mr-1" />
                                     {serviceType.duration}
                                   </p>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <p className="font-medium text-gray-900">
-                                  {formatPriceByLanguage(serviceType.price * vehicle.quantity, i18n.language)}
-                                </p>
-                              </div>
                             </div>
                           </div>
                         ))}
+
+                        {/* Show a placeholder if no service types are available */}
+                        {getAvailableServiceTypes(vehicle.id).length === 0 && (
+                          <div className="p-3 border rounded-lg bg-gray-50 text-center text-gray-500">
+                            {t('transportationBooking.noServiceTypesAvailable')}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Express Service Option */}
-                <div className="mt-6 p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <FaBolt className="text-yellow-500 mr-3" />
-                      <div>
-                        <h4 className="font-medium text-gray-900">{t('transportationBooking.expressService')}</h4>
-                        <p className="text-sm text-gray-600">{t('transportationBooking.expressDescription')}</p>
-                      </div>
-                    </div>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={expressSurcharge}
-                        onChange={(e) => setExpressSurcharge(e.target.checked)}
-                        className="form-checkbox h-5 w-5 text-blue-600"
-                      />
-                      <span className="ml-2 text-sm">{t('transportationBooking.enable')}</span>
-                    </label>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -829,18 +733,18 @@ const TransportationBookingPage = () => {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('transportationBooking.orderSummary')}</h3>
                     <div className="space-y-3">
-                      {pricing.vehicleCalculations.map(vehicle => (
+                      {selectedVehicles.map(vehicle => (
                         <div key={vehicle.id} className="flex items-center justify-between py-2 border-b border-gray-100">
                           <div className="flex items-center">
                             <div>
                               <span className="font-medium">{getVehicleTypeName(vehicle.vehicleType)}</span>
                               <span className="text-gray-500 ml-2">×{vehicle.quantity}</span>
                               <div className="text-sm text-gray-600">
-                                {vehicle.serviceType?.name}
+                                {vehicle.category || 'Economy'}
                               </div>
                             </div>
                           </div>
-                          <span className="font-medium">{formatPriceByLanguage(vehicle.vehiclePrice, i18n.language)}</span>
+                          <span className="text-sm text-gray-600">Quote pending</span>
                         </div>
                       ))}
                     </div>
@@ -872,38 +776,9 @@ const TransportationBookingPage = () => {
             )}
           </div>
 
-          {/* Pricing Summary Sidebar */}
+          {/* Navigation and Choose Service Types button only */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                <FaCalculator className="inline mr-2" />
-                {t('transportationBooking.pricingSummary')}
-              </h3>
-
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>{t('transportationBooking.vehicles')} ({selectedVehicles.reduce((sum, vehicle) => sum + vehicle.quantity, 0)})</span>
-                  <span>{formatPriceByLanguage(pricing.subtotal, i18n.language)}</span>
-                </div>
-
-                {expressSurcharge && (
-                  <div className="flex justify-between text-yellow-600">
-                    <span className="flex items-center">
-                      <FaBolt className="mr-1" />
-                      {t('transportationBooking.expressService')}
-                    </span>
-                    <span>+{formatPriceByLanguage(pricing.expressCharge, i18n.language)}</span>
-                  </div>
-                )}
-
-                <hr />
-
-                <div className="flex justify-between text-lg font-bold">
-                  <span>{t('transportationBooking.total')}</span>
-                  <span className="text-green-600">{formatPriceByLanguage(pricing.total, i18n.language)}</span>
-                </div>
-              </div>
-
               {selectedVehicles.length > 0 && (
                 <div className="mt-6 space-y-3">
                   {step < 4 ? (
@@ -941,14 +816,6 @@ const TransportationBookingPage = () => {
                       {t('transportationBooking.back')}
                     </button>
                   )}
-                </div>
-              )}
-
-              {selectedVehicles.length === 0 && step === 1 && (
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg text-center">
-                  <p className="text-gray-600 text-sm">
-                    {t('transportationBooking.selectVehiclesFirst')}
-                  </p>
                 </div>
               )}
             </div>

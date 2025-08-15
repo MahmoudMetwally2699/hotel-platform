@@ -1,4 +1,5 @@
-{  "common": {
+{
+  "common": {
     "welcome": "Welcome",
     "login": "Login",
     "logout": "Logout",
@@ -31,17 +32,22 @@
     "no": "No",
     "select": "Select",
     "selectLanguage": "Select Language",
-    "english": "English",    "arabic": "العربية",
-    "openUserMenu": "Open user menu",    "userAvatar": "User avatar",    "clearFilters": "Clear Filters",
+    "english": "English",
+    "arabic": "Arabic",
+    "openUserMenu": "Open user menu",
+    "userAvatar": "User avatar",
+    "clearFilters": "Clear Filters",
     "viewResults": "View Results",
     "filters": "Filters",
-    "moreOptions": "More Options",    "pending": "Pending",
+    "moreOptions": "More Options",
+    "pending": "Pending",
     "confirmed": "Confirmed",
     "completed": "Completed",
     "cancelled": "Cancelled",
     "inProgress": "In Progress",
     "checkin": "Check-in"
-  },"navigation": {
+  },
+  "navigation": {
     "home": "Home",
     "dashboard": "Dashboard",
     "services": "Services",
@@ -1059,6 +1065,42 @@
     "pricing": "Pricing",
     "totalAmount": "Total Amount"
   },
+
+  "transportation": {
+    "myBookings": "My Transportation Bookings",
+    "bookingsSubtitle": "Manage and pay for your transportation quotes and bookings.",
+    "labels": {
+      "waitingForQuote": "Waiting for quote",
+      "readyForPayment": "Ready for payment",
+      "confirmed": "Confirmed",
+      "processing": "Processing",
+      "scheduledTime": "Scheduled time",
+      "pickup": "Pickup",
+      "destination": "Destination",
+      "quotedPrice": "Quoted price",
+      "quotedAt": "Quoted at",
+      "expiresAt": "Expires at",
+      "viewDetails": "View details",
+      "payNow": "Pay now"
+    },
+    "status": {
+      "pending_quote": "Pending quote",
+      "payment_pending": "Payment pending",
+      "payment_completed": "Payment completed",
+      "quote_rejected": "Quote rejected"
+    },
+    "vehicleTypes": {
+      "suv": "SUV",
+      "van": "Van",
+      "minibus": "Minibus",
+      "sedan": "Sedan"
+    },
+    "comfortLevels": {
+      "comfort": "Comfort",
+      "economy": "Economy"
+    }
+  },
+
   "transportationBooking": {
     "title": "Transportation Service Booking",
     "loadingService": "Loading transportation service...",
@@ -1076,6 +1118,8 @@
     "expressDescription": "Priority transportation with faster response time (+20% surcharge)",
     "enable": "Enable",
     "scheduleService": "Schedule Transportation",
+    "selectVehicleType": "Select Vehicle Type",
+    "chooseVehicleTypePlaceholder": "Choose a vehicle type...",
     "pickupDate": "Pickup Date",
     "pickupTime": "Pickup Time",
     "returnDate": "Return Date",

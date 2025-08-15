@@ -220,6 +220,9 @@ const GuestCategorySelection = () => {
     if (categoryKey === 'laundry') {
       // Navigate directly to laundry booking for better UX
       navigate(`/hotels/${hotelId}/services/laundry/booking`);
+    } else if (categoryKey === 'transportation') {
+      // Navigate directly to transportation booking for better UX
+      navigate(`/hotels/${hotelId}/services/transportation/booking`);
     } else {
       // Navigate to category-specific service list page for other categories
       navigate(`/hotels/${hotelId}/services/${categoryKey}`);

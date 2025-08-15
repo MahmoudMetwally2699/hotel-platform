@@ -44,18 +44,24 @@ const TailwindHeader = () => {
     setShowProfileMenu(false);
   };
 
+  // Compute avatar initial safely
+  const userInitialSource = (user?.firstName || user?.lastName || user?.name || user?.email || '').toString().trim();
+  const userInitial = userInitialSource ? userInitialSource.charAt(0).toUpperCase() : '';
+
   return (
     <header className="bg-white shadow-sm z-10">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <div className="flex-shrink-0 flex items-center">              <img
+            <div className="flex-shrink-0 flex items-center">
+              <img
                 className="block h-8 w-auto"
-                src="/logo192.png"
+                src="/logo.svg"
                 alt={t('homepage.platformName')}
               />
             </div>
-          </div>          <div className="flex items-center">
+          </div>
+          <div className="flex items-center">
             {/* Language Switcher */}
             <div className={`${isRTL ? 'ml-4' : 'mr-4'}`}>
               <LanguageSwitcher />
@@ -95,13 +101,18 @@ const TailwindHeader = () => {
               <div>
                 <button
                   onClick={handleProfileClick}
-                  className="bg-white rounded-full flex focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="bg-white rounded-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   <span className="sr-only">{t('common.openUserMenu')}</span>
-                  <img
-                    className="h-8 w-8 rounded-full"
-                    src={user?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixqx=CSFCItvz2e&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"}                    alt={user?.firstName || t('common.userAvatar')}
-                  />
+                  <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium text-gray-700">
+                    {userInitial ? (
+                      userInitial
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M10 2a4 4 0 100 8 4 4 0 000-8zM2 16a8 8 0 1116 0H2z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
                 </button>
               </div>
 
