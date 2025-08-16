@@ -389,14 +389,14 @@ const GuestTransportationBookings = () => {
           </div>
           <div className="ml-3">
             <h3 className="text-sm font-medium text-blue-800">
-              How Transportation Booking Works
+              {t('transportation.info.title')}
             </h3>
             <div className="mt-2 text-sm text-blue-700">
               <ul className="list-disc list-inside space-y-1">
-                <li>Submit a transportation request with your destination and preferences</li>
-                <li>Service provider will set a price and your booking becomes ready for payment</li>
-                <li>Complete payment to confirm your booking immediately</li>
-                <li>Receive confirmation and track your service</li>
+                <li>{t('transportation.info.steps.step1')}</li>
+                <li>{t('transportation.info.steps.step2')}</li>
+                <li>{t('transportation.info.steps.step3')}</li>
+                <li>{t('transportation.info.steps.step4')}</li>
               </ul>
             </div>
           </div>

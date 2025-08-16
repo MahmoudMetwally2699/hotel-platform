@@ -1098,6 +1098,15 @@
     "comfortLevels": {
       "comfort": "Comfort",
       "economy": "Economy"
+    },
+    "info": {
+      "title": "How Transportation Booking Works",
+      "steps": {
+        "step1": "Submit a transportation request with your destination and preferences",
+        "step2": "Service provider will set a price and your booking becomes ready for payment",
+        "step3": "Complete payment to confirm your booking immediately",
+        "step4": "Receive confirmation and track your service"
+      }
     }
   },
 
