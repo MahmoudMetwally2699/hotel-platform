@@ -5,11 +5,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { FaCheckCircle, FaCar, FaCalendarAlt, FaMapMarkerAlt, FaMoneyBillWave, FaReceipt, FaHome, FaTshirt } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { formatPriceByLanguage } from '../../utils/currency';
 
 const PaymentSuccess = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [booking, setBooking] = useState(null);
@@ -31,7 +33,7 @@ const PaymentSuccess = () => {
         fetchBookingDetails();
       }
     } else {
-      setError('No booking ID provided');
+      setError(t('paymentSuccess.noBookingId'));
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,17 +108,17 @@ const PaymentSuccess = () => {
             return;
           } else if (response.status === 202) {
             // Booking is still being processed
-            setError('Your booking is being processed. Please refresh the page in a moment.');
+            setError(t('paymentSuccess.bookingProcessing'));
             return;
           }
         } catch (err) {
           if (err.response?.status === 202) {
-            setError('Your booking is being processed. Please refresh the page in a moment.');
+            setError(t('paymentSuccess.bookingProcessing'));
             return;
           }
           console.log('Merchant order lookup failed:', err.message);
           // For temp IDs, don't fall back to standard endpoints - they will fail
-          setError('Unable to retrieve booking details. The booking may still be processing.');
+          setError(t('paymentSuccess.unableRetrieve'));
           return;
         }
       }
@@ -163,14 +165,14 @@ const PaymentSuccess = () => {
         console.log('Laundry booking also not found');
       }
 
-      setError('Failed to fetch booking details');
+      setError(t('paymentSuccess.failedFetch'));
     } catch (error) {
       console.error('Error fetching booking details:', error);
-      setError('Failed to load booking information');
+      setError(t('paymentSuccess.failedLoad'));
     } finally {
       setLoading(false);
     }
-  }, [bookingId]);
+  }, [bookingId, t]);
 
   const handleViewBookings = () => {
     navigate('/guest/bookings');
@@ -185,7 +187,7 @@ const PaymentSuccess = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading payment confirmation...</p>
+          <p className="text-gray-600">{t('paymentSuccess.loading')}</p>
         </div>
       </div>
     );
@@ -199,7 +201,7 @@ const PaymentSuccess = () => {
             <FaCheckCircle className="text-6xl mx-auto mb-4 opacity-50" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Unable to Load Confirmation
+            {t('paymentSuccess.unableLoadConfirmation')}
           </h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="space-y-3">
@@ -207,13 +209,13 @@ const PaymentSuccess = () => {
               onClick={handleViewBookings}
               className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              View My Bookings
+              {t('paymentSuccess.viewBookings')}
             </button>
             <button
               onClick={handleGoHome}
               className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
             >
-              Go Home
+              {t('paymentSuccess.goHome')}
             </button>
           </div>
         </div>
@@ -230,12 +232,12 @@ const PaymentSuccess = () => {
             <FaCheckCircle className="text-8xl mx-auto animate-bounce" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Payment Successful!
+            {t('paymentSuccess.title')}
           </h1>
           <p className="text-xl text-gray-600">
             {booking.bookingType === 'laundry'
-              ? 'Your laundry order has been confirmed'
-              : 'Your transportation booking has been confirmed'}
+              ? t('paymentSuccess.laundryConfirmed')
+              : t('paymentSuccess.transportConfirmed')}
           </p>
         </div>
 
@@ -246,10 +248,10 @@ const PaymentSuccess = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold mb-1">
-                  {booking.bookingType === 'laundry' ? 'Order Confirmed' : 'Booking Confirmed'}
+                  {booking.bookingType === 'laundry' ? t('paymentSuccess.orderConfirmed') : t('paymentSuccess.bookingConfirmed')}
                 </h2>
                 <p className="text-green-100">
-                  Reference: {booking.bookingNumber || booking.bookingReference}
+                  {t('paymentSuccess.reference', { ref: booking.bookingNumber || booking.bookingReference })}
                 </p>
               </div>
               {booking.bookingType === 'laundry' ? (
@@ -270,17 +272,17 @@ const PaymentSuccess = () => {
                   <>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                       <FaTshirt className="mr-2 text-blue-500" />
-                      Order Details
+                      {t('paymentSuccess.orderDetails')}
                     </h3>
                     <div className="space-y-4">
                       <div>
-                        <p className="font-medium text-gray-900">Items</p>
+                        <p className="font-medium text-gray-900">{t('paymentSuccess.items')}</p>
                         <div className="bg-gray-50 rounded-md p-3 mt-2">
                           {booking.laundryItems?.map((item, idx) => (
                             <div key={idx} className="flex justify-between text-sm py-1">
                               <div>
                                 <p className="font-medium">{item.itemName} <span className="text-gray-500">({item.serviceTypeName})</span></p>
-                                <p className="text-gray-500 text-xs">Qty: {item.quantity}</p>
+                                <p className="text-gray-500 text-xs">{t('paymentSuccess.quantity')}: {item.quantity}</p>
                               </div>
                               <div className="text-right font-medium">{formatPriceByLanguage(item.totalPrice || item.price || 0, 'en')}</div>
                             </div>
@@ -290,11 +292,11 @@ const PaymentSuccess = () => {
 
                       {booking.schedule && (
                         <div>
-                          <p className="font-medium text-gray-700">Schedule</p>
+                          <p className="font-medium text-gray-700">{t('paymentSuccess.schedule')}</p>
                           <div className="bg-gray-50 rounded-md p-3 mt-2 text-sm">
-                            <p>Pickup Date: {booking.schedule?.preferredDate}</p>
-                            <p>Pickup Time: {booking.schedule?.preferredTime}</p>
-                            <p>Pickup Location: {booking.guestDetails?.roomNumber || booking.guestDetails?.pickupLocation || 'N/A'}</p>
+                            <p>{t('paymentSuccess.pickupDate')}: {booking.schedule?.preferredDate}</p>
+                            <p>{t('paymentSuccess.pickupTime')}: {booking.schedule?.preferredTime}</p>
+                            <p>{t('paymentSuccess.pickupLocation')}: {booking.guestDetails?.roomNumber || booking.guestDetails?.pickupLocation || t('paymentSuccess.notAvailable')}</p>
                           </div>
                         </div>
                       )}
@@ -305,27 +307,27 @@ const PaymentSuccess = () => {
                   <>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                       <FaCar className="mr-2 text-blue-500" />
-                      Trip Details
+                      {t('paymentSuccess.tripDetails')}
                     </h3>
                     <div className="space-y-4">
                       <div className="flex items-start">
                         <FaMapMarkerAlt className="mr-3 text-green-500 mt-1" />
                         <div>
-                          <p className="font-medium text-gray-900">From</p>
+                          <p className="font-medium text-gray-900">{t('paymentSuccess.from')}</p>
                           <p className="text-gray-600">{booking.tripDetails?.pickupLocation}</p>
                         </div>
                       </div>
                       <div className="flex items-start">
                         <FaMapMarkerAlt className="mr-3 text-red-500 mt-1" />
                         <div>
-                          <p className="font-medium text-gray-900">To</p>
+                          <p className="font-medium text-gray-900">{t('paymentSuccess.to')}</p>
                           <p className="text-gray-600">{booking.tripDetails?.destination}</p>
                         </div>
                       </div>
                       <div className="flex items-start">
                         <FaCalendarAlt className="mr-3 text-blue-500 mt-1" />
                         <div>
-                          <p className="font-medium text-gray-900">Date & Time</p>
+                          <p className="font-medium text-gray-900">{t('paymentSuccess.dateTime')}</p>
                           <p className="text-gray-600">
                             {booking.tripDetails?.scheduledDateTime && new Date(booking.tripDetails.scheduledDateTime).toLocaleString()}
                           </p>
@@ -334,15 +336,15 @@ const PaymentSuccess = () => {
                       <div className="bg-gray-50 rounded-md p-4">
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
-                            <p className="font-medium text-gray-700">Vehicle Type</p>
+                            <p className="font-medium text-gray-700">{t('paymentSuccess.vehicleType')}</p>
                             <p className="text-gray-600 capitalize">{booking.vehicleDetails?.vehicleType}</p>
                           </div>
                           <div>
-                            <p className="font-medium text-gray-700">Comfort Level</p>
+                            <p className="font-medium text-gray-700">{t('paymentSuccess.comfortLevel')}</p>
                             <p className="text-gray-600 capitalize">{booking.vehicleDetails?.comfortLevel}</p>
                           </div>
                           <div>
-                            <p className="font-medium text-gray-700">Passengers</p>
+                            <p className="font-medium text-gray-700">{t('paymentSuccess.passengers')}</p>
                             <p className="text-gray-600">{booking.tripDetails?.passengerCount}</p>
                           </div>
                         </div>
@@ -356,12 +358,12 @@ const PaymentSuccess = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <FaMoneyBillWave className="mr-2 text-green-500" />
-                  Payment Details
+                  {t('paymentSuccess.paymentDetails')}
                 </h3>
                 <div className="space-y-4">
                   <div className="bg-green-50 rounded-md p-4">
                     <div className="text-center">
-                      <p className="text-sm text-green-600 font-medium">Amount Paid</p>
+                      <p className="text-sm text-green-600 font-medium">{t('paymentSuccess.amountPaid')}</p>
                       <p className="text-3xl font-bold text-green-700">
                         {formatPriceByLanguage(
                           booking.payment?.paidAmount ||
@@ -377,7 +379,7 @@ const PaymentSuccess = () => {
 
                   {booking.payment.paymentDate && (
                     <div>
-                      <p className="font-medium text-gray-700">Payment Date</p>
+                      <p className="font-medium text-gray-700">{t('paymentSuccess.paymentDate')}</p>
                       <p className="text-gray-600">
                         {new Date(booking.payment.paymentDate).toLocaleString()}
                       </p>
@@ -386,7 +388,7 @@ const PaymentSuccess = () => {
 
                   {booking.payment.kashier?.transactionId && (
                     <div>
-                      <p className="font-medium text-gray-700">Transaction ID</p>
+                      <p className="font-medium text-gray-700">{t('paymentSuccess.transactionId')}</p>
                       <p className="text-gray-600 font-mono text-sm">
                         {booking.payment.kashier.transactionId}
                       </p>
@@ -395,17 +397,17 @@ const PaymentSuccess = () => {
 
                   {booking.payment.method && (
                     <div>
-                      <p className="font-medium text-gray-700">Payment Method</p>
+                      <p className="font-medium text-gray-700">{t('paymentSuccess.paymentMethod')}</p>
                       <p className="text-gray-600 capitalize">{booking.payment.method}</p>
                     </div>
                   )}
 
                   {booking.payment.kashier?.cardInfo && (
                     <div className="bg-gray-50 rounded-md p-3">
-                      <p className="font-medium text-gray-700 mb-2">Card Details</p>
+                      <p className="font-medium text-gray-700 mb-2">{t('paymentSuccess.cardDetails')}</p>
                       <div className="text-sm space-y-1">
                         <p className="text-gray-600">
-                          {booking.payment.kashier.cardInfo.cardBrand} ending in {booking.payment.kashier.cardInfo.maskedCard?.slice(-4)}
+                          {booking.payment.kashier.cardInfo.cardBrand} {t('paymentSuccess.endingIn')} {booking.payment.kashier.cardInfo.maskedCard?.slice(-4)}
                         </p>
                         {booking.payment.kashier.cardInfo.cardHolderName && (
                           <p className="text-gray-600">
@@ -418,7 +420,7 @@ const PaymentSuccess = () => {
 
                   <div className="border-t pt-4">
                     <p className="text-lg font-semibold text-green-600 text-center">
-                      ✓ Payment Status: Completed
+                      {t('paymentSuccess.paymentStatusCompleted')}
                     </p>
                   </div>
                 </div>
@@ -428,7 +430,7 @@ const PaymentSuccess = () => {
             {/* Service Provider Info */}
             {booking.serviceProvider && (
               <div className="mt-8 pt-6 border-t">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Service Provider</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('paymentSuccess.serviceProvider')}</h3>
                 <div className="bg-blue-50 rounded-md p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -439,8 +441,8 @@ const PaymentSuccess = () => {
                       )}
                     </div>
                     <div className="text-center">
-                      <p className="text-sm text-blue-600">They will contact you soon</p>
-                      <p className="text-sm text-blue-600">with driver details</p>
+                      <p className="text-sm text-blue-600">{t('paymentSuccess.willContact')}</p>
+                      <p className="text-sm text-blue-600">{t('paymentSuccess.withDriverDetails')}</p>
                     </div>
                   </div>
                 </div>
@@ -449,40 +451,40 @@ const PaymentSuccess = () => {
 
             {/* Next Steps */}
             <div className="mt-8 pt-6 border-t">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">What's Next?</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('paymentSuccess.whatsNext')}</h3>
               <div className="bg-blue-50 rounded-md p-4">
                 {booking.bookingType === 'laundry' ? (
                   <ul className="space-y-2 text-sm text-blue-800">
                     <li className="flex items-center">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                      You will receive a confirmation SMS or email shortly
+                      {t('paymentSuccess.nextLaundry.smsEmail')}
                     </li>
                     <li className="flex items-center">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                      The hotel staff will contact you if any clarification is required
+                      {t('paymentSuccess.nextLaundry.hotelContact')}
                     </li>
                     <li className="flex items-center">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                      You can view this order in your laundry bookings history
+                      {t('paymentSuccess.nextLaundry.viewHistory')}
                     </li>
                   </ul>
                 ) : (
                   <ul className="space-y-2 text-sm text-blue-800">
                     <li className="flex items-center">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                      You will receive a confirmation email shortly
+                      {t('paymentSuccess.nextTransport.email')}
                     </li>
                     <li className="flex items-center">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                      The service provider will contact you with driver details
+                      {t('paymentSuccess.nextTransport.providerContact')}
                     </li>
                     <li className="flex items-center">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                      You can view this booking in your booking history
+                      {t('paymentSuccess.nextTransport.viewBookings')}
                     </li>
                     <li className="flex items-center">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                      Be ready at your pickup location 10 minutes before the scheduled time
+                      {t('paymentSuccess.nextTransport.beReady')}
                     </li>
                   </ul>
                 )}
@@ -498,24 +500,21 @@ const PaymentSuccess = () => {
             className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-lg font-medium"
           >
             <FaReceipt className="mr-2" />
-            View My Bookings
+            {t('paymentSuccess.viewBookings')}
           </button>
           <button
             onClick={handleGoHome}
             className="flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-lg font-medium"
           >
             <FaHome className="mr-2" />
-            {booking.bookingType === 'laundry' ? 'Explore More Services' : 'Book Another Trip'}
+            {booking.bookingType === 'laundry' ? t('paymentSuccess.exploreMoreServices') : t('paymentSuccess.bookAnotherTrip')}
           </button>
         </div>
 
         {/* Additional Info */}
         <div className="mt-8 text-center text-gray-600">
           <p className="text-sm">
-            Need help? Contact our support team at{' '}
-            <a href="mailto:support@hotelplatform.com" className="text-blue-600 hover:underline">
-              support@hotelplatform.com
-            </a>
+            {t('paymentSuccess.needHelp', { email: 'support@hotelplatform.com' })}
           </p>
         </div>
       </div>

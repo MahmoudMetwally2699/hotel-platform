@@ -1323,5 +1323,63 @@
     "errors": {
       "fetchBookings": "فشل في جلب الحجوزات"
     }
+  },
+  "paymentSuccess": {
+    "noBookingId": "لم يتم تقديم معرف الحجز",
+    "bookingProcessing": "جارٍ معالجة الحجز الخاص بك. يرجى تحديث الصفحة بعد لحظة.",
+    "unableRetrieve": "تعذر استرداد تفاصيل الحجز. قد لا يزال الحجز قيد المعالجة.",
+    "failedFetch": "فشل في جلب تفاصيل الحجز",
+    "failedLoad": "فشل في تحميل معلومات الحجز",
+    "loading": "جارٍ تأكيد الدفع...",
+    "unableLoadConfirmation": "تعذر تحميل التأكيد",
+    "viewBookings": "عرض حجوزاتي",
+    "goHome": "الذهاب إلى الرئيسية",
+    "title": "تم الدفع بنجاح!",
+    "laundryConfirmed": "تم تأكيد طلب الغسيل الخاص بك",
+    "transportConfirmed": "تم تأكيد حجز النقل الخاص بك",
+    "orderConfirmed": "تم تأكيد الطلب",
+    "bookingConfirmed": "تم تأكيد الحجز",
+    "reference": "المرجع: {{ref}}",
+    "orderDetails": "تفاصيل الطلب",
+    "items": "العناصر",
+    "quantity": "الكمية",
+    "schedule": "الجدول",
+    "pickupDate": "تاريخ الاستلام",
+    "pickupTime": "وقت الاستلام",
+    "pickupLocation": "موقع الاستلام",
+    "notAvailable": "غير متاح",
+    "tripDetails": "تفاصيل الرحلة",
+    "from": "من",
+    "to": "إلى",
+    "dateTime": "التاريخ والوقت",
+    "vehicleType": "نوع المركبة",
+    "comfortLevel": "مستوى الراحة",
+    "passengers": "الركاب",
+    "paymentDetails": "تفاصيل الدفع",
+    "amountPaid": "المبلغ المدفوع",
+    "paymentDate": "تاريخ الدفع",
+    "transactionId": "معرّف المعاملة",
+    "paymentMethod": "طريقة الدفع",
+    "cardDetails": "تفاصيل البطاقة",
+    "endingIn": "ينتهي ب",
+    "paymentStatusCompleted": "✓ حالة الدفع: مكتمل",
+    "serviceProvider": "مقدم الخدمة",
+    "willContact": "سوف يتواصلون معك قريبًا",
+    "withDriverDetails": "بمعلومات السائق",
+    "whatsNext": "ما التالي؟",
+    "nextLaundry": {
+      "smsEmail": "ستتلقى رسالة تأكيد عبر SMS أو البريد الإلكتروني قريبًا",
+      "hotelContact": "سيتواصل موظفو الفندق معك إذا تطلب الأمر أي توضيح",
+      "viewHistory": "يمكنك عرض هذا الطلب في سجل حجوزات الغسيل الخاص بك"
+    },
+    "nextTransport": {
+      "email": "ستتلقى رسالة تأكيد عبر البريد الإلكتروني قريبًا",
+      "providerContact": "سيتواصل مقدم الخدمة معك بمعلومات السائق",
+      "viewBookings": "يمكنك عرض هذا الحجز في سجل حجوزاتك",
+      "beReady": "كن جاهزًا في موقع الاستلام قبل 10 دقائق من الوقت المجدول"
+    },
+    "exploreMoreServices": "استكشف المزيد من الخدمات",
+    "bookAnotherTrip": "حجز رحلة أخرى",
+    "needHelp": "هل تحتاج مساعدة؟ تواصل مع فريق الدعم عبر <1>{{email}}</1>"
   }
 }
