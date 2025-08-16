@@ -9,6 +9,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
+import { getVehicleIcon } from '../../utils/vehicleIconMap';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -93,19 +95,19 @@ const TransportationBookingPage = () => {
   };
 
   const getServiceTypeKey = (serviceType) => {
-    // Prefer an explicit id if present, otherwise normalize the name
-    const candidate = serviceType?.id || serviceType?.name || '';
-    return normalizeKey(candidate);
+  // Always normalize the name, ignore hex keys
+  const candidate = serviceType?.name || '';
+  return normalizeKey(candidate);
   };
 
   const getServiceTypeName = (serviceType) => {
-    const key = getServiceTypeKey(serviceType);
-    return t(`transportationBooking.serviceTypeNames.${key}`, { defaultValue: serviceType?.name || '' });
+  const key = getServiceTypeKey(serviceType);
+  return t(`transportationBooking.serviceTypeNames.${key}`, { defaultValue: serviceType?.name || '' });
   };
 
   const getServiceTypeDescription = (serviceType) => {
-    const key = getServiceTypeKey(serviceType);
-    return t(`transportationBooking.serviceTypeDescriptions.${key}`, { defaultValue: serviceType?.description || '' });
+  const key = getServiceTypeKey(serviceType);
+  return t(`transportationBooking.serviceTypeDescriptions.${key}`, { defaultValue: serviceType?.description || '' });
   };
 
   useEffect(() => {
@@ -458,27 +460,70 @@ const TransportationBookingPage = () => {
                 {/* Two separate dropdowns for vehicle and service type */}
                 {getAvailableTransportationVehicles().length > 0 && (
                   <div className="space-y-4">
-                    {/* Vehicle Selection Dropdown */}
+                    {/* Vehicle Selection Dropdown with Icons */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t('transportationBooking.selectVehicleType')}
-                        </label>
-                        <select
-                          value={selectedVehicleTypeId}
-                          onChange={(e) => handleVehicleTypeChoose(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="">{t('transportationBooking.chooseVehicleTypePlaceholder')}</option>
-                          {getAvailableTransportationVehicles().map(vehicle => {
-                            const capacity = vehicle.capacity ? (typeof vehicle.capacity === 'object' ? vehicle.capacity.passengers : vehicle.capacity) : 'N/A';
-
-                            return (
-                              <option key={vehicle.id} value={vehicle.id}>
-                                {getVehicleTypeName(vehicle.vehicleType)} - {capacity} passengers
-                              </option>
-                            );
-                          })}
-                        </select>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {t('transportationBooking.selectVehicleType')}
+                      </label>
+                      <Select
+                        options={getAvailableTransportationVehicles().map(vehicle => {
+                          const capacity = vehicle.capacity ? (typeof vehicle.capacity === 'object' ? vehicle.capacity.passengers : vehicle.capacity) : 'N/A';
+                          return {
+                            value: vehicle.id,
+                            label: `${getVehicleTypeName(vehicle.vehicleType)} - ${capacity} passengers`,
+                            vehicleType: vehicle.vehicleType,
+                          };
+                        })}
+                        value={(() => {
+                          const vehicles = getAvailableTransportationVehicles();
+                          return vehicles.length > 0 ? vehicles.map(vehicle => ({
+                            value: vehicle.id,
+                            label: `${getVehicleTypeName(vehicle.vehicleType)} - ${vehicle.capacity ? (typeof vehicle.capacity === 'object' ? vehicle.capacity.passengers : vehicle.capacity) : 'N/A'} passengers`,
+                            vehicleType: vehicle.vehicleType,
+                          })).find(opt => opt.value === selectedVehicleTypeId) || null : null;
+                        })()}
+                        onChange={option => handleVehicleTypeChoose(option ? option.value : '')}
+                        placeholder={t('transportationBooking.chooseVehicleTypePlaceholder')}
+                        isClearable
+                        classNamePrefix="vehicle-select"
+                        aria-label={t('transportationBooking.selectVehicleType')}
+                        styles={{
+                          control: (base, state) => ({
+                            ...base,
+                            borderRadius: '0.5rem',
+                            borderColor: state.isFocused ? '#3b82f6' : '#d1d5db',
+                            boxShadow: state.isFocused ? '0 0 0 2px #3b82f6' : 'none',
+                            minHeight: '44px',
+                          }),
+                          option: (base, state) => ({
+                            ...base,
+                            display: 'flex',
+                            alignItems: 'center',
+                            fontSize: '1rem',
+                            backgroundColor: state.isFocused ? '#eff6ff' : '#fff',
+                            color: '#1f2937',
+                          }),
+                          singleValue: (base) => ({
+                            ...base,
+                            display: 'flex',
+                            alignItems: 'center',
+                          }),
+                        }}
+                        components={{
+                          Option: (props) => (
+                            <div {...props.innerProps} className={props.className} style={{ display: 'flex', alignItems: 'center' }}>
+                              {getVehicleIcon(props.data.vehicleType)}
+                              <span>{props.data.label}</span>
+                            </div>
+                          ),
+                          SingleValue: (props) => (
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              {getVehicleIcon(props.data.vehicleType)}
+                              <span>{props.data.label}</span>
+                            </div>
+                          ),
+                        }}
+                      />
                     </div>
 
                   </div>
