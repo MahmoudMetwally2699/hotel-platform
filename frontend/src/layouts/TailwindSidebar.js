@@ -13,6 +13,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
   const { role } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
+  const [showMobileCategories, setShowMobileCategories] = useState(false);
 
   // Check if current language is RTL
   const isRTL = i18n.language === 'ar';
@@ -291,21 +292,39 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
       {/* Mobile Bottom Navigation Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-gray-800 text-white border-t border-gray-700 z-50">
         <div className="flex justify-around items-center py-2">
-          {navigationItems.slice(0, 5).map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) => `
-                flex flex-col items-center justify-center p-2 rounded-lg transition-colors min-w-0 flex-1 max-w-[80px]
-                ${isActive ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
-              `}
-            >
-              <span className="mb-1">{getIcon(item.icon)}</span>
-              <span className="text-xs text-center leading-tight truncate w-full">
-                {item.name}
-              </span>
-            </NavLink>
-          ))}
+          {navigationItems.slice(0, 5).map((item) => {
+            // Handle expandable items specially on mobile
+            if (item.isExpandable) {
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => setShowMobileCategories(true)}
+                  className="flex flex-col items-center justify-center p-2 rounded-lg transition-colors min-w-0 flex-1 max-w-[80px] text-gray-300 hover:bg-gray-700 hover:text-white"
+                >
+                  <span className="mb-1">{getIcon(item.icon)}</span>
+                  <span className="text-xs text-center leading-tight truncate w-full">
+                    {item.name}
+                  </span>
+                </button>
+              );
+            }
+
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) => `
+                  flex flex-col items-center justify-center p-2 rounded-lg transition-colors min-w-0 flex-1 max-w-[80px]
+                  ${isActive ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+                `}
+              >
+                <span className="mb-1">{getIcon(item.icon)}</span>
+                <span className="text-xs text-center leading-tight truncate w-full">
+                  {item.name}
+                </span>
+              </NavLink>
+            );
+          })}
           {navigationItems.length > 5 && (
             <button
               onClick={toggleSidebar}
@@ -319,6 +338,92 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           )}
         </div>
       </div>
+
+      {/* Mobile Categories Modal for Service Providers */}
+      {showMobileCategories && role === 'service' && (
+        <>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
+            onClick={() => setShowMobileCategories(false)}
+          />
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-xl z-50 lg:hidden max-h-[70vh] overflow-y-auto">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">
+                  {t('categorySelection.manageServices')}
+                </h3>
+                <button
+                  onClick={() => setShowMobileCategories(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Service Categories Grid */}
+              <div className="grid grid-cols-1 gap-4">
+                {(() => {
+                  const manageServicesItem = navigationItems.find(item => item.isExpandable && item.key === 'manage-services');
+                  return manageServicesItem?.children?.map((category) => (
+                    <div key={category.path} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                      <NavLink
+                        to={category.path}
+                        onClick={() => setShowMobileCategories(false)}
+                        className="flex items-center space-x-4 w-full"
+                      >
+                        <div className="flex-shrink-0 p-3 bg-white rounded-lg shadow-sm">
+                          <span className="text-2xl">{getIcon(category.icon)}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-lg font-semibold text-gray-900 truncate">
+                            {category.name}
+                          </h4>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {category.path.includes('laundry') && t('categorySelection.categories.laundry.description')}
+                            {category.path.includes('transportation') && t('categorySelection.categories.transportation.description')}
+                            {category.path.includes('bookings') && 'Manage transportation bookings and requests'}
+                          </p>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </NavLink>
+                    </div>
+                  ));
+                })()}
+              </div>
+
+              {/* Quick Actions */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                  {t('common.quickActions') || 'Quick Actions'}
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <NavLink
+                    to="/service/dashboard"
+                    onClick={() => setShowMobileCategories(false)}
+                    className="flex items-center justify-center p-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+                  >
+                    <span className="text-sm font-medium">{t('navigation.dashboard')}</span>
+                  </NavLink>
+                  <NavLink
+                    to="/service/orders"
+                    onClick={() => setShowMobileCategories(false)}
+                    className="flex items-center justify-center p-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors"
+                  >
+                    <span className="text-sm font-medium">{t('navigation.orders')}</span>
+                  </NavLink>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Mobile Overlay Menu for Additional Items */}
       {navigationItems.length > 5 && (
