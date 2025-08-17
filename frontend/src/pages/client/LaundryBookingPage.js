@@ -454,83 +454,81 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
 
                 {/* Only show categories if items are available */}
                 {getAvailableLaundryItems().length > 0 && (
-                  <>                    {/* Categories - Dynamically generated from available items */}
-                    {(() => {
-                      const availableItems = getAvailableLaundryItems();
-
-                      // Get unique categories from all available items
-                      const availableCategories = [...new Set(availableItems.map(item => item.category))];
-                      console.log('🔍 Dynamic categories found:', availableCategories);
-
-                      return availableCategories.map(category => {
+                  <>
+                    {/* Categories - Dynamically generated from available items */}
+                    {getAvailableLaundryItems()
+                      .map(item => item.category)
+                      .filter((value, index, self) => self.indexOf(value) === index)
+                      .map(category => {
+                        const availableItems = getAvailableLaundryItems();
                         const categoryItems = availableItems.filter(item => item.category === category);
-                        console.log(`🔍 Category: ${category}, Items found: ${categoryItems.length}`, categoryItems.map(i => i.name));
-                        if (categoryItems.length === 0) return null;return (
-                    <div key={category} className="mb-8">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                        {getCategoryName(category)}
-                      </h3><div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {categoryItems.map(item => {
-                          const selectedItem = selectedItems.find(selected => selected.id === item.id);                          const quantity = selectedItem ? selectedItem.quantity : 0;
-                          const isAvailable = item.isAvailable !== false; // Default to available if not specified
-                          const availableServiceTypes = getAvailableServiceTypes(item.id);
-                          const hasAvailableServices = availableServiceTypes.length > 0;
-
-                          return (
-                            <div
-                              key={item.id}
-                              className={`flex items-center justify-between p-4 border rounded-lg transition-colors ${
-                                isAvailable && hasAvailableServices
-                                  ? 'border-gray-200 hover:border-blue-300'
-                                  : 'border-gray-200 bg-gray-50 opacity-60'
-                              }`}
-                            >                              <div className="flex items-center">
-                                <div>
-                                  <h4 className={`font-medium ${isAvailable && hasAvailableServices ? 'text-gray-900' : 'text-gray-500'}`}>
-                                    {getItemName(item.name)}
-                                    {!isAvailable && (
-                                      <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
-                                        {t('laundryBooking.unavailable')}
-                                      </span>
-                                    )}
-                                    {isAvailable && !hasAvailableServices && (
-                                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded">
-                                        {t('laundryBooking.noServiceTypes')}
-                                      </span>
-                                    )}
-                                  </h4>
-                                  <p className={`text-sm ${isAvailable && hasAvailableServices ? 'text-gray-600' : 'text-gray-400'}`}>
-                                    {availableServiceTypes.length > 0                                      ? `From ${formatPriceByLanguage(Math.min(...availableServiceTypes.map(st => st.price)), i18n.language)}`
-                                      : item.basePrice ? formatPriceByLanguage(item.basePrice, i18n.language) : t('laundryBooking.priceNotSet')
-                                    }
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <button
-                                  onClick={() => handleItemRemove(item.id)}
-                                  disabled={quantity === 0 || !isAvailable || !hasAvailableServices}
-                                  className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  <FaMinus className="text-xs" />
-                                </button>
-                                <span className="w-8 text-center font-medium">{quantity}</span>
-                                <button
-                                  onClick={() => handleItemAdd(item)}
-                                  disabled={!isAvailable || !hasAvailableServices}
-                                  className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                >
-                                  <FaPlus className="text-xs" />
-                                </button>
-                              </div>
+                        if (categoryItems.length === 0) return null;
+                        return (
+                          <div key={category} className="mb-8">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                              {getCategoryName(category)}
+                            </h3>
+                            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+                              {categoryItems.map(item => {
+                                const selectedItem = selectedItems.find(selected => selected.id === item.id);
+                                const quantity = selectedItem ? selectedItem.quantity : 0;
+                                const isAvailable = item.isAvailable !== false;
+                                const availableServiceTypes = getAvailableServiceTypes(item.id);
+                                const hasAvailableServices = availableServiceTypes.length > 0;
+                                return (
+                                  <div
+                                    key={item.id}
+                                    className={`border rounded-lg transition-colors p-4 ${
+                                      isAvailable && hasAvailableServices
+                                        ? 'border-gray-200 hover:border-blue-300'
+                                        : 'border-gray-200 bg-gray-50 opacity-60'
+                                    } flex flex-col justify-between h-full`}
+                                  >
+                                    <div className="mb-4">
+                                      <h4 className={`font-medium ${isAvailable && hasAvailableServices ? 'text-gray-900' : 'text-gray-500'}`}>
+                                        {getItemName(item.name)}
+                                        {!isAvailable && (
+                                          <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
+                                            {t('laundryBooking.unavailable')}
+                                          </span>
+                                        )}
+                                        {isAvailable && !hasAvailableServices && (
+                                          <span className="ml-2 text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded">
+                                            {t('laundryBooking.noServiceTypes')}
+                                          </span>
+                                        )}
+                                      </h4>
+                                      <p className={`text-sm ${isAvailable && hasAvailableServices ? 'text-gray-600' : 'text-gray-400'}`}>
+                                        {availableServiceTypes.length > 0
+                                          ? `From ${formatPriceByLanguage(Math.min(...availableServiceTypes.map(st => st.price)), i18n.language)}`
+                                          : item.basePrice ? formatPriceByLanguage(item.basePrice, i18n.language) : t('laundryBooking.priceNotSet')
+                                        }
+                                      </p>
+                                    </div>
+                                    <div className="flex flex-row items-center justify-center gap-2 mt-auto">
+                                      <button
+                                        onClick={() => handleItemRemove(item.id)}
+                                        disabled={quantity === 0 || !isAvailable || !hasAvailableServices}
+                                        className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      >
+                                        <FaMinus className="text-base" />
+                                      </button>
+                                      <span className="w-9 text-center font-medium text-lg">{quantity}</span>
+                                      <button
+                                        onClick={() => handleItemAdd(item)}
+                                        disabled={!isAvailable || !hasAvailableServices}
+                                        className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                      >
+                                        <FaPlus className="text-base" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
-                          );                        })}
-                      </div>
-
-                    </div>
-                  );
-                      });
-                    })()}
+                          </div>
+                        );
+                      })}
                   </>
                 )}
               </div>
@@ -540,41 +538,70 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                   {t('laundryBooking.chooseServiceTypes')}
                 </h2>
 
+                {/* Service Type Filter Buttons */}
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {(() => {
+                    // Collect all available service type names for selected items
+                    const typeNames = Array.from(new Set(
+                      selectedItems.flatMap(item =>
+                        getAvailableServiceTypes(item.id).map(st => st.name)
+                      )
+                    ));
+                    return typeNames.map(typeName => (
+                      <button
+                        key={typeName}
+                        className="px-3 py-1 rounded bg-blue-100 text-blue-700 font-medium hover:bg-blue-200 transition-colors"
+                        onClick={() => {
+                          // For each selected item, if it has this service type, select it
+                          selectedItems.forEach(item => {
+                            const serviceTypesForItem = getAvailableServiceTypes(item.id);
+                            const foundType = serviceTypesForItem.find(st => st.name === typeName);
+                            if (foundType) {
+                              handleServiceTypeChange(item.id, foundType.id);
+                            }
+                          });
+                        }}
+                      >
+                        {typeName}
+                      </button>
+                    ));
+                  })()}
+                </div>
+
                 <div className="space-y-6">
                   {selectedItems.map(item => (
-                    <div key={item.id} className="border border-gray-200 rounded-lg p-4">                      <div className="flex items-center mb-4">
+                    <div key={item.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center mb-4">
                         <div>
                           <h4 className="font-medium text-gray-900">{getItemName(item.name)}</h4>
                           <p className="text-sm text-gray-600">{t('laundryBooking.quantity')}: {item.quantity}</p>
                         </div>
-                      </div><div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
                         {getAvailableServiceTypes(item.id).map(serviceType => (
                           <div
                             key={serviceType.id}
-                            className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                            className={`p-3 border rounded-lg cursor-pointer transition-colors flex flex-col justify-between h-full ${
                               serviceTypes[item.id] === serviceType.id
                                 ? 'border-blue-500 bg-blue-50'
                                 : 'border-gray-200 hover:border-gray-300'
                             }`}
                             onClick={() => handleServiceTypeChange(item.id, serviceType.id)}
                           >
-                            <div className="flex items-center justify-between">                              <div className="flex items-center">
-                                <div>
-                                  <h5 className="font-medium text-gray-900">
-                                    {serviceType.name}
-                                  </h5>
-                                  <p className="text-xs text-gray-600">{serviceType.description}</p>
-                                  <p className="text-xs text-gray-500">
-                                    <FaClock className="inline mr-1" />
-                                    {serviceType.duration}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p className="font-medium text-gray-900">
-                                  {formatPriceByLanguage(serviceType.price * item.quantity, i18n.language)}
-                                </p>
-                              </div>
+                            <div>
+                              <h5 className="font-medium text-gray-900">
+                                {serviceType.name}
+                              </h5>
+                              <p className="text-xs text-gray-600 mt-1">{serviceType.description}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                <FaClock className="inline mr-1" />
+                                {serviceType.duration}
+                              </p>
+                            </div>
+                            <div className="mt-2 text-right">
+                              <p className="font-medium text-gray-900">
+                                {formatPriceByLanguage(serviceType.price * item.quantity, i18n.language)}
+                              </p>
                             </div>
                           </div>
                         ))}
