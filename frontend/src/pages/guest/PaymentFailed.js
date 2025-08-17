@@ -3,7 +3,7 @@
  * Displays error message when payment fails or is cancelled
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FaTimesCircle, FaCar, FaCalendarAlt, FaMapMarkerAlt, FaMoneyBillWave, FaRedo, FaHome, FaExclamationTriangle } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -24,16 +24,7 @@ const PaymentFailed = () => {
   const errorCode = searchParams.get('error');
   const errorMessage = searchParams.get('message');
 
-  useEffect(() => {
-    if (bookingId) {
-      fetchBookingDetails();
-    } else {
-      setError('No booking ID provided');
-      setLoading(false);
-    }
-  }, [bookingId]);
-
-  const fetchBookingDetails = async () => {
+  const fetchBookingDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.get(`/transportation-bookings/${bookingId}`);
@@ -41,15 +32,24 @@ const PaymentFailed = () => {
       if (response.data.success) {
         setBooking(response.data.data.booking);
       } else {
-        setError('Failed to fetch booking details');
+        setError(t('paymentFailed.failedFetch'));
       }
-    } catch (error) {
-      console.error('Error fetching booking details:', error);
-      setError('Failed to load booking information');
+    } catch (err) {
+      console.error('Error fetching booking details:', err);
+      setError(t('paymentFailed.failedLoad'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [bookingId, t]);
+
+  useEffect(() => {
+    if (bookingId) {
+      fetchBookingDetails();
+    } else {
+      setError(t('paymentFailed.noBookingId'));
+      setLoading(false);
+    }
+  }, [bookingId, fetchBookingDetails, t]);
 
   const handleRetryPayment = async () => {
     try {
@@ -65,11 +65,11 @@ const PaymentFailed = () => {
         // Redirect to Kashier payment page
         window.location.href = paymentUrl;
       } else {
-        toast.error('Failed to create new payment session');
+        toast.error(t('paymentFailed.failedCreateSession'));
       }
-    } catch (error) {
-      console.error('Error retrying payment:', error);
-      toast.error('Failed to retry payment. Please try again later.');
+    } catch (err) {
+      console.error('Error retrying payment:', err);
+      toast.error(t('paymentFailed.failedRetry'));
     } finally {
       setRetrying(false);
     }
@@ -90,17 +90,17 @@ const PaymentFailed = () => {
 
     switch (errorCode) {
       case 'cancelled':
-        return 'Payment was cancelled by user';
+        return t('paymentFailed.errorMessages.cancelled');
       case 'timeout':
-        return 'Payment session timed out';
+        return t('paymentFailed.errorMessages.timeout');
       case 'insufficient_funds':
-        return 'Insufficient funds in your account';
+        return t('paymentFailed.errorMessages.insufficientFunds');
       case 'card_declined':
-        return 'Your card was declined';
+        return t('paymentFailed.errorMessages.cardDeclined');
       case 'network_error':
-        return 'Network error occurred during payment';
+        return t('paymentFailed.errorMessages.network');
       default:
-        return 'Payment could not be completed. Please try again.';
+        return t('paymentFailed.errorMessages.default');
     }
   };
 
@@ -109,7 +109,7 @@ const PaymentFailed = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading payment information...</p>
+          <p className="text-gray-600">{t('paymentFailed.loading')}</p>
         </div>
       </div>
     );
@@ -123,7 +123,7 @@ const PaymentFailed = () => {
             <FaTimesCircle className="text-6xl mx-auto mb-4 opacity-50" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Unable to Load Information
+            {t('paymentFailed.unableLoadInformation')}
           </h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="space-y-3">
@@ -131,13 +131,13 @@ const PaymentFailed = () => {
               onClick={handleViewBookings}
               className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              View My Bookings
+              {t('paymentFailed.viewBookings')}
             </button>
             <button
               onClick={handleGoHome}
               className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
             >
-              Go Home
+              {t('paymentFailed.goHome')}
             </button>
           </div>
         </div>
@@ -154,7 +154,7 @@ const PaymentFailed = () => {
             <FaTimesCircle className="text-8xl mx-auto animate-pulse" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Payment Failed
+            {t('paymentFailed.title')}
           </h1>
           <p className="text-xl text-gray-600">
             {getErrorMessage()}
@@ -167,8 +167,8 @@ const PaymentFailed = () => {
           <div className="bg-red-600 text-white p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold mb-1">Booking Pending Payment</h2>
-                <p className="text-red-100">Reference: {booking.bookingReference}</p>
+                <h2 className="text-2xl font-bold mb-1">{t('paymentFailed.bookingPending')}</h2>
+                <p className="text-red-100">{t('paymentFailed.reference', { ref: booking.bookingReference })}</p>
               </div>
               <FaCar className="text-4xl text-red-200" />
             </div>
@@ -181,44 +181,42 @@ const PaymentFailed = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <FaCar className="mr-2 text-blue-500" />
-                  Trip Details
+                  {t('paymentFailed.tripDetails')}
                 </h3>
                 <div className="space-y-4">
                   <div className="flex items-start">
                     <FaMapMarkerAlt className="mr-3 text-green-500 mt-1" />
                     <div>
-                      <p className="font-medium text-gray-900">From</p>
+                      <p className="font-medium text-gray-900">{t('paymentFailed.from')}</p>
                       <p className="text-gray-600">{booking.tripDetails.pickupLocation}</p>
                     </div>
                   </div>
                   <div className="flex items-start">
                     <FaMapMarkerAlt className="mr-3 text-red-500 mt-1" />
                     <div>
-                      <p className="font-medium text-gray-900">To</p>
+                      <p className="font-medium text-gray-900">{t('paymentFailed.to')}</p>
                       <p className="text-gray-600">{booking.tripDetails.destination}</p>
                     </div>
                   </div>
                   <div className="flex items-start">
                     <FaCalendarAlt className="mr-3 text-blue-500 mt-1" />
                     <div>
-                      <p className="font-medium text-gray-900">Date & Time</p>
-                      <p className="text-gray-600">
-                        {new Date(booking.tripDetails.scheduledDateTime).toLocaleString()}
-                      </p>
+                      <p className="font-medium text-gray-900">{t('paymentFailed.dateTime')}</p>
+                      <p className="text-gray-600">{new Date(booking.tripDetails.scheduledDateTime).toLocaleString()}</p>
                     </div>
                   </div>
                   <div className="bg-gray-50 rounded-md p-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="font-medium text-gray-700">Vehicle Type</p>
+                        <p className="font-medium text-gray-700">{t('paymentFailed.vehicleType')}</p>
                         <p className="text-gray-600 capitalize">{booking.vehicleDetails.vehicleType}</p>
                       </div>
                       <div>
-                        <p className="font-medium text-gray-700">Comfort Level</p>
+                        <p className="font-medium text-gray-700">{t('paymentFailed.comfortLevel')}</p>
                         <p className="text-gray-600 capitalize">{booking.vehicleDetails.comfortLevel}</p>
                       </div>
                       <div>
-                        <p className="font-medium text-gray-700">Passengers</p>
+                        <p className="font-medium text-gray-700">{t('paymentFailed.passengers')}</p>
                         <p className="text-gray-600">{booking.tripDetails.passengerCount}</p>
                       </div>
                     </div>
@@ -230,15 +228,13 @@ const PaymentFailed = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <FaMoneyBillWave className="mr-2 text-red-500" />
-                  Payment Information
+                  {t('paymentFailed.paymentInformation')}
                 </h3>
                 <div className="space-y-4">
                   <div className="bg-red-50 rounded-md p-4">
                     <div className="text-center">
-                      <p className="text-sm text-red-600 font-medium">Amount Due</p>
-                      <p className="text-3xl font-bold text-red-700">
-                        {formatPriceByLanguage(booking.payment.totalAmount || booking.quote.finalPrice, i18n.language)}
-                      </p>
+                      <p className="text-sm text-red-600 font-medium">{t('paymentFailed.amountDue')}</p>
+                      <p className="text-3xl font-bold text-red-700">{formatPriceByLanguage(booking.payment.totalAmount || booking.quote.finalPrice, i18n.language)}</p>
                       <p className="text-sm text-red-600">{booking.payment.currency || 'EGP'}</p>
                     </div>
                   </div>
@@ -247,18 +243,14 @@ const PaymentFailed = () => {
                     <div className="flex items-start">
                       <FaExclamationTriangle className="text-orange-500 mt-1 mr-3" />
                       <div>
-                        <p className="text-sm font-medium text-orange-800">Payment Required</p>
-                        <p className="text-sm text-orange-700 mt-1">
-                          Your booking is reserved but payment is still required to confirm it.
-                        </p>
+                        <p className="text-sm font-medium text-orange-800">{t('paymentFailed.paymentRequiredTitle')}</p>
+                        <p className="text-sm text-orange-700 mt-1">{t('paymentFailed.paymentRequiredDesc')}</p>
                       </div>
                     </div>
                   </div>
 
                   <div className="border-t pt-4">
-                    <p className="text-lg font-semibold text-red-600 text-center">
-                      ✗ Payment Status: Failed
-                    </p>
+                    <p className="text-lg font-semibold text-red-600 text-center">{t('paymentFailed.paymentStatusFailed')}</p>
                   </div>
                 </div>
               </div>
@@ -267,7 +259,7 @@ const PaymentFailed = () => {
             {/* Service Provider Info */}
             {booking.serviceProvider && (
               <div className="mt-8 pt-6 border-t">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Service Provider</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('paymentFailed.serviceProvider')}</h3>
                 <div className="bg-blue-50 rounded-md p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -278,8 +270,8 @@ const PaymentFailed = () => {
                       )}
                     </div>
                     <div className="text-center">
-                      <p className="text-sm text-blue-600">Waiting for payment</p>
-                      <p className="text-sm text-blue-600">to confirm booking</p>
+                      <p className="text-sm text-blue-600">{t('paymentFailed.waitingForPayment')}</p>
+                      <p className="text-sm text-blue-600">{t('paymentFailed.toConfirmBooking')}</p>
                     </div>
                   </div>
                 </div>
@@ -288,16 +280,14 @@ const PaymentFailed = () => {
 
             {/* What Happened */}
             <div className="mt-8 pt-6 border-t">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">What Happened?</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('paymentFailed.whatHappened')}</h3>
               <div className="bg-yellow-50 rounded-md p-4">
                 <div className="flex">
                   <FaExclamationTriangle className="text-yellow-400 mr-3 mt-1" />
                   <div>
-                    <p className="font-medium text-yellow-800">Payment Issue</p>
+                    <p className="font-medium text-yellow-800">{t('paymentFailed.paymentIssue')}</p>
                     <p className="text-yellow-700 mt-1">{getErrorMessage()}</p>
-                    <p className="text-yellow-700 mt-2 text-sm">
-                      Don't worry - your booking is still reserved. You can try paying again or contact support if you need assistance.
-                    </p>
+                    <p className="text-yellow-700 mt-2 text-sm">{t('paymentFailed.stillReserved')}</p>
                   </div>
                 </div>
               </div>
@@ -315,12 +305,12 @@ const PaymentFailed = () => {
             {retrying ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-                Processing...
+                {t('paymentFailed.processing')}
               </>
             ) : (
               <>
                 <FaRedo className="mr-2" />
-                Try Payment Again
+                {t('paymentFailed.tryAgain')}
               </>
             )}
           </button>
@@ -329,24 +319,21 @@ const PaymentFailed = () => {
             className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-lg font-medium"
           >
             <FaCar className="mr-2" />
-            View My Bookings
+            {t('paymentFailed.viewBookings')}
           </button>
           <button
             onClick={handleGoHome}
             className="flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-lg font-medium"
           >
             <FaHome className="mr-2" />
-            Back to Home
+            {t('paymentFailed.backToHome')}
           </button>
         </div>
 
         {/* Additional Info */}
         <div className="mt-8 text-center text-gray-600">
           <p className="text-sm">
-            Having trouble with payment? Contact our support team at{' '}
-            <a href="mailto:support@hotelplatform.com" className="text-blue-600 hover:underline">
-              support@hotelplatform.com
-            </a>
+            {t('paymentFailed.needHelp', { email: 'support@hotelplatform.com' })}
           </p>
         </div>
       </div>
