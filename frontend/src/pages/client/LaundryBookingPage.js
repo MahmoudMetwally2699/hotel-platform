@@ -547,24 +547,40 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                         getAvailableServiceTypes(item.id).map(st => st.name)
                       )
                     ));
-                    return typeNames.map(typeName => (
-                      <button
-                        key={typeName}
-                        className="px-3 py-1 rounded bg-blue-100 text-blue-700 font-medium hover:bg-blue-200 transition-colors"
-                        onClick={() => {
-                          // For each selected item, if it has this service type, select it
-                          selectedItems.forEach(item => {
-                            const serviceTypesForItem = getAvailableServiceTypes(item.id);
-                            const foundType = serviceTypesForItem.find(st => st.name === typeName);
-                            if (foundType) {
-                              handleServiceTypeChange(item.id, foundType.id);
-                            }
-                          });
-                        }}
-                      >
-                        {typeName}
-                      </button>
-                    ));
+                    // Determine which type is currently selected for all items
+                    const getIsActive = (typeName) => {
+                      // Active if all selected items have this type selected
+                      return selectedItems.length > 0 && selectedItems.every(item => {
+                        const serviceTypesForItem = getAvailableServiceTypes(item.id);
+                        const foundType = serviceTypesForItem.find(st => st.name === typeName);
+                        return foundType && serviceTypes[item.id] === foundType.id;
+                      });
+                    };
+                    return typeNames.map(typeName => {
+                      const isActive = getIsActive(typeName);
+                      return (
+                        <button
+                          key={typeName}
+                          className={`px-3 py-1 rounded font-medium transition-colors border ${
+                            isActive
+                              ? 'bg-blue-500 text-white border-blue-600'
+                              : 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200'
+                          }`}
+                          onClick={() => {
+                            // For each selected item, if it has this service type, select it
+                            selectedItems.forEach(item => {
+                              const serviceTypesForItem = getAvailableServiceTypes(item.id);
+                              const foundType = serviceTypesForItem.find(st => st.name === typeName);
+                              if (foundType) {
+                                handleServiceTypeChange(item.id, foundType.id);
+                              }
+                            });
+                          }}
+                        >
+                          {typeName}
+                        </button>
+                      );
+                    });
                   })()}
                 </div>
 

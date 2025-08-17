@@ -36,12 +36,8 @@ const RegisterPage = () => {
     phone: Yup.string().required(t('register.validation.phoneRequired')),
     selectedHotelId: Yup.string().required(t('register.validation.hotelRequired')),
     password: Yup.string()
-      .min(8, t('register.validation.passwordMinLength'))
-      .matches(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        t('register.validation.passwordComplexity')
-      )
-      .required(t('register.validation.passwordRequired')),
+    .min(4, 'Password must be at least 4 characters')
+    .required(t('register.validation.passwordRequired')),
     confirmPassword: Yup.string()
       .oneOf([Yup.ref('password'), null], t('register.validation.passwordsMatch'))
       .required(t('register.validation.confirmPasswordRequired')),

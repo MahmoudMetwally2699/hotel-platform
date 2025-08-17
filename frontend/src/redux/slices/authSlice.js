@@ -263,7 +263,8 @@ const authSlice = createSlice({
       .addCase(login.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-      })      .addCase(login.fulfilled, (state, action) => {
+      })
+      .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
 
@@ -303,9 +304,14 @@ const authSlice = createSlice({
       .addCase(register.pending, (state) => {
         state.isLoading = true;
         state.error = null;
-      })      .addCase(register.fulfilled, (state, action) => {
+      })
+      .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
-        if (action.payload.token) {
+
+        // Check for token in both possible locations
+        const token = action.payload.token || action.payload.data?.token;
+
+        if (token) {
           state.isAuthenticated = true;
 
           // Handle both data formats that might come from the API
@@ -318,7 +324,7 @@ const authSlice = createSlice({
 
           // Store user data in localStorage for persistence
           localStorage.setItem('user', JSON.stringify(userData));
-          console.log('✅ User data stored in localStorage from registration');
+          console.log('✅ User registered and logged in automatically');
         }
         state.error = null;
       })

@@ -21,6 +21,13 @@ const PaymentSuccess = () => {
   const bookingId = searchParams.get('booking') || searchParams.get('bookingRef') || searchParams.get('merchantOrderId');
 
   useEffect(() => {
+    console.log('🔵 PaymentSuccess initialized with:', {
+      bookingId,
+      allParams: Object.fromEntries(searchParams.entries()),
+      paymentStatus: searchParams.get('paymentStatus'),
+      transactionId: searchParams.get('transactionId')
+    });
+
     if (bookingId) {
       // Check if we have payment success parameters from Kashier
       const paymentStatus = searchParams.get('paymentStatus');
@@ -95,16 +102,50 @@ const PaymentSuccess = () => {
           if (response.data && response.data.success) {
             const bookingData = response.data.data;
 
-            // Determine booking type from the data structure
-            if (bookingData.laundryItems && bookingData.laundryItems.length > 0) {
-              bookingData.bookingType = 'laundry';
-            } else if (bookingData.pickupLocation || bookingData.dropoffLocation) {
-              bookingData.bookingType = 'transportation';
-            } else {
-              bookingData.bookingType = bookingData.category === 'laundry' ? 'laundry' : 'transportation';
+            // Determine booking type from multiple indicators
+            let detectedType = 'unknown';
+
+            // Check booking ID pattern first (most reliable)
+            if (bookingId.includes('TEMP_LAUNDRY_')) {
+              detectedType = 'laundry';
+            } else if (bookingId.includes('TEMP_TRANSPORT_')) {
+              detectedType = 'transportation';
+            }
+            // Check data structure - look for laundry items in multiple locations
+            else if ((bookingData.bookingConfig?.laundryItems && bookingData.bookingConfig.laundryItems.length > 0) ||
+                     (bookingData.laundryItems && bookingData.laundryItems.length > 0)) {
+              detectedType = 'laundry';
+            } else if (bookingData.pickupLocation || bookingData.dropoffLocation || bookingData.tripDetails) {
+              detectedType = 'transportation';
+            }
+            // Check category field
+            else if (bookingData.category) {
+              detectedType = bookingData.category;
+            }
+            // Check service type
+            else if (bookingData.serviceId?.category) {
+              detectedType = bookingData.serviceId.category;
+            }
+            // Check serviceDetails category
+            else if (bookingData.serviceDetails?.category) {
+              detectedType = bookingData.serviceDetails.category;
+            }
+            // Final fallback - assume transportation if no clear indicators
+            else {
+              detectedType = 'transportation';
             }
 
-            setBooking(bookingData);
+            bookingData.bookingType = detectedType;
+            console.log('🔍 Booking type detection:', {
+              bookingId,
+              detectedType,
+              hasLaundryItems: !!(bookingData.bookingConfig?.laundryItems?.length || bookingData.laundryItems?.length),
+              hasPickupLocation: !!bookingData.pickupLocation,
+              hasTripDetails: !!bookingData.tripDetails,
+              category: bookingData.category,
+              serviceCategory: bookingData.serviceId?.category,
+              serviceDetailsCategory: bookingData.serviceDetails?.category
+            });            setBooking(bookingData);
             return;
           } else if (response.status === 202) {
             // Booking is still being processed
@@ -188,12 +229,14 @@ const PaymentSuccess = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto mb-4"></div>
           <p className="text-gray-600">{t('paymentSuccess.loading')}</p>
+          <p className="text-xs text-gray-400 mt-2">Booking ID: {bookingId}</p>
         </div>
       </div>
     );
   }
 
   if (error || !booking) {
+    console.log('❌ PaymentSuccess Error State:', { error, booking, bookingId });
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
@@ -222,6 +265,21 @@ const PaymentSuccess = () => {
       </div>
     );
   }
+
+  // Debug log when booking is successfully loaded
+  console.log('✅ PaymentSuccess Rendering with booking:', {
+    bookingId,
+    bookingType: booking?.bookingType,
+    hasLaundryItems: !!(booking?.bookingConfig?.laundryItems?.length || booking?.laundryItems?.length),
+    laundryItemsCount: booking?.bookingConfig?.laundryItems?.length || booking?.laundryItems?.length || 0,
+    hasPickupLocation: !!booking?.pickupLocation,
+    hasTripDetails: !!booking?.tripDetails,
+    category: booking?.category,
+    serviceCategory: booking?.serviceId?.category,
+    serviceDetailsCategory: booking?.serviceDetails?.category,
+    bookingStructure: Object.keys(booking || {}),
+    bookingConfigStructure: booking?.bookingConfig ? Object.keys(booking.bookingConfig) : []
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
@@ -278,25 +336,76 @@ const PaymentSuccess = () => {
                       <div>
                         <p className="font-medium text-gray-900">{t('paymentSuccess.items')}</p>
                         <div className="bg-gray-50 rounded-md p-3 mt-2">
-                          {booking.laundryItems?.map((item, idx) => (
-                            <div key={idx} className="flex justify-between text-sm py-1">
-                              <div>
-                                <p className="font-medium">{item.itemName} <span className="text-gray-500">({item.serviceTypeName})</span></p>
-                                <p className="text-gray-500 text-xs">{t('paymentSuccess.quantity')}: {item.quantity}</p>
-                              </div>
-                              <div className="text-right font-medium">{formatPriceByLanguage(item.totalPrice || item.price || 0, 'en')}</div>
-                            </div>
-                          ))}
+                          {/* Debug info - remove after fixing */}
+                          {console.log('🔍 Laundry items debug:', {
+                            laundryItems: booking.laundryItems,
+                            bookingConfigLaundryItems: booking.bookingConfig?.laundryItems,
+                            items: booking.items,
+                            allBookingKeys: Object.keys(booking),
+                            bookingConfig: booking.bookingConfig
+                          })}
+
+                          {/* Try multiple possible field names for laundry items */}
+                          {(() => {
+                            const laundryItems = booking.bookingConfig?.laundryItems || booking.laundryItems || booking.items || [];
+
+                            if (laundryItems.length > 0) {
+                              return laundryItems.map((item, idx) => (
+                                <div key={idx} className="flex justify-between text-sm py-1">
+                                  <div>
+                                    <p className="font-medium">
+                                      {item.itemName || item.name || item.serviceName || 'Unknown Item'}
+                                      <span className="text-gray-500">
+                                        ({item.serviceType?.name || item.serviceTypeName || item.serviceType || item.type || 'Standard'})
+                                      </span>
+                                    </p>
+                                    <p className="text-gray-500 text-xs">
+                                      {t('paymentSuccess.quantity')}: {item.quantity || 1}
+                                    </p>
+                                  </div>
+                                  <div className="text-right font-medium">
+                                    {formatPriceByLanguage(item.finalPrice || item.totalPrice || item.price || item.amount || 0, 'en')}
+                                  </div>
+                                </div>
+                              ));
+                            } else {
+                              return (
+                                <div className="text-gray-500 text-sm">
+                                  <p>No items found in booking data</p>
+                                  <p className="text-xs mt-1">Available fields: {Object.keys(booking).join(', ')}</p>
+                                  {booking.bookingConfig && (
+                                    <p className="text-xs mt-1">BookingConfig fields: {Object.keys(booking.bookingConfig).join(', ')}</p>
+                                  )}
+                                </div>
+                              );
+                            }
+                          })()}
                         </div>
                       </div>
 
-                      {booking.schedule && (
+                      {(booking.schedule || booking.scheduledDate || booking.pickupDetails) && (
                         <div>
                           <p className="font-medium text-gray-700">{t('paymentSuccess.schedule')}</p>
                           <div className="bg-gray-50 rounded-md p-3 mt-2 text-sm">
-                            <p>{t('paymentSuccess.pickupDate')}: {booking.schedule?.preferredDate}</p>
-                            <p>{t('paymentSuccess.pickupTime')}: {booking.schedule?.preferredTime}</p>
-                            <p>{t('paymentSuccess.pickupLocation')}: {booking.guestDetails?.roomNumber || booking.guestDetails?.pickupLocation || t('paymentSuccess.notAvailable')}</p>
+                            <p>{t('paymentSuccess.pickupDate')}: {
+                              booking.schedule?.preferredDate ||
+                              booking.scheduledDate ||
+                              booking.pickupDetails?.date ||
+                              t('paymentSuccess.notAvailable')
+                            }</p>
+                            <p>{t('paymentSuccess.pickupTime')}: {
+                              booking.schedule?.preferredTime ||
+                              booking.scheduledTime ||
+                              booking.pickupDetails?.time ||
+                              t('paymentSuccess.notAvailable')
+                            }</p>
+                            <p>{t('paymentSuccess.pickupLocation')}: {
+                              booking.guestDetails?.roomNumber ||
+                              booking.guestDetails?.pickupLocation ||
+                              booking.pickupLocation ||
+                              booking.location?.pickupLocation ||
+                              t('paymentSuccess.notAvailable')
+                            }</p>
                           </div>
                         </div>
                       )}

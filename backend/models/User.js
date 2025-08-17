@@ -55,15 +55,9 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
-    minlength: [8, 'Password must be at least 8 characters'],
+  minlength: [4, 'Password must be at least 4 characters'],
     select: false,
-    validate: {
-      validator: function(password) {
-        // Password must contain at least one uppercase, one lowercase, one number, and one special character
-        return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(password);
-      },
-      message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-    }
+  // No complexity validation for guest registration
   },
 
   // Role and Permissions

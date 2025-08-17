@@ -96,10 +96,29 @@ class AuthService {
         endpoint = CLIENT_API.REGISTER;
       }
 
-      const response = await apiClient.post(endpoint, userData);      // No need to store tokens in localStorage if registration also logs the user in
-      // Tokens are now stored as cookies by the backend
-      if (response.data.data) {
+      const response = await apiClient.post(endpoint, userData);
+
+      console.log('Registration response received:', response.data);
+
+      // Store tokens and user data properly (same as login)
+      if (response.data?.data?.token) {
+        localStorage.setItem('token', response.data.data.token);
+        console.log('✅ Token stored in localStorage from registration:', response.data.data.token.substring(0, 20) + '...');
+      }
+
+      if (response.data?.data?.refreshToken) {
+        localStorage.setItem('refreshToken', response.data.data.refreshToken);
+        console.log('✅ Refresh token stored in localStorage from registration');
+      }
+
+      // Store user data
+      if (response.data?.data?.user) {
+        const userData = response.data.data.user;
+        this.setUserData(userData);
+        console.log('✅ User data stored from registration:', userData);
+      } else if (response.data?.data) {
         this.setUserData(response.data.data);
+        console.log('✅ User data stored from registration (fallback):', response.data.data);
       }
 
       return response.data;
