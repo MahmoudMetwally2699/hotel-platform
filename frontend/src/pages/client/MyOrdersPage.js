@@ -40,9 +40,7 @@ const MyOrdersPage = () => {
       const token = localStorage.getItem('token');
       let statusFilter = '';
       if (activeTab !== 'all') {
-        // Map 'waitingForQuote' tab to backend status 'pending_quote'
-        const statusKey = activeTab === 'waitingForQuote' ? 'pending_quote' : activeTab;
-        statusFilter = `?status=${statusKey}`;
+        statusFilter = `?status=${activeTab}`;
       }
 
       // Construct the full API URL
@@ -103,7 +101,6 @@ const MyOrdersPage = () => {
   // Tab configuration
   const tabs = [
     { key: 'all', label: t('myOrders.tabs.allOrders'), count: Array.isArray(bookings) ? bookings.length : 0 },
-    { key: 'waitingForQuote', label: t('transportation.labels.waitingForQuote'), count: Array.isArray(bookings) ? bookings.filter(b => b.status === 'pending_quote').length : 0 },
     { key: 'pending', label: t('myOrders.tabs.pending'), count: Array.isArray(bookings) ? bookings.filter(b => b.status === 'pending').length : 0 },
     { key: 'confirmed', label: t('myOrders.tabs.confirmed'), count: Array.isArray(bookings) ? bookings.filter(b => b.status === 'confirmed').length : 0 },
     { key: 'completed', label: t('myOrders.tabs.completed'), count: Array.isArray(bookings) ? bookings.filter(b => b.status === 'completed').length : 0 }

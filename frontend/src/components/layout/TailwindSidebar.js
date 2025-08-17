@@ -7,6 +7,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Link, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 // SVG Icons
 const HomeIcon = () => (
@@ -95,38 +96,6 @@ const CloseIcon = () => (
   </svg>
 );
 
-// Navigation items by role with updated permissions
-const navigationItems = {
-  superadmin: [
-    { text: 'Dashboard', icon: <HomeIcon />, path: '/superadmin/dashboard' },
-    { text: 'Hotels', icon: <OfficeBuildingIcon />, path: '/superadmin/hotels' },
-    { text: 'Hotel Admins', icon: <UserGroupIcon />, path: '/superadmin/hotel-admins' },
-    { text: 'Platform Metrics', icon: <ChartBarIcon />, path: '/superadmin/platform-metrics' },
-    { text: 'Analytics', icon: <ChartBarIcon />, path: '/superadmin/analytics' },
-    { text: 'Settings', icon: <CogIcon />, path: '/superadmin/settings' }
-  ],  hotel: [
-    { text: 'Dashboard', icon: <HomeIcon />, path: '/hotel/dashboard' },
-    { text: 'Revenue', icon: <CurrencyDollarIcon />, path: '/hotel/revenue' },
-    { text: 'Settings', icon: <CogIcon />, path: '/hotel/settings' }
-  ],
-  service: [
-    { text: 'Dashboard', icon: <HomeIcon />, path: '/service/dashboard' },
-    { text: 'My Services', icon: <ShoppingBagIcon />, path: '/service/services' },
-    { text: 'Orders', icon: <ClipboardListIcon />, path: '/service/orders' },
-    { text: 'Process Bookings', icon: <ClipboardListIcon />, path: '/service/process-bookings' },
-    { text: 'Earnings', icon: <CurrencyDollarIcon />, path: '/service/earnings' },
-    { text: 'Metrics', icon: <ChartBarIcon />, path: '/service/metrics' },
-    { text: 'Settings', icon: <CogIcon />, path: '/service/settings' }
-  ],
-  guest: [
-    { text: 'Home', icon: <HomeIcon />, path: '/' },
-    { text: 'Hotels', icon: <OfficeBuildingIcon />, path: '/hotels' },
-    { text: 'Services', icon: <ShoppingBagIcon />, path: '/services' },
-    { text: 'My Bookings', icon: <ClipboardListIcon />, path: '/bookings' },
-    { text: 'Profile', icon: <UserIcon />, path: '/profile' }
-  ]
-};
-
 // Category Icons
 const categoryIcons = {
   laundry: <ArchiveIcon />,
@@ -137,11 +106,45 @@ const categoryIcons = {
 
 const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const location = useLocation();
   const userRole = user ? user.role : 'guest';
 
+  // Navigation items by role using translations
+  const navItemsByRole = {
+    superadmin: [
+      { text: t('navigation.dashboard'), icon: <HomeIcon />, path: '/superadmin/dashboard' },
+      { text: t('navigation.hotels'), icon: <OfficeBuildingIcon />, path: '/superadmin/hotels' },
+      { text: t('navigation.hotelAdmins'), icon: <UserGroupIcon />, path: '/superadmin/hotel-admins' },
+      { text: t('navigation.platformMetrics'), icon: <ChartBarIcon />, path: '/superadmin/platform-metrics' },
+      { text: t('navigation.analytics'), icon: <ChartBarIcon />, path: '/superadmin/analytics' },
+      { text: t('navigation.settings'), icon: <CogIcon />, path: '/superadmin/settings' }
+    ],
+    hotel: [
+      { text: t('navigation.dashboard'), icon: <HomeIcon />, path: '/hotel/dashboard' },
+      { text: t('navigation.revenue'), icon: <CurrencyDollarIcon />, path: '/hotel/revenue' },
+      { text: t('navigation.settings'), icon: <CogIcon />, path: '/hotel/settings' }
+    ],
+    service: [
+      { text: t('navigation.dashboard'), icon: <HomeIcon />, path: '/service/dashboard' },
+      { text: t('navigation.services'), icon: <ShoppingBagIcon />, path: '/service/services' },
+      { text: t('navigation.orders'), icon: <ClipboardListIcon />, path: '/service/orders' },
+      { text: t('navigation.bookings'), icon: <ClipboardListIcon />, path: '/service/process-bookings' },
+      { text: t('navigation.earnings'), icon: <CurrencyDollarIcon />, path: '/service/earnings' },
+      { text: t('navigation.metrics'), icon: <ChartBarIcon />, path: '/service/metrics' },
+      { text: t('navigation.settings'), icon: <CogIcon />, path: '/service/settings' }
+    ],
+    guest: [
+      { text: t('navigation.home'), icon: <HomeIcon />, path: '/' },
+      { text: t('navigation.hotels'), icon: <OfficeBuildingIcon />, path: '/hotels' },
+      { text: t('navigation.services'), icon: <ShoppingBagIcon />, path: '/services' },
+      { text: t('navigation.myBookings'), icon: <ClipboardListIcon />, path: '/bookings' },
+      { text: t('navigation.profile'), icon: <UserIcon />, path: '/profile' }
+    ]
+  };
+
   // Get navigation items for the user role
-  const navItems = navigationItems[userRole] || navigationItems.guest;
+  const navItems = navItemsByRole[userRole] || navItemsByRole.guest;
   return (
     <>
       {/* Sidebar Overlay */}

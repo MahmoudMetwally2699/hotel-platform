@@ -69,7 +69,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
       case 'guest':
         return [
           { name: t('navigation.hotelServices'), path: '/my-hotel-services', icon: 'server' },
-          { name: 'My Bookings', path: '/my-bookings', icon: 'clipboard-list' },
+          { name: t('navigation.myBookings'), path: '/my-bookings', icon: 'clipboard-list' },
           { name: t('navigation.myOrders'), path: '/my-orders', icon: 'shopping-bag' }
         ];
       default:
