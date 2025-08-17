@@ -11,11 +11,9 @@ import * as Yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import { login, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole, clearError, clearLoading, setError } from '../../redux/slices/authSlice';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
-import useRTL from '../../hooks/useRTL';
 
 const LoginPage = () => {
   const { t } = useTranslation();
-  const { isRTL } = useRTL();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isAuthenticated = useSelector(selectIsAuthenticated);
@@ -109,9 +107,15 @@ const LoginPage = () => {
       dispatch(setError('Login request timed out. Please try again.'));
     }, 30000); // 30 second timeout
 
-    // Clear timeout if login completes
+    // Clear timeout and ensure loading is cleared regardless of outcome
     loginPromise.finally(() => {
-      clearTimeout(timeoutId);    });
+      clearTimeout(timeoutId);
+      // Ensure any global loading flag is cleared so the button is re-enabled after failure
+      dispatch(clearLoading());
+    });
+
+    // Return the promise so Formik will wait and clear isSubmitting appropriately
+    return loginPromise;
   };
   // Show loading screen while checking authentication state
   if (!authCheckComplete || (isAuthenticated && role)) {
@@ -207,16 +211,18 @@ const LoginPage = () => {
 
               <button
                 type="submit"
-                disabled={isSubmitting || isLoading}
+                // Only disable the button while Formik is submitting. Don't keep it disabled based on global isLoading
+                disabled={isSubmitting}
                 className="w-full bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? (
+                {/* Show spinner when submitting or when the global loading flag is set, but do not keep the button disabled because of global loading */}
+                {(isSubmitting || isLoading) ? (
                   <div className="flex items-center justify-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>{t('login.signingIn')}...</span>
+                    <span>{isSubmitting || isLoading ? (t('login.signingIn') + '...') : t('login.signIn')}</span>
                   </div>
                 ) : (
                   t('login.signIn')

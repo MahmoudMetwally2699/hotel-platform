@@ -127,7 +127,11 @@ apiClient.interceptors.response.use(
     // Handle specific error codes
     if (error.response) {
       switch (error.response.status) {        case 401:
-          // Prevent 401 handling loop
+          // If the 401 comes from login/register or related auth actions, don't override the message
+          // or redirect — let the component handle the error so it can show e.g. "Incorrect email or password".
+          const url = error.config?.url || '';
+          const isAuthAction = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh-token') || url.includes('/auth/forgot-password') || url.includes('/auth/reset-password');
+
           if (is401HandlingInProgress) {
             console.log('401 handling already in progress, skipping redirect');
             return Promise.reject({
@@ -142,7 +146,16 @@ apiClient.interceptors.response.use(
                 }
               }
             });
-          }          // Handle auth check failures differently from regular 401s
+          }
+
+          // For login/register and other direct auth actions, return the original error
+          // so UI can render the backend's specific message (e.g. invalid credentials).
+          if (isAuthAction) {
+            console.log('401 from auth action (login/register) - passing error to component');
+            return Promise.reject(error);
+          }
+
+          // Handle auth check failures differently from regular 401s
           if (error.config?.url?.includes('/auth/me')) {
             console.log('401 from auth check - clearing session and redirecting');
 
@@ -187,7 +200,7 @@ apiClient.interceptors.response.use(
 
           is401HandlingInProgress = true;
 
-          // Unauthorized - redirect to login
+          // Unauthorized - redirect to login for other protected endpoints
           console.log('401 Unauthorized - Redirecting to login');
           // Clear any stored session data
           localStorage.removeItem('token');
