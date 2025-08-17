@@ -187,7 +187,7 @@ const LaundryPaymentFailed = () => {
                   <div className="bg-red-50 rounded-md p-4 text-center">
                     <p className="text-sm text-red-600 font-medium">Amount Due</p>
                     <p className="text-3xl font-bold text-red-700">{formatPriceByLanguage(booking.payment?.totalAmount || booking.pricing?.total || 0, i18n.language)}</p>
-                    <p className="text-sm text-red-600">{booking.payment?.currency || 'EGP'}</p>
+                    <p className="text-sm text-red-600">{booking.payment?.currency || 'USD'}</p>
                   </div>
 
                   {booking.payment?.paymentDate && (

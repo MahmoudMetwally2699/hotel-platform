@@ -212,7 +212,7 @@ const LaundryBookingInterface = () => {
         bookingData,
         bookingType: 'laundry',
         amount: calculateTotal().total,
-        currency: 'EGP'
+        currency: 'USD'
       });
 
       if (paymentResponse.data.success) {

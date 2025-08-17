@@ -235,7 +235,7 @@ const PaymentFailed = () => {
                     <div className="text-center">
                       <p className="text-sm text-red-600 font-medium">{t('paymentFailed.amountDue')}</p>
                       <p className="text-3xl font-bold text-red-700">{formatPriceByLanguage(booking.payment.totalAmount || booking.quote.finalPrice, i18n.language)}</p>
-                      <p className="text-sm text-red-600">{booking.payment.currency || 'EGP'}</p>
+                      <p className="text-sm text-red-600">{booking.payment.currency || 'USD'}</p>
                     </div>
                   </div>
 

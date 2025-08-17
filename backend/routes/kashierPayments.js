@@ -20,7 +20,7 @@ const KASHIER_CONFIG = {
   merchantId: process.env.KASHIER_MERCHANT_ID,
   apiKey: process.env.KASHIER_API_KEY,
   secretKey: process.env.KASHIER_SECRET_KEY,
-  currency: process.env.KASHIER_CURRENCY || 'EGP',
+  currency: process.env.KASHIER_CURRENCY || 'USD',
   mode: process.env.KASHIER_MODE || 'test'
 };
 
@@ -223,7 +223,7 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
  */
 router.post('/create-payment-session', protect, restrictTo('guest'), async (req, res) => {
   try {
-    const { bookingData, bookingType = 'laundry', amount, currency = 'EGP' } = req.body;
+    const { bookingData, bookingType = 'laundry', amount, currency = 'USD' } = req.body;
 
     console.log('🔵 Create direct payment session request:', { bookingType, amount, userId: req.user._id });
 

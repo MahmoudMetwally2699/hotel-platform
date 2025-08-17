@@ -176,7 +176,7 @@ const LaundryPaymentSuccess = () => {
                   <div className="bg-green-50 rounded-md p-4 text-center">
                     <p className="text-sm text-green-600 font-medium">Amount Paid</p>
                     <p className="text-3xl font-bold text-green-700">{formatPriceByLanguage(booking.payment?.paidAmount || booking.pricing?.total || booking.payment?.totalAmount || 0, i18n.language)}</p>
-                    <p className="text-sm text-green-600">{booking.payment?.currency || 'EGP'}</p>
+                    <p className="text-sm text-green-600">{booking.payment?.currency || 'USD'}</p>
                   </div>
 
                   {booking.payment?.paymentDate && (

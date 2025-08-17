@@ -373,7 +373,7 @@ const PaymentSuccess = () => {
                           'en'
                         )}
                       </p>
-                      <p className="text-sm text-green-600">{booking.payment?.currency || 'EGP'}</p>
+                      <p className="text-sm text-green-600">{booking.payment?.currency || 'USD'}</p>
                     </div>
                   </div>
 

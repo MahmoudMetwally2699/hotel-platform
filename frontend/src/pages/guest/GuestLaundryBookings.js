@@ -77,7 +77,7 @@ const GuestLaundryBookings = () => {
       language === 'ar' ? 'ar-EG' : 'en-US',
       {
         style: 'currency',
-        currency: 'EGP',
+        currency: 'USD',
         minimumFractionDigits: 0,
         maximumFractionDigits: 2,
       }

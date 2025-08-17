@@ -311,7 +311,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
         bookingData,
         bookingType: 'laundry',
         amount: pricing.total,
-        currency: 'EGP'
+        currency: 'USD'
       });
 
       if (paymentResponse.data.success) {
