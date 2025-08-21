@@ -16,6 +16,8 @@ const Service = require('../models/Service');
 const Booking = require('../models/Booking');
 const Hotel = require('../models/Hotel');
 const logger = require('../utils/logger');
+const { sendEmail } = require('../utils/email');
+const { sendLaundryServiceCompleted } = require('../utils/whatsapp');
 const mongoose = require('mongoose');
 const categoryTemplates = require('../config/categoryTemplates');
 
@@ -282,7 +284,7 @@ router.post('/services', catchAsync(async (req, res, next) => {
     category: req.body.category,
     pricing: {
       basePrice: req.body.basePrice,
-      currency: req.body.currency || 'USD'
+      currency: req.body.currency || 'EGP'
     },
     duration: req.body.duration,
     images: req.body.images || [],
@@ -677,6 +679,31 @@ router.patch('/bookings/:id/status', protect, restrictTo('service'), async (req,
       }
     } catch (emailError) {
       logger.error('Failed to send booking status email', { error: emailError });
+    }
+
+    // Send WhatsApp notification for completed services
+    try {
+      if (status === 'completed' && booking.guestId.phone) {
+        await sendLaundryServiceCompleted({
+          guestName: `${booking.guestId.firstName} ${booking.guestId.lastName || ''}`,
+          guestPhone: booking.guestId.phone,
+          bookingNumber: booking.bookingNumber || booking._id,
+          serviceProviderName: req.user.serviceProvider?.businessName || 'مقدم الخدمة',
+          deliveryDate: new Date().toLocaleDateString('ar-EG'),
+          deliveryTime: new Date().toLocaleTimeString('ar-EG'),
+          roomNumber: booking.roomNumber || 'غير محدد'
+        });
+        logger.info('WhatsApp service completion notification sent to guest', {
+          bookingId: booking._id,
+          guestPhone: booking.guestId.phone
+        });
+      }
+    } catch (whatsappError) {
+      logger.error('Failed to send WhatsApp completion notification', {
+        error: whatsappError.message,
+        bookingId: booking._id
+      });
+      // Don't fail the status update if WhatsApp fails
     }
 
     res.json({
@@ -1651,7 +1678,7 @@ router.post('/categories/:category/items', catchAsync(async (req, res) => {
     pricing: {
       basePrice: 0, // Will be calculated dynamically
       pricingType: 'per-item',
-      currency: 'USD'
+      currency: 'EGP'
     },
     laundryItems: processedLaundryItems
   };
@@ -1892,7 +1919,7 @@ router.post('/categories/transportation/vehicles', catchAsync(async (req, res) =
         pricing: {
           basePrice: 25, // Default base price, will be overridden by individual vehicle pricing
           pricingType: 'per-item', // Transportation is priced per vehicle/service
-          currency: 'USD'
+          currency: 'EGP'
         },
 
         // Required specifications fields

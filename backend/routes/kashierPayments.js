@@ -13,6 +13,7 @@ const Booking = require('../models/Booking'); // Add laundry booking model
 const User = require('../models/User'); // Add user model for guest details
 const { protect, restrictTo } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const whatsapp = require('../utils/whatsapp');
 
 // Kashier.io configuration
 const KASHIER_CONFIG = {
@@ -20,7 +21,7 @@ const KASHIER_CONFIG = {
   merchantId: process.env.KASHIER_MERCHANT_ID,
   apiKey: process.env.KASHIER_API_KEY,
   secretKey: process.env.KASHIER_SECRET_KEY,
-  currency: process.env.KASHIER_CURRENCY || 'USD',
+  currency: process.env.KASHIER_CURRENCY || 'EGP',
   mode: process.env.KASHIER_MODE || 'test'
 };
 
@@ -223,7 +224,8 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
  */
 router.post('/create-payment-session', protect, restrictTo('guest'), async (req, res) => {
   try {
-    const { bookingData, bookingType = 'laundry', amount, currency = 'USD' } = req.body;
+  const { bookingData, bookingType = 'laundry', amount } = req.body;
+  const currency = 'EGP';
 
     console.log('🔵 Create direct payment session request:', { bookingType, amount, userId: req.user._id });
 
@@ -402,6 +404,74 @@ router.post('/webhook', async (req, res) => {
               delete global.tempBookingData[data.merchantOrderId];
             }
 
+                  // WhatsApp notification logic (guest & provider)
+                  try {
+                    // Fetch guest and hotel details for WhatsApp
+                    const guest = await User.findById(newBooking.guestId);
+                    const hotel = await mongoose.model('Hotel').findById(newBooking.hotelId);
+                    const service = await mongoose.model('Service').findById(newBooking.serviceId).populate('providerId');
+
+                    // Send confirmation to guest
+                    if (guest?.phone) {
+                      try {
+                        await whatsapp.sendLaundryBookingConfirmation({
+                          guestName: `${guest.firstName} ${guest.lastName || ''}`,
+                          guestPhone: guest.phone,
+                          bookingNumber: newBooking.bookingNumber,
+                          hotelName: hotel?.name || '',
+                          serviceProviderName: service?.providerId?.businessName || '',
+                          serviceType: service?.name || '',
+                          pickupDate: new Date(newBooking.schedule?.preferredDate).toLocaleDateString('ar-EG'),
+                          pickupTime: newBooking.schedule?.preferredTime || 'سيتم التأكيد',
+                          roomNumber: newBooking.guestDetails?.roomNumber || '',
+                          totalAmount: newBooking.pricing?.total || '',
+                          paymentStatus: 'تم الدفع'
+                        });
+                        logger.info('WhatsApp booking confirmation sent to guest (webhook)', {
+                          bookingNumber: newBooking.bookingNumber,
+                          guestPhone: guest.phone
+                        });
+                      } catch (waGuestErr) {
+                        logger.error('WhatsApp guest notification error (webhook)', {
+                          error: waGuestErr.message,
+                          bookingNumber: newBooking.bookingNumber
+                        });
+                      }
+                    }
+
+                    // Send notification to service provider
+                    if (service?.providerId?.phone) {
+                      try {
+                        await whatsapp.sendNewLaundryOrderToProvider({
+                          providerPhone: service.providerId.phone,
+                          bookingNumber: newBooking.bookingNumber,
+                          guestName: `${guest.firstName} ${guest.lastName || ''}`,
+                          hotelName: hotel?.name || '',
+                          roomNumber: newBooking.guestDetails?.roomNumber || '',
+                          guestPhone: guest.phone,
+                          pickupDate: new Date(newBooking.schedule?.preferredDate).toLocaleDateString('ar-EG'),
+                          pickupTime: newBooking.schedule?.preferredTime || 'سيتم التأكيد',
+                          serviceType: service?.name || '',
+                          specialNotes: newBooking.guestDetails?.specialRequests || '',
+                          baseAmount: newBooking.pricing?.subtotal || ''
+                        });
+                        logger.info('WhatsApp order notification sent to provider (webhook)', {
+                          bookingNumber: newBooking.bookingNumber,
+                          providerPhone: service.providerId.phone
+                        });
+                      } catch (waProviderErr) {
+                        logger.error('WhatsApp provider notification error (webhook)', {
+                          error: waProviderErr.message,
+                          bookingNumber: newBooking.bookingNumber
+                        });
+                      }
+                    }
+                  } catch (whatsappError) {
+                    logger.error('Failed to send WhatsApp notifications (webhook)', {
+                      error: whatsappError.message,
+                      bookingNumber: newBooking.bookingNumber
+                    });
+                  }
             return res.json({
               success: true,
               message: 'Payment processed and booking created successfully'
@@ -832,7 +902,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
               },
               totalBeforeMarkup: (parseFloat(paymentData.amount) / 1.15) || 0,
               totalAmount: parseFloat(paymentData.amount) || 0,
-              currency: 'USD', // Use valid enum value instead of EGP
+              currency: 'EGP', // Use valid enum value instead of EGP
               providerEarnings: (parseFloat(paymentData.amount) / 1.15) || 0,
               hotelEarnings: (parseFloat(paymentData.amount) * 0.15 / 1.15) || 0
             },
@@ -985,6 +1055,79 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
 
       // Process the payment (both booking types have this method)
       await booking.processKashierPayment(webhookData);
+
+      // Send WhatsApp notifications after successful payment processing
+      try {
+        if (bookingType === 'laundry') {
+          // Fetch guest and hotel details for WhatsApp
+          const guest = await User.findById(booking.guestId);
+          const hotel = await mongoose.model('Hotel').findById(booking.hotelId);
+          const service = await mongoose.model('Service').findById(booking.serviceId).populate('providerId');
+
+          // Send confirmation to guest
+          if (guest?.phone) {
+            try {
+              await whatsapp.sendLaundryBookingConfirmation({
+                guestName: `${guest.firstName} ${guest.lastName || ''}`,
+                guestPhone: guest.phone,
+                bookingNumber: booking.bookingNumber,
+                hotelName: hotel?.name || '',
+                serviceProviderName: service?.providerId?.businessName || '',
+                serviceType: service?.name || 'خدمة الغسيل',
+                pickupDate: new Date(booking.schedule?.preferredDate).toLocaleDateString('ar-EG'),
+                pickupTime: booking.schedule?.preferredTime || 'سيتم التأكيد',
+                roomNumber: booking.guestDetails?.roomNumber || '',
+                totalAmount: `${booking.pricing?.totalAmount || paymentData.amount} ${booking.pricing?.currency || 'EGP'}`,
+                paymentStatus: 'تم الدفع'
+              });
+              logger.info('WhatsApp booking confirmation sent to guest (public)', {
+                bookingNumber: booking.bookingNumber,
+                guestPhone: guest.phone
+              });
+            } catch (waGuestErr) {
+              logger.error('WhatsApp guest notification error (public)', {
+                error: waGuestErr.message,
+                bookingNumber: booking.bookingNumber
+              });
+            }
+          }
+
+          // Send notification to service provider
+          if (service?.providerId?.phone) {
+            try {
+              await whatsapp.sendNewLaundryOrderToProvider({
+                providerPhone: service.providerId.phone,
+                bookingNumber: booking.bookingNumber,
+                guestName: `${guest.firstName} ${guest.lastName || ''}`,
+                hotelName: hotel?.name || '',
+                roomNumber: booking.guestDetails?.roomNumber || '',
+                guestPhone: guest.phone,
+                pickupDate: new Date(booking.schedule?.preferredDate).toLocaleDateString('ar-EG'),
+                pickupTime: booking.schedule?.preferredTime || 'سيتم التأكيد',
+                serviceType: service?.name || 'خدمة الغسيل',
+                specialNotes: booking.guestDetails?.specialRequests || booking.bookingConfig?.specialRequests || '',
+                baseAmount: `${booking.pricing?.providerEarnings || booking.pricing?.totalBeforeMarkup || paymentData.amount} ${booking.pricing?.currency || 'EGP'}`
+              });
+              logger.info('WhatsApp order notification sent to provider (public)', {
+                bookingNumber: booking.bookingNumber,
+                providerPhone: service.providerId.phone
+              });
+            } catch (waProviderErr) {
+              logger.error('WhatsApp provider notification error (public)', {
+                error: waProviderErr.message,
+                bookingNumber: booking.bookingNumber
+              });
+            }
+          }
+        }
+        // TODO: Add transportation WhatsApp notifications here if needed
+      } catch (whatsappError) {
+        logger.error('Failed to send WhatsApp notifications (public)', {
+          error: whatsappError.message,
+          bookingNumber: bookingType === 'laundry' ? booking.bookingNumber : booking.bookingReference
+        });
+        // Don't fail the payment confirmation if WhatsApp fails
+      }
 
       logger.info('Payment confirmed via public redirect', {
         bookingId: booking._id,

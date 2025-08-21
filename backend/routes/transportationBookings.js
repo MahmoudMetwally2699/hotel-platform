@@ -13,6 +13,10 @@ const ServiceProvider = require('../models/ServiceProvider');
 const User = require('../models/User');
 const { protect, restrictTo } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const {
+  sendTransportationBookingConfirmation,
+  sendNewTransportationOrderToProvider
+} = require('../utils/whatsapp');
 
 /**
  * @desc    Create a new transportation booking request (Guest route)
@@ -154,8 +158,58 @@ router.post('/guest', protect, restrictTo('guest'), async (req, res) => {
       serviceProviderId: service.providerId._id
     });
 
-    // TODO: Send email notification to service provider
-    // TODO: Send confirmation email to guest
+    // Send WhatsApp notifications
+    try {
+      // Send confirmation to guest via WhatsApp
+      if (req.user.phone) {
+        await sendTransportationBookingConfirmation({
+          guestName: `${req.user.firstName} ${req.user.lastName || ''}`,
+          guestPhone: req.user.phone,
+          bookingNumber: booking.bookingReference,
+          hotelName: hotel.name,
+          serviceProviderName: service.providerId.businessName,
+          vehicleType: booking.vehicleDetails.vehicleType,
+          tripDate: new Date(booking.tripDetails.scheduledDateTime).toLocaleDateString('ar-EG'),
+          departureTime: new Date(booking.tripDetails.scheduledDateTime).toLocaleTimeString('ar-EG'),
+          pickupLocation: booking.tripDetails.pickupLocation,
+          destinationLocation: booking.tripDetails.destination,
+          totalAmount: 'سيتم تحديد السعر قريباً',
+          paymentStatus: 'في انتظار السعر'
+        });
+        logger.info('WhatsApp transportation booking confirmation sent to guest', {
+          bookingReference: booking.bookingReference,
+          guestPhone: req.user.phone
+        });
+      }
+
+      // Send notification to service provider via WhatsApp
+      if (service.providerId.phone) {
+        await sendNewTransportationOrderToProvider({
+          providerPhone: service.providerId.phone,
+          bookingNumber: booking.bookingReference,
+          guestName: `${req.user.firstName} ${req.user.lastName || ''}`,
+          hotelName: hotel.name,
+          guestPhone: req.user.phone,
+          tripDate: new Date(booking.tripDetails.scheduledDateTime).toLocaleDateString('ar-EG'),
+          departureTime: new Date(booking.tripDetails.scheduledDateTime).toLocaleTimeString('ar-EG'),
+          pickupLocation: booking.tripDetails.pickupLocation,
+          destinationLocation: booking.tripDetails.destination,
+          vehicleType: booking.vehicleDetails.vehicleType,
+          passengerCount: booking.tripDetails.passengerCount,
+          baseAmount: 'سيتم تحديد السعر'
+        });
+        logger.info('WhatsApp transportation order notification sent to provider', {
+          bookingReference: booking.bookingReference,
+          providerPhone: service.providerId.phone
+        });
+      }
+    } catch (whatsappError) {
+      logger.error('Failed to send WhatsApp notifications for transportation booking', {
+        error: whatsappError.message,
+        bookingReference: booking.bookingReference
+      });
+      // Don't fail the booking if WhatsApp fails
+    }
 
     res.status(201).json({
       success: true,

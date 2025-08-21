@@ -10,6 +10,12 @@ const User = require('../models/User');
 const { protect, restrictTo, restrictToOwnBookings } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
+const {
+  sendLaundryBookingConfirmation,
+  sendNewLaundryOrderToProvider,
+  sendTransportationBookingConfirmation,
+  sendNewTransportationOrderToProvider
+} = require('../utils/whatsapp');
 
 /**
  * @desc    Get all active hotels
@@ -427,7 +433,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
         providerEarnings: providerAmount,
         hotelEarnings: hotelCommission,
         platformFee: Math.round((finalPrice * 0.05) * 100) / 100, // 5% platform fee
-        currency: service.pricing.currency || 'USD'
+        currency: service.pricing.currency || 'EGP'
       },
 
       // Payment information
@@ -480,7 +486,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           - Time: ${selectedTime || 'To be confirmed'}
           - Room: ${roomNumber}
           - Quantity: ${quantity}
-          - Total Amount: $${finalPrice} ${service.pricing.currency || 'USD'}
+          - Total Amount: $${finalPrice} ${service.pricing.currency || 'EGP'}
 
           Special Requests: ${specialRequests || 'None'}
 
@@ -517,7 +523,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           - Requested Date: ${new Date(bookingDate).toLocaleDateString()}
           - Requested Time: ${selectedTime || 'To be confirmed'}
           - Quantity: ${quantity}
-          - Amount: $${providerAmount} ${service.pricing.currency || 'USD'}
+          - Amount: $${providerAmount} ${service.pricing.currency || 'EGP'}
 
           Special Requests: ${specialRequests || 'None'}
 
@@ -529,6 +535,57 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       });
     } catch (emailError) {
       logger.error('Failed to send provider notification email', { error: emailError });
+    }
+
+    // Send WhatsApp notifications
+    try {
+      // Send confirmation to guest via WhatsApp
+      if (user.phone) {
+        await sendLaundryBookingConfirmation({
+          guestName: `${user.firstName} ${user.lastName || ''}`,
+          guestPhone: user.phone,
+          bookingNumber,
+          hotelName: hotel.name,
+          serviceProviderName: service.providerId.businessName,
+          serviceType: service.name,
+          pickupDate: new Date(bookingDate).toLocaleDateString('ar-EG'),
+          pickupTime: selectedTime || 'سيتم التأكيد',
+          roomNumber,
+          totalAmount: finalPrice,
+          paymentStatus: 'في انتظار الدفع'
+        });
+        logger.info('WhatsApp booking confirmation sent to guest', {
+          bookingNumber,
+          guestPhone: user.phone
+        });
+      }
+
+      // Send notification to service provider via WhatsApp
+      if (service.providerId.phone) {
+        await sendNewLaundryOrderToProvider({
+          providerPhone: service.providerId.phone,
+          bookingNumber,
+          guestName: `${user.firstName} ${user.lastName || ''}`,
+          hotelName: hotel.name,
+          roomNumber,
+          guestPhone: user.phone,
+          pickupDate: new Date(bookingDate).toLocaleDateString('ar-EG'),
+          pickupTime: selectedTime || 'سيتم التأكيد',
+          serviceType: service.name,
+          specialNotes: specialRequests,
+          baseAmount: providerAmount
+        });
+        logger.info('WhatsApp order notification sent to provider', {
+          bookingNumber,
+          providerPhone: service.providerId.phone
+        });
+      }
+    } catch (whatsappError) {
+      logger.error('Failed to send WhatsApp notifications', {
+        error: whatsappError.message,
+        bookingNumber
+      });
+      // Don't fail the booking if WhatsApp fails
     }
 
     res.status(201).json({
@@ -1237,7 +1294,7 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
         },
         totalBeforeMarkup: totalBeforeMarkup,
         totalAmount: totalAmount,
-        currency: 'USD',        providerEarnings: providerEarnings,
+        currency: 'EGP',        providerEarnings: providerEarnings,
         hotelEarnings: hotelEarnings
       },
 
@@ -1636,6 +1693,59 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
     } catch (emailError) {
       console.error('Email notification error:', emailError);
       // Don't fail the booking if email fails
+    }
+
+    // Send WhatsApp notifications
+    try {
+      // Send confirmation to guest via WhatsApp
+      if (req.user.phone) {
+        await sendTransportationBookingConfirmation({
+          guestName: `${req.user.firstName} ${req.user.lastName || ''}`,
+          guestPhone: req.user.phone,
+          bookingNumber,
+          hotelName: hotel.name,
+          serviceProviderName: service.providerId.businessName,
+          vehicleType: transportationItems[0]?.vehicleType || 'مركبة',
+          tripDate: schedule.pickupDate,
+          departureTime: schedule.pickupTime,
+          pickupLocation: location.pickupLocation,
+          destinationLocation: location.dropoffLocation,
+          totalAmount: totalAmount,
+          paymentStatus: 'في انتظار الدفع'
+        });
+        logger.info('WhatsApp transportation booking confirmation sent to guest', {
+          bookingNumber,
+          guestPhone: req.user.phone
+        });
+      }
+
+      // Send notification to service provider via WhatsApp
+      if (service.providerId.phone) {
+        await sendNewTransportationOrderToProvider({
+          providerPhone: service.providerId.phone,
+          bookingNumber,
+          guestName: `${req.user.firstName} ${req.user.lastName || ''}`,
+          hotelName: hotel.name,
+          guestPhone: req.user.phone,
+          tripDate: schedule.pickupDate,
+          departureTime: schedule.pickupTime,
+          pickupLocation: location.pickupLocation,
+          destinationLocation: location.dropoffLocation,
+          vehicleType: transportationItems[0]?.vehicleType || 'مركبة',
+          passengerCount: guestDetails.passengerCount || 1,
+          baseAmount: providerEarnings
+        });
+        logger.info('WhatsApp transportation order notification sent to provider', {
+          bookingNumber,
+          providerPhone: service.providerId.phone
+        });
+      }
+    } catch (whatsappError) {
+      logger.error('Failed to send WhatsApp notifications for transportation booking', {
+        error: whatsappError.message,
+        bookingNumber
+      });
+      // Don't fail the booking if WhatsApp fails
     }
 
     res.status(201).json({

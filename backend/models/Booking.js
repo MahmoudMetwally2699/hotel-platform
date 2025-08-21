@@ -333,9 +333,9 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     },
 
     currency: {
-      type: String,
-      default: 'USD',
-      enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
+  type: String,
+  default: 'EGP',
+  enum: ['EGP', 'USD', 'EUR', 'GBP', 'CAD', 'AUD']
     },
 
     // Revenue distribution
@@ -452,9 +452,9 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     },
 
     currency: {
-      type: String,
-      default: 'USD',
-      enum: ['USD', 'EGP', 'EUR', 'GBP', 'SAR']
+  type: String,
+  default: 'EGP',
+  enum: ['EGP', 'USD', 'EUR', 'GBP', 'SAR']
     },
 
     paymentDate: Date,
@@ -917,7 +917,7 @@ bookingSchema.methods.processKashierPayment = function(webhookData) {
     this.payment.status = 'completed';
     this.payment.paymentDate = new Date();
     this.payment.paidAmount = parseFloat(webhookData.amount);
-    this.payment.currency = webhookData.currency || 'USD';
+    this.payment.currency = webhookData.currency || 'EGP';
     this.status = 'confirmed';
 
     // Calculate platform fee and earnings (if needed)

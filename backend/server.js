@@ -173,6 +173,13 @@ try {
     console.error('❌ Transportation booking routes failed:', error.message);
   }
 
+  try {
+    app.use('/api/whatsapp', require('./routes/whatsapp'));
+    console.log('✅ WhatsApp webhook routes loaded');
+  } catch (error) {
+    console.error('❌ WhatsApp webhook routes failed:', error.message);
+  }
+
   console.log('✅ All routes configured');
 
   // Socket.io connection handling
