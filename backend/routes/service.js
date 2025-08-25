@@ -2150,4 +2150,534 @@ router.delete('/categories/transportation/vehicles/:serviceId', catchAsync(async
   });
 }));
 
+/**
+ * @route   GET /api/service/inside-services
+ * @desc    Get service provider's inside services (services provided within hotel premises)
+ * @access  Private/ServiceProvider
+ */
+router.get('/inside-services', catchAsync(async (req, res) => {
+  const providerId = req.user.serviceProviderId;
+
+  const provider = await ServiceProvider.findById(providerId);
+
+  // Default inside services categories
+  const defaultServices = [
+    {
+      id: 'room-service',
+      name: 'Room Service',
+      description: 'In-room dining and service requests',
+      category: 'dining',
+      isActive: false,
+      operatingHours: { start: '06:00', end: '23:00' },
+      features: ['24/7 availability option', 'Menu customization', 'Special dietary accommodations']
+    },
+    {
+      id: 'hotel-restaurant',
+      name: 'Hotel Restaurant',
+      description: 'Main dining facilities and reservations',
+      category: 'dining',
+      isActive: false,
+      operatingHours: { start: '07:00', end: '22:00' },
+      features: ['Table reservations', 'Private dining', 'Event catering']
+    },
+    {
+      id: 'concierge-services',
+      name: 'Concierge Services',
+      description: 'Guest assistance and recommendations',
+      category: 'assistance',
+      isActive: false,
+      operatingHours: { start: '24/7', end: '24/7' },
+      features: ['Local recommendations', 'Booking assistance', 'Special requests']
+    },
+    {
+      id: 'housekeeping-requests',
+      name: 'Housekeeping Services',
+      description: 'Room cleaning and maintenance requests',
+      category: 'maintenance',
+      isActive: false,
+      operatingHours: { start: '08:00', end: '18:00' },
+      features: ['Extra cleaning', 'Amenity requests', 'Maintenance issues']
+    }
+  ];
+
+  // Initialize insideServices if it doesn't exist
+  if (!provider.insideServices || provider.insideServices.length === 0) {
+    provider.insideServices = defaultServices;
+    await provider.save();
+  }
+
+  // Merge with defaults to ensure all categories exist
+  const existingServiceIds = provider.insideServices.map(s => s.id);
+  const missingServices = defaultServices.filter(s => !existingServiceIds.includes(s.id));
+
+  if (missingServices.length > 0) {
+    provider.insideServices = [...provider.insideServices, ...missingServices];
+    await provider.save();
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: provider.insideServices
+  });
+}));
+
+/**
+ * @route   POST /api/service/inside-services/:serviceId/activate
+ * @desc    Activate an inside service for service provider
+ * @access  Private/ServiceProvider
+ */
+router.post('/inside-services/:serviceId/activate', catchAsync(async (req, res) => {
+  const providerId = req.user.serviceProviderId;
+  const { serviceId } = req.params;
+
+  const provider = await ServiceProvider.findById(providerId);
+  if (!provider) {
+    throw new AppError('Service provider not found', 404);
+  }
+
+  // Initialize insideServices if it doesn't exist
+  if (!provider.insideServices) {
+    provider.insideServices = [];
+  }
+
+  // Find and activate the service
+  const serviceIndex = provider.insideServices.findIndex(service => service.id === serviceId);
+  if (serviceIndex !== -1) {
+    provider.insideServices[serviceIndex].isActive = true;
+  } else {
+    // Add new service if it doesn't exist
+    provider.insideServices.push({
+      id: serviceId,
+      isActive: true
+    });
+  }
+
+  await provider.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Service activated successfully'
+  });
+}));
+
+/**
+ * @route   POST /api/service/inside-services/:serviceId/deactivate
+ * @desc    Deactivate an inside service for service provider
+ * @access  Private/ServiceProvider
+ */
+router.post('/inside-services/:serviceId/deactivate', catchAsync(async (req, res) => {
+  const providerId = req.user.serviceProviderId;
+  const { serviceId } = req.params;
+
+  const provider = await ServiceProvider.findById(providerId);
+  if (!provider) {
+    throw new AppError('Service provider not found', 404);
+  }
+
+  // Find and deactivate the service
+  if (provider.insideServices) {
+    const serviceIndex = provider.insideServices.findIndex(service => service.id === serviceId);
+    if (serviceIndex !== -1) {
+      provider.insideServices[serviceIndex].isActive = false;
+      await provider.save();
+    }
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Service deactivated successfully'
+  });
+}));
+
+/**
+ * @route   POST /api/service/inside-services
+ * @desc    Create a new inside service for service provider
+ * @access  Private/ServiceProvider
+ */
+router.post('/inside-services', catchAsync(async (req, res) => {
+  const providerId = req.user.serviceProviderId;
+  const { name, description, category, operatingHours, features } = req.body;
+
+  const provider = await ServiceProvider.findById(providerId);
+  if (!provider) {
+    throw new AppError('Service provider not found', 404);
+  }
+
+  // Initialize insideServices if it doesn't exist
+  if (!provider.insideServices) {
+    provider.insideServices = [];
+  }
+
+  const newService = {
+    id: `custom-${Date.now()}`,
+    name,
+    description,
+    category,
+    operatingHours,
+    features,
+    isActive: false,
+    isCustom: true
+  };
+
+  provider.insideServices.push(newService);
+  await provider.save();
+
+  res.status(201).json({
+    status: 'success',
+    data: newService,
+    message: 'Service created successfully'
+  });
+}));
+
+/**
+ * Housekeeping Services Management Routes
+ */
+
+/**
+ * @route   GET /api/service/housekeeping-services
+ * @desc    Get all housekeeping services for the service provider
+ * @access  Private/ServiceProvider
+ */
+router.get('/housekeeping-services', catchAsync(async (req, res) => {
+  const providerId = req.user.serviceProviderId;
+
+  const provider = await ServiceProvider.findById(providerId);
+  if (!provider) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Service provider not found'
+    });
+  }
+
+  // Default housekeeping services if none exist
+  const defaultServices = [
+    {
+      id: 'extra-cleaning',
+      name: 'Extra Room Cleaning',
+      description: 'Deep cleaning of guest room including bathroom and all surfaces',
+      category: 'cleaning',
+      estimatedDuration: 45,
+      availability: 'always',
+      isActive: true,
+      requirements: ['Room must be vacant during cleaning'],
+      instructions: 'Please ensure all personal items are stored safely'
+    },
+    {
+      id: 'linen-change',
+      name: 'Fresh Linen Change',
+      description: 'Complete change of bed linens and towels',
+      category: 'laundry',
+      estimatedDuration: 15,
+      availability: 'always',
+      isActive: true,
+      requirements: ['Guest can be present during service'],
+      instructions: 'Standard linen replacement service'
+    },
+    {
+      id: 'amenity-restock',
+      name: 'Amenity Restocking',
+      description: 'Restock bathroom amenities, toiletries, and room supplies',
+      category: 'amenities',
+      estimatedDuration: 10,
+      availability: 'always',
+      isActive: true,
+      requirements: ['Quick service, minimal disruption'],
+      instructions: 'Check all amenity levels and restock as needed'
+    },
+    {
+      id: 'maintenance-request',
+      name: 'Room Maintenance',
+      description: 'General maintenance and repair requests for room issues',
+      category: 'maintenance',
+      estimatedDuration: 60,
+      availability: 'business-hours',
+      isActive: true,
+      requirements: ['Room inspection required', 'May require multiple visits'],
+      instructions: 'Please describe the specific issue when booking'
+    }
+  ];
+
+  // Get existing housekeeping services or return defaults
+  const housekeepingServices = provider.housekeepingServices || defaultServices;
+
+  res.status(200).json({
+    status: 'success',
+    data: housekeepingServices
+  });
+}));
+
+/**
+ * @route   POST /api/service/housekeeping-services
+ * @desc    Create a new housekeeping service
+ * @access  Private/ServiceProvider
+ */
+router.post('/housekeeping-services', catchAsync(async (req, res) => {
+  const providerId = req.user.serviceProviderId;
+  const { name, description, category, estimatedDuration, availability, requirements, instructions } = req.body;
+
+  const provider = await ServiceProvider.findById(providerId);
+  if (!provider) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Service provider not found'
+    });
+  }
+
+  // Initialize housekeeping services array if it doesn't exist
+  if (!provider.housekeepingServices) {
+    provider.housekeepingServices = [];
+  }
+
+  const newService = {
+    id: `custom-${Date.now()}`,
+    name,
+    description,
+    category,
+    estimatedDuration: estimatedDuration || 30,
+    availability: availability || 'always',
+    isActive: true,
+    requirements: requirements || [],
+    instructions: instructions || '',
+    createdAt: new Date()
+  };
+
+  provider.housekeepingServices.push(newService);
+  await provider.save();
+
+  res.status(201).json({
+    status: 'success',
+    data: newService,
+    message: 'Housekeeping service created successfully'
+  });
+}));
+
+/**
+ * @route   POST /api/service/housekeeping-services/:serviceId/activate
+ * @desc    Activate a housekeeping service
+ * @access  Private/ServiceProvider
+ */
+router.post('/housekeeping-services/:serviceId/activate', catchAsync(async (req, res) => {
+  const providerId = req.user.serviceProviderId;
+  const { serviceId } = req.params;
+
+  const provider = await ServiceProvider.findById(providerId);
+  if (!provider) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Service provider not found'
+    });
+  }
+
+  // Initialize housekeeping services if not exists
+  if (!provider.housekeepingServices) {
+    provider.housekeepingServices = [];
+  }
+
+  // Find and activate the service
+  const serviceIndex = provider.housekeepingServices.findIndex(service => service.id === serviceId);
+  if (serviceIndex !== -1) {
+    provider.housekeepingServices[serviceIndex].isActive = true;
+    await provider.save();
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Service activated successfully'
+  });
+}));
+
+/**
+ * @route   POST /api/service/housekeeping-services/:serviceId/deactivate
+ * @desc    Deactivate a housekeeping service
+ * @access  Private/ServiceProvider
+ */
+router.post('/housekeeping-services/:serviceId/deactivate', catchAsync(async (req, res) => {
+  const providerId = req.user.serviceProviderId;
+  const { serviceId } = req.params;
+
+  const provider = await ServiceProvider.findById(providerId);
+  if (!provider) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Service provider not found'
+    });
+  }
+
+  // Initialize housekeeping services if not exists
+  if (!provider.housekeepingServices) {
+    provider.housekeepingServices = [];
+  }
+
+  // Find and deactivate the service
+  const serviceIndex = provider.housekeepingServices.findIndex(service => service.id === serviceId);
+  if (serviceIndex !== -1) {
+    provider.housekeepingServices[serviceIndex].isActive = false;
+    await provider.save();
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Service deactivated successfully'
+  });
+}));
+
+/**
+ * @route   DELETE /api/service/housekeeping-services/:serviceId
+ * @desc    Delete a custom housekeeping service
+ * @access  Private/ServiceProvider
+ */
+router.delete('/housekeeping-services/:serviceId', catchAsync(async (req, res) => {
+  const providerId = req.user.serviceProviderId;
+  const { serviceId } = req.params;
+
+  const provider = await ServiceProvider.findById(providerId);
+  if (!provider) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Service provider not found'
+    });
+  }
+
+  // Only allow deletion of custom services
+  if (!serviceId.startsWith('custom-')) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Cannot delete default services'
+    });
+  }
+
+  // Remove the service
+  if (provider.housekeepingServices) {
+    provider.housekeepingServices = provider.housekeepingServices.filter(
+      service => service.id !== serviceId
+    );
+    await provider.save();
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Service deleted successfully'
+  });
+}));
+
+/**
+ * @route   GET /api/service/housekeeping-bookings
+ * @desc    Get housekeeping service bookings for the service provider
+ * @access  Private/ServiceProvider
+ */
+router.get('/housekeeping-bookings', catchAsync(async (req, res) => {
+  const providerId = req.user.serviceProviderId;
+  const hotelId = req.user.hotelId;
+  const { status, limit = 50, page = 1 } = req.query;
+
+  console.log('🔧 Housekeeping bookings query - hotelId:', hotelId);
+  console.log('🔧 Housekeeping bookings query - providerId:', providerId);
+
+  let query = {
+    serviceType: 'housekeeping',
+    hotelId: hotelId
+  };
+
+  if (status) {
+    query.status = status;
+  }
+
+  console.log('🔧 Housekeeping bookings query:', query);
+
+  // Let's also check all housekeeping bookings regardless of hotel to debug
+  const allHousekeepingBookings = await Booking.find({ serviceType: 'housekeeping' }).lean();
+  console.log('🔧 All housekeeping bookings in DB:', allHousekeepingBookings.map(b => ({
+    id: b._id,
+    hotelId: b.hotelId,
+    hotel: b.hotel,
+    serviceName: b.serviceName,
+    status: b.status,
+    serviceType: b.serviceType
+  })));
+
+  // Let's also check all bookings in this hotel
+  const allHotelBookings = await Booking.find({ hotelId: hotelId }).lean();
+  console.log('🔧 All bookings for this hotel:', allHotelBookings.map(b => ({
+    id: b._id,
+    serviceType: b.serviceType,
+    serviceName: b.serviceName || b.serviceDetails?.name,
+    status: b.status
+  })));
+
+  const bookings = await Booking.find(query)
+    .sort({ bookingDate: -1 })
+    .limit(limit * 1)
+    .skip((page - 1) * limit)
+    .populate('hotelId', 'name location')
+    .populate('hotel', 'name location')
+    .lean();
+
+  console.log('🔧 Filtered housekeeping bookings found:', bookings.length);
+
+  const totalBookings = await Booking.countDocuments(query);
+
+  res.status(200).json({
+    status: 'success',
+    results: bookings.length,
+    totalBookings,
+    totalPages: Math.ceil(totalBookings / limit),
+    currentPage: page,
+    data: bookings
+  });
+}));
+
+/**
+ * @route   PUT /api/service/housekeeping-bookings/:bookingId/status
+ * @desc    Update housekeeping booking status
+ * @access  Private/ServiceProvider
+ */
+router.put('/housekeeping-bookings/:bookingId/status', catchAsync(async (req, res) => {
+  const { bookingId } = req.params;
+  const { status, notes } = req.body;
+  const hotelId = req.user.hotelId;
+
+  const booking = await Booking.findOne({
+    _id: bookingId,
+    serviceType: 'housekeeping',
+    hotelId: hotelId
+  });
+
+  if (!booking) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Booking not found'
+    });
+  }
+
+  const oldStatus = booking.status;
+  booking.status = status;
+  booking.statusHistory = booking.statusHistory || [];
+  booking.statusHistory.push({
+    status,
+    timestamp: new Date(),
+    notes: notes || `Status changed from ${oldStatus} to ${status}`
+  });
+
+  if (status === 'completed') {
+    booking.completedAt = new Date();
+  }
+
+  await booking.save();
+
+  // Log the status change
+  logger.info(`Housekeeping booking ${bookingId} status updated from ${oldStatus} to ${status}`, {
+    bookingId,
+    oldStatus,
+    newStatus: status,
+    hotelId,
+    serviceProviderId: req.user.serviceProviderId
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: booking,
+    message: `Booking status updated to ${status}`
+  });
+}));
+
 module.exports = router;

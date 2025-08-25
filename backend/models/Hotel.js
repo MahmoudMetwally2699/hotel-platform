@@ -431,6 +431,45 @@ const hotelSchema = new mongoose.Schema({
     // Note: adminId is not required to allow creation without admin initially
   },
 
+  // Inside Hotel Services (services provided directly by the hotel)
+  insideServices: [{
+    id: {
+      type: String,
+      required: true
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    category: {
+      type: String,
+      enum: ['dining', 'assistance', 'maintenance', 'recreation', 'business'],
+      required: true
+    },
+    isActive: {
+      type: Boolean,
+      default: false
+    },
+    operatingHours: {
+      start: String,
+      end: String
+    },
+    features: [String],
+    basePrice: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    isCustom: {
+      type: Boolean,
+      default: false
+    }
+  }],
+
   // Metadata
   metadata: {
     createdBy: {

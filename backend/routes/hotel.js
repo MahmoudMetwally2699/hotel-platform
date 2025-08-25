@@ -1627,4 +1627,170 @@ router.get('/bookings', catchAsync(async (req, res) => {
   }
 }));
 
+/**
+ * @route   GET /api/hotel/inside-services
+ * @desc    Get hotel's inside services (services provided directly by the hotel)
+ * @access  Private/HotelAdmin
+ */
+router.get('/inside-services', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+
+  const hotel = await Hotel.findById(hotelId).populate('insideServices');
+
+  // Default inside services if none exist
+  const defaultServices = [
+    {
+      id: 'room-service',
+      name: 'Room Service',
+      description: 'In-room dining and service requests',
+      category: 'dining',
+      isActive: false,
+      operatingHours: { start: '06:00', end: '23:00' },
+      features: ['24/7 availability option', 'Menu customization', 'Special dietary accommodations']
+    },
+    {
+      id: 'hotel-restaurant',
+      name: 'Hotel Restaurant',
+      description: 'Main dining facilities and reservations',
+      category: 'dining',
+      isActive: false,
+      operatingHours: { start: '07:00', end: '22:00' },
+      features: ['Table reservations', 'Private dining', 'Event catering']
+    },
+    {
+      id: 'concierge-services',
+      name: 'Concierge Services',
+      description: 'Guest assistance and recommendations',
+      category: 'assistance',
+      isActive: false,
+      operatingHours: { start: '24/7', end: '24/7' },
+      features: ['Local recommendations', 'Booking assistance', 'Special requests']
+    },
+    {
+      id: 'housekeeping-requests',
+      name: 'Housekeeping Requests',
+      description: 'Room cleaning and maintenance requests',
+      category: 'maintenance',
+      isActive: false,
+      operatingHours: { start: '08:00', end: '18:00' },
+      features: ['Extra cleaning', 'Amenity requests', 'Maintenance issues']
+    }
+  ];
+
+  const insideServices = hotel.insideServices || defaultServices;
+
+  res.status(200).json({
+    status: 'success',
+    data: insideServices
+  });
+}));
+
+/**
+ * @route   POST /api/hotel/inside-services/:serviceId/activate
+ * @desc    Activate an inside hotel service
+ * @access  Private/HotelAdmin
+ */
+router.post('/inside-services/:serviceId/activate', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { serviceId } = req.params;
+
+  const hotel = await Hotel.findById(hotelId);
+  if (!hotel) {
+    throw new AppError('Hotel not found', 404);
+  }
+
+  // Initialize insideServices if it doesn't exist
+  if (!hotel.insideServices) {
+    hotel.insideServices = [];
+  }
+
+  // Find and activate the service
+  const serviceIndex = hotel.insideServices.findIndex(service => service.id === serviceId);
+  if (serviceIndex !== -1) {
+    hotel.insideServices[serviceIndex].isActive = true;
+  } else {
+    // Add new service if it doesn't exist
+    hotel.insideServices.push({
+      id: serviceId,
+      isActive: true
+    });
+  }
+
+  await hotel.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Service activated successfully'
+  });
+}));
+
+/**
+ * @route   POST /api/hotel/inside-services/:serviceId/deactivate
+ * @desc    Deactivate an inside hotel service
+ * @access  Private/HotelAdmin
+ */
+router.post('/inside-services/:serviceId/deactivate', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { serviceId } = req.params;
+
+  const hotel = await Hotel.findById(hotelId);
+  if (!hotel) {
+    throw new AppError('Hotel not found', 404);
+  }
+
+  // Find and deactivate the service
+  if (hotel.insideServices) {
+    const serviceIndex = hotel.insideServices.findIndex(service => service.id === serviceId);
+    if (serviceIndex !== -1) {
+      hotel.insideServices[serviceIndex].isActive = false;
+      await hotel.save();
+    }
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Service deactivated successfully'
+  });
+}));
+
+/**
+ * @route   POST /api/hotel/inside-services
+ * @desc    Create a new inside hotel service
+ * @access  Private/HotelAdmin
+ */
+router.post('/inside-services', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { name, description, category, operatingHours, features } = req.body;
+
+  const hotel = await Hotel.findById(hotelId);
+  if (!hotel) {
+    throw new AppError('Hotel not found', 404);
+  }
+
+  // Initialize insideServices if it doesn't exist
+  if (!hotel.insideServices) {
+    hotel.insideServices = [];
+  }
+
+  const newService = {
+    id: `custom-${Date.now()}`,
+    name,
+    description,
+    category,
+    operatingHours,
+    features,
+    isActive: false,
+    isCustom: true
+  };
+
+  hotel.insideServices.push(newService);
+  await hotel.save();
+
+  res.status(201).json({
+    status: 'success',
+    data: newService,
+    message: 'Service created successfully'
+  });
+}));
+
 module.exports = router;

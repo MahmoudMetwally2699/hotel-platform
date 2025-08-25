@@ -13,6 +13,7 @@ import {
   selectServiceLoading,
   selectServiceError
 } from '../../redux/slices/serviceSlice';
+import apiClient from '../../services/api.service';
 
 const OrdersPage = () => {
   const { t } = useTranslation();
@@ -21,40 +22,93 @@ const OrdersPage = () => {
   const isLoading = useSelector(selectServiceLoading);
   const error = useSelector(selectServiceError);
 
+  const [housekeepingBookings, setHousekeepingBookings] = useState([]);
+  const [housekeepingLoading, setHousekeepingLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
+  const [serviceTypeFilter, setServiceTypeFilter] = useState('all'); // New filter for service types
   const [currentOrder, setCurrentOrder] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });  useEffect(() => {
+    // Fetch regular orders
     dispatch(fetchProviderOrders());
+
+    // Fetch housekeeping bookings
+    fetchHousekeepingBookings();
   }, [dispatch]);
+
+  const fetchHousekeepingBookings = async () => {
+    try {
+      setHousekeepingLoading(true);
+      console.log('🔧 OrdersPage: Fetching housekeeping bookings...');
+      const response = await apiClient.get('/service/housekeeping-bookings');
+      console.log('🔧 OrdersPage: Housekeeping bookings response:', response.data);
+      setHousekeepingBookings(response.data.data || []);
+    } catch (error) {
+      console.error('🔧 OrdersPage: Error fetching housekeeping bookings:', error);
+      setHousekeepingBookings([]);
+    } finally {
+      setHousekeepingLoading(false);
+    }
+  };
   const handleStatusChange = (orderId, newStatus) => {
     console.log('🔧 OrdersPage: Updating status for order', orderId, 'to', newStatus);
 
-    dispatch(updateOrderStatus({ orderId, status: newStatus }))
-      .then((result) => {
-        console.log('🔧 OrdersPage: Status update result:', result);
+    // Check if this is a housekeeping booking by finding it in housekeepingBookings
+    const isHousekeepingBooking = housekeepingBookings.some(booking => booking._id === orderId);
 
-        if (result.type === 'service/updateOrderStatus/fulfilled') {
-          // Update the currentOrder if it's the one being updated
+    if (isHousekeepingBooking) {
+      // Handle housekeeping booking status update
+      apiClient.put(`/service/housekeeping-bookings/${orderId}/status`, { status: newStatus })
+        .then((response) => {
+          console.log('🔧 OrdersPage: Housekeeping booking status updated:', response.data);
+
+          // Update local state
+          setHousekeepingBookings(prev =>
+            prev.map(booking =>
+              booking._id === orderId ? { ...booking, status: newStatus } : booking
+            )
+          );
+
+          // Update currentOrder if it's the one being updated
           if (currentOrder && currentOrder._id === orderId) {
             setCurrentOrder({
               ...currentOrder,
               status: newStatus
             });
           }
+        })
+        .catch((error) => {
+          console.error('🔧 OrdersPage: Housekeeping booking status update failed:', error);
+          alert('Failed to update housekeeping booking status');
+        });
+    } else {
+      // Handle regular order status update
+      dispatch(updateOrderStatus({ orderId, status: newStatus }))
+        .then((result) => {
+          console.log('🔧 OrdersPage: Status update result:', result);
 
-          // Refresh the orders list to get the latest data
-          dispatch(fetchProviderOrders());
-        } else if (result.type === 'service/updateOrderStatus/rejected') {
-          console.error('🔧 OrdersPage: Status update failed:', result.payload);
-          alert('Failed to update order status: ' + result.payload);
-        }
-      })
-      .catch((error) => {
-        console.error('🔧 OrdersPage: Status update error:', error);
-        alert('Failed to update order status');
-      });
+          if (result.type === 'service/updateOrderStatus/fulfilled') {
+            // Update the currentOrder if it's the one being updated
+            if (currentOrder && currentOrder._id === orderId) {
+              setCurrentOrder({
+                ...currentOrder,
+                status: newStatus
+              });
+            }
+
+            // Refresh the orders list to get the latest data
+            dispatch(fetchProviderOrders());
+          } else if (result.type === 'service/updateOrderStatus/rejected') {
+            console.error('🔧 OrdersPage: Status update failed:', result.payload);
+            alert('Failed to update order status: ' + result.payload);
+          }
+        })
+        .catch((error) => {
+          console.error('🔧 OrdersPage: Status update error:', error);
+          alert('Failed to update order status');
+        });
+    }
   };const handleViewDetails = (order) => {
     console.log('🔧 OrdersPage: handleViewDetails called with order =', order);
     console.log('🔧 OrdersPage: order structure:', {
@@ -84,9 +138,57 @@ const OrdersPage = () => {
     }
     setSortConfig({ key, direction });
   };
-  // Filter orders based on selected filters
-  const filteredOrders = (Array.isArray(orders) ? orders : []).filter((order) => {
+  // Combine regular orders and housekeeping bookings
+  const allBookings = [
+    ...(Array.isArray(orders) ? orders : []).map(order => ({
+      ...order,
+      serviceType: order.serviceType || 'regular',
+      displayType: 'Regular Service'
+    })),
+    ...(Array.isArray(housekeepingBookings) ? housekeepingBookings : []).map(booking => ({
+      ...booking,
+      serviceType: 'housekeeping',
+      displayType: 'Housekeeping Service',
+      // Normalize the data structure to match regular orders
+      serviceName: booking.serviceName || booking.serviceDetails?.name || 'Housekeeping Service',
+      guestName: booking.guestDetails?.firstName && booking.guestDetails?.lastName
+        ? `${booking.guestDetails.firstName} ${booking.guestDetails.lastName}`
+        : booking.guestInfo?.name || 'Unknown Guest',
+      roomNumber: booking.guestDetails?.roomNumber || booking.guestInfo?.roomNumber || 'N/A',
+      totalAmount: booking.totalAmount || 0,
+      createdAt: booking.bookingDate || booking.createdAt,
+      // Add hotel information
+      hotel: booking.hotel || { name: 'Hotel Service' },
+      hotelName: booking.hotel?.name || 'Hotel Service',
+      // Add service details
+      serviceDetails: {
+        name: booking.serviceName || booking.serviceDetails?.name || 'Housekeeping Service',
+        category: 'housekeeping'
+      },
+      // Add guest details in the expected format
+      guestDetails: {
+        firstName: booking.guestDetails?.firstName || 'Guest',
+        lastName: booking.guestDetails?.lastName || '',
+        email: booking.guestDetails?.email || 'no-email@housekeeping.local',
+        phone: booking.guestDetails?.phone || '',
+        roomNumber: booking.guestDetails?.roomNumber || 'N/A'
+      },
+      // Add schedule information
+      schedule: {
+        preferredDate: booking.schedule?.preferredDate || booking.bookingDate,
+        preferredTime: booking.schedule?.preferredTime || '09:00'
+      }
+    }))
+  ];
+
+  console.log('🔧 OrdersPage: Regular orders:', orders);
+  console.log('🔧 OrdersPage: Housekeeping bookings:', housekeepingBookings);
+  console.log('🔧 OrdersPage: Combined allBookings:', allBookings);
+
+  // Filter combined bookings based on selected filters
+  const filteredOrders = allBookings.filter((order) => {
     let passesStatusFilter = statusFilter === 'all' || order.status === statusFilter;
+    let passesServiceTypeFilter = serviceTypeFilter === 'all' || order.serviceType === serviceTypeFilter;
 
     let passesDateFilter = true;
     const orderDate = new Date(order.createdAt);
@@ -106,7 +208,9 @@ const OrdersPage = () => {
       passesDateFilter = orderDate >= lastWeek;
     } else if (dateFilter === 'month') {
       passesDateFilter = orderDate >= lastMonth;
-    }    return passesStatusFilter && passesDateFilter;
+    }
+
+    return passesStatusFilter && passesDateFilter && passesServiceTypeFilter;
   });
 
   // Sort filtered orders
@@ -155,6 +259,16 @@ const OrdersPage = () => {
               <option value="yesterday">Yesterday</option>
               <option value="week">Last 7 Days</option>
               <option value="month">Last 30 Days</option>
+            </select>
+
+            <select
+              value={serviceTypeFilter}
+              onChange={(e) => setServiceTypeFilter(e.target.value)}
+              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+            >
+              <option value="all">All Services</option>
+              <option value="regular">Regular Services</option>
+              <option value="housekeeping">Housekeeping</option>
             </select>
           </div>
 
@@ -256,10 +370,10 @@ const OrdersPage = () => {
                       {order.bookingNumber || order._id}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.serviceId?.name || 'N/A'}
+                      {order.serviceDetails?.name || order.serviceId?.name || order.serviceName || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.hotelId?.name || 'N/A'}
+                      {order.hotel?.name || order.hotelId?.name || order.hotelName || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       ${(order.pricing?.totalAmount || order.totalAmount || 0).toFixed(2)}
@@ -359,7 +473,9 @@ const OrdersPage = () => {
                         </div>
                       </div>                      <div className="mb-4">
                         <p className="text-sm font-medium text-gray-500">Service</p>
-                        <p className="mt-1 text-sm text-gray-900">{currentOrder.serviceId?.name || 'Unknown Service'}</p>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {currentOrder.serviceDetails?.name || currentOrder.serviceId?.name || currentOrder.serviceName || 'Unknown Service'}
+                        </p>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -381,7 +497,9 @@ const OrdersPage = () => {
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
                           <p className="text-sm font-medium text-gray-500">Hotel</p>
-                          <p className="mt-1 text-sm text-gray-900">{currentOrder.hotelId?.name || 'Unknown Hotel'}</p>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {currentOrder.hotel?.name || currentOrder.hotelId?.name || currentOrder.hotelName || 'Unknown Hotel'}
+                          </p>
                         </div><div>
                           <p className="text-sm font-medium text-gray-500">Room Number</p>
                           <p className="mt-1 text-sm text-gray-900">{currentOrder.guestDetails?.roomNumber || 'N/A'}</p>
@@ -398,7 +516,7 @@ const OrdersPage = () => {
                       </div>                      <div className="mb-4">
                         <p className="text-sm font-medium text-gray-500">Notes/Special Requests</p>
                         <p className="mt-1 text-sm text-gray-900">
-                          {currentOrder.bookingConfig?.specialRequests || currentOrder.bookingConfig?.notes || currentOrder.notes || currentOrder.specialRequests || 'No special requests'}
+                          {currentOrder.bookingDetails?.specialRequests || currentOrder.bookingConfig?.specialRequests || currentOrder.bookingConfig?.notes || currentOrder.notes || currentOrder.specialRequests || 'No special requests'}
                         </p>
                       </div>
 

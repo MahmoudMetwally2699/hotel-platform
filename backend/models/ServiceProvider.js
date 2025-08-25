@@ -557,7 +557,86 @@ const serviceProviderSchema = new mongoose.Schema({
       default: 'hotel-admin'
     },
     notes: String
-  }
+  },
+
+  // Inside Hotel Services - Services provided within hotel premises
+  insideServices: [{
+    id: {
+      type: String,
+      required: true
+    },
+    name: String,
+    description: String,
+    category: {
+      type: String,
+      enum: ['dining', 'assistance', 'maintenance']
+    },
+    operatingHours: {
+      start: String,
+      end: String
+    },
+    features: [String],
+    basePrice: {
+      type: Number,
+      default: 0
+    },
+    isActive: {
+      type: Boolean,
+      default: false
+    },
+    isCustom: {
+      type: Boolean,
+      default: false
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+
+  // Housekeeping Services - Specific to room and guest services
+  housekeepingServices: [{
+    id: {
+      type: String,
+      required: true
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    category: {
+      type: String,
+      enum: ['cleaning', 'maintenance', 'amenities', 'laundry'],
+      required: true
+    },
+    estimatedDuration: {
+      type: Number, // in minutes
+      default: 30
+    },
+    availability: {
+      type: String,
+      enum: ['always', 'business-hours'],
+      default: 'always'
+    },
+    requirements: [{
+      type: String
+    }],
+    instructions: {
+      type: String
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

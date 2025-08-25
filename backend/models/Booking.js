@@ -42,6 +42,13 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     index: true
   },
 
+  // Service Type (for different types of bookings)
+  serviceType: {
+    type: String,
+    enum: ['regular', 'housekeeping', 'transportation', 'laundry', 'tours'],
+    default: 'regular'
+  },
+
   // Guest Information
   guestDetails: {
     firstName: {

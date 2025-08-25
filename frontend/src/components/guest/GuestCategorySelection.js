@@ -18,6 +18,7 @@ import {
   FaMusic,
   FaShoppingBag,
   FaDumbbell,
+  FaBroom,
   FaSpinner,
   FaArrowRight,
   FaStar,
@@ -35,7 +36,8 @@ const categoryIcons = {
   dining: FaUtensils,
   entertainment: FaMusic,
   shopping: FaShoppingBag,
-  fitness: FaDumbbell
+  fitness: FaDumbbell,
+  housekeeping: FaBroom
 };
 
 const GuestCategorySelection = () => {
@@ -164,6 +166,13 @@ const GuestCategorySelection = () => {
         features: [t('guestCategories.certifiedTrainers'), t('guestCategories.equipmentProvided'), t('guestCategories.flexibleSchedules')],
         estimatedTime: t('guestCategories.fitnessTime'),
         color: 'bg-indigo-500'
+      },
+      housekeeping: {
+        title: 'Housekeeping Services',
+        description: 'Professional room cleaning and maintenance services provided at no additional charge',
+        features: ['Extra Cleaning', 'Fresh Linens', 'Amenity Restocking', 'Room Maintenance'],
+        estimatedTime: 'Available 24/7',
+        color: 'bg-teal-500'
       }
     });
 
@@ -189,15 +198,20 @@ const GuestCategorySelection = () => {
           serviceCounts[service.category]++;
         });
 
+        // Always include housekeeping services (they're stored separately)
+        serviceCounts['housekeeping'] = 1; // Always show housekeeping
+
         // Get localized category descriptions
         const categoryDescriptions = getCategoryDescriptions();
 
         // Create category list with service counts
-        const availableCategories = Object.keys(serviceCounts).map(categoryKey => ({
-          key: categoryKey,
-          serviceCount: serviceCounts[categoryKey],
-          ...categoryDescriptions[categoryKey]
-        }));
+        const availableCategories = Object.keys(serviceCounts)
+          .filter(categoryKey => categoryDescriptions[categoryKey]) // Only include categories with descriptions
+          .map(categoryKey => ({
+            key: categoryKey,
+            serviceCount: serviceCounts[categoryKey],
+            ...categoryDescriptions[categoryKey]
+          }));
 
         setCategories(availableCategories);
 
@@ -223,6 +237,9 @@ const GuestCategorySelection = () => {
     } else if (categoryKey === 'transportation') {
       // Navigate directly to transportation booking for better UX
       navigate(`/hotels/${hotelId}/services/transportation/booking`);
+    } else if (categoryKey === 'housekeeping') {
+      // Navigate directly to housekeeping booking for better UX
+      navigate(`/hotels/${hotelId}/services/housekeeping/booking`);
     } else {
       // Navigate to category-specific service list page for other categories
       navigate(`/hotels/${hotelId}/services/${categoryKey}`);

@@ -230,7 +230,9 @@ const MyOrdersPage = () => {
                               {formatPriceByLanguage(booking.pricing?.totalAmount || 0, i18n.language)}
                             </p>
                             <p className="text-sm text-gray-500">
-                              {booking.serviceDetails?.category || booking.serviceId?.category}
+                              {booking.serviceType === 'housekeeping'
+                                ? 'Housekeeping Service'
+                                : (booking.serviceDetails?.category || booking.serviceId?.category)}
                             </p>
                           </div>
                         </div>

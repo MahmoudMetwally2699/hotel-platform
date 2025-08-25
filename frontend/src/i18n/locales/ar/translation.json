@@ -755,6 +755,40 @@
         "name": "خدمات اللياقة البدنية",
         "description": "التدريب الشخصي والأنشطة الرياضية"
       }
+    },
+    "serviceTypes": {
+      "outside": {
+        "title": "خدمات خارج الفندق",
+        "description": "خدمات مقدمة من مزودي خدمات خارجيين",
+        "subtitle": "شراكة مع مزودين خارجيين"
+      },
+      "inside": {
+        "title": "خدمات داخل الفندق",
+        "description": "خدمات مقدمة مباشرة من الفندق",
+        "subtitle": "خدمات فندقية مباشرة"
+      }
+    },
+    "insideServices": {
+      "title": "خدمات داخل الفندق",
+      "description": "إدارة الخدمات المقدمة مباشرة من فندقك",
+      "roomService": "خدمة الغرف",
+      "hotelRestaurant": "مطعم الفندق",
+      "conciergeServices": "خدمات الكونسيرج",
+      "housekeepingRequests": "طلبات التدبير المنزلي",
+      "activate": "تفعيل",
+      "deactivate": "إلغاء تفعيل",
+      "addService": "إضافة خدمة",
+      "manageServiceDetails": "إدارة تفاصيل الخدمة",
+      "viewHotelBookings": "عرض الحجوزات",
+      "operatingHours": "ساعات العمل",
+      "features": "المميزات",
+      "categories": {
+        "dining": "الطعام",
+        "assistance": "مساعدة الضيوف",
+        "maintenance": "الصيانة",
+        "recreation": "الترفيه",
+        "business": "الأعمال"
+      }
     }
   },
   "payment": {

@@ -1,34 +1,32 @@
+/**
+ * Inside Hotel Services Category Selection Dashboard
+ * Similar to CategorySelectionDashboard but for inside hotel services
+ */
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  FaTshirt,
-  FaCar,
-  FaMapMarkedAlt,
-  FaSpa,
-  FaUtensils,
-  FaMusic,
-  FaShoppingBag,
-  FaDumbbell,
+  FaConciergeBell,
+  FaCoffee,
+  FaHotel,
+  FaBroom,
   FaCheck,
   FaPlus,
-  FaSpinner
+  FaSpinner,
+  FaTimes
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
 import { showErrorToast } from '../../utils/errorHandler';
 
 const categoryIcons = {
-  laundry: FaTshirt,
-  transportation: FaCar,
-  tours: FaMapMarkedAlt,
-  spa: FaSpa,
-  dining: FaUtensils,
-  entertainment: FaMusic,
-  shopping: FaShoppingBag,
-  fitness: FaDumbbell
+  'room-service': FaConciergeBell,
+  'hotel-restaurant': FaCoffee,
+  'concierge-services': FaConciergeBell,
+  'housekeeping-requests': FaBroom
 };
 
-const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) => {
+const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories }) => {
   const { t } = useTranslation();
   const [categories, setCategories] = useState({});
   const [activeCategories, setActiveCategories] = useState([]);
@@ -37,58 +35,110 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
 
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await apiClient.get('/service/categories');
-      setCategories(response.data.data.availableCategories);
-      setActiveCategories(response.data.data.activeCategories || []);
+      const response = await apiClient.get('/service/inside-services');
+
+      // Transform the response into category format
+      const categoriesData = {
+        'room-service': {
+          name: 'Room Service',
+          description: 'In-room dining and service requests',
+          items: [
+            { name: 'Breakfast in bed', category: 'dining' },
+            { name: 'Late night snacks', category: 'dining' },
+            { name: 'Mini bar restocking', category: 'service' },
+            { name: 'Special dietary meals', category: 'dining' }
+          ]
+        },
+        'hotel-restaurant': {
+          name: 'Hotel Restaurant',
+          description: 'Main dining facilities and reservations',
+          items: [
+            { name: 'Table reservations', category: 'booking' },
+            { name: 'Private dining', category: 'special' },
+            { name: 'Event catering', category: 'events' },
+            { name: 'Wine selection', category: 'beverage' }
+          ]
+        },
+        'concierge-services': {
+          name: 'Concierge Services',
+          description: 'Guest assistance and recommendations',
+          items: [
+            { name: 'Local recommendations', category: 'guidance' },
+            { name: 'Booking assistance', category: 'booking' },
+            { name: 'Transportation arrangements', category: 'transport' },
+            { name: 'Special requests', category: 'service' }
+          ]
+        },
+        'housekeeping-requests': {
+          name: 'Housekeeping Services',
+          description: 'Room cleaning and maintenance requests',
+          items: [
+            { name: 'Extra cleaning', category: 'cleaning' },
+            { name: 'Amenity requests', category: 'amenities' },
+            { name: 'Maintenance issues', category: 'maintenance' },
+            { name: 'Linen change', category: 'cleaning' }
+          ]
+        }
+      };
+
+      // Get active categories from response
+      const serviceData = response.data.data || [];
+      const activeCats = serviceData
+        .filter(service => service.isActive)
+        .map(service => service.id);
+
+      setCategories(categoriesData);
+      setActiveCategories(activeCats);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error fetching inside service categories:', error);
 
       // Fallback to local category data if API fails
-      const fallbackCategories = {        laundry: {
-          name: t('categorySelection.categories.laundry.name'),
-          description: t('categorySelection.categories.laundry.description'),
+      const fallbackCategories = {
+        'room-service': {
+          name: 'Room Service',
+          description: 'In-room dining and service requests',
           items: [
-            { name: t('categorySelection.sampleItems.shirts'), category: 'clothing' },
-            { name: t('categorySelection.sampleItems.pants'), category: 'clothing' },
-            { name: t('categorySelection.sampleItems.dresses'), category: 'clothing' },
-            { name: t('categorySelection.sampleItems.suits'), category: 'formal' }
+            { name: 'Breakfast in bed', category: 'dining' },
+            { name: 'Late night snacks', category: 'dining' },
+            { name: 'Mini bar restocking', category: 'service' }
           ]
         },
-        transportation: {
-          name: t('categorySelection.categories.transportation.name'),
-          description: t('categorySelection.categories.transportation.description'),
-          vehicleTypes: [
-            { name: t('categorySelection.sampleItems.sedan'), capacity: 4 },
-            { name: t('categorySelection.sampleItems.suv'), capacity: 7 },
-            { name: t('categorySelection.sampleItems.van'), capacity: 12 }
-          ]
-        },
-        tours: {
-          name: t('categorySelection.categories.tours.name'),
-          description: t('categorySelection.categories.tours.description'),
-          tourTypes: [
-            { name: t('categorySelection.sampleItems.cityTour'), duration: '4 hours' },
-            { name: t('categorySelection.sampleItems.historicalTour'), duration: '6 hours' },
-            { name: t('categorySelection.sampleItems.natureTour'), duration: '8 hours' }
-          ]
-        },
-        spa: {
-          name: t('categorySelection.categories.spa.name'),
-          description: t('categorySelection.categories.spa.description'),
+        'hotel-restaurant': {
+          name: 'Hotel Restaurant',
+          description: 'Main dining facilities and reservations',
           items: [
-            { name: t('categorySelection.sampleItems.massage'), duration: '60 min' },
-            { name: t('categorySelection.sampleItems.facial'), duration: '45 min' }
+            { name: 'Table reservations', category: 'booking' },
+            { name: 'Private dining', category: 'special' },
+            { name: 'Event catering', category: 'events' }
+          ]
+        },
+        'concierge-services': {
+          name: 'Concierge Services',
+          description: 'Guest assistance and recommendations',
+          items: [
+            { name: 'Local recommendations', category: 'guidance' },
+            { name: 'Booking assistance', category: 'booking' },
+            { name: 'Special requests', category: 'service' }
+          ]
+        },
+        'housekeeping-requests': {
+          name: 'Housekeeping Services',
+          description: 'Room cleaning and maintenance requests',
+          items: [
+            { name: 'Extra cleaning', category: 'cleaning' },
+            { name: 'Amenity requests', category: 'amenities' },
+            { name: 'Maintenance issues', category: 'maintenance' }
           ]
         }
       };
 
       setCategories(fallbackCategories);
       setActiveCategories([]);
-      toast.warn(t('categorySelection.offlineMode'));
+      toast.warn('Using default inside service categories. API connection failed.');
       setLoading(false);
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     fetchCategories();
@@ -97,29 +147,17 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
   const activateCategory = async (categoryKey) => {
     setActivating(categoryKey);
     try {
-      const response = await apiClient.post(`/service/categories/${categoryKey}/activate`);
+      const response = await apiClient.post(`/service/inside-services/${categoryKey}/activate`);
       setActiveCategories(prev => [...prev, categoryKey]);
-      toast.success(response.data.message);
+      toast.success(response.data.message || 'Service activated successfully');
 
       // Call the callback if provided
       if (onCategorySelect) {
         onCategorySelect(categoryKey, categories[categoryKey]);
       }
     } catch (error) {
-      console.error('Error activating category:', error);
-
-      // Fallback for offline mode - just activate locally
-      if (error.response?.status === 404 || error.code === 'ERR_NETWORK') {
-        setActiveCategories(prev => [...prev, categoryKey]);
-        toast.success(`${categories[categoryKey]?.name || categoryKey} ${t('categorySelection.activatedLocally')}`);
-
-        // Call the callback if provided
-        if (onCategorySelect) {
-          onCategorySelect(categoryKey, categories[categoryKey]);
-        }
-      } else {
-        showErrorToast(error, t('categorySelection.failedToActivate'));
-      }
+      console.error('Error activating inside service category:', error);
+      showErrorToast(error, 'Failed to activate service');
     } finally {
       setActivating(null);
     }
@@ -128,19 +166,12 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
   const deactivateCategory = async (categoryKey) => {
     setActivating(categoryKey);
     try {
-      const response = await apiClient.post(`/service/categories/${categoryKey}/deactivate`);
+      const response = await apiClient.post(`/service/inside-services/${categoryKey}/deactivate`);
       setActiveCategories(prev => prev.filter(cat => cat !== categoryKey));
-      toast.success(response.data.message);
+      toast.success(response.data.message || 'Service deactivated successfully');
     } catch (error) {
-      console.error('Error deactivating category:', error);
-
-      // Fallback for offline mode
-      if (error.response?.status === 404 || error.code === 'ERR_NETWORK') {
-        setActiveCategories(prev => prev.filter(cat => cat !== categoryKey));
-        toast.success(`${categories[categoryKey]?.name || categoryKey} ${t('categorySelection.deactivatedLocally')}`);
-      } else {
-        showErrorToast(error, t('categorySelection.failedToDeactivate'));
-      }
+      console.error('Error deactivating inside service category:', error);
+      showErrorToast(error, 'Failed to deactivate service');
     } finally {
       setActivating(null);
     }
@@ -163,9 +194,9 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('categorySelection.title')}</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Inside Hotel Services</h1>
             <p className="text-gray-600 mb-6">
-              {t('categorySelection.description')}
+              Select and activate the inside hotel services you want to offer. These services are provided within the hotel premises.
             </p>
           </div>
           {onBackToCategories && (
@@ -180,12 +211,14 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
 
         {activeCategories.length > 0 && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <h3 className="text-lg font-semibold text-green-800 mb-2">{t('categorySelection.activeCategories')}</h3>
-            <div className="flex flex-wrap gap-2">              {activeCategories.map(categoryKey => {
+            <h3 className="text-lg font-semibold text-green-800 mb-2">Active Inside Services</h3>
+            <div className="flex flex-wrap gap-2">
+              {activeCategories.map(categoryKey => {
                 const IconComponent = categoryIcons[categoryKey];
-                return (<div key={categoryKey} className="flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                return (
+                  <div key={categoryKey} className="flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
                     {IconComponent && <IconComponent className="mr-2" />}
-                    {t(`categorySelection.categories.${categoryKey}.name`)}
+                    {categories[categoryKey]?.name}
                     <FaCheck className="ml-2 text-green-600" />
                   </div>
                 );
@@ -230,12 +263,14 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                   `}>
                     {IconComponent && <IconComponent className="text-3xl" />}
                   </div>
-                </div>                <h3 className="text-xl font-bold text-center mb-2 text-gray-800">
-                  {t(`categorySelection.categories.${categoryKey}.name`)}
+                </div>
+
+                <h3 className="text-xl font-bold text-center mb-2 text-gray-800">
+                  {category.name}
                 </h3>
 
                 <p className="text-gray-600 text-center text-sm mb-4">
-                  {t(`categorySelection.categories.${categoryKey}.description`)}
+                  {category.description}
                 </p>
 
                 {isActive ? (
@@ -244,7 +279,7 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                     className={`
                       w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200
                       ${isActivating
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-red-500 hover:bg-red-600 text-white'
                       }
                     `}
@@ -256,12 +291,12 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                     {isActivating ? (
                       <div className="flex items-center justify-center">
                         <FaSpinner className="animate-spin mr-2" />
-                        {t('categorySelection.deactivating')}
+                        Processing...
                       </div>
                     ) : (
                       <div className="flex items-center justify-center">
-                        <FaCheck className="mr-2" />
-                        {t('categorySelection.deactivate')}
+                        <FaTimes className="mr-2" />
+                        Deactivate
                       </div>
                     )}
                   </button>
@@ -271,7 +306,7 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                     className={`
                       w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200
                       ${isActivating
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-blue-500 hover:bg-blue-600 text-white'
                       }
                     `}
@@ -283,12 +318,12 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                     {isActivating ? (
                       <div className="flex items-center justify-center">
                         <FaSpinner className="animate-spin mr-2" />
-                        {t('categorySelection.activating')}
+                        Activating...
                       </div>
                     ) : (
                       <div className="flex items-center justify-center">
                         <FaPlus className="mr-2" />
-                        {t('categorySelection.activate')}
+                        Activate
                       </div>
                     )}
                   </button>
@@ -297,7 +332,7 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                 {/* Show sample items/services for preview */}
                 {category.items && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">{t('categorySelection.sampleServices')}</p>
+                    <p className="text-xs text-gray-500 mb-2">Sample Services:</p>
                     <div className="flex flex-wrap gap-1">
                       {category.items.slice(0, 3).map((item, index) => (
                         <span
@@ -309,49 +344,7 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                       ))}
                       {category.items.length > 3 && (
                         <span className="text-gray-400 text-xs">
-                          +{category.items.length - 3} {t('categorySelection.more')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {category.vehicleTypes && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">{t('categorySelection.vehicleTypes')}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {category.vehicleTypes.slice(0, 2).map((vehicle, index) => (
-                        <span
-                          key={index}
-                          className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs"
-                        >
-                          {vehicle.name}
-                        </span>
-                      ))}
-                      {category.vehicleTypes.length > 2 && (
-                        <span className="text-gray-400 text-xs">
-                          +{category.vehicleTypes.length - 2} {t('categorySelection.more')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {category.tourTypes && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">{t('categorySelection.tourTypes')}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {category.tourTypes.slice(0, 2).map((tour, index) => (
-                        <span
-                          key={index}
-                          className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs"
-                        >
-                          {tour.name}
-                        </span>
-                      ))}
-                      {category.tourTypes.length > 2 && (
-                        <span className="text-gray-400 text-xs">
-                          +{category.tourTypes.length - 2} {t('categorySelection.more')}
+                          +{category.items.length - 3} more
                         </span>
                       )}
                     </div>
@@ -366,14 +359,14 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
       {activeCategories.length > 0 && (
         <div className="mt-8 text-center">
           <p className="text-gray-600 mb-4">
-            {t('categorySelection.successMessage')} {activeCategories.length} {activeCategories.length === 1 ? t('categorySelection.categorySingle') : t('categorySelection.categoryPlural')}.
-            {' '}{t('categorySelection.successDescription')}
+            You have {activeCategories.length} active inside hotel services.
+            Guests can now book these services directly within the hotel premises.
           </p>
           <button
-            onClick={() => window.location.href = '/service/services'}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+            onClick={() => window.location.href = '/service/inside-services/manage'}
+            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
-            {t('categorySelection.manageServices')}
+            Manage Service Details
           </button>
         </div>
       )}
@@ -381,4 +374,4 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
   );
 };
 
-export default CategorySelectionDashboard;
+export default InsideServicesCategorySelection;

@@ -29,6 +29,7 @@ const HotelListPage = lazy(() => import('../pages/client/HotelListPage'));
 const HotelCategoryServicesPage = lazy(() => import('../pages/client/HotelCategoryServicesPage'));
 const LaundryBookingPage = lazy(() => import('../pages/client/LaundryBookingPage'));
 const TransportationBookingPage = lazy(() => import('../pages/client/TransportationBookingPage'));
+const HousekeepingBookingPage = lazy(() => import('../pages/guest/HousekeepingBookingPage'));
 const GuestTransportationBookings = lazy(() => import('../pages/guest/GuestTransportationBookings'));
 const GuestLaundryBookings = lazy(() => import('../pages/guest/GuestLaundryBookings'));
 const PaymentSuccess = lazy(() => import('../pages/guest/PaymentSuccess'));
@@ -62,6 +63,7 @@ const ServiceProviderClients = lazy(() => import('../components/hotel/ServicePro
 const HotelServiceProviderAnalytics = lazy(() => import('../components/hotel/HotelServiceProviderAnalytics'));
 
 // Service Provider Pages
+const TwoTierServiceDashboard = lazy(() => import('../components/service/TwoTierServiceDashboard'));
 const MultiCategoryDashboard = lazy(() => import('../pages/service/MultiCategoryDashboard'));
 const ServiceProviderOrdersPage = lazy(() => import('../pages/service/OrdersPage'));
 const ServiceProviderOrderDetailPage = lazy(() => import('../pages/service/OrderDetailPage'));
@@ -70,6 +72,7 @@ const ServiceProviderEarningsPage = lazy(() => import('../pages/service/Earnings
 const ServiceProviderMetricsPage = lazy(() => import('../pages/service/MetricsPage'));
 const ServiceProviderSettingsPage = lazy(() => import('../pages/service/SettingsPage'));
 const TransportationBookingManagement = lazy(() => import('../pages/service/TransportationBookingManagement'));
+const HousekeepingServiceManagement = lazy(() => import('../components/service/HousekeepingServiceManagement'));
 const CategorySelectionDashboard = lazy(() => import('../components/service/CategorySelectionDashboard'));
 const ServiceProviderAnalytics = lazy(() => import('../components/service/ServiceProviderAnalytics'));
 const ServiceProviderServicesPage = lazy(() => import('../pages/service/ServicesPage'));
@@ -95,6 +98,7 @@ const AppRouter = () => {
         <Route path="/hotels/:hotelId/categories" element={<TailwindLayout><HotelCategoryServicesPage /></TailwindLayout>} />        <Route path="/hotels/:hotelId/services/:category" element={<TailwindLayout><HotelCategoryServicesPage /></TailwindLayout>} />
         <Route path="/hotels/:hotelId/services/laundry/booking" element={<TailwindLayout><LaundryBookingPage /></TailwindLayout>} />
         <Route path="/hotels/:hotelId/services/transportation/booking" element={<TailwindLayout><TransportationBookingPage /></TailwindLayout>} />
+        <Route path="/hotels/:hotelId/services/housekeeping/booking" element={<TailwindLayout><HousekeepingBookingPage /></TailwindLayout>} />
         <Route path="/guest/payment-success" element={<TailwindLayout><PaymentSuccess /></TailwindLayout>} />
         <Route path="/guest/payment-failed" element={<TailwindLayout><PaymentFailed /></TailwindLayout>} />
         <Route path="/services/:category" element={<ServiceListPage />} />
@@ -354,6 +358,16 @@ const AppRouter = () => {
           element={
             <ProtectedRoute allowedRoles="service">
               <TailwindLayout>
+                <TwoTierServiceDashboard />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/old-dashboard"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
                 <MultiCategoryDashboard />
               </TailwindLayout>
             </ProtectedRoute>
@@ -365,6 +379,16 @@ const AppRouter = () => {
             <ProtectedRoute allowedRoles="service">
               <TailwindLayout>
                 <CategorySelectionDashboard />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/inside-services"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <TwoTierServiceDashboard />
               </TailwindLayout>
             </ProtectedRoute>
           }
@@ -442,6 +466,16 @@ const AppRouter = () => {
             <ProtectedRoute allowedRoles="service">
               <TailwindLayout>
                 <TransportationBookingManagement />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/housekeeping"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <HousekeepingServiceManagement onBack={() => window.history.back()} />
               </TailwindLayout>
             </ProtectedRoute>
           }

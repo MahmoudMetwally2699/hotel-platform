@@ -698,6 +698,40 @@
         "name": "Fitness Services",
         "description": "Personal training and sports activities"
       }
+    },
+    "serviceTypes": {
+      "outside": {
+        "title": "Outside Hotel Services",
+        "description": "Services provided by external service providers",
+        "subtitle": "Partner with external providers"
+      },
+      "inside": {
+        "title": "Inside Hotel Services",
+        "description": "Services provided directly by the hotel",
+        "subtitle": "Direct hotel services"
+      }
+    },
+    "insideServices": {
+      "title": "Inside Hotel Services",
+      "description": "Manage services provided directly by your hotel",
+      "roomService": "Room Service",
+      "hotelRestaurant": "Hotel Restaurant",
+      "conciergeServices": "Concierge Services",
+      "housekeepingRequests": "Housekeeping Requests",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "addService": "Add Service",
+      "manageServiceDetails": "Manage Service Details",
+      "viewHotelBookings": "View Bookings",
+      "operatingHours": "Operating Hours",
+      "features": "Features",
+      "categories": {
+        "dining": "Dining",
+        "assistance": "Guest Assistance",
+        "maintenance": "Maintenance",
+        "recreation": "Recreation",
+        "business": "Business"
+      }
     }
   },
   "payment": {

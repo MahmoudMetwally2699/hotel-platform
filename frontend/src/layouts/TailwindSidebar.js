@@ -60,7 +60,8 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
             children: [
               { name: `👕 ${t('categorySelection.sidebar.laundryManagement')}`, path: '/service/services?category=laundry', icon: 'laundry' },
               { name: `🚗 ${t('categorySelection.sidebar.transportationManagement')}`, path: '/service/services?category=transportation', icon: 'truck' },
-              { name: `📋 ${t('categorySelection.sidebar.transportationBookings')}`, path: '/service/transportation-bookings', icon: 'truck' }
+              { name: `📋 ${t('categorySelection.sidebar.transportationBookings')}`, path: '/service/transportation-bookings', icon: 'truck' },
+              { name: `🧹 Housekeeping Services`, path: '/service/housekeeping', icon: 'broom' }
             ]
           },
           { name: t('navigation.earnings'), path: '/service/earnings', icon: 'cash' },
@@ -170,6 +171,12 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         return (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+          </svg>
+        );
+      case 'broom':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
         );
       case 'chevron-down':

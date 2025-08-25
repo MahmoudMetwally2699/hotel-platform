@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const Hotel = require('../models/Hotel');
 const Service = require('../models/Service');
 const ServiceProvider = require('../models/ServiceProvider');
@@ -630,20 +631,84 @@ router.get('/bookings', protect, restrictTo('guest'), async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-    const bookings = await Booking.find(query)
-      .populate('serviceId', 'name category')
-      .populate('hotelId', 'name')
-      .populate('serviceProviderId', 'businessName')
-      .sort({ createdAt: -1 }) // Sort by creation date instead of bookingDate
-      .skip(skip)
-      .limit(parseInt(limit));
+    // Create the main query for regular bookings with user's guestId (exclude housekeeping)
+    const regularBookingsQuery = {
+      ...query,
+      $or: [
+        { serviceType: { $ne: 'housekeeping' } },
+        { serviceType: { $exists: false } }
+      ]
+    };
 
-    const total = await Booking.countDocuments(query);
+    // Also find housekeeping bookings that match user's email (for bookings made without authentication)
+    // OR match by guestId (for bookings made with authentication)
+    const housekeepingByEmailQuery = {
+      serviceType: 'housekeeping',
+      $or: [
+        { 'guestDetails.email': req.user.email },
+        { guestId: req.user.id }
+      ]
+    };
+
+    // If status filter is provided, apply it to housekeeping query too
+    if (status) housekeepingByEmailQuery.status = status;
+
+    console.log('🔍 Guest bookings - User ID:', req.user.id);
+    console.log('🔍 Guest bookings - User email:', req.user.email);
+    console.log('🔍 Guest bookings - Regular query:', regularBookingsQuery);
+    console.log('🔍 Guest bookings - Housekeeping query:', housekeepingByEmailQuery);
+
+    // Debug: Check all housekeeping bookings to see what emails they have
+    const allHousekeepingBookings = await Booking.find({ serviceType: 'housekeeping' }).lean();
+    console.log('🔍 All housekeeping bookings emails:', allHousekeepingBookings.map(b => ({
+      id: b._id,
+      email: b.guestDetails?.email,
+      guestId: b.guestId
+    })));
+
+    // Get both regular bookings and housekeeping bookings by email
+    const [regularBookings, housekeepingBookings] = await Promise.all([
+      Booking.find(regularBookingsQuery)
+        .populate('serviceId', 'name category')
+        .populate('hotelId', 'name')
+        .populate('serviceProviderId', 'businessName')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+
+      Booking.find(housekeepingByEmailQuery)
+        .populate('hotelId', 'name')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+    ]);
+
+    console.log('🔍 Guest bookings - Regular bookings found:', regularBookings.length);
+    console.log('🔍 Guest bookings - Housekeeping bookings found:', housekeepingBookings.length);
+    console.log('🔍 Guest bookings - Housekeeping bookings details:', housekeepingBookings.map(b => ({
+      id: b._id,
+      serviceName: b.serviceName,
+      email: b.guestDetails?.email,
+      serviceType: b.serviceType
+    })));
+
+    // Combine and sort all bookings
+    const allBookings = [...regularBookings, ...housekeepingBookings]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, parseInt(limit));
+
+    // Get total count
+    const [regularTotal, housekeepingTotal] = await Promise.all([
+      Booking.countDocuments(regularBookingsQuery),
+      Booking.countDocuments(housekeepingByEmailQuery)
+    ]);
+
+    const total = regularTotal + housekeepingTotal;
 
     res.json({
       success: true,
       data: {
-        bookings,
+        bookings: allBookings,
         pagination: {
           page: parseInt(page),
           pages: Math.ceil(total / limit),
@@ -1765,6 +1830,402 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
 
   } catch (error) {
     logger.error('Create transportation booking error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+/**
+ * Client Housekeeping Services Routes
+ */
+
+/**
+ * @desc    Get housekeeping services for a hotel
+ * @route   GET /api/client/hotels/:hotelId/housekeeping-services
+ * @access  Public
+ */
+router.get('/hotels/:hotelId/housekeeping-services', async (req, res) => {
+  try {
+    const { hotelId } = req.params;
+
+    logger.info('🏨 Housekeeping services request:', {
+      hotelId,
+      timestamp: new Date().toISOString()
+    });
+
+    // Verify hotel exists and is active
+    const hotel = await Hotel.findOne({ _id: hotelId, isActive: true, isPublished: true });
+    if (!hotel) {
+      logger.warn('❌ Hotel not found for housekeeping services:', { hotelId });
+      return res.status(404).json({
+        success: false,
+        message: 'Hotel not found'
+      });
+    }
+
+    logger.info('✅ Hotel found:', {
+      hotelId: hotel._id,
+      hotelName: hotel.name
+    });
+
+    // Get all service providers for this hotel (not just housekeeping category)
+    const providers = await ServiceProvider.find({
+      hotelId: hotelId,
+      isActive: true
+    }).select('businessName housekeepingServices categories');
+
+    // Default services if no providers have custom services
+    const defaultServices = [
+      {
+        id: 'extra-cleaning',
+        name: 'Extra Room Cleaning',
+        description: 'Deep cleaning of guest room including bathroom and all surfaces',
+        category: 'cleaning',
+        estimatedDuration: 45,
+        availability: 'always',
+        isActive: true,
+        requirements: ['Room must be vacant during cleaning'],
+        instructions: 'Please ensure all personal items are stored safely'
+      },
+      {
+        id: 'linen-change',
+        name: 'Fresh Linen Change',
+        description: 'Complete change of bed linens and towels',
+        category: 'laundry',
+        estimatedDuration: 15,
+        availability: 'always',
+        isActive: true,
+        requirements: ['Guest can be present during service'],
+        instructions: 'Standard linen replacement service'
+      },
+      {
+        id: 'amenity-restock',
+        name: 'Amenity Restocking',
+        description: 'Restock bathroom amenities, toiletries, and room supplies',
+        category: 'amenities',
+        estimatedDuration: 10,
+        availability: 'always',
+        isActive: true,
+        requirements: ['Quick service, minimal disruption'],
+        instructions: 'Check all amenity levels and restock as needed'
+      },
+      {
+        id: 'maintenance-request',
+        name: 'Room Maintenance',
+        description: 'General maintenance and repair requests for room issues',
+        category: 'maintenance',
+        estimatedDuration: 60,
+        availability: 'business-hours',
+        isActive: true,
+        requirements: ['Room inspection required', 'May require multiple visits'],
+        instructions: 'Please describe the specific issue when booking'
+      }
+    ];
+
+    // Collect all active housekeeping services
+    let allServices = [];
+
+    logger.info('Housekeeping services debug:', {
+      hotelId,
+      providersFound: providers.length,
+      providers: providers.map(p => ({
+        id: p._id,
+        businessName: p.businessName,
+        categories: p.categories,
+        housekeepingServicesCount: p.housekeepingServices ? p.housekeepingServices.length : 0
+      }))
+    });
+
+    providers.forEach(provider => {
+      if (provider.housekeepingServices && provider.housekeepingServices.length > 0) {
+        const activeServices = provider.housekeepingServices.filter(service => service.isActive);
+        logger.info('Provider housekeeping services:', {
+          providerId: provider._id,
+          businessName: provider.businessName,
+          totalServices: provider.housekeepingServices.length,
+          activeServices: activeServices.length,
+          services: activeServices.map(s => ({ id: s.id, name: s.name, isActive: s.isActive }))
+        });
+        allServices = allServices.concat(activeServices);
+      }
+    });    // If no custom services found, use defaults
+    if (allServices.length === 0) {
+      logger.info('⚠️ No custom housekeeping services found, using defaults');
+      allServices = defaultServices;
+    } else {
+      logger.info('✅ Custom housekeeping services found:', {
+        totalActiveServices: allServices.length,
+        services: allServices.map(s => ({ id: s.id, name: s.name }))
+      });
+    }
+
+    logger.info('📤 Returning housekeeping services to guest:', {
+      hotelId,
+      servicesCount: allServices.length,
+      servicesList: allServices.map(s => s.name)
+    });
+
+    res.status(200).json({
+      success: true,
+      data: allServices,
+      hotel: {
+        id: hotel._id,
+        name: hotel.name
+      }
+    });
+
+  } catch (error) {
+    logger.error('Get housekeeping services error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+/**
+ * @desc    Book a housekeeping service
+ * @route   POST /api/client/bookings/housekeeping
+ * @access  Public (but can use authentication if available)
+ */
+router.post('/bookings/housekeeping', async (req, res) => {
+  try {
+    // Check if user is authenticated (optional)
+    let authenticatedUser = null;
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+        if (user) {
+          authenticatedUser = user;
+          console.log('🔧 Housekeeping booking - Authenticated user found:', user.email);
+        }
+      } catch (error) {
+        // Token is invalid, but that's okay - continue as non-authenticated
+        console.log('🔧 Housekeeping booking - No valid authentication, continuing as guest');
+      }
+    }
+
+    console.log('🔧 Housekeeping booking creation - Request body:', req.body);
+
+    const {
+      serviceId,
+      serviceName,
+      hotelId,
+      guestName,
+      roomNumber,
+      phoneNumber,
+      preferredTime,
+      scheduledDateTime,
+      specialRequests,
+      guestEmail,
+      estimatedDuration
+    } = req.body;
+
+    console.log('🔧 Housekeeping booking - Extracted data:', {
+      serviceId, serviceName, hotelId, guestName, roomNumber, phoneNumber
+    });
+
+    // Verify hotel exists
+    const hotel = await Hotel.findOne({ _id: hotelId, isActive: true });
+    if (!hotel) {
+      console.log('🔧 Housekeeping booking - Hotel not found:', hotelId);
+      return res.status(404).json({
+        success: false,
+        message: 'Hotel not found'
+      });
+    }
+
+    console.log('🔧 Housekeeping booking - Hotel found:', hotel.name);
+
+    // Create booking with all required fields for housekeeping services
+    const bookingData = {
+      // Core booking fields - use a real ObjectId for serviceId
+      serviceId: new mongoose.Types.ObjectId(), // Generate a new ObjectId since custom services don't have real IDs
+      serviceName: serviceName,
+      serviceType: 'housekeeping',
+      hotel: hotelId,
+      hotelId: hotelId,
+
+      // Use authenticated user ID if available, otherwise create dummy ID
+      guestId: authenticatedUser ? authenticatedUser._id : new mongoose.Types.ObjectId(),
+      serviceProviderId: new mongoose.Types.ObjectId(), // Dummy service provider ID
+
+      // Guest Information (mapped from our housekeeping form)
+      guestDetails: {
+        firstName: guestName.split(' ')[0] || guestName,
+        lastName: guestName.split(' ').slice(1).join(' ') || 'Guest',
+        email: guestEmail || 'no-email@housekeeping.local',
+        phone: phoneNumber,
+        roomNumber: roomNumber
+      },
+
+      // Service Details - use valid enum value
+      serviceDetails: {
+        name: serviceName,
+        category: 'laundry' // Use 'laundry' as the closest valid enum value to housekeeping
+      },
+
+      // Booking Configuration
+      bookingConfig: {
+        quantity: 1
+      },
+
+      // Schedule - use proper time format
+      schedule: {
+        preferredDate: new Date(),
+        preferredTime: '09:00' // Use HH:MM format instead of 'now' or 'scheduled'
+      },
+
+      // Pricing (all zero for housekeeping)
+      pricing: {
+        basePrice: 0,
+        quantity: 1,
+        subtotal: 0,
+        markup: {
+          percentage: 0,
+          amount: 0
+        },
+        totalBeforeMarkup: 0,
+        totalAmount: 0,
+        providerEarnings: 0,
+        hotelEarnings: 0
+      },
+
+      // Payment - use valid enum values
+      payment: {
+        method: 'cash', // Use 'cash' as valid enum value for free services
+        status: 'completed' // Use 'completed' since it's free
+      },
+
+      // Housekeeping specific details
+      bookingDetails: {
+        preferredTime: preferredTime,
+        scheduledDateTime: scheduledDateTime ? new Date(scheduledDateTime) : null,
+        specialRequests: specialRequests,
+        estimatedDuration: estimatedDuration || 30
+      },
+
+      status: 'pending',
+      bookingDate: new Date(),
+      totalAmount: 0, // Housekeeping services are free
+      paymentStatus: 'completed' // Since it's free, mark as completed
+    };
+
+    console.log('🔧 Housekeeping booking - Creating booking with data:', bookingData);
+
+    const booking = new Booking(bookingData);
+
+    console.log('🔧 Housekeeping booking - Before save, booking object:', booking);
+    await booking.save();
+    console.log('🔧 Housekeeping booking - After save, booking ID:', booking._id);
+
+    // Log the booking
+    logger.info('Housekeeping service booked:', {
+      bookingId: booking._id,
+      serviceId,
+      serviceName,
+      hotelId,
+      guestName,
+      roomNumber,
+      preferredTime
+    });
+
+    // Send confirmation email if email provided
+    if (guestEmail) {
+      try {
+        await sendEmail({
+          to: guestEmail,
+          subject: `Housekeeping Service Booking Confirmation - ${hotel.name}`,
+          html: `
+            <h2>Housekeeping Service Booking Confirmed</h2>
+            <p>Dear ${guestName},</p>
+            <p>Your housekeeping service request has been received and confirmed.</p>
+
+            <h3>Booking Details:</h3>
+            <ul>
+              <li><strong>Service:</strong> ${serviceName}</li>
+              <li><strong>Hotel:</strong> ${hotel.name}</li>
+              <li><strong>Room:</strong> ${roomNumber}</li>
+              <li><strong>Phone:</strong> ${phoneNumber}</li>
+              <li><strong>Timing:</strong> ${preferredTime === 'now' ? 'As Soon As Possible' : 'Scheduled'}</li>
+              ${scheduledDateTime ? `<li><strong>Scheduled Time:</strong> ${new Date(scheduledDateTime).toLocaleString()}</li>` : ''}
+              ${specialRequests ? `<li><strong>Special Requests:</strong> ${specialRequests}</li>` : ''}
+            </ul>
+
+            <p>Our housekeeping team will contact you shortly to confirm the service timing.</p>
+            <p>This service is provided at no additional charge.</p>
+
+            <p>Thank you for choosing ${hotel.name}!</p>
+          `
+        });
+      } catch (emailError) {
+        logger.error('Failed to send housekeeping booking confirmation email:', emailError);
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      data: {
+        bookingId: booking._id,
+        serviceName: serviceName,
+        guestName: guestName,
+        roomNumber: roomNumber,
+        status: booking.status,
+        hotelName: hotel.name
+      },
+      message: 'Housekeeping service booked successfully'
+    });
+
+  } catch (error) {
+    logger.error('Create housekeeping booking error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+/**
+ * @desc    Get housekeeping booking status
+ * @route   GET /api/client/bookings/housekeeping/:bookingId
+ * @access  Public
+ */
+router.get('/bookings/housekeeping/:bookingId', async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    const booking = await Booking.findOne({
+      _id: bookingId,
+      serviceType: 'housekeeping'
+    }).populate('hotel', 'name location phone');
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        id: booking._id,
+        serviceName: booking.serviceName,
+        status: booking.status,
+        bookingDate: booking.bookingDate,
+        guestInfo: booking.guestInfo,
+        bookingDetails: booking.bookingDetails,
+        hotel: booking.hotel,
+        statusHistory: booking.statusHistory || []
+      }
+    });
+
+  } catch (error) {
+    logger.error('Get housekeeping booking error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
