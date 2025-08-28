@@ -33,7 +33,9 @@ const RegisterPage = () => {
     email: Yup.string()
       .email(t('register.validation.emailInvalid'))
       .required(t('register.validation.emailRequired')),
-    phone: Yup.string().required(t('register.validation.phoneRequired')),
+    phone: Yup.string()
+      .required(t('register.validation.phoneRequired'))
+      .matches(/^[+]?[\d\s\-().]{7,20}$/, t('register.validation.phoneInvalid')),
     selectedHotelId: Yup.string().required(t('register.validation.hotelRequired')),
     password: Yup.string()
     .min(4, 'Password must be at least 4 characters')
@@ -144,7 +146,7 @@ const RegisterPage = () => {
           {({ isSubmitting }) => (
             <Form className="space-y-4">              <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('register.firstName')}
+                  {t('register.firstName')} <span className="text-red-500">*</span>
                 </label>
                 <Field
                   type="text"
@@ -155,7 +157,7 @@ const RegisterPage = () => {
                 <ErrorMessage name="firstName" component="div" className="mt-1 text-sm text-red-600" />
               </div>              <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('register.emailAddress')}
+                  {t('register.emailAddress')} <span className="text-red-500">*</span>
                 </label>
                 <Field
                   type="email"
@@ -166,7 +168,7 @@ const RegisterPage = () => {
                 <ErrorMessage name="email" component="div" className="mt-1 text-sm text-red-600" />
               </div>              <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('register.phoneNumber')}
+                  {t('register.phoneNumber')} <span className="text-red-500">*</span>
                 </label>
                 <Field
                   type="tel"
@@ -177,7 +179,7 @@ const RegisterPage = () => {
                 <ErrorMessage name="phone" component="div" className="mt-1 text-sm text-red-600" />
               </div>              <div>
                 <label htmlFor="selectedHotelId" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('register.selectHotel')}
+                  {t('register.selectHotel')} <span className="text-red-500">*</span>
                 </label>
                 <Field
                   as="select"
@@ -200,7 +202,7 @@ const RegisterPage = () => {
                 )}
               </div>              <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('register.password')}
+                  {t('register.password')} <span className="text-red-500">*</span>
                 </label>
                 <Field
                   type="password"
@@ -213,7 +215,7 @@ const RegisterPage = () => {
 
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('register.confirmPassword')}
+                  {t('register.confirmPassword')} <span className="text-red-500">*</span>
                 </label>
                 <Field
                   type="password"

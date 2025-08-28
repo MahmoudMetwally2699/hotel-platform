@@ -393,6 +393,128 @@ const sendLaundryServiceCompleted = async ({
   });
 };
 
+/**
+ * Template: housekeeping_booking_confirmation_ar (language: ar)
+ * Body placeholders:
+ *  {{booking_number}}, {{hotel_name}}, {{service_type}},
+ *  {{preferred_time}}, {{room_number}}, {{special_requests}}
+ */
+const sendHousekeepingBookingConfirmation = async ({
+  guestName,
+  guestPhone,
+  bookingNumber,
+  hotelName,
+  serviceType,
+  preferredTime,
+  roomNumber,
+  specialRequests
+}) => {
+  return sendTemplateMessage(guestPhone, 'housekeeping_booking_confirmation_ar', {
+    languageCode: 'ar',
+    namedParams: {
+      booking_number: bookingNumber,
+      hotel_name: hotelName,
+      service_type: serviceType,
+      preferred_time: preferredTime,
+      room_number: roomNumber,
+      special_requests: specialRequests || 'لا توجد ملاحظات خاصة'
+    }
+  });
+};
+
+/**
+ * Template: new_housekeeping_order_provider_ar (language: ar)
+ * Body placeholders:
+ *  {{booking_number}}, {{guest_name}}, {{hotel_name}}, {{room_number}},
+ *  {{guest_phone}}, {{service_type}}, {{preferred_time}}, {{scheduled_time}},
+ *  {{estimated_duration}}, {{special_requests}}
+ */
+const sendNewHousekeepingOrderToProvider = async ({
+  providerPhone,
+  bookingNumber,
+  guestName,
+  hotelName,
+  roomNumber,
+  guestPhone,
+  serviceType,
+  preferredTime,
+  scheduledTime,
+  estimatedDuration,
+  specialRequests
+}) => {
+  return sendTemplateMessage(providerPhone, 'new_housekeeping_order_provider_ar', {
+    languageCode: 'ar',
+    namedParams: {
+      booking_number: bookingNumber,
+      guest_name: guestName,
+      hotel_name: hotelName,
+      room_number: roomNumber,
+      guest_phone: guestPhone,
+      service_type: serviceType,
+      preferred_time: preferredTime,
+      scheduled_time: scheduledTime || 'حسب الوقت المفضل',
+      estimated_duration: estimatedDuration || '30',
+      special_requests: specialRequests || 'لا توجد ملاحظات خاصة'
+    }
+  });
+};
+
+/**
+ * Template: housekeeping_service_completed_guest_ar (language: ar)
+ * Body placeholders:
+ *  {{guest_name}}, {{booking_number}}, {{service_type}},
+ *  {{completion_date}}, {{completion_time}}, {{room_number}}
+ */
+const sendHousekeepingServiceCompleted = async ({
+  guestName,
+  guestPhone,
+  bookingNumber,
+  serviceType,
+  completionDate,
+  completionTime,
+  roomNumber
+}) => {
+  return sendTemplateMessage(guestPhone, 'housekeeping_service_completed_guest_ar', {
+    languageCode: 'ar',
+    namedParams: {
+      guest_name: guestName,
+      booking_number: bookingNumber,
+      service_type: serviceType,
+      completion_date: completionDate,
+      completion_time: completionTime,
+      room_number: roomNumber
+    }
+  });
+};
+
+/**
+ * Template: housekeeping_service_started_guest_ar (language: ar)
+ * Body placeholders:
+ *  {{guest_name}}, {{booking_number}}, {{service_type}},
+ *  {{start_time}}, {{room_number}}, {{estimated_duration}}
+ */
+const sendHousekeepingServiceStarted = async ({
+  guestName,
+  guestPhone,
+  bookingNumber,
+  serviceType,
+  startTime,
+  roomNumber,
+  estimatedDuration
+}) => {
+  return sendTemplateMessage(guestPhone, 'housekeeping_service_started_guest_ar', {
+    languageCode: 'ar',
+    namedParams: {
+      guest_name: guestName,
+      booking_number: bookingNumber,
+      service_type: serviceType,
+      start_time: startTime,
+      room_number: roomNumber,
+      estimated_duration: estimatedDuration || '30'
+    }
+  });
+};
+
 module.exports = {
   // Core
   sendTemplateMessage,
@@ -405,5 +527,10 @@ module.exports = {
   sendTransportationBookingConfirmation,
   sendNewLaundryOrderToProvider,
   sendNewTransportationOrderToProvider,
-  sendLaundryServiceCompleted
+  sendLaundryServiceCompleted,
+  // Housekeeping services
+  sendHousekeepingBookingConfirmation,
+  sendNewHousekeepingOrderToProvider,
+  sendHousekeepingServiceCompleted,
+  sendHousekeepingServiceStarted
 };

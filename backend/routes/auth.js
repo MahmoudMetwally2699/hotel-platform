@@ -120,6 +120,23 @@ router.post('/register', catchAsync(async (req, res, next) => {
     selectedHotelId
   });
 
+  // Validate required fields
+  if (!firstName) {
+    return next(new AppError('First name is required', 400));
+  }
+  if (!email) {
+    return next(new AppError('Email is required', 400));
+  }
+  if (!password) {
+    return next(new AppError('Password is required', 400));
+  }
+  if (!phone) {
+    return next(new AppError('Phone number is required', 400));
+  }
+  if (!selectedHotelId) {
+    return next(new AppError('Hotel selection is required', 400));
+  }
+
   // Check if user already exists
   const existingUser = await User.findOne({ email: email.toLowerCase() });
   if (existingUser) {
@@ -196,6 +213,7 @@ router.post('/login', catchAsync(async (req, res, next) => {
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
+    phone: user.phone,
     role: user.role,
     avatar: user.avatar,
     selectedHotelId: user.selectedHotelId,

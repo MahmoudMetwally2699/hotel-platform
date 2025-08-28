@@ -143,6 +143,7 @@
       "emailRequired": "Email is required",
       "emailInvalid": "Invalid email address",
       "phoneRequired": "Phone number is required",
+      "phoneInvalid": "Please provide a valid phone number (7-20 characters with numbers, spaces, hyphens, parentheses, dots, or + allowed)",
       "hotelRequired": "Please select a hotel",
       "roomNumberRequired": "Room number is required",
       "checkInDateRequired": "Check-in date is required",

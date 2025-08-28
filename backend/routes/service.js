@@ -17,7 +17,12 @@ const Booking = require('../models/Booking');
 const Hotel = require('../models/Hotel');
 const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
-const { sendLaundryServiceCompleted } = require('../utils/whatsapp');
+const {
+  sendLaundryServiceCompleted,
+  sendHousekeepingServiceCompleted,
+  sendHousekeepingServiceStarted,
+  sendNewHousekeepingOrderToProvider
+} = require('../utils/whatsapp');
 const mongoose = require('mongoose');
 const categoryTemplates = require('../config/categoryTemplates');
 
@@ -2663,6 +2668,51 @@ router.put('/housekeeping-bookings/:bookingId/status', catchAsync(async (req, re
   }
 
   await booking.save();
+
+  // Send WhatsApp notifications based on status change
+  if (booking.guestDetails?.phone) {
+    try {
+      let whatsappPromise = null;
+      const currentTime = new Date().toLocaleString('ar-SA');
+      const currentDate = new Date().toLocaleDateString('ar-SA');
+
+      if (status === 'in-progress' || status === 'confirmed') {
+        // Service started notification
+        whatsappPromise = sendHousekeepingServiceStarted({
+          guestName: booking.guestDetails.firstName + ' ' + (booking.guestDetails.lastName || ''),
+          guestPhone: booking.guestDetails.phone,
+          bookingNumber: booking._id.toString(),
+          serviceType: booking.serviceName || 'خدمة التدبير المنزلي',
+          startTime: currentTime,
+          roomNumber: booking.guestDetails.roomNumber || 'غير محدد',
+          estimatedDuration: booking.bookingDetails?.estimatedDuration || '30'
+        });
+      } else if (status === 'completed') {
+        // Service completed notification
+        whatsappPromise = sendHousekeepingServiceCompleted({
+          guestName: booking.guestDetails.firstName + ' ' + (booking.guestDetails.lastName || ''),
+          guestPhone: booking.guestDetails.phone,
+          bookingNumber: booking._id.toString(),
+          serviceType: booking.serviceName || 'خدمة التدبير المنزلي',
+          completionDate: currentDate,
+          completionTime: currentTime,
+          roomNumber: booking.guestDetails.roomNumber || 'غير محدد'
+        });
+      }
+
+      if (whatsappPromise) {
+        await whatsappPromise;
+        logger.info(`WhatsApp notification sent for housekeeping booking status: ${status}`, {
+          bookingId,
+          status,
+          guestPhone: booking.guestDetails.phone
+        });
+      }
+    } catch (whatsappError) {
+      logger.error('Failed to send WhatsApp notification for housekeeping status update:', whatsappError);
+      // Don't fail the status update if WhatsApp fails
+    }
+  }
 
   // Log the status change
   logger.info(`Housekeeping booking ${bookingId} status updated from ${oldStatus} to ${status}`, {

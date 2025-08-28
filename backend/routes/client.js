@@ -15,7 +15,9 @@ const {
   sendLaundryBookingConfirmation,
   sendNewLaundryOrderToProvider,
   sendTransportationBookingConfirmation,
-  sendNewTransportationOrderToProvider
+  sendNewTransportationOrderToProvider,
+  sendHousekeepingBookingConfirmation,
+  sendNewHousekeepingOrderToProvider
 } = require('../utils/whatsapp');
 
 /**
@@ -2164,6 +2166,51 @@ router.post('/bookings/housekeeping', async (req, res) => {
         });
       } catch (emailError) {
         logger.error('Failed to send housekeeping booking confirmation email:', emailError);
+      }
+    }
+
+    // Send WhatsApp confirmation to guest if phone number provided
+    if (phoneNumber) {
+      try {
+        await sendHousekeepingBookingConfirmation({
+          guestName,
+          guestPhone: phoneNumber,
+          bookingNumber: booking._id.toString(),
+          hotelName: hotel.name,
+          serviceType: serviceName,
+          preferredTime: preferredTime === 'now' ? 'في أقرب وقت ممكن' : (scheduledDateTime ? new Date(scheduledDateTime).toLocaleString('ar-SA') : 'حسب الوقت المحدد'),
+          roomNumber,
+          specialRequests: specialRequests || 'لا توجد ملاحظات خاصة'
+        });
+        logger.info('WhatsApp housekeeping booking confirmation sent to guest');
+      } catch (whatsappError) {
+        logger.error('Failed to send WhatsApp housekeeping booking confirmation:', whatsappError);
+        // Don't fail the booking if WhatsApp fails
+      }
+    }
+
+    // Send WhatsApp notification to housekeeping team/service provider
+    // For now, we'll use a default housekeeping phone number from hotel data
+    // In a real implementation, you might have specific housekeeping staff numbers
+    if (hotel.contactPhone) {
+      try {
+        await sendNewHousekeepingOrderToProvider({
+          providerPhone: hotel.contactPhone, // Using hotel phone as placeholder for housekeeping team
+          bookingNumber: booking._id.toString(),
+          guestName,
+          hotelName: hotel.name,
+          roomNumber,
+          guestPhone: phoneNumber,
+          serviceType: serviceName,
+          preferredTime: preferredTime === 'now' ? 'في أقرب وقت ممكن' : 'حسب الموعد المحدد',
+          scheduledTime: scheduledDateTime ? new Date(scheduledDateTime).toLocaleString('ar-SA') : null,
+          estimatedDuration: estimatedDuration || 30,
+          specialRequests: specialRequests || 'لا توجد ملاحظات خاصة'
+        });
+        logger.info('WhatsApp housekeeping order notification sent to provider');
+      } catch (whatsappError) {
+        logger.error('Failed to send WhatsApp housekeeping order notification to provider:', whatsappError);
+        // Don't fail the booking if WhatsApp fails
       }
     }
 

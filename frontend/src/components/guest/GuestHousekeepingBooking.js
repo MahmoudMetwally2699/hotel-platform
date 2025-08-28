@@ -3,7 +3,7 @@
  * Allows guests to book housekeeping services without any pricing
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FaBroom,
   FaClock,
@@ -18,8 +18,58 @@ import {
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../hooks/useAuth';
+
+// Default services defined outside component to avoid dependency issues
+const defaultServices = [
+  {
+    id: 'extra-cleaning',
+    name: 'Extra Room Cleaning',
+    description: 'Deep cleaning of guest room including bathroom and all surfaces',
+    category: 'cleaning',
+    estimatedDuration: 45,
+    availability: 'always',
+    isActive: true,
+    requirements: ['Room must be vacant during cleaning'],
+    instructions: 'Please ensure all personal items are stored safely'
+  },
+  {
+    id: 'linen-change',
+    name: 'Fresh Linen Change',
+    description: 'Complete change of bed linens and towels',
+    category: 'laundry',
+    estimatedDuration: 15,
+    availability: 'always',
+    isActive: true,
+    requirements: ['Guest can be present during service'],
+    instructions: 'Standard linen replacement service'
+  },
+  {
+    id: 'amenity-restock',
+    name: 'Amenity Restocking',
+    description: 'Restock bathroom amenities, toiletries, and room supplies',
+    category: 'amenities',
+    estimatedDuration: 10,
+    availability: 'always',
+    isActive: true,
+    requirements: ['Quick service, minimal disruption'],
+    instructions: 'Check all amenity levels and restock as needed'
+  },
+  {
+    id: 'maintenance-request',
+    name: 'Room Maintenance',
+    description: 'General maintenance and repair requests for room issues',
+    category: 'maintenance',
+    estimatedDuration: 60,
+    availability: 'business-hours',
+    isActive: true,
+    requirements: ['Room inspection required', 'May require multiple visits'],
+    instructions: 'Please describe the specific issue when booking'
+  }
+];
 
 const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
+  const { currentUser, isAuthenticated } = useAuth();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState(null);
@@ -43,58 +93,22 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     { value: 'laundry', label: 'Laundry Service', icon: FaClock, color: 'orange' }
   ];
 
-  const defaultServices = [
-    {
-      id: 'extra-cleaning',
-      name: 'Extra Room Cleaning',
-      description: 'Deep cleaning of guest room including bathroom and all surfaces',
-      category: 'cleaning',
-      estimatedDuration: 45,
-      availability: 'always',
-      isActive: true,
-      requirements: ['Room must be vacant during cleaning'],
-      instructions: 'Please ensure all personal items are stored safely'
-    },
-    {
-      id: 'linen-change',
-      name: 'Fresh Linen Change',
-      description: 'Complete change of bed linens and towels',
-      category: 'laundry',
-      estimatedDuration: 15,
-      availability: 'always',
-      isActive: true,
-      requirements: ['Guest can be present during service'],
-      instructions: 'Standard linen replacement service'
-    },
-    {
-      id: 'amenity-restock',
-      name: 'Amenity Restocking',
-      description: 'Restock bathroom amenities, toiletries, and room supplies',
-      category: 'amenities',
-      estimatedDuration: 10,
-      availability: 'always',
-      isActive: true,
-      requirements: ['Quick service, minimal disruption'],
-      instructions: 'Check all amenity levels and restock as needed'
-    },
-    {
-      id: 'maintenance-request',
-      name: 'Room Maintenance',
-      description: 'General maintenance and repair requests for room issues',
-      category: 'maintenance',
-      estimatedDuration: 60,
-      availability: 'business-hours',
-      isActive: true,
-      requirements: ['Room inspection required', 'May require multiple visits'],
-      instructions: 'Please describe the specific issue when booking'
-    }
-  ];
-
+  // Auto-populate user data if logged in
   useEffect(() => {
-    fetchAvailableServices();
-  }, [hotelId]);
+    if (isAuthenticated && currentUser) {
+      const fullName = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim();
+      const phoneNumber = currentUser.phone || '';
 
-  const fetchAvailableServices = async () => {
+      setBookingDetails(prev => ({
+        ...prev,
+        guestName: fullName || currentUser.name || '',
+        phoneNumber: phoneNumber,
+        guestEmail: currentUser.email || ''
+      }));
+    }
+  }, [isAuthenticated, currentUser]);
+
+  const fetchAvailableServices = useCallback(async () => {
     try {
       console.log('Fetching housekeeping services for hotel:', hotelId);
       const response = await apiClient.get(`/client/hotels/${hotelId}/housekeeping-services`);
@@ -111,7 +125,11 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [hotelId]);
+
+  useEffect(() => {
+    fetchAvailableServices();
+  }, [fetchAvailableServices]);
 
   const getCategoryInfo = (category) => {
     const categoryInfo = serviceCategories.find(cat => cat.value === category);
@@ -347,12 +365,20 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <FaUser className="inline mr-2" />
                   Guest Name *
+                  {isAuthenticated && currentUser && (
+                    <span className="text-xs text-green-600 ml-2">(Auto-filled from profile)</span>
+                  )}
                 </label>
                 <input
                   type="text"
                   value={bookingDetails.guestName}
                   onChange={(e) => setBookingDetails(prev => ({ ...prev, guestName: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    isAuthenticated && currentUser && bookingDetails.guestName
+                      ? 'bg-green-50 border-green-300'
+                      : ''
+                  }`}
+                  readOnly={isAuthenticated && currentUser && bookingDetails.guestName}
                   required
                 />
               </div>
@@ -375,12 +401,23 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <FaPhone className="inline mr-2" />
                   Phone Number *
+                  {isAuthenticated && currentUser && bookingDetails.phoneNumber && (
+                    <span className="text-xs text-green-600 ml-2">(Auto-filled from profile)</span>
+                  )}
+                  {isAuthenticated && currentUser && !bookingDetails.phoneNumber && (
+                    <span className="text-xs text-orange-600 ml-2">(No phone in profile - please add)</span>
+                  )}
                 </label>
                 <input
                   type="tel"
                   value={bookingDetails.phoneNumber}
                   onChange={(e) => setBookingDetails(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    isAuthenticated && currentUser && bookingDetails.phoneNumber
+                      ? 'bg-green-50 border-green-300'
+                      : ''
+                  }`}
+                  readOnly={isAuthenticated && currentUser && bookingDetails.phoneNumber}
                   required
                 />
               </div>

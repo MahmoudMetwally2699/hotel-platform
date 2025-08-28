@@ -137,6 +137,7 @@
       "emailRequired": "البريد الإلكتروني مطلوب",
       "emailInvalid": "عنوان بريد إلكتروني غير صحيح",
       "phoneRequired": "رقم الهاتف مطلوب",
+      "phoneInvalid": "يرجى إدخال رقم هاتف صحيح (7-20 حرف مع أرقام ومسافات وشرطات وأقواس ونقاط أو + مسموح)",
       "hotelRequired": "يرجى اختيار فندق",
       "roomNumberRequired": "رقم الغرفة مطلوب",
       "checkInDateRequired": "تاريخ الوصول مطلوب",
