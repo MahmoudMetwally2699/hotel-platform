@@ -2191,39 +2191,101 @@ router.post('/bookings/housekeeping', async (req, res) => {
     }
 
     // Send WhatsApp notification to housekeeping team/service provider
-    // Find the actual housekeeping service provider for this hotel
+    // Find the specific service provider who created this housekeeping service
     try {
-      // First, try to find a service provider for this hotel with laundry/housekeeping services
-      const housekeepingProvider = await User.findOne({
-        role: 'service',
-        hotelId: hotelId,
-        isActive: true
-      }).populate('serviceProviderId');
+      let serviceProvider = null;
 
-      console.log('🔧 Searching for housekeeping provider for hotel:', hotelId);
-      console.log('🔧 Found housekeeping provider:', housekeepingProvider ? {
-        name: housekeepingProvider.firstName,
-        phone: housekeepingProvider.phone,
-        serviceProviderId: housekeepingProvider.serviceProviderId
+      // First, try to find the service provider who has this specific service
+      if (serviceId && serviceId.startsWith('custom-')) {
+        console.log('🔧 Looking for service provider with specific serviceId:', serviceId);
+
+        const providers = await ServiceProvider.find({
+          hotelId: hotelId,
+          isActive: true,
+          'housekeepingServices.id': serviceId
+        });
+
+        console.log('🔧 Found providers with this service:', providers.length);
+
+        if (providers.length > 0) {
+          serviceProvider = providers[0]; // Take the first one
+          console.log('🔧 Using provider who created this service:', {
+            businessName: serviceProvider.businessName,
+            id: serviceProvider._id
+          });
+        }
+      }
+
+      // If no specific provider found by serviceId, fallback to laundry category providers
+      if (!serviceProvider) {
+        console.log('🔧 Falling back to laundry category provider search');
+
+        serviceProvider = await ServiceProvider.findOne({
+          hotelId: hotelId,
+          isActive: true,
+          categories: { $in: ['laundry'] } // Housekeeping is under laundry category
+        });
+
+        // If no laundry provider found, try any active provider for this hotel
+        if (!serviceProvider) {
+          serviceProvider = await ServiceProvider.findOne({
+            hotelId: hotelId,
+            isActive: true
+          });
+          console.log('🔧 No laundry provider found, using any available provider for hotel:', hotelId);
+        }
+      }
+
+      console.log('🔧 Searching for housekeeping service provider for hotel:', hotelId);
+      console.log('🔧 Found service provider:', serviceProvider ? {
+        businessName: serviceProvider.businessName,
+        _id: serviceProvider._id,
+        phone: serviceProvider.phone
       } : 'None found');
 
+      let housekeepingProvider = null;
       let providerPhone = null;
 
-      if (housekeepingProvider && housekeepingProvider.phone) {
-        // Use the specific service provider's phone
-        providerPhone = housekeepingProvider.phone;
-        // Ensure phone number is in international format for WhatsApp
-        if (!providerPhone.startsWith('+')) {
-          providerPhone = '+' + providerPhone;
+      if (serviceProvider) {
+        // First try to use the phone from ServiceProvider model
+        if (serviceProvider.phone) {
+          providerPhone = serviceProvider.phone;
+          console.log('🔧 Using ServiceProvider phone directly:', providerPhone);
+        } else {
+          // If no phone in ServiceProvider, try to find the User that references this ServiceProvider
+          housekeepingProvider = await User.findOne({
+            role: 'service',
+            serviceProviderId: serviceProvider._id,
+            isActive: true
+          });
+
+          console.log('🔧 Found housekeeping provider user:', housekeepingProvider ? {
+            name: housekeepingProvider.firstName,
+            phone: housekeepingProvider.phone,
+            serviceProviderId: housekeepingProvider.serviceProviderId
+          } : 'None found');
+
+          if (housekeepingProvider && housekeepingProvider.phone) {
+            providerPhone = housekeepingProvider.phone;
+            console.log('🔧 Using User phone:', providerPhone);
+          }
         }
-        console.log('🔧 Using service provider phone:', providerPhone);
-      } else {
-        // Fallback to hotel phone
+      }
+
+      // Format phone number and add fallback logic
+      if (!providerPhone) {
+        // Fallback to hotel phone if no service provider phone found
         providerPhone = hotel.phone;
         console.log('🔧 Using hotel phone as fallback:', providerPhone);
       }
 
       if (providerPhone) {
+        // Ensure phone number is in international format for WhatsApp
+        if (!providerPhone.startsWith('+')) {
+          providerPhone = '+' + providerPhone;
+        }
+        console.log('🔧 Final provider phone for WhatsApp:', providerPhone);
+
         await sendNewHousekeepingOrderToProvider({
           providerPhone: providerPhone,
           bookingNumber: booking._id.toString(),
