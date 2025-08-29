@@ -442,6 +442,7 @@ const sendNewHousekeepingOrderToProvider = async ({
   estimatedDuration,
   specialRequests
 }) => {
+  console.log('🔧 Sending housekeeping order to provider phone:', providerPhone);
   return sendTemplateMessage(providerPhone, 'new_housekeeping_order_provider_ar', {
     languageCode: 'ar',
     namedParams: {

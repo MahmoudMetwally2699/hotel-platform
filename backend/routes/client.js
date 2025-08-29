@@ -2042,6 +2042,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
     }
 
     console.log('🔧 Housekeeping booking - Hotel found:', hotel.name);
+    console.log('🔧 Housekeeping booking - Hotel phone:', hotel.phone);
 
     // Create booking with all required fields for housekeeping services
     const bookingData = {
@@ -2190,12 +2191,41 @@ router.post('/bookings/housekeeping', async (req, res) => {
     }
 
     // Send WhatsApp notification to housekeeping team/service provider
-    // For now, we'll use a default housekeeping phone number from hotel data
-    // In a real implementation, you might have specific housekeeping staff numbers
-    if (hotel.contactPhone) {
-      try {
+    // Find the actual housekeeping service provider for this hotel
+    try {
+      // First, try to find a service provider for this hotel with laundry/housekeeping services
+      const housekeepingProvider = await User.findOne({
+        role: 'service',
+        hotelId: hotelId,
+        isActive: true
+      }).populate('serviceProviderId');
+
+      console.log('🔧 Searching for housekeeping provider for hotel:', hotelId);
+      console.log('🔧 Found housekeeping provider:', housekeepingProvider ? {
+        name: housekeepingProvider.firstName,
+        phone: housekeepingProvider.phone,
+        serviceProviderId: housekeepingProvider.serviceProviderId
+      } : 'None found');
+
+      let providerPhone = null;
+
+      if (housekeepingProvider && housekeepingProvider.phone) {
+        // Use the specific service provider's phone
+        providerPhone = housekeepingProvider.phone;
+        // Ensure phone number is in international format for WhatsApp
+        if (!providerPhone.startsWith('+')) {
+          providerPhone = '+' + providerPhone;
+        }
+        console.log('🔧 Using service provider phone:', providerPhone);
+      } else {
+        // Fallback to hotel phone
+        providerPhone = hotel.phone;
+        console.log('🔧 Using hotel phone as fallback:', providerPhone);
+      }
+
+      if (providerPhone) {
         await sendNewHousekeepingOrderToProvider({
-          providerPhone: hotel.contactPhone, // Using hotel phone as placeholder for housekeeping team
+          providerPhone: providerPhone,
           bookingNumber: booking._id.toString(),
           guestName,
           hotelName: hotel.name,
@@ -2208,10 +2238,10 @@ router.post('/bookings/housekeeping', async (req, res) => {
           specialRequests: specialRequests || 'لا توجد ملاحظات خاصة'
         });
         logger.info('WhatsApp housekeeping order notification sent to provider');
-      } catch (whatsappError) {
-        logger.error('Failed to send WhatsApp housekeeping order notification to provider:', whatsappError);
-        // Don't fail the booking if WhatsApp fails
       }
+    } catch (whatsappError) {
+      logger.error('Failed to send WhatsApp housekeeping order notification to provider:', whatsappError);
+      // Don't fail the booking if WhatsApp fails
     }
 
     res.status(201).json({
