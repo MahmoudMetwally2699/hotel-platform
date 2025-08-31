@@ -45,7 +45,7 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
   // Service Type (for different types of bookings)
   serviceType: {
     type: String,
-    enum: ['regular', 'housekeeping', 'transportation', 'laundry', 'tours'],
+    enum: ['regular', 'housekeeping', 'transportation', 'laundry', 'tours', 'restaurant', 'dining'],
     default: 'regular'
   },
 
@@ -82,7 +82,7 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     category: {
       type: String,
       required: [true, 'Service category is required'],
-      enum: ['laundry', 'transportation', 'tours']
+      enum: ['laundry', 'transportation', 'tours', 'restaurant', 'dining']
     },
     subcategory: String,
     description: String
@@ -136,6 +136,53 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
         required: true,
         min: [0, 'Item final price cannot be negative']
       }
+    }],
+
+    // Menu items for restaurant bookings
+    menuItems: [{
+      itemName: {
+        type: String,
+        required: true
+      },
+      itemCategory: {
+        type: String,
+        required: true
+      },
+      description: String,
+      quantity: {
+        type: Number,
+        required: true,
+        min: [1, 'Item quantity must be at least 1']
+      },
+      price: {
+        type: Number,
+        required: true,
+        min: [0, 'Item price cannot be negative']
+      },
+      totalPrice: {
+        type: Number,
+        required: true,
+        min: [0, 'Item total price cannot be negative']
+      },
+      isVegetarian: {
+        type: Boolean,
+        default: false
+      },
+      isVegan: {
+        type: Boolean,
+        default: false
+      },
+      spicyLevel: {
+        type: String,
+        enum: ['mild', 'medium', 'hot', 'very_hot'],
+        default: 'mild'
+      },
+      allergens: [String],
+      preparationTime: {
+        type: Number, // in minutes
+        default: 15
+      },
+      specialInstructions: String
     }],
 
     // Express service selection

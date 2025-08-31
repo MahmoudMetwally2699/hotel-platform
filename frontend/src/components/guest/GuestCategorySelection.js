@@ -240,6 +240,9 @@ const GuestCategorySelection = () => {
     } else if (categoryKey === 'housekeeping') {
       // Navigate directly to housekeeping booking for better UX
       navigate(`/hotels/${hotelId}/services/housekeeping/booking`);
+    } else if (categoryKey === 'dining') {
+      // Navigate directly to restaurant booking for better UX
+      navigate(`/hotels/${hotelId}/services/dining/booking`);
     } else {
       // Navigate to category-specific service list page for other categories
       navigate(`/hotels/${hotelId}/services/${categoryKey}`);

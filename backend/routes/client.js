@@ -629,6 +629,10 @@ router.get('/bookings', protect, restrictTo('guest'), async (req, res) => {
       // Find services with transportation category
       const transportServices = await Service.find({ category: 'transportation' }).select('_id');
       query.serviceId = { $in: transportServices.map(s => s._id) };
+    } else if (category === 'restaurant' || category === 'dining') {
+      // Find services with dining category
+      const restaurantServices = await Service.find({ category: 'dining' }).select('_id');
+      query.serviceId = { $in: restaurantServices.map(s => s._id) };
     }
 
     const skip = (page - 1) * limit;
@@ -1176,6 +1180,120 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
     });
   } catch (error) {
     logger.error('Get laundry services error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+/**
+ * @desc    Get available restaurant services with menu items for a hotel
+ * @route   GET /api/client/hotels/:hotelId/services/dining/items
+ * @access  Public
+ */
+router.get('/hotels/:hotelId/services/dining/items', async (req, res) => {
+  try {
+    const { hotelId } = req.params;
+
+    // Check if hotel exists and is active
+    const hotel = await Hotel.findOne({ _id: hotelId, isActive: true, isPublished: true });
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: 'Hotel not found or not available'
+      });
+    }
+
+    // Find all restaurant services for this hotel
+    const restaurantServices = await Service.find({
+      hotelId: hotelId,
+      category: 'dining',
+      isActive: true
+    })
+    .populate('providerId', 'businessName rating contactEmail contactPhone')
+    .sort({ 'performance.totalBookings': -1 });
+
+    console.log('🍽️ Restaurant services query for hotel:', {
+      hotelId,
+      query: { hotelId, category: 'dining', isActive: true },
+      servicesFound: restaurantServices.length,
+      serviceNames: restaurantServices.map(s => s.name),
+      servicesWithItems: restaurantServices.map(s => ({
+        name: s.name,
+        hasMenuItems: !!(s.menuItems && s.menuItems.length > 0),
+        itemCount: s.menuItems?.length || 0
+      }))
+    });
+
+    // Apply hotel markup to pricing
+    const servicesWithMarkup = restaurantServices.map(service => {
+      const serviceObj = service.toObject();
+      let markup = hotel.markupSettings?.default || 15; // Default 15% markup
+
+      // Check if there's a category-specific markup for dining
+      if (hotel.markupSettings?.categories &&
+          hotel.markupSettings.categories['dining'] !== undefined) {
+        markup = hotel.markupSettings.categories['dining'];
+      }
+
+      console.log(`🔍 Service "${serviceObj.name}" menuItems:`, {
+        hasItems: !!(serviceObj.menuItems && serviceObj.menuItems.length > 0),
+        itemCount: serviceObj.menuItems?.length || 0,
+        categories: serviceObj.menuItems ? [...new Set(serviceObj.menuItems.map(item => item.category))] : []
+      });
+
+      // Apply markup to individual menu items
+      if (serviceObj.menuItems && serviceObj.menuItems.length > 0) {
+        serviceObj.menuItems = serviceObj.menuItems.map(item => {
+          const updatedItem = { ...item };
+
+          // Apply markup to menu item price
+          if (updatedItem.price) {
+            updatedItem.price = Math.round((updatedItem.price * (1 + markup / 100)) * 100) / 100;
+          }
+
+          return updatedItem;
+        });
+      }
+
+      // Set final pricing for the service
+      if (serviceObj.pricing) {
+        serviceObj.pricing.finalPrice = serviceObj.pricing.basePrice * (1 + markup / 100);
+      }
+
+      return serviceObj;
+    });
+
+    // Filter out services without actual menuItems
+    const servicesWithActualItems = servicesWithMarkup.filter(service => {
+      const hasItems = service.menuItems && service.menuItems.length > 0;
+      console.log(`🔍 Service "${service.name}" - hasItems: ${hasItems}, itemCount: ${service.menuItems?.length || 0}`);
+      return hasItems;
+    });
+
+    console.log('🔍 Final restaurant services with items:', {
+      totalServices: restaurantServices.length,
+      servicesWithItems: servicesWithActualItems.length,
+      filteredServices: servicesWithActualItems.map(s => ({
+        name: s.name,
+        itemCount: s.menuItems?.length || 0,
+        categories: [...new Set(s.menuItems?.map(item => item.category) || [])]
+      }))
+    });
+
+    res.json({
+      success: true,
+      data: {
+        hotel: {
+          id: hotel._id,
+          name: hotel.name
+        },
+        services: servicesWithActualItems
+      }
+    });
+  } catch (error) {
+    logger.error('Get restaurant services error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'

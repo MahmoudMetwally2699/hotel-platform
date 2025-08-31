@@ -324,6 +324,63 @@ const categoryTemplates = {
       { id: 'lunch', name: 'Lunch', timeRange: '11:00-16:00' },
       { id: 'dinner', name: 'Dinner', timeRange: '18:00-23:00' },
       { id: 'snacks', name: 'Snacks & Beverages', timeRange: '24/7' }
+    ],
+    items: [
+      // Breakfast Items
+      { name: 'Continental Breakfast', category: 'breakfast', icon: '🍳' },
+      { name: 'Full English Breakfast', category: 'breakfast', icon: '🥓' },
+      { name: 'Pancakes', category: 'breakfast', icon: '🥞' },
+      { name: 'French Toast', category: 'breakfast', icon: '🍞' },
+      { name: 'Omelette', category: 'breakfast', icon: '🥚' },
+      { name: 'Croissant', category: 'breakfast', icon: '🥐' },
+      { name: 'Bagel with Cream Cheese', category: 'breakfast', icon: '🥯' },
+      { name: 'Avocado Toast', category: 'breakfast', icon: '🥑' },
+
+      // Main Courses
+      { name: 'Grilled Chicken', category: 'mains', icon: '🍗' },
+      { name: 'Beef Steak', category: 'mains', icon: '🥩' },
+      { name: 'Fish & Chips', category: 'mains', icon: '🐟' },
+      { name: 'Pasta Carbonara', category: 'mains', icon: '🍝' },
+      { name: 'Pizza Margherita', category: 'mains', icon: '🍕' },
+      { name: 'Burger & Fries', category: 'mains', icon: '🍔' },
+      { name: 'Grilled Salmon', category: 'mains', icon: '🐠' },
+      { name: 'Lamb Chops', category: 'mains', icon: '🍖' },
+      { name: 'BBQ Ribs', category: 'mains', icon: '🍖' },
+      { name: 'Chicken Curry', category: 'mains', icon: '🍛' },
+      { name: 'Seafood Paella', category: 'mains', icon: '🥘' },
+      { name: 'Vegetable Stir Fry', category: 'mains', icon: '🥬' },
+
+      // Appetizers
+      { name: 'Caesar Salad', category: 'appetizers', icon: '🥗' },
+      { name: 'Soup of the Day', category: 'appetizers', icon: '🍲' },
+      { name: 'Garlic Bread', category: 'appetizers', icon: '🍞' },
+      { name: 'Bruschetta', category: 'appetizers', icon: '🍅' },
+      { name: 'Chicken Wings', category: 'appetizers', icon: '🍗' },
+      { name: 'Calamari Rings', category: 'appetizers', icon: '🦑' },
+      { name: 'Stuffed Mushrooms', category: 'appetizers', icon: '🍄' },
+      { name: 'Shrimp Cocktail', category: 'appetizers', icon: '🍤' },
+
+      // Desserts
+      { name: 'Chocolate Cake', category: 'desserts', icon: '🍰' },
+      { name: 'Ice Cream', category: 'desserts', icon: '🍦' },
+      { name: 'Tiramisu', category: 'desserts', icon: '🧁' },
+      { name: 'Fruit Salad', category: 'desserts', icon: '🍓' },
+      { name: 'Cheesecake', category: 'desserts', icon: '🍰' },
+      { name: 'Apple Pie', category: 'desserts', icon: '🥧' },
+      { name: 'Chocolate Mousse', category: 'desserts', icon: '🍫' },
+      { name: 'Crème Brûlée', category: 'desserts', icon: '🍮' },
+
+      // Beverages
+      { name: 'Fresh Orange Juice', category: 'beverages', icon: '🍊' },
+      { name: 'Coffee', category: 'beverages', icon: '☕' },
+      { name: 'Tea', category: 'beverages', icon: '🍵' },
+      { name: 'Soft Drinks', category: 'beverages', icon: '🥤' },
+      { name: 'Mineral Water', category: 'beverages', icon: '💧' },
+      { name: 'Fresh Smoothie', category: 'beverages', icon: '🥤' },
+      { name: 'Wine (Glass)', category: 'beverages', icon: '🍷' },
+      { name: 'Beer', category: 'beverages', icon: '🍺' },
+      { name: 'Cocktail', category: 'beverages', icon: '🍹' },
+      { name: 'Hot Chocolate', category: 'beverages', icon: '☕' }
     ]
   },
 

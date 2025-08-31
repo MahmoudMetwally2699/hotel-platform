@@ -152,6 +152,94 @@ const serviceSchema = new mongoose.Schema({
     }
   }],
 
+  // Menu items (for restaurant/dining services)
+  menuItems: [{
+    name: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    category: {
+      type: String,
+      enum: [
+        'breakfast',
+        'mains',
+        'appetizers',
+        'desserts',
+        'beverages',
+        'salads',
+        'soups',
+        'sides',
+        'specials'
+      ],
+      required: true
+    },
+    description: {
+      type: String,
+      maxlength: [500, 'Menu item description cannot exceed 500 characters']
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: [0, 'Menu item price cannot be negative']
+    },
+    isAvailable: {
+      type: Boolean,
+      default: true
+    },
+    allergens: [{
+      type: String,
+      enum: [
+        'gluten',
+        'dairy',
+        'nuts',
+        'peanuts',
+        'eggs',
+        'soy',
+        'fish',
+        'shellfish',
+        'sesame'
+      ]
+    }],
+    spicyLevel: {
+      type: String,
+      enum: ['mild', 'medium', 'hot', 'very_hot'],
+      default: 'mild'
+    },
+    isVegetarian: {
+      type: Boolean,
+      default: false
+    },
+    isVegan: {
+      type: Boolean,
+      default: false
+    },
+    preparationTime: {
+      type: Number, // in minutes
+      default: 15,
+      min: [1, 'Preparation time must be at least 1 minute']
+    },
+    calories: {
+      type: Number,
+      min: [0, 'Calories cannot be negative']
+    },
+    ingredients: [String],
+    nutritionalInfo: {
+      protein: Number,
+      carbs: Number,
+      fat: Number,
+      fiber: Number,
+      sugar: Number
+    },
+    // Additional notes or specifications for the menu item
+    notes: String,
+    // Date when this item was added
+    dateAdded: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+
   // Transportation Items (for transportation services without pricing)
   transportationItems: [{
     vehicleType: {
@@ -332,7 +420,7 @@ const serviceSchema = new mongoose.Schema({
     currency: {
       type: String,
       default: 'USD',
-      enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
+      enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'EGP']
     },
 
     pricingType: {

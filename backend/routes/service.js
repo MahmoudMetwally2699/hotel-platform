@@ -280,23 +280,42 @@ router.get('/services/:id', catchAsync(async (req, res, next) => {  const provid
 router.post('/services', catchAsync(async (req, res, next) => {
   const providerId = req.user.serviceProviderId;
   const hotelId = req.user.hotelId;
-  // Create service
-  const service = await Service.create({
+
+  // Log the incoming request body for debugging
+  console.log('🔵 Creating service with data:', JSON.stringify(req.body, null, 2));
+
+  // Create service with all required fields
+  const serviceData = {
     providerId: providerId,
     hotelId,
     name: req.body.name,
     description: req.body.description,
     category: req.body.category,
+    subcategory: req.body.subcategory,
+    serviceType: req.body.serviceType,
     pricing: {
-      basePrice: req.body.basePrice,
-      currency: req.body.currency || 'EGP'
+      basePrice: req.body.pricing?.basePrice || req.body.basePrice,
+      currency: req.body.pricing?.currency || req.body.currency || 'USD',
+      pricingType: req.body.pricing?.pricingType || 'per-item'
+    },
+    specifications: {
+      duration: {
+        estimated: req.body.specifications?.duration?.estimated || 30,
+        unit: req.body.specifications?.duration?.unit || 'minutes'
+      }
     },
     duration: req.body.duration,
     images: req.body.images || [],
     availability: req.body.availability || {},
-    options: req.body.options || [],    isActive: req.body.isActive || true,
+    options: req.body.options || [],
+    menuItems: req.body.menuItems || [],
+    isActive: req.body.isActive || true,
     isApproved: true // Services are automatically approved
-  });
+  };
+
+  console.log('🟢 Processed service data:', JSON.stringify(serviceData, null, 2));
+
+  const service = await Service.create(serviceData);
 
   logger.info(`New service created: ${service.name}`, {
     serviceProviderId: providerId,

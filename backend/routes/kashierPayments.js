@@ -402,6 +402,43 @@ router.post('/webhook', async (req, res) => {
 
               // Clean up temporary booking data
               delete global.tempBookingData[data.merchantOrderId];
+            } else if (bookingType === 'restaurant') {
+              // Create the actual restaurant booking after successful payment
+              newBooking = new Booking({
+                ...bookingData,
+                guestId: guestId,
+                category: 'restaurant',
+                status: 'payment_completed',
+                bookingNumber: `REST${Date.now()}`,
+                payment: {
+                  method: 'credit-card',
+                  status: 'completed',
+                  paidAmount: data.amount,
+                  paymentDate: new Date(),
+                  transactionId: data.transactionId
+                },
+                kashier: {
+                  sessionId: data.merchantOrderId,
+                  transactionId: data.transactionId,
+                  webhookData: data
+                }
+              });
+
+              await newBooking.save();
+
+              logger.info('Restaurant booking created after payment', {
+                bookingId: newBooking._id,
+                bookingNumber: newBooking.bookingNumber,
+                amount: data.amount,
+                transactionId: data.transactionId
+              });
+
+              // Update booking status to confirmed
+              newBooking.status = 'confirmed';
+              await newBooking.save();
+
+              // Clean up temporary booking data
+              delete global.tempBookingData[data.merchantOrderId];
             }
 
                   // WhatsApp notification logic (guest & provider)

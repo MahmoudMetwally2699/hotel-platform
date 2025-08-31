@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   FaConciergeBell,
@@ -28,6 +29,7 @@ const categoryIcons = {
 
 const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [categories, setCategories] = useState({});
   const [activeCategories, setActiveCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -155,6 +157,15 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
       if (onCategorySelect) {
         onCategorySelect(categoryKey, categories[categoryKey]);
       }
+
+      // Navigate to specific service management page based on category
+      if (categoryKey === 'hotel-restaurant') {
+        navigate('/service/restaurant');
+      } else if (categoryKey === 'housekeeping-requests') {
+        navigate('/service/housekeeping');
+      }
+      // Add more navigation cases as needed for other services
+
     } catch (error) {
       console.error('Error activating inside service category:', error);
       showErrorToast(error, 'Failed to activate service');
@@ -244,7 +255,18 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
                   : 'hover:transform hover:scale-105 cursor-pointer'
                 }
               `}
-              onClick={!isActive && !isActivating ? () => activateCategory(categoryKey) : undefined}
+              onClick={!isActivating ? () => {
+                if (isActive) {
+                  // Navigate to management page if already active
+                  if (categoryKey === 'hotel-restaurant') {
+                    navigate('/service/restaurant');
+                  } else if (categoryKey === 'housekeeping-requests') {
+                    navigate('/service/housekeeping');
+                  }
+                } else {
+                  activateCategory(categoryKey);
+                }
+              } : undefined}
             >
               {isActive && (
                 <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
@@ -274,32 +296,59 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
                 </p>
 
                 {isActive ? (
-                  <button
-                    disabled={isActivating}
-                    className={`
-                      w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200
-                      ${isActivating
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-red-500 hover:bg-red-600 text-white'
-                      }
-                    `}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!isActivating) deactivateCategory(categoryKey);
-                    }}
-                  >
-                    {isActivating ? (
-                      <div className="flex items-center justify-center">
-                        <FaSpinner className="animate-spin mr-2" />
-                        Processing...
-                      </div>
-                    ) : (
+                  <div className="space-y-2">
+                    <button
+                      disabled={isActivating}
+                      className={`
+                        w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200
+                        ${isActivating
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-green-500 hover:bg-green-600 text-white'
+                        }
+                      `}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isActivating) {
+                          if (categoryKey === 'hotel-restaurant') {
+                            navigate('/service/restaurant');
+                          } else if (categoryKey === 'housekeeping-requests') {
+                            navigate('/service/housekeeping');
+                          }
+                        }
+                      }}
+                    >
+                      {isActivating ? (
+                        <div className="flex items-center justify-center">
+                          <FaSpinner className="animate-spin mr-2" />
+                          Processing...
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <FaCheck className="mr-2" />
+                          Manage Service
+                        </div>
+                      )}
+                    </button>
+                    <button
+                      disabled={isActivating}
+                      className={`
+                        w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200
+                        ${isActivating
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-red-500 hover:bg-red-600 text-white'
+                        }
+                      `}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isActivating) deactivateCategory(categoryKey);
+                      }}
+                    >
                       <div className="flex items-center justify-center">
                         <FaTimes className="mr-2" />
                         Deactivate
                       </div>
-                    )}
-                  </button>
+                    </button>
+                  </div>
                 ) : (
                   <button
                     disabled={isActivating}

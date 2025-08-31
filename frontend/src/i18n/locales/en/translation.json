@@ -71,7 +71,10 @@
     "laundryServices": "Laundry Services",
     "transportation": "Transportation",
     "travelTourism": "Travel & Tourism",
-    "myBookings": "My Bookings"
+    "myBookings": "My Bookings",
+    "transportationBookings": "Transportation",
+    "laundryBookings": "Laundry",
+    "restaurantBookings": "Restaurant Orders"
   },"auth": {
     "signIn": "Sign In",
     "signUp": "Sign Up",

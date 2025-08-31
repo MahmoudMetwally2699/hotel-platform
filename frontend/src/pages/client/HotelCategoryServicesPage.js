@@ -137,6 +137,11 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
       navigate(`/hotels/${hotelId}/services/transportation/booking`, {
         state: { service, hotel }
       });
+    } else if (category === 'dining' || category === 'restaurant') {
+      // Navigate to enhanced restaurant booking interface
+      navigate(`/hotels/${hotelId}/services/dining/booking`, {
+        state: { service, hotel }
+      });
     } else {
       // Navigate to regular service details page
       navigate(`/services/details/${service._id}`);

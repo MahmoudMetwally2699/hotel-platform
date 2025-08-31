@@ -65,7 +65,10 @@
     "laundryServices": "خدمات الغسيل",
     "transportation": "المواصلات",
     "travelTourism": "السفر والسياحة",
-    "myBookings": "حجوزاتي"
+    "myBookings": "حجوزاتي",
+    "transportationBookings": "النقل",
+    "laundryBookings": "الغسيل",
+    "restaurantBookings": "طلبات المطعم"
   },"auth": {
     "signIn": "تسجيل الدخول",
     "signUp": "إنشاء حساب",

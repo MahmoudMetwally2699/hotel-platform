@@ -70,7 +70,15 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
       case 'guest':
         return [
           { name: t('navigation.hotelServices'), path: '/my-hotel-services', icon: 'server' },
-          { name: t('navigation.myBookings'), path: '/my-bookings', icon: 'clipboard-list' },
+          {
+            name: t('navigation.myBookings'),
+            icon: 'clipboard-list',
+            submenu: [
+              { name: t('navigation.transportationBookings'), path: '/my-bookings', icon: 'truck' },
+              { name: t('navigation.laundryBookings'), path: '/my-laundry-bookings', icon: 'sparkles' },
+              { name: t('navigation.restaurantBookings'), path: '/my-restaurant-bookings', icon: 'utensils' }
+            ]
+          },
           { name: t('navigation.myOrders'), path: '/my-orders', icon: 'shopping-bag' }
         ];
       default:
