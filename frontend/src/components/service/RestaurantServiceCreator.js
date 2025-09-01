@@ -182,6 +182,7 @@ const RestaurantServiceCreator = () => {
           category: item.category,
           description: item.description,
           price: item.price,
+          imageUrl: item.imageUrl, // Add the missing imageUrl field!
           isAvailable: item.isAvailable,
           allergens: item.allergens || [],
           spicyLevel: item.spicyLevel || 'mild',
@@ -377,7 +378,15 @@ const RestaurantServiceCreator = () => {
                   {/* Item Header */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
-                      <span className="text-2xl mr-3">{item.icon}</span>
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-16 h-16 object-cover rounded-lg mr-3"
+                        />
+                      ) : (
+                        <span className="text-2xl mr-3">{item.icon}</span>
+                      )}
                       <div>
                         <h4 className="text-lg font-semibold">{item.name}</h4>
                         <p className="text-sm text-gray-500">Category: {getCategoryName(item.category)}</p>
@@ -723,6 +732,7 @@ const CustomMenuItemForm = ({ onAddItem }) => {
     description: '',
     price: '',
     icon: '🍽️',
+    imageUrl: '',
     preparationTime: '15',
     isVegetarian: false,
     isVegan: false,
@@ -732,6 +742,9 @@ const CustomMenuItemForm = ({ onAddItem }) => {
   });
 
   const [allergenInput, setAllergenInput] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const categoryOptions = [
     { value: 'appetizers', label: 'Appetizers' },
@@ -759,6 +772,132 @@ const CustomMenuItemForm = ({ onAddItem }) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Image upload functions
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+
+      setImageFile(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImageToCloudinary = async () => {
+    if (!imageFile) return null;
+
+    console.log('🔴 Starting uploadImageToCloudinary');
+    console.log('🔴 imageFile:', imageFile);
+
+    try {
+      setUploadingImage(true);
+
+      // Check if Cloudinary is properly configured
+      const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+      const apiKey = process.env.REACT_APP_CLOUDINARY_API_KEY;
+
+      console.log('🔴 Environment variables:', {
+        cloudName,
+        uploadPreset,
+        hasApiKey: !!apiKey
+      });
+
+      if (!cloudName || cloudName === 'hotel-platform-demo' || cloudName === 'your_cloud_name_here') {
+        console.warn('🔴 Cloudinary not configured properly. Using local preview for testing.');
+        toast.warning('Cloudinary not configured, using local preview');
+
+        // Create a local blob URL for testing
+        const localUrl = URL.createObjectURL(imageFile);
+        console.log('🔴 Created local URL:', localUrl);
+        return localUrl;
+      }
+
+      // Try upload with preset first
+      const formData = new FormData();
+      formData.append('file', imageFile);
+
+      if (uploadPreset) {
+        formData.append('upload_preset', uploadPreset);
+      }
+
+      formData.append('folder', 'hotel-platform/menu-items');
+
+      console.log('🔴 Uploading to Cloudinary:', { cloudName, uploadPreset: uploadPreset || 'none' });
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+
+      console.log('🔴 Upload response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('🔴 Cloudinary response error:', errorData);
+
+        // If upload preset failed, provide helpful error and use local preview
+        if (errorData.error?.message?.includes('Upload preset')) {
+          console.warn('🔴 Upload preset not found. Need to create it in Cloudinary dashboard.');
+          toast.error(`Upload preset "${uploadPreset}" not found. Please create it in your Cloudinary dashboard or contact admin.`);
+
+          // Create a local blob URL for testing
+          const localUrl = URL.createObjectURL(imageFile);
+          console.log('🔴 Created local URL for fallback:', localUrl);
+          toast.info('Using local preview for now. Image will be saved when upload preset is configured.');
+          return localUrl;
+        }
+
+        throw new Error(`Upload failed: ${errorData.error?.message || 'Unknown error'}`);
+      }
+
+      const data = await response.json();
+      console.log('🔴 Cloudinary upload success:', data.secure_url);
+      toast.success('Image uploaded successfully to Cloudinary!');
+      return data.secure_url;
+    } catch (error) {
+      console.error('🔴 Error uploading image:', error);
+
+      // As fallback, always provide local preview
+      if (imageFile) {
+        console.log('🔴 Creating local preview as fallback');
+        toast.warning('Upload failed, using local preview');
+        const localUrl = URL.createObjectURL(imageFile);
+        return localUrl;
+      }
+
+      toast.error(`Failed to upload image: ${error.message}`);
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, imageUrl: '' }));
+  };
+
   const addAllergen = () => {
     if (allergenInput.trim() && !formData.allergens.includes(allergenInput.trim())) {
       setFormData(prev => ({
@@ -776,8 +915,12 @@ const CustomMenuItemForm = ({ onAddItem }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    console.log('🟡 handleSubmit called');
+    console.log('🟡 imageFile:', imageFile);
+    console.log('🟡 formData.imageUrl:', formData.imageUrl);
 
     // Validation
     if (!formData.name.trim()) {
@@ -790,12 +933,31 @@ const CustomMenuItemForm = ({ onAddItem }) => {
       return;
     }
 
+    let imageUrl = formData.imageUrl;
+
+    // Upload image if selected
+    if (imageFile) {
+      console.log('🟡 Starting image upload...');
+      toast.info('Uploading image...');
+      imageUrl = await uploadImageToCloudinary();
+      console.log('🟡 Upload result:', imageUrl);
+      if (!imageUrl) {
+        toast.error('Failed to upload image. Please try again.');
+        return;
+      }
+    } else {
+      console.log('🟡 No image file selected');
+    }
+
     const newItem = {
       ...formData,
       price: parseFloat(formData.price),
       preparationTime: parseInt(formData.preparationTime),
-      isAvailable: true
+      isAvailable: true,
+      imageUrl: imageUrl || formData.imageUrl
     };
+
+    console.log('🟡 Final menu item to add:', newItem);
 
     const success = onAddItem(newItem);
     if (success) {
@@ -806,6 +968,7 @@ const CustomMenuItemForm = ({ onAddItem }) => {
         description: '',
         price: '',
         icon: '🍽️',
+        imageUrl: '',
         preparationTime: '15',
         isVegetarian: false,
         isVegan: false,
@@ -814,10 +977,10 @@ const CustomMenuItemForm = ({ onAddItem }) => {
         notes: ''
       });
       setAllergenInput('');
+      setImageFile(null);
+      setImagePreview('');
     }
-  };
-
-  return (
+  };  return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Item Name */}
@@ -874,12 +1037,13 @@ const CustomMenuItemForm = ({ onAddItem }) => {
         {/* Icon */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Icon
+            Icon (if no image)
           </label>
           <select
             value={formData.icon}
             onChange={(e) => handleInputChange('icon', e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            disabled={imagePreview || formData.imageUrl}
           >
             {iconOptions.map(icon => (
               <option key={icon} value={icon}>
@@ -888,6 +1052,58 @@ const CustomMenuItemForm = ({ onAddItem }) => {
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Image Upload Section */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Menu Item Image
+        </label>
+
+        {!imagePreview && !formData.imageUrl ? (
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="hidden"
+              id="image-upload"
+            />
+            <label htmlFor="image-upload" className="cursor-pointer">
+              <div className="text-gray-400 mb-2">
+                <svg className="mx-auto h-12 w-12" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <p className="text-sm text-gray-600 mb-1">
+                <span className="font-medium text-blue-600 hover:text-blue-500">Click to upload</span> or drag and drop
+              </p>
+              <p className="text-xs text-gray-500">PNG, JPG, JPEG up to 5MB</p>
+            </label>
+          </div>
+        ) : (
+          <div className="relative">
+            <div className="border border-gray-300 rounded-lg p-4">
+              <img
+                src={imagePreview || formData.imageUrl}
+                alt="Menu item preview"
+                className="w-full h-48 object-cover rounded-lg"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              {imageFile ? 'New image selected' : 'Current image'}
+            </p>
+          </div>
+        )}
 
         {/* Preparation Time */}
         <div>
@@ -1018,10 +1234,20 @@ const CustomMenuItemForm = ({ onAddItem }) => {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+          disabled={uploadingImage}
+          className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          <FaPlus className="mr-2" />
-          Add Menu Item
+          {uploadingImage ? (
+            <>
+              <FaSpinner className="animate-spin mr-2" />
+              Uploading Image...
+            </>
+          ) : (
+            <>
+              <FaPlus className="mr-2" />
+              Add Menu Item
+            </>
+          )}
         </button>
       </div>
     </form>

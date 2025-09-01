@@ -178,6 +178,10 @@ const serviceSchema = new mongoose.Schema({
       type: String,
       maxlength: [500, 'Menu item description cannot exceed 500 characters']
     },
+    imageUrl: {
+      type: String,
+      trim: true
+    },
     price: {
       type: Number,
       required: true,

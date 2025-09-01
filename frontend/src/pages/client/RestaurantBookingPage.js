@@ -16,10 +16,13 @@ import {
   FaClock,
   FaMapMarkerAlt,
   FaSpinner,
+  FaFilter,
+  FaSearch,
   FaLeaf,
   FaPepperHot
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
+import MenuItemCard from '../../components/guest/MenuItemCard';
 
 const RestaurantBookingPage = () => {
   const { hotelId } = useParams();
@@ -44,6 +47,11 @@ const RestaurantBookingPage = () => {
     deliveryLocation: '',
     specialRequests: ''
   });
+
+  // UI State
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchServiceDetails = async () => {
@@ -100,7 +108,15 @@ const RestaurantBookingPage = () => {
     fetchServiceDetails();
   }, [hotelId, passedService, passedHotel, navigate, t]);
 
-  // Get available menu items from all services
+  // Handle window resize for responsive design
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);  // Get available menu items from all services
   const getAvailableMenuItems = () => {
     let allItems = [];
 
@@ -328,83 +344,75 @@ const RestaurantBookingPage = () => {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {/* Group items by category */}
-                    {Object.entries(
-                      availableItems.reduce((grouped, item) => {
-                        const category = item.category || 'other';
-                        if (!grouped[category]) grouped[category] = [];
-                        grouped[category].push(item);
-                        return grouped;
-                      }, {})
-                    ).map(([category, items]) => (
-                      <div key={category} className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-900 capitalize border-b pb-2">
-                          {category === 'mains' ? 'Main Courses' :
-                           category === 'appetizers' ? 'Appetizers' :
-                           category === 'desserts' ? 'Desserts' :
-                           category === 'beverages' ? 'Beverages' :
-                           category}
-                        </h3>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {items.map((item, index) => (
-                            <div
-                              key={index}
-                              className="border rounded-lg p-4 hover:border-blue-300 transition-colors"
-                            >
-                              <div className="flex items-start justify-between mb-2">
-                                <h4 className="font-medium text-gray-900">
-                                  <span className="text-lg mr-2">{item.icon || '🍽️'}</span>
-                                  {item.name}
-                                </h4>
-                                <div className="text-lg font-bold text-green-600">
-                                  ${item.price}
-                                </div>
-                              </div>
-
-                              {item.description && (
-                                <p className="text-sm text-gray-600 mb-2">{item.description}</p>
-                              )}
-
-                              <div className="flex items-center gap-2 text-xs mb-3">
-                                {item.isVegetarian && (
-                                  <span className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded">
-                                    <FaLeaf className="mr-1" />
-                                    Vegetarian
-                                  </span>
-                                )}
-                                {item.isVegan && (
-                                  <span className="flex items-center bg-green-100 text-green-800 px-2 py-1 rounded">
-                                    <FaLeaf className="mr-1" />
-                                    Vegan
-                                  </span>
-                                )}
-                                {item.spicyLevel && item.spicyLevel !== 'mild' && (
-                                  <span className="flex items-center bg-red-100 text-red-800 px-2 py-1 rounded">
-                                    <FaPepperHot className="mr-1" />
-                                    {getSpicyLevelIcon(item.spicyLevel)}
-                                  </span>
-                                )}
-                                {item.preparationTime && (
-                                  <span className="flex items-center bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                    <FaClock className="mr-1" />
-                                    {item.preparationTime}min
-                                  </span>
-                                )}
-                              </div>
-
-                              <button
-                                onClick={() => addToCart(item)}
-                                className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium transition-colors"
-                              >
-                                <FaPlus className="inline mr-2" />
-                                Add to Cart
-                              </button>
-                            </div>
-                          ))}
+                    {/* Filter and Search Bar */}
+                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                      <div className="flex-1">
+                        <div className="relative">
+                          <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            placeholder="Search menu items..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          />
                         </div>
                       </div>
-                    ))}
+                      <div className="sm:w-48">
+                        <select
+                          value={categoryFilter}
+                          onChange={(e) => setCategoryFilter(e.target.value)}
+                          className="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        >
+                          <option value="all">All Categories</option>
+                          <option value="appetizers">Appetizers</option>
+                          <option value="mains">Main Courses</option>
+                          <option value="desserts">Desserts</option>
+                          <option value="beverages">Beverages</option>
+                          <option value="breakfast">Breakfast</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Filtered Items */}
+                    {(() => {
+                      const filteredItems = availableItems.filter(item => {
+                        const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+                        const matchesSearch = searchQuery === '' ||
+                          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+                        return matchesCategory && matchesSearch;
+                      });
+
+                      if (filteredItems.length === 0) {
+                        return (
+                          <div className="text-center py-8">
+                            <p className="text-gray-600">No items found matching your criteria.</p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className={isMobile ? "space-y-4" : "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"}>
+                          {filteredItems.map((item, index) => {
+                            const existingItem = selectedItems.find(selected => selected.id === item.id);
+                            const quantity = existingItem ? existingItem.quantity : 0;
+
+                            return (
+                              <MenuItemCard
+                                key={index}
+                                item={item}
+                                quantity={quantity}
+                                isMobile={isMobile}
+                                onAdd={() => addToCart(item)}
+                                onIncrease={() => updateQuantity(item.id, quantity + 1)}
+                                onDecrease={() => updateQuantity(item.id, quantity - 1)}
+                              />
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
