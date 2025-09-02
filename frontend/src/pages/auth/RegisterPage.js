@@ -10,7 +10,10 @@ import { useTranslation } from 'react-i18next';
 import useRTL from '../../hooks/useRTL';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 import * as Yup from 'yup';
+import { HiUser, HiMail, HiLockClosed, HiOfficeBuilding } from 'react-icons/hi';
 import { register, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole } from '../../redux/slices/authSlice';
 import hotelService from '../../services/hotel.service';
 
@@ -116,7 +119,17 @@ const RegisterPage = () => {
     dispatch(register({ userData, role: values.role }));
   };
   return (
-    <div className={`min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+    <div className={`min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+        {/* Logo */}
+        <div className="text-center mb-6">
+          <img
+            src="/qickroom.png"
+            alt="Qickroom Logo"
+            className="mx-auto h-16 w-auto mb-4"
+          />
+        </div>
+
         {/* Language Switcher */}
         <div className={`flex ${isRTL ? 'justify-start' : 'justify-end'} mb-4`}>
           <LanguageSwitcher className="scale-90" />
@@ -148,68 +161,205 @@ const RegisterPage = () => {
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('register.firstName')} <span className="text-red-500">*</span>
                 </label>
-                <Field
-                  type="text"
-                  name="firstName"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={t('register.firstNamePlaceholder')}
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <HiUser className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <Field
+                    type="text"
+                    name="firstName"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={t('register.firstNamePlaceholder')}
+                  />
+                </div>
                 <ErrorMessage name="firstName" component="div" className="mt-1 text-sm text-red-600" />
               </div>              <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('register.emailAddress')} <span className="text-red-500">*</span>
                 </label>
-                <Field
-                  type="email"
-                  name="email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={t('register.enterYourEmail')}
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <HiMail className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <Field
+                    type="email"
+                    name="email"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={t('register.enterYourEmail')}
+                  />
+                </div>
                 <ErrorMessage name="email" component="div" className="mt-1 text-sm text-red-600" />
               </div>              <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('register.phoneNumber')} <span className="text-red-500">*</span>
                 </label>
-                <Field
-                  type="tel"
-                  name="phone"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={t('register.enterYourPhoneNumber')}
-                />
+                <Field name="phone">
+                  {({ field, form }) => (
+                    <div className="relative">
+                      <style>{`
+                        .phone-container-${isRTL ? 'rtl' : 'ltr'} .react-tel-input {
+                          position: relative !important;
+                          width: 100% !important;
+                        }
+                        .phone-container-${isRTL ? 'rtl' : 'ltr'} .react-tel-input .flag-dropdown {
+                          position: absolute !important;
+                          top: 1px !important;
+                          ${isRTL ? 'right: 1px !important; left: auto !important;' : 'left: 1px !important; right: auto !important;'}
+                          height: 40px !important;
+                          width: 54px !important;
+                          border: none !important;
+                          border-radius: ${isRTL ? '0 5px 5px 0' : '5px 0 0 5px'} !important;
+                          background-color: #f9fafb !important;
+                          z-index: 1 !important;
+                          border-right: ${isRTL ? 'none' : '1px solid #d1d5db'} !important;
+                          border-left: ${isRTL ? '1px solid #d1d5db' : 'none'} !important;
+                          display: flex !important;
+                          align-items: center !important;
+                          justify-content: center !important;
+                        }
+                        .phone-container-${isRTL ? 'rtl' : 'ltr'} .react-tel-input .flag-dropdown .selected-flag {
+                          position: relative !important;
+                          width: 100% !important;
+                          height: 100% !important;
+                          display: flex !important;
+                          align-items: center !important;
+                          justify-content: center !important;
+                          padding: 0 !important;
+                        }
+                        .phone-container-${isRTL ? 'rtl' : 'ltr'} .react-tel-input .flag-dropdown .arrow {
+                          position: absolute !important;
+                          right: 3px !important;
+                          top: 50% !important;
+                          transform: translateY(-50%) !important;
+                          border-top: 4px solid #9ca3af !important;
+                          border-left: 3px solid transparent !important;
+                          border-right: 3px solid transparent !important;
+                        }
+                        .phone-container-${isRTL ? 'rtl' : 'ltr'} .react-tel-input .form-control {
+                          width: 100% !important;
+                          height: 42px !important;
+                          border: 1px solid #d1d5db !important;
+                          border-radius: 6px !important;
+                          font-size: 14px !important;
+                          padding-left: ${isRTL ? '12px' : '60px'} !important;
+                          padding-right: ${isRTL ? '60px' : '12px'} !important;
+                          text-align: ${isRTL ? 'right' : 'left'} !important;
+                          direction: ltr !important;
+                          box-sizing: border-box !important;
+                          text-indent: ${isRTL ? '-45px' : '0'} !important;
+                        }
+                        .phone-container-${isRTL ? 'rtl' : 'ltr'} .react-tel-input .country-list {
+                          ${isRTL ? 'right: 0 !important; left: auto !important;' : 'left: 0 !important; right: auto !important;'}
+                          text-align: left !important;
+                          direction: ltr !important;
+                          z-index: 9999 !important;
+                          position: absolute !important;
+                          top: 100% !important;
+                          margin-top: 1px !important;
+                        }
+                      `}</style>
+                      <div className={`phone-container-${isRTL ? 'rtl' : 'ltr'}`}>
+                        <PhoneInput
+                          country={'eg'}
+                          value={field.value}
+                          onChange={(phone) => form.setFieldValue('phone', phone)}
+                          inputProps={{
+                            name: 'phone',
+                            required: true,
+                            dir: isRTL ? 'rtl' : 'ltr'
+                          }}
+                          containerStyle={{
+                            width: '100%',
+                            position: 'relative'
+                          }}
+                          inputStyle={{
+                            width: '100%',
+                            height: '42px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            paddingLeft: isRTL ? '12px' : '60px',
+                            paddingRight: isRTL ? '60px' : '12px',
+                            textAlign: isRTL ? 'right' : 'left',
+                            direction: 'ltr',
+                            boxSizing: 'border-box',
+                            textIndent: isRTL ? '-45px' : '0'
+                          }}
+                          buttonStyle={{
+                            position: 'absolute',
+                            top: '1px',
+                            [isRTL ? 'right' : 'left']: '1px',
+                            height: '40px',
+                            width: '54px',
+                            border: 'none',
+                            borderRadius: isRTL ? '0 5px 5px 0' : '5px 0 0 5px',
+                            backgroundColor: '#f9fafb',
+                            zIndex: 1,
+                            [isRTL ? 'borderLeft' : 'borderRight']: '1px solid #d1d5db',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          dropdownStyle={{
+                            position: 'absolute',
+                            top: '100%',
+                            [isRTL ? 'right' : 'left']: '0',
+                            marginTop: '1px',
+                            zIndex: 9999,
+                            textAlign: 'left',
+                            direction: 'ltr'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </Field>
                 <ErrorMessage name="phone" component="div" className="mt-1 text-sm text-red-600" />
               </div>              <div>
                 <label htmlFor="selectedHotelId" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('register.selectHotel')} <span className="text-red-500">*</span>
                 </label>
-                <Field
-                  as="select"
-                  name="selectedHotelId"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={loadingHotels}
-                >
-                  <option value="">
-                    {loadingHotels ? t('register.loadingHotels') : t('register.chooseAHotel')}
-                  </option>
-                  {hotels.map((hotel) => (
-                    <option key={hotel._id || hotel.id} value={hotel._id || hotel.id}>
-                      {hotel.name}
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <HiOfficeBuilding className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <Field
+                    as="select"
+                    name="selectedHotelId"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={loadingHotels}
+                  >
+                    <option value="">
+                      {loadingHotels ? t('register.loadingHotels') : t('register.chooseAHotel')}
                     </option>
-                  ))}
-                </Field>
+                    {hotels.map((hotel) => (
+                      <option key={hotel._id || hotel.id} value={hotel._id || hotel.id}>
+                        {hotel.name}
+                      </option>
+                    ))}
+                  </Field>
+                </div>
                 <ErrorMessage name="selectedHotelId" component="div" className="mt-1 text-sm text-red-600" />
                 {hotels.length === 0 && !loadingHotels && (
                   <p className="mt-1 text-sm text-yellow-600">{t('register.noHotelsAvailable')}</p>
                 )}
-              </div>              <div>
+              </div>
+
+              <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('register.password')} <span className="text-red-500">*</span>
                 </label>
-                <Field
-                  type="password"
-                  name="password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={t('register.createPassword')}
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <HiLockClosed className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <Field
+                    type="password"
+                    name="password"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={t('register.createPassword')}
+                  />
+                </div>
                 <ErrorMessage name="password" component="div" className="mt-1 text-sm text-red-600" />
               </div>
 
@@ -217,12 +367,17 @@ const RegisterPage = () => {
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('register.confirmPassword')} <span className="text-red-500">*</span>
                 </label>
-                <Field
-                  type="password"
-                  name="confirmPassword"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={t('register.confirmPasswordPlaceholder')}
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <HiLockClosed className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <Field
+                    type="password"
+                    name="confirmPassword"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={t('register.confirmPasswordPlaceholder')}
+                  />
+                </div>
                 <ErrorMessage name="confirmPassword" component="div" className="mt-1 text-sm text-red-600" />
               </div>              <div className="flex items-center">
                 <Field
@@ -237,7 +392,8 @@ const RegisterPage = () => {
               <ErrorMessage name="acceptTerms" component="div" className="mt-1 text-sm text-red-600" />              <button
                 type="submit"
                 disabled={isSubmitting || isLoading}
-                className="w-full bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: '#3B5787' }}
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">

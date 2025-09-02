@@ -45,53 +45,6 @@ const HousekeepingServiceManagement = ({ onBack }) => {
     { value: 'laundry', label: 'Laundry Service', icon: FaClock }
   ];
 
-  const defaultServices = [
-    {
-      id: 'extra-cleaning',
-      name: 'Extra Room Cleaning',
-      description: 'Deep cleaning of guest room including bathroom and all surfaces',
-      category: 'cleaning',
-      estimatedDuration: 45,
-      availability: 'always',
-      isActive: true,
-      requirements: ['Room must be vacant during cleaning'],
-      instructions: 'Please ensure all personal items are stored safely'
-    },
-    {
-      id: 'linen-change',
-      name: 'Fresh Linen Change',
-      description: 'Complete change of bed linens and towels',
-      category: 'laundry',
-      estimatedDuration: 15,
-      availability: 'always',
-      isActive: true,
-      requirements: ['Guest can be present during service'],
-      instructions: 'Standard linen replacement service'
-    },
-    {
-      id: 'amenity-restock',
-      name: 'Amenity Restocking',
-      description: 'Restock bathroom amenities, toiletries, and room supplies',
-      category: 'amenities',
-      estimatedDuration: 10,
-      availability: 'always',
-      isActive: true,
-      requirements: ['Quick service, minimal disruption'],
-      instructions: 'Check all amenity levels and restock as needed'
-    },
-    {
-      id: 'maintenance-request',
-      name: 'Room Maintenance',
-      description: 'General maintenance and repair requests for room issues',
-      category: 'maintenance',
-      estimatedDuration: 60,
-      availability: 'business-hours',
-      isActive: true,
-      requirements: ['Room inspection required', 'May require multiple visits'],
-      instructions: 'Please describe the specific issue when booking'
-    }
-  ];
-
   useEffect(() => {
     fetchServices();
   }, []);
@@ -99,11 +52,10 @@ const HousekeepingServiceManagement = ({ onBack }) => {
   const fetchServices = async () => {
     try {
       const response = await apiClient.get('/service/housekeeping-services');
-      setServices(response.data.data || defaultServices);
+      setServices(response.data.data || []);
     } catch (error) {
       console.error('Error fetching housekeeping services:', error);
-      setServices(defaultServices);
-      toast.info('Loaded default housekeeping services');
+      setServices([]);
     } finally {
       setLoading(false);
     }

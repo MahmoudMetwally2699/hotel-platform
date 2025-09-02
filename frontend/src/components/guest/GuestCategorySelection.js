@@ -22,7 +22,9 @@ import {
   FaSpinner,
   FaArrowRight,
   FaStar,
-  FaHeart
+  FaHeart,
+  FaMapMarkerAlt,
+  FaClock
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
@@ -46,68 +48,10 @@ const GuestCategorySelection = () => {
   const navigate = useNavigate();
   const { hotelId } = useParams();
 
-  // Get localized category descriptions
-  const getCategoryDescriptions = () => ({
-    laundry: {
-      title: t('services.laundry'),
-      description: t('homepage.laundryDescription'),
-      features: [t('guestCategories.expressService'), t('guestCategories.premiumCare'), t('guestCategories.roomPickup')],
-      estimatedTime: t('guestCategories.laundryTime'),
-      color: 'bg-blue-500'
-    },
-    transportation: {
-      title: t('services.transportation'),
-      description: t('homepage.transportationDescription'),
-      features: [t('guestCategories.variousVehicles'), t('guestCategories.professionalDrivers'), t('guestCategories.cityTours')],
-      estimatedTime: t('guestCategories.onDemand'),
-      color: 'bg-green-500'
-    },
-    tours: {
-      title: t('services.tourism'),
-      description: t('homepage.tourismDescription'),
-      features: [t('guestCategories.localExpertise'), t('guestCategories.groupPrivateTours'), t('guestCategories.culturalExperiences')],
-      estimatedTime: t('guestCategories.toursTime'),
-      color: 'bg-purple-500'
-    },
-    spa: {
-      title: t('services.spa'),
-      description: t('guestCategories.spaDescription'),
-      features: [t('guestCategories.professionalTherapists'), t('guestCategories.premiumProducts'), t('guestCategories.inRoomService')],
-      estimatedTime: t('guestCategories.spaTime'),
-      color: 'bg-pink-500'
-    },
-    dining: {
-      title: t('services.dining'),
-      description: t('guestCategories.diningDescription'),
-      features: [t('guestCategories.multipleCuisines'), t('guestCategories.freshIngredients'), t('guestCategories.quickDelivery')],
-      estimatedTime: t('guestCategories.diningTime'),
-      color: 'bg-orange-500'
-    },
-    entertainment: {
-      title: t('services.entertainment'),
-      description: t('guestCategories.entertainmentDescription'),
-      features: [t('guestCategories.professionalArtists'), t('guestCategories.customPlaylists'), t('guestCategories.eventPlanning')],
-      estimatedTime: t('guestCategories.entertainmentTime'),
-      color: 'bg-red-500'
-    },
-    shopping: {
-      title: t('services.shopping'),
-      description: t('guestCategories.shoppingDescription'),
-      features: [t('guestCategories.localShopping'), t('guestCategories.giftSelection'), t('guestCategories.sameDayDelivery')],
-      estimatedTime: t('guestCategories.shoppingTime'),
-      color: 'bg-yellow-500'
-    },
-    fitness: {
-      title: t('services.fitness'),
-      description: t('guestCategories.fitnessDescription'),
-      features: [t('guestCategories.certifiedTrainers'), t('guestCategories.equipmentProvided'), t('guestCategories.flexibleSchedules')],
-      estimatedTime: t('guestCategories.fitnessTime'),
-      color: 'bg-indigo-500'
-    }
-  });  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [hoveredCategory, setHoveredCategory] = useState(null);
+
   useEffect(() => {
     // Get localized category descriptions
     const getCategoryDescriptions = () => ({
@@ -168,10 +112,10 @@ const GuestCategorySelection = () => {
         color: 'bg-indigo-500'
       },
       housekeeping: {
-        title: 'Housekeeping Services',
-        description: 'Professional room cleaning and maintenance services provided at no additional charge',
-        features: ['Extra Cleaning', 'Fresh Linens', 'Amenity Restocking', 'Room Maintenance'],
-        estimatedTime: 'Available 24/7',
+        title: t('services.housekeeping'),
+        description: t('guestCategories.housekeepingDescription'),
+        features: [t('guestCategories.extraCleaning'), t('guestCategories.freshLinens'), t('guestCategories.amenityRestocking')],
+        estimatedTime: t('guestCategories.available24_7'),
         color: 'bg-teal-500'
       }
     });
@@ -225,7 +169,8 @@ const GuestCategorySelection = () => {
 
     if (hotelId) {
       fetchHotelAndCategories();
-    }  }, [hotelId, t]); // Remove categoryDescriptions from dependencies
+    }
+  }, [hotelId, t]);
 
   /**
    * Handle category selection - updated routing for better UX
@@ -259,32 +204,80 @@ const GuestCategorySelection = () => {
     );
   }
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {hotel?.name} {t('navigation.services')}
-              </h1>
-              <p className="text-gray-600 mt-2">
-                {t('guestCategories.chooseFromCategories')}
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Modern Header with Hotel Branding */}
+      <div className="bg-white shadow-lg border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Hotel Logo and Branding Section */}
+          <div className="text-center mb-8">
+            {/* Hotel Logo */}
+            {hotel?.images?.logo ? (
+              <div className="flex justify-center mb-6">
+                <div className="bg-white rounded-3xl shadow-xl p-4 border border-gray-200 hover:shadow-2xl transition-shadow duration-300 inline-flex">
+                  <img
+                    src={hotel.images.logo}
+                    alt={`${hotel.name} Logo`}
+                    className="h-24 w-auto sm:h-32 sm:w-auto lg:h-40 lg:w-auto max-w-xs object-contain"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-center mb-6">
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl shadow-xl p-6 border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
+                  <div className="h-24 w-24 sm:h-32 sm:w-32 lg:h-40 lg:w-40 flex items-center justify-center">
+                    <span className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white">
+                      {hotel?.name?.charAt(0) || 'H'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Hotel Name */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 tracking-tight">
+              {hotel?.name || 'Hotel Services'}
+            </h1>
+
+            {/* Star Rating */}
+            <div className="flex items-center justify-center mb-6">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <FaStar
+                  key={star}
+                  className={`text-xl sm:text-2xl mx-1 ${star <= (hotel?.starRating || 4) ? 'text-yellow-400' : 'text-gray-300'}`}
+                />
+              ))}
+              <span className="ml-3 text-lg font-medium text-blue-600">
+                {hotel?.category === 'luxury' ? 'Luxury Hotel' :
+                 hotel?.category === 'resort' ? 'Resort Hotel' :
+                 hotel?.category === 'boutique' ? 'Boutique Hotel' :
+                 hotel?.category === 'mid-range' ? 'Mid-Range Hotel' :
+                 'Budget Hotel'}
+              </span>
             </div>
-            <div className="hidden md:flex items-center space-x-4">
-              <div className={`${isRTL ? 'text-left' : 'text-right'}`}>
-                <p className="text-sm text-gray-500">{t('guestCategories.hotelRating')}</p>
+
+            {/* Welcome Message */}
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-semibold text-blue-600 mb-4">
+                {t('guestCategories.welcomeToServices')}
+              </h2>
+              <p className="text-lg text-gray-600 leading-relaxed mb-6">
+                {t('guestCategories.welcomeDescription')}
+              </p>
+
+              {/* Location and Services Info */}
+              <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-8 text-gray-600">
                 <div className="flex items-center">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <FaStar
-                      key={star}
-                      className={`text-sm ${star <= (hotel?.rating || 4) ? 'text-yellow-400' : 'text-gray-300'}`}
-                    />
-                  ))}
-                  <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-600`}>
-                    ({hotel?.rating || 4.0})
+                  <FaMapMarkerAlt className="text-red-500 mr-2" />
+                  <span className="font-medium">
+                    {hotel?.address?.city && hotel?.address?.country
+                      ? `${hotel.address.city}, ${hotel.address.country}`
+                      : t('guestCategories.premiumLocation')
+                    }
                   </span>
+                </div>
+                <div className="flex items-center">
+                  <FaHeart className="text-red-500 mr-2" />
+                  <span className="font-medium">{t('guestCategories.premiumServicesAvailable')}</span>
                 </div>
               </div>
             </div>
@@ -292,29 +285,33 @@ const GuestCategorySelection = () => {
         </div>
       </div>
 
-      {/* Categories Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Service Categories Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {categories.length === 0 ? (
-          <div className="text-center py-12">
-            <FaShoppingBag className="text-6xl text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-gray-900 mb-2">
-              {t('guestCategories.noServicesAvailable')}
-            </h3>
-            <p className="text-gray-600">
-              {t('guestCategories.noActiveServices')}
-            </p>
+          <div className="text-center py-16">
+            <div className="bg-white rounded-2xl shadow-lg p-12 max-w-md mx-auto">
+              <FaShoppingBag className="text-6xl text-gray-300 mx-auto mb-6" />
+              <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+                {t('guestCategories.noServicesAvailable')}
+              </h3>
+              <p className="text-gray-600">
+                {t('guestCategories.noActiveServices')}
+              </p>
+            </div>
           </div>
         ) : (
           <>
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            {/* Section Header */}
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
                 {t('guestCategories.availableServiceCategories')}
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
                 {t('guestCategories.selectCategoryToBrowse')}
               </p>
             </div>
 
+            {/* Modern Categories Grid - Redesigned Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {categories.map((category) => {
                 const IconComponent = categoryIcons[category.key] || FaShoppingBag;
@@ -322,66 +319,73 @@ const GuestCategorySelection = () => {
                 return (
                   <div
                     key={category.key}
-                    className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:scale-105 ${
-                      hoveredCategory === category.key ? 'ring-2 ring-blue-500' : ''
-                    }`}
-                    onMouseEnter={() => setHoveredCategory(category.key)}
-                    onMouseLeave={() => setHoveredCategory(null)}
+                    className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2 border border-gray-100 overflow-hidden"
                     onClick={() => handleCategorySelect(category.key)}
                   >
-                    {/* Category Header */}
-                    <div className={`${category.color} text-white p-6 rounded-t-lg`}>
-                      <div className="flex items-center justify-between">
-                        <IconComponent className="text-3xl" />                        <span className="bg-white bg-opacity-20 text-xs px-2 py-1 rounded-full">
-                          {category.serviceCount} {category.serviceCount === 1 ? t('services.singleService') : t('services.multipleServices')}
-                        </span>
+                    {/* Icon and Service Count Header */}
+                    <div className="p-6 text-center border-b border-gray-50">
+                      <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${category.color} group-hover:scale-110 transition-transform duration-300`}>
+                        <IconComponent className="text-2xl text-white" />
                       </div>
-                      <h3 className="text-xl font-bold mt-4 mb-2">
-                        {category.title}
-                      </h3>
-                      <p className="text-sm opacity-90">
-                        {category.description}
-                      </p>
+                      <div className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-full inline-block">
+                        {category.serviceCount} {category.serviceCount === 1 ? t('services.singleService') : t('services.multipleServices')}
+                      </div>
                     </div>
 
-                    {/* Category Details */}
+                    {/* Content Section */}
                     <div className="p-6">
-                      <div className="space-y-3">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <FaHeart className="text-red-400 mr-2" />
-                          <span>{category.estimatedTime}</span>
-                        </div>
+                      {/* Title */}
+                      <h3 className="text-xl font-bold text-gray-900 mb-3 text-center group-hover:text-blue-600 transition-colors duration-200">
+                        {category.title || 'Service Category'}
+                      </h3>
 
-                        <div className="space-y-2">
-                          {category.features.slice(0, 3).map((feature, index) => (
-                            <div key={index} className="flex items-center text-sm text-gray-600">
-                              <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                              <span>{feature}</span>
-                            </div>
-                          ))}
-                        </div>
+                      {/* Description */}
+                      <p className="text-gray-600 text-sm text-center mb-4 line-clamp-2">
+                        {category.description || 'Professional service available for your comfort'}
+                      </p>
+
+                      {/* Estimated Time */}
+                      <div className="flex items-center justify-center text-sm text-gray-500 mb-4">
+                        <FaClock className="mr-2 text-blue-500" />
+                        <span>{category.estimatedTime || 'Available'}</span>
                       </div>
 
-                      {/* Action Button */}                      <div className="mt-6 pt-4 border-t border-gray-100">
-                        <button className="w-full flex items-center justify-center text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                          <span>{t('guestCategories.browseServices')}</span>
-                          <FaArrowRight className={`${isRTL ? 'mr-2' : 'ml-2'} ${isRTL ? 'transform rotate-180' : ''}`} />
-                        </button>
+                      {/* Features - Show only 2 for cleaner look */}
+                      <div className="space-y-2 mb-6">
+                        {(category.features || ['Professional Service', 'Quality Guaranteed']).slice(0, 2).map((feature, index) => (
+                          <div key={index} className="flex items-center text-xs text-gray-600">
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2 flex-shrink-0"></div>
+                            <span>{feature}</span>
+                          </div>
+                        ))}
                       </div>
+
+                      {/* Action Button */}
+                      <button className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 flex items-center justify-center group-hover:shadow-lg">
+                        <span>{t('guestCategories.browseServices') || 'Browse Services'}</span>
+                        <FaArrowRight className={`${isRTL ? 'mr-2 rotate-180' : 'ml-2'} text-sm group-hover:translate-x-1 transition-transform duration-200`} />
+                      </button>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            {/* Popular Categories Note */}
-            <div className="mt-12 bg-blue-50 rounded-lg p-6 text-center">
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                🌟 {t('guestCategories.mostPopularServices')}
-              </h3>
-              <p className="text-blue-700">
-                {t('guestCategories.popularServicesNote')}
-              </p>
+            {/* Bottom Call-to-Action */}
+            <div className="mt-16 text-center">
+              <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl shadow-2xl p-8 text-white">
+                <h3 className="text-2xl font-bold mb-4">
+                  🌟 {t('guestCategories.mostPopularServices')}
+                </h3>
+                <p className="text-lg opacity-90 max-w-2xl mx-auto">
+                  {t('guestCategories.popularServicesNote')}
+                </p>
+                <div className="mt-6">
+                  <button className="bg-white text-blue-600 font-semibold py-3 px-8 rounded-full hover:bg-gray-100 transition-colors duration-200 shadow-lg">
+                    Explore All Services
+                  </button>
+                </div>
+              </div>
             </div>
           </>
         )}

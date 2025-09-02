@@ -20,54 +20,6 @@ import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/useAuth';
 
-// Default services defined outside component to avoid dependency issues
-const defaultServices = [
-  {
-    id: 'extra-cleaning',
-    name: 'Extra Room Cleaning',
-    description: 'Deep cleaning of guest room including bathroom and all surfaces',
-    category: 'cleaning',
-    estimatedDuration: 45,
-    availability: 'always',
-    isActive: true,
-    requirements: ['Room must be vacant during cleaning'],
-    instructions: 'Please ensure all personal items are stored safely'
-  },
-  {
-    id: 'linen-change',
-    name: 'Fresh Linen Change',
-    description: 'Complete change of bed linens and towels',
-    category: 'laundry',
-    estimatedDuration: 15,
-    availability: 'always',
-    isActive: true,
-    requirements: ['Guest can be present during service'],
-    instructions: 'Standard linen replacement service'
-  },
-  {
-    id: 'amenity-restock',
-    name: 'Amenity Restocking',
-    description: 'Restock bathroom amenities, toiletries, and room supplies',
-    category: 'amenities',
-    estimatedDuration: 10,
-    availability: 'always',
-    isActive: true,
-    requirements: ['Quick service, minimal disruption'],
-    instructions: 'Check all amenity levels and restock as needed'
-  },
-  {
-    id: 'maintenance-request',
-    name: 'Room Maintenance',
-    description: 'General maintenance and repair requests for room issues',
-    category: 'maintenance',
-    estimatedDuration: 60,
-    availability: 'business-hours',
-    isActive: true,
-    requirements: ['Room inspection required', 'May require multiple visits'],
-    instructions: 'Please describe the specific issue when booking'
-  }
-];
-
 const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const { currentUser, isAuthenticated } = useAuth();
   const [services, setServices] = useState([]);
@@ -114,14 +66,13 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       const response = await apiClient.get(`/client/hotels/${hotelId}/housekeeping-services`);
       console.log('Housekeeping services response:', response.data);
 
-      const activeServices = (response.data.data || defaultServices).filter(service => service.isActive);
+      const activeServices = (response.data.data || []).filter(service => service.isActive);
       console.log('Active services after filtering:', activeServices);
 
       setServices(activeServices);
     } catch (error) {
       console.error('Error fetching housekeeping services:', error);
-      const activeServices = defaultServices.filter(service => service.isActive);
-      setServices(activeServices);
+      setServices([]);
     } finally {
       setLoading(false);
     }

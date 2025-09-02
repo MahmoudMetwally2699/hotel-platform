@@ -66,8 +66,18 @@ const SuperAdminHotelsPage = () => {
       phone: '',
       password: '',
       confirmPassword: ''
+    },
+    // Hotel Images
+    images: {
+      logo: '',
+      coverImage: '',
+      gallery: []
     }
   });
+
+  // File upload states
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
   useEffect(() => {
     console.log('🏨 useEffect running - fetching hotels...');
     dispatch(fetchAllHotels()).then((result) => {
@@ -120,10 +130,27 @@ const SuperAdminHotelsPage = () => {
     console.log('✅ All validations passed');
 
     try {
-      console.log('📤 Dispatching createHotel action...');
-      console.log('Form data being submitted:', formData);
+      // Upload logo if provided
+      let logoUrl = '';
+      if (logoFile) {
+        console.log('📤 Uploading hotel logo...');
+        logoUrl = await uploadLogo(logoFile);
+        console.log('✅ Logo uploaded successfully:', logoUrl);
+      }
 
-      const result = await dispatch(createHotel(formData)).unwrap();      console.log('✅ Hotel creation successful:', result);
+      // Prepare final form data with logo
+      const finalFormData = {
+        ...formData,
+        images: {
+          ...formData.images,
+          logo: logoUrl
+        }
+      };
+
+      console.log('📤 Dispatching createHotel action...');
+      console.log('Form data being submitted:', finalFormData);
+
+      const result = await dispatch(createHotel(finalFormData)).unwrap();      console.log('✅ Hotel creation successful:', result);
       console.log('🎉 Showing success toast...');
       // toast.success('Hotel and admin account created successfully');
       alert('Hotel and admin account created successfully!'); // Temporary replacement
@@ -174,7 +201,115 @@ const SuperAdminHotelsPage = () => {
           alert(`Error deleting hotel: ${error.message || error}`); // Temporary replacement
         });
     }
-  };  const resetForm = () => {
+  };
+
+  // Handle logo file selection
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLogoFile(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Upload logo to Cloudinary
+  const uploadLogo = async (file) => {
+    console.log('🏨 Starting hotel logo upload to Cloudinary');
+    console.log('🏨 logoFile:', file);
+
+    try {
+      // Check if Cloudinary is properly configured
+      const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+      const apiKey = process.env.REACT_APP_CLOUDINARY_API_KEY;
+
+      console.log('🏨 Environment variables:', {
+        cloudName,
+        uploadPreset,
+        hasApiKey: !!apiKey
+      });
+
+      if (!cloudName || cloudName === 'hotel-platform-demo' || cloudName === 'your_cloud_name_here') {
+        console.warn('🏨 Cloudinary not configured properly. Using local preview for testing.');
+        alert('Cloudinary not configured, using local preview');
+
+        // Create a local blob URL for testing
+        const localUrl = URL.createObjectURL(file);
+        console.log('🏨 Created local URL:', localUrl);
+        return localUrl;
+      }
+
+      // Prepare form data for Cloudinary upload
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+
+      // Try with upload preset first, then fallback to signed upload
+      if (uploadPreset) {
+        uploadFormData.append('upload_preset', uploadPreset);
+      } else {
+        // If no upload preset, we'll need to use signed uploads
+        console.warn('🏨 No upload preset found, this might require backend support for signed uploads');
+      }
+
+      uploadFormData.append('folder', 'hotel-platform/hotel-logos');
+
+      console.log('🏨 Uploading to Cloudinary:', { cloudName, uploadPreset: uploadPreset || 'none' });
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: 'POST',
+          body: uploadFormData
+        }
+      );
+
+      console.log('🏨 Upload response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('🏨 Cloudinary response error:', errorData);
+
+        // If upload preset failed, provide helpful error and use local preview
+        if (errorData.error?.message?.includes('Upload preset')) {
+          console.warn('🏨 Upload preset not found. Need to create it in Cloudinary dashboard.');
+          alert(`Upload preset "${uploadPreset}" not found. Please create an unsigned upload preset named "${uploadPreset}" in your Cloudinary dashboard.\n\nSteps:\n1. Go to Settings > Upload\n2. Add upload preset\n3. Set it to "Unsigned"\n4. Enable "Use filename or externally defined Public ID"\n\nFor now, using local preview.`);
+
+          // Create a local blob URL for testing
+          const localUrl = URL.createObjectURL(file);
+          console.log('🏨 Created local URL for fallback:', localUrl);
+          return localUrl;
+        }
+
+        throw new Error(`Upload failed: ${errorData.error?.message || 'Unknown error'}`);
+      }
+
+      const data = await response.json();
+      console.log('🏨 Cloudinary upload success:', data.secure_url);
+      alert('Hotel logo uploaded successfully to Cloudinary!');
+      return data.secure_url;
+    } catch (error) {
+      console.error('🏨 Error uploading hotel logo:', error);
+
+      // As fallback, always provide local preview
+      if (file) {
+        console.log('🏨 Creating local preview as fallback');
+        alert('Upload failed, using local preview');
+        const localUrl = URL.createObjectURL(file);
+        return localUrl;
+      }
+
+      alert(`Failed to upload hotel logo: ${error.message}`);
+      throw error;
+    }
+  };
+
+  const resetForm = () => {
     setFormData({
       name: '',
       description: '',
@@ -209,9 +344,16 @@ const SuperAdminHotelsPage = () => {
         phone: '',
         password: '',
         confirmPassword: ''
+      },
+      images: {
+        logo: '',
+        coverImage: '',
+        gallery: []
       }
     });
     setSelectedHotel(null);
+    setLogoFile(null);
+    setLogoPreview(null);
   };
 
   const openEditModal = (hotel) => {
@@ -439,6 +581,31 @@ const SuperAdminHotelsPage = () => {
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Hotel</h3>
               <form onSubmit={handleCreateHotel} className="space-y-4">
+                {/* Hotel Logo Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Hotel Logo</label>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoChange}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Upload a logo for the hotel (PNG, JPG, or GIF)</p>
+                    </div>
+                    {logoPreview && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={logoPreview}
+                          alt="Logo preview"
+                          className="h-16 w-16 object-cover rounded-lg border border-gray-300"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Hotel Name</label>

@@ -200,7 +200,8 @@
     "dining": "تناول الطعام",
     "entertainment": "الترفيه",
     "shopping": "التسوق",
-    "fitness": "اللياقة البدنية",    "other": "خدمات أخرى",
+    "fitness": "اللياقة البدنية",
+    "housekeeping": "خدمات الغرف والصيانه",    "other": "خدمات أخرى",
     "allServices": "جميع الخدمات",
     "servicesAvailable": "{{count}} خدمة متاحة",
     "singleService": "خدمة",
@@ -909,6 +910,10 @@
     "updateProfile": "تحديث الملف الشخصي"
   },
   "guestCategories": {
+    "welcomeToServices": "مرحباً بك في خدماتنا المميزة",
+    "welcomeDescription": "استمتع بأفضل الخدمات المصممة خصيصاً لضيوفنا الكرام",
+    "premiumLocation": "موقع مميز",
+    "premiumServicesAvailable": "خدمات مميزة متاحة",
     "chooseFromCategories": "اختر من فئات الخدمات المتاحة لدينا",
     "hotelRating": "تقييم الفندق",
     "noServicesAvailable": "لا توجد خدمات متاحة",
@@ -953,7 +958,12 @@
     "certifiedTrainers": "مدربين معتمدين",
     "equipmentProvided": "المعدات متوفرة",
     "flexibleSchedules": "جداول مرنة",
-    "fitnessTime": "30-90 دقيقة"
+    "fitnessTime": "30-90 دقيقة",
+    "housekeepingDescription": "خدمات التنظيف والصيانة المهنية للغرف متوفرة بدون رسوم إضافية",
+    "extraCleaning": "تنظيف إضافي",
+    "freshLinens": "بياضات نظيفة",
+    "amenityRestocking": "إعادة تعبئة مستلزمات الراحة",
+    "available24_7": "متاح 24/7"
   },
   "laundryBooking": {
     "title": "حجز خدمة الغسيل",

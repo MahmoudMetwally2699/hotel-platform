@@ -163,6 +163,8 @@ const serviceSchema = new mongoose.Schema({
       type: String,
       enum: [
         'breakfast',
+        'lunch',
+        'dinner',
         'mains',
         'appetizers',
         'desserts',
@@ -170,6 +172,7 @@ const serviceSchema = new mongoose.Schema({
         'salads',
         'soups',
         'sides',
+        'snacks',
         'specials'
       ],
       required: true
