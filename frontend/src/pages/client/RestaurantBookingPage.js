@@ -21,12 +21,14 @@ import {
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import MenuItemCard from '../../components/guest/MenuItemCard';
+import useRTL from '../../hooks/useRTL';
 
 const RestaurantBookingPage = () => {
   const { hotelId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { isRTL, textAlign } = useRTL();
 
   // Props from navigation state (UNCHANGED)
   const { service: passedService, hotel: passedHotel } = location.state || {};
@@ -270,12 +272,12 @@ const RestaurantBookingPage = () => {
               <FaUtensils />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-3">
+              <div className={`flex items-center justify-between gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="truncate">
-                  <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                  <h1 className={`text-base sm:text-lg font-semibold text-gray-900 truncate ${textAlign}`}>
                     {service.name}
                   </h1>
-                  <p className="text-[11px] sm:text-xs text-gray-500 truncate">{hotel?.name}</p>
+                  <p className={`text-[11px] sm:text-xs text-gray-500 truncate ${textAlign}`}>{hotel?.name}</p>
                 </div>
                 {/* step indicator */}
                 <div className="hidden sm:flex items-center gap-2 text-xs">
@@ -533,7 +535,7 @@ const RestaurantBookingPage = () => {
           {/* Right / Cart */}
           <aside className="lg:col-span-1">
             <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-5 sticky top-24">
-              <h3 className="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2">
+              <h3 className={`text-base sm:text-lg font-semibold mb-4 flex items-center gap-2 ${textAlign}`}>
                 <FaShoppingCart />
                 Your Order ({selectedItems.length} items)
               </h3>
@@ -643,12 +645,12 @@ const RestaurantBookingPage = () => {
       {/* Mobile sticky cart bar */}
       {selectedItems.length > 0 && (
         <div className="lg:hidden sticky bottom-0 z-30 border-t border-gray-200 bg-white/90 backdrop-blur-md">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className={`max-w-6xl mx-auto px-4 py-3 flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="h-9 w-9 rounded-full bg-[#3B5787] grid place-items-center text-white">
                 <FaShoppingCart />
               </div>
-              <div>
+              <div className={textAlign}>
                 <div className="text-sm font-semibold">{selectedItems.length} item{selectedItems.length>1?'s':''}</div>
                 <div className="text-xs text-gray-600">Total ${pricing.total.toFixed(2)}</div>
               </div>
