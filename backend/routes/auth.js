@@ -251,11 +251,11 @@ router.post('/logout', protect, (req, res) => {
 });
 
 /**
- * @route   POST /api/auth/refresh
+ * @route   POST /api/auth/refresh-token
  * @desc    Refresh JWT token
  * @access  Public (requires refresh token)
  */
-router.post('/refresh', catchAsync(async (req, res, next) => {
+router.post('/refresh-token', catchAsync(async (req, res, next) => {
   let refreshToken = req.body.refreshToken || req.cookies.refreshToken;
 
   if (!refreshToken) {

@@ -3,12 +3,13 @@
  * Main header component with user profile and notifications
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import useAuth from '../hooks/useAuth';
 import useRTL from '../hooks/useRTL';
 import LanguageSwitcher from '../components/common/LanguageSwitcher';
+import apiClient from '../services/api.service';
 // Fix import path to ensure component is available
 // import TailwindNotificationsMenu from '../components/notifications/TailwindNotificationsMenu';
 
@@ -17,8 +18,56 @@ const TailwindHeader = () => {
   const { isRTL } = useRTL();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [hotel, setHotel] = useState(null);
+
+  // Fetch hotel details when user has a selected hotel or when on a hotel page
+  useEffect(() => {
+    // Extract hotel ID from URL path if available
+    const getHotelIdFromPath = () => {
+      const pathMatch = location.pathname.match(/\/hotels\/([^/]+)/);
+      return pathMatch ? pathMatch[1] : null;
+    };
+
+    const fetchHotelDetails = async () => {
+      // Get hotel ID from user's selectedHotelId or URL path
+      const userHotelId = user?.selectedHotelId;
+      const pathHotelId = getHotelIdFromPath();
+      const hotelId = userHotelId || pathHotelId;
+
+      console.log('🔍 Checking hotel fetch conditions:', {
+        userLoaded: user !== undefined,
+        userRole: user?.role,
+        userHotelId,
+        pathHotelId,
+        finalHotelId: hotelId,
+        path: location.pathname
+      });
+
+      // Only fetch if user is loaded and has the required data, or if we're on a hotel page
+      if (hotelId && (user === undefined || user?.role === 'guest')) {
+        try {
+          console.log('🏨 Fetching hotel details for ID:', hotelId);
+          const response = await apiClient.get(`/client/hotels/${hotelId}`);
+          console.log('🏨 Hotel details response:', response.data);
+          setHotel(response.data.data);
+        } catch (error) {
+          console.error('❌ Error fetching hotel details:', error);
+        }
+      } else {
+        console.log('❌ Not fetching hotel details:', {
+          userExists: !!user,
+          hasHotelId: !!hotelId,
+          userRole: user?.role
+        });
+      }
+    };
+
+    // Always try to fetch if we can get a hotel ID
+    fetchHotelDetails();
+  }, [user, location.pathname]);
 
   const handleProfileClick = () => {
     setShowProfileMenu(!showProfileMenu);
@@ -48,6 +97,52 @@ const TailwindHeader = () => {
   const userInitialSource = (user?.firstName || user?.lastName || user?.name || user?.email || '').toString().trim();
   const userInitial = userInitialSource ? userInitialSource.charAt(0).toUpperCase() : '';
 
+  // Determine logo source with debugging
+  const getLogoInfo = () => {
+    const userLoaded = user !== undefined;
+    const isGuest = user?.role === 'guest';
+    const hasSelectedHotel = !!user?.selectedHotelId;
+    const hasHotelLogo = hotel?.logo;
+    const hasHotelImagesLogo = hotel?.images?.logo;
+
+    console.log('🖼️ Logo determination:', {
+      userLoaded,
+      isGuest,
+      hasSelectedHotel,
+      selectedHotelId: user?.selectedHotelId,
+      hasHotelLogo,
+      hasHotelImagesLogo,
+      hotel: hotel,
+      userRole: user?.role,
+      user: user
+    });
+
+    // Show hotel logo if we have hotel data and a logo, regardless of user state for testing
+    if (hasHotelLogo) {
+      console.log('✅ Using hotel.logo:', hotel.logo);
+      return { src: hotel.logo, alt: `${hotel.name} Logo` };
+    } else if (hasHotelImagesLogo) {
+      console.log('✅ Using hotel.images.logo:', hotel.images.logo);
+      return { src: hotel.images.logo, alt: `${hotel.name} Logo` };
+    } else {
+      if (hotel) {
+        console.log('✅ Using platform logo - Hotel has no logo:', hotel.name);
+      } else if (userLoaded) {
+        console.log('✅ Using platform logo - Reason:', {
+          notGuest: !isGuest,
+          noSelectedHotel: !hasSelectedHotel,
+          noHotelLogo: !hasHotelLogo && !hasHotelImagesLogo,
+          userRole: user?.role
+        });
+      } else {
+        console.log('✅ Using platform logo - User not loaded yet');
+      }
+      return { src: "/logo.svg", alt: t('homepage.platformName') };
+    }
+  };
+
+  const logoInfo = getLogoInfo();
+
   return (
     <header className="bg-white shadow-sm z-10">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -56,8 +151,8 @@ const TailwindHeader = () => {
             <div className="flex-shrink-0 flex items-center">
               <img
                 className="block h-8 w-auto"
-                src="/logo.svg"
-                alt={t('homepage.platformName')}
+                src={logoInfo.src}
+                alt={logoInfo.alt}
               />
             </div>
           </div>
