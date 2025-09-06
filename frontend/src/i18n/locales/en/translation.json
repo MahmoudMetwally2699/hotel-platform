@@ -74,7 +74,8 @@
     "myBookings": "My Bookings",
     "transportationBookings": "Transportation",
     "laundryBookings": "Laundry",
-    "restaurantBookings": "Restaurant Orders"
+    "restaurantBookings": "Restaurant Orders",
+    "housekeepingBookings": "Housekeeping"
   },"auth": {
     "signIn": "Sign In",
     "signUp": "Sign Up",
@@ -1346,5 +1347,30 @@
       "network": "Network error occurred during payment",
       "default": "Payment could not be completed. Please try again."
     }
+  },
+  "housekeeping": {
+    "title": "Housekeeping",
+    "guestServices": "Guest services",
+    "scheduleService": "Schedule our service below",
+    "roomNumber": "Room",
+    "additionalNotes": "Any additional Notes",
+    "processing": "Processing...",
+    "submitRequest": "Submit Request",
+    "bookingConfirmed": "Booking Confirmed!",
+    "confirmationMessage": "Your housekeeping service request has been submitted successfully. Our housekeeping team will contact you shortly to confirm the timing.",
+    "bookAnother": "Book Another Service",
+    "categories": {
+      "amenities": "Amenities",
+      "cleaning": "Room Cleaning",
+      "maintenance": "Maintenance"
+    },
+    "descriptions": {
+      "amenities": "Fresh towels and supplies",
+      "cleaning": "Professional room cleaning",
+      "maintenance": "Room maintenance and repairs"
+    },
+    "noServices": "No Services Available",
+    "noServicesDescription": "Housekeeping services are currently not available.",
+    "asap": "As soon as possible"
   }
 }

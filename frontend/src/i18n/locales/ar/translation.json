@@ -68,7 +68,8 @@
     "myBookings": "حجوزاتي",
     "transportationBookings": "النقل",
     "laundryBookings": "الغسيل",
-    "restaurantBookings": "طلبات المطعم"
+    "restaurantBookings": "طلبات المطعم",
+    "housekeepingBookings": "التنظيف"
   },"auth": {
     "signIn": "تسجيل الدخول",
     "signUp": "إنشاء حساب",
@@ -1474,5 +1475,30 @@
       "network": "حدث خطأ في الشبكة أثناء الدفع",
       "default": "تعذر إتمام الدفع. يرجى المحاولة مرة أخرى."
     }
+  },
+  "housekeeping": {
+    "title": "خدمة التنظيف",
+    "guestServices": "خدمات الضيوف",
+    "scheduleService": "حدد موعد الخدمة أدناه",
+    "roomNumber": "رقم الغرفة",
+    "additionalNotes": "أي ملاحظات إضافية",
+    "processing": "جاري المعالجة...",
+    "submitRequest": "إرسال الطلب",
+    "bookingConfirmed": "تم تأكيد الحجز!",
+    "confirmationMessage": "تم إرسال طلب خدمة التنظيف بنجاح. سيتواصل معك فريق التنظيف قريباً لتأكيد التوقيت.",
+    "bookAnother": "احجز خدمة أخرى",
+    "categories": {
+      "amenities": "المرافق",
+      "cleaning": "تنظيف الغرفة",
+      "maintenance": "الصيانة"
+    },
+    "descriptions": {
+      "amenities": "مناشف ومستلزمات جديدة",
+      "cleaning": "تنظيف احترافي للغرفة",
+      "maintenance": "صيانة وإصلاح الغرفة"
+    },
+    "noServices": "لا توجد خدمات متاحة",
+    "noServicesDescription": "خدمات التنظيف غير متاحة حالياً.",
+    "asap": "في أقرب وقت ممكن"
   }
 }

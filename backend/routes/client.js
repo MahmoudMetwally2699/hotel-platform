@@ -2082,6 +2082,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
     const {
       serviceId,
       serviceName,
+      serviceCategory,
       hotelId,
       guestName,
       roomNumber,
@@ -2116,6 +2117,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
       serviceId: new mongoose.Types.ObjectId(), // Generate a new ObjectId since custom services don't have real IDs
       serviceName: serviceName,
       serviceType: 'housekeeping',
+      category: serviceCategory || 'cleaning', // Store the housekeeping category at the top level
       hotel: hotelId,
       hotelId: hotelId,
 
@@ -2132,10 +2134,10 @@ router.post('/bookings/housekeeping', async (req, res) => {
         roomNumber: roomNumber
       },
 
-      // Service Details - use valid enum value
+      // Service Details - store the actual housekeeping category
       serviceDetails: {
         name: serviceName,
-        category: 'laundry' // Use 'laundry' as the closest valid enum value to housekeeping
+        category: serviceCategory || 'cleaning' // Use the actual service category (cleaning, amenities, maintenance)
       },
 
       // Booking Configuration
@@ -2143,10 +2145,21 @@ router.post('/bookings/housekeeping', async (req, res) => {
         quantity: 1
       },
 
-      // Schedule - use proper time format
+      // Schedule - use actual preferred time from request
       schedule: {
-        preferredDate: new Date(),
-        preferredTime: '09:00' // Use HH:MM format instead of 'now' or 'scheduled'
+        preferredDate: scheduledDateTime ? new Date(scheduledDateTime) : new Date(),
+        preferredTime: (() => {
+          // Convert special time values to valid HH:MM format
+          if (preferredTime === 'now' || preferredTime === 'ASAP') {
+            return '09:00'; // Default to 9 AM for ASAP requests
+          }
+          // If preferredTime is already in HH:MM format, use it
+          if (preferredTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(preferredTime)) {
+            return preferredTime;
+          }
+          // Default fallback
+          return '09:00';
+        })()
       },
 
       // Pricing (all zero for housekeeping)

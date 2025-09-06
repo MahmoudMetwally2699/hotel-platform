@@ -76,10 +76,11 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
             submenu: [
               { name: t('navigation.transportationBookings'), path: '/my-bookings', icon: 'truck' },
               { name: t('navigation.laundryBookings'), path: '/my-laundry-bookings', icon: 'sparkles' },
-              { name: t('navigation.restaurantBookings'), path: '/my-restaurant-bookings', icon: 'utensils' }
+              { name: t('navigation.restaurantBookings'), path: '/my-restaurant-bookings', icon: 'utensils' },
+              { name: t('navigation.housekeepingBookings'), path: '/my-housekeeping-bookings', icon: 'broom' }
             ]
           },
-          { name: t('navigation.myOrders'), path: '/my-orders', icon: 'shopping-bag' }
+          { name: t('navigation.profile'), path: '/profile', icon: 'user' }
         ];
       default:
         return [];
@@ -199,6 +200,36 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         );
+      case 'sparkles':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+        );
+      case 'utensils':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+          </svg>
+        );
+      case 'sparkles':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          </svg>
+        );
+      case 'utensils':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v5a2 2 0 01-2 2H9a2 2 0 01-2-2v-5m6-5a2 2 0 012 2v3" />
+          </svg>
+        );
+      case 'user':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        );
       default:
         return (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -214,71 +245,91 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
     <>
       {/* Desktop Sidebar */}
       <aside
-        className={`bg-gray-800 text-white min-h-screen transition-all duration-300 ease-in-out z-30
+        style={{ backgroundColor: '#3B5787' }}
+        className={`text-white min-h-screen transition-all duration-300 ease-in-out z-30 shadow-xl
           ${collapsed ? 'lg:w-16' : 'lg:w-64'}
           lg:relative lg:translate-x-0
           hidden lg:block
         `}
       >
-        <div className="p-4 flex justify-between items-center">
+        <div className="p-6 flex justify-between items-center border-b border-white/10">
           {!collapsed && (
-            <span className="text-lg font-semibold">Hotel Platform</span>
+            <div className="flex items-center space-x-3">
+              <div
+                style={{ backgroundColor: '#48ACDA' }}
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+              >
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+                </svg>
+              </div>
+              <span className="text-lg font-bold">Hotel Platform</span>
+            </div>
           )}
           <button
             onClick={toggleCollapse}
-            className="p-1 rounded-full hover:bg-gray-700 focus:outline-none"
+            className="p-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors"
           >
             {collapsed ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
               </svg>
             )}
           </button>
         </div>
 
-        <nav className="mt-5">
-          <ul>
+        <nav className="mt-6 px-4">
+          <ul className="space-y-2">
             {navigationItems.map((item) => (
-              <li key={item.path || item.key} className="px-2 py-1">
-                {item.isExpandable ? (
-                  // Expandable parent menu
+              <li key={item.path || item.key || item.name}>
+                {(item.isExpandable || item.submenu) ? (
+                  // Expandable parent menu (for both service and guest roles)
                   <>
                     <button
-                      onClick={() => toggleMenu(item.key)}
-                      className={`w-full flex items-center justify-between px-4 py-2 rounded-md transition-colors min-h-[48px] ${
-                        expandedMenus[item.key]
-                          ? 'bg-gray-900 text-white'
-                          : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                      onClick={() => toggleMenu(item.key || item.name)}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px] group ${
+                        expandedMenus[item.key || item.name]
+                          ? 'text-white shadow-lg'
+                          : 'text-white/80 hover:text-white hover:bg-white/10'
                       }`}
+                      style={expandedMenus[item.key || item.name] ? { backgroundColor: '#48ACDA' } : {}}
                     >
                       <div className="flex items-center">
-                        <span className={`${isRTL ? 'ml-3' : 'mr-3'}`}>{getIcon(item.icon)}</span>
-                        <span className={`${collapsed ? 'hidden' : ''}`}>{item.name}</span>
+                        <span className={`${isRTL ? 'ml-3' : 'mr-3'} transition-transform group-hover:scale-110`}>
+                          {getIcon(item.icon)}
+                        </span>
+                        <span className={`${collapsed ? 'hidden' : ''} font-medium`}>{item.name}</span>
                       </div>
                       {!collapsed && (
-                        <span className="ml-auto">
-                          {expandedMenus[item.key] ? getIcon('chevron-down') : getIcon('chevron-right')}
+                        <span className={`transition-transform duration-200 ${expandedMenus[item.key || item.name] ? 'rotate-180' : ''}`}>
+                          {getIcon('chevron-down')}
                         </span>
                       )}
                     </button>
                     {/* Submenu */}
-                    {expandedMenus[item.key] && !collapsed && (
-                      <ul className="mt-1 ml-4 space-y-1">
-                        {item.children?.map((child, childIndex) => (
-                          <li key={childIndex} className="px-2 py-1">
+                    {expandedMenus[item.key || item.name] && !collapsed && (
+                      <ul className="mt-2 ml-2 space-y-1">
+                        {(item.children || item.submenu)?.map((child, childIndex) => (
+                          <li key={childIndex}>
                             <NavLink
                               to={child.path}
                               className={({ isActive }) => `
-                                flex items-center px-4 py-2 rounded-md transition-colors min-h-[40px]
-                                ${isActive ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white'}
+                                flex items-center px-4 py-3 rounded-lg transition-all duration-200 min-h-[40px] group
+                                ${isActive
+                                  ? 'text-white shadow-lg'
+                                  : 'text-white/70 hover:text-white hover:bg-white/10'
+                                }
                               `}
+                              style={({ isActive }) => isActive ? { backgroundColor: '#48ACDA' } : {}}
                             >
-                              <span className={`${isRTL ? 'ml-3' : 'mr-3'}`}>{getIcon(child.icon)}</span>
-                              <span>{child.name}</span>
+                              <span className={`${isRTL ? 'ml-3' : 'mr-3'} transition-transform group-hover:scale-110`}>
+                                {getIcon(child.icon)}
+                              </span>
+                              <span className="font-medium">{child.name}</span>
                             </NavLink>
                           </li>
                         ))}
@@ -290,12 +341,18 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                   <NavLink
                     to={item.path}
                     className={({ isActive }) => `
-                      flex items-center px-4 py-2 rounded-md transition-colors min-h-[48px]
-                      ${isActive ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+                      flex items-center px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px] group
+                      ${isActive
+                        ? 'text-white shadow-lg'
+                        : 'text-white/80 hover:text-white hover:bg-white/10'
+                      }
                     `}
+                    style={({ isActive }) => isActive ? { backgroundColor: '#48ACDA' } : {}}
                   >
-                    <span className={`${isRTL ? 'ml-3' : 'mr-3'}`}>{getIcon(item.icon)}</span>
-                    <span className={`${collapsed ? 'hidden' : ''}`}>{item.name}</span>
+                    <span className={`${isRTL ? 'ml-3' : 'mr-3'} transition-transform group-hover:scale-110`}>
+                      {getIcon(item.icon)}
+                    </span>
+                    <span className={`${collapsed ? 'hidden' : ''} font-medium`}>{item.name}</span>
                   </NavLink>
                 )}
               </li>
@@ -305,19 +362,22 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
       </aside>
 
       {/* Mobile Bottom Navigation Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-gray-800 text-white border-t border-gray-700 z-50">
+      <div
+        style={{ backgroundColor: '#3B5787' }}
+        className="lg:hidden fixed bottom-0 left-0 right-0 text-white border-t border-white/10 z-50 shadow-2xl"
+      >
         <div className="flex justify-around items-center py-2">
           {navigationItems.slice(0, 5).map((item) => {
             // Handle expandable items specially on mobile
-            if (item.isExpandable) {
+            if (item.isExpandable || item.submenu) {
               return (
                 <button
-                  key={item.key}
+                  key={item.key || item.name}
                   onClick={() => setShowMobileCategories(true)}
-                  className="flex flex-col items-center justify-center p-2 rounded-lg transition-colors min-w-0 flex-1 max-w-[80px] text-gray-300 hover:bg-gray-700 hover:text-white"
+                  className="flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[80px] text-white/80 hover:bg-white/10 hover:text-white"
                 >
                   <span className="mb-1">{getIcon(item.icon)}</span>
-                  <span className="text-xs text-center leading-tight truncate w-full">
+                  <span className="text-xs text-center leading-tight truncate w-full font-medium">
                     {item.name}
                   </span>
                 </button>
@@ -329,12 +389,16 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) => `
-                  flex flex-col items-center justify-center p-2 rounded-lg transition-colors min-w-0 flex-1 max-w-[80px]
-                  ${isActive ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+                  flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[80px]
+                  ${isActive
+                    ? 'text-white shadow-lg'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                  }
                 `}
+                style={({ isActive }) => isActive ? { backgroundColor: '#48ACDA' } : {}}
               >
                 <span className="mb-1">{getIcon(item.icon)}</span>
-                <span className="text-xs text-center leading-tight truncate w-full">
+                <span className="text-xs text-center leading-tight truncate w-full font-medium">
                   {item.name}
                 </span>
               </NavLink>
@@ -343,12 +407,12 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           {navigationItems.length > 5 && (
             <button
               onClick={toggleSidebar}
-              className="flex flex-col items-center justify-center p-2 rounded-lg transition-colors min-w-0 flex-1 max-w-[80px] text-gray-300 hover:bg-gray-700 hover:text-white"
+              className="flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[80px] text-white/80 hover:bg-white/10 hover:text-white"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
-              <span className="text-xs text-center leading-tight">More</span>
+              <span className="text-xs text-center leading-tight font-medium">More</span>
             </button>
           )}
         </div>
@@ -440,6 +504,113 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         </>
       )}
 
+      {/* Mobile Bookings Modal for Guests */}
+      {showMobileCategories && role === 'guest' && (
+        <>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
+            onClick={() => setShowMobileCategories(false)}
+          />
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-xl z-50 lg:hidden max-h-[70vh] overflow-y-auto">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">
+                  {t('navigation.myBookings')}
+                </h3>
+                <button
+                  onClick={() => setShowMobileCategories(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Booking Categories Grid */}
+              <div className="grid grid-cols-1 gap-4">
+                {(() => {
+                  const myBookingsItem = navigationItems.find(item => item.submenu && item.name === t('navigation.myBookings'));
+                  return myBookingsItem?.submenu?.map((booking) => (
+                    <div key={booking.path} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                      <NavLink
+                        to={booking.path}
+                        onClick={() => setShowMobileCategories(false)}
+                        className="flex items-center space-x-4 w-full"
+                      >
+                        <div className="flex-shrink-0 p-3 bg-white rounded-lg shadow-sm">
+                          {booking.icon === 'truck' && (
+                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                            </svg>
+                          )}
+                          {booking.icon === 'sparkles' && (
+                            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                            </svg>
+                          )}
+                          {booking.icon === 'utensils' && (
+                            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v5a2 2 0 01-2 2H9a2 2 0 01-2-2v-5m6-5a2 2 0 012 2v3" />
+                            </svg>
+                          )}
+                          {booking.icon === 'broom' && (
+                            <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-lg font-semibold text-gray-900 truncate">
+                            {booking.name}
+                          </h4>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {booking.path.includes('transportation') && 'View your transportation bookings'}
+                            {booking.path.includes('laundry') && 'Check your laundry service orders'}
+                            {booking.path.includes('restaurant') && 'See your restaurant reservations'}
+                            {booking.path.includes('housekeeping') && 'View your housekeeping service requests'}
+                          </p>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </NavLink>
+                    </div>
+                  ));
+                })()}
+              </div>
+
+              {/* Quick Actions */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                  {t('common.quickActions') || 'Quick Actions'}
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <NavLink
+                    to="/my-hotel-services"
+                    onClick={() => setShowMobileCategories(false)}
+                    className="flex items-center justify-center p-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+                  >
+                    <span className="text-sm font-medium">{t('navigation.hotelServices')}</span>
+                  </NavLink>
+                  <NavLink
+                    to="/profile"
+                    onClick={() => setShowMobileCategories(false)}
+                    className="flex items-center justify-center p-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors"
+                  >
+                    <span className="text-sm font-medium">{t('navigation.profile')}</span>
+                  </NavLink>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Mobile Overlay Menu for Additional Items */}
       {navigationItems.length > 5 && (
         <>
@@ -449,12 +620,13 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
             }`}
             onClick={toggleSidebar}
           />          <div
-            className={`bg-gray-800 text-white fixed bottom-16 left-0 right-0 z-50 lg:hidden transition-all duration-300 ease-in-out ${
+            style={{ backgroundColor: '#3B5787' }}
+            className={`text-white fixed bottom-16 left-0 right-0 z-50 lg:hidden transition-all duration-300 ease-in-out shadow-2xl ${
               isOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
             }`}
           >
-            <div className="p-4">
-              <h3 className="text-lg font-semibold mb-4">{t('common.moreOptions') || 'More Options'}</h3>
+            <div className="p-6">
+              <h3 className="text-lg font-bold mb-4 text-white">{t('common.moreOptions') || 'More Options'}</h3>
               <div className="space-y-2">
                 {navigationItems.slice(5).map((item) => (
                   <NavLink
@@ -462,12 +634,16 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                     to={item.path}
                     onClick={toggleSidebar}
                     className={({ isActive }) => `
-                      flex items-center px-4 py-3 rounded-md transition-colors
-                      ${isActive ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+                      flex items-center px-4 py-3 rounded-xl transition-all duration-200
+                      ${isActive
+                        ? 'text-white shadow-lg'
+                        : 'text-white/80 hover:bg-white/10 hover:text-white'
+                      }
                     `}
+                    style={({ isActive }) => isActive ? { backgroundColor: '#48ACDA' } : {}}
                   >
                     <span className={`${isRTL ? 'ml-3' : 'mr-3'}`}>{getIcon(item.icon)}</span>
-                    <span>{item.name}</span>
+                    <span className="font-medium">{item.name}</span>
                   </NavLink>
                 ))}
               </div>

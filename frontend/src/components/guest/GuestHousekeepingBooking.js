@@ -11,17 +11,16 @@ import {
   FaSpinner,
   FaCheck,
   FaArrowLeft,
-  FaUser,
-  FaPhone,
-  FaMapMarkerAlt,
-  FaCommentDots
+  FaMapMarkerAlt
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const { currentUser, isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState(null);
@@ -32,17 +31,37 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     guestName: '',
     roomNumber: '',
     phoneNumber: '',
-    preferredTime: 'now',
+    preferredTime: '09:00',
     scheduledDateTime: '',
     specialRequests: '',
     guestEmail: ''
   });
 
   const serviceCategories = [
-    { value: 'cleaning', label: 'Room Cleaning', icon: FaBroom, color: 'blue' },
-    { value: 'maintenance', label: 'Maintenance', icon: FaCheck, color: 'green' },
-    { value: 'amenities', label: 'Amenities', icon: FaMapMarkerAlt, color: 'purple' },
-    { value: 'laundry', label: 'Laundry Service', icon: FaClock, color: 'orange' }
+    {
+      value: 'amenities',
+      label: t('housekeeping.categories.amenities', 'Amenities'),
+      icon: FaMapMarkerAlt,
+      color: 'gray',
+      image: '/amenities.jpg',
+      description: t('housekeeping.descriptions.amenities', 'Fresh towels and supplies')
+    },
+    {
+      value: 'cleaning',
+      label: t('housekeeping.categories.cleaning', 'Room Cleaning'),
+      icon: FaBroom,
+      color: 'blue',
+      image: '/roomcleaning.jpg',
+      description: t('housekeeping.descriptions.cleaning', 'Professional room cleaning')
+    },
+    {
+      value: 'maintenance',
+      label: t('housekeeping.categories.maintenance', 'Maintenance'),
+      icon: FaCheck,
+      color: 'amber',
+      image: '/maintaince.jpg',
+      description: 'Repairs and technical support'
+    }
   ];
 
   // Auto-populate user data if logged in
@@ -89,6 +108,14 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
   const handleServiceSelect = (service) => {
     setSelectedService(service);
+
+    // Set default time based on service category
+    if (service.category === 'maintenance') {
+      setBookingDetails(prev => ({ ...prev, preferredTime: 'asap' }));
+    } else {
+      setBookingDetails(prev => ({ ...prev, preferredTime: '09:00' }));
+    }
+
     setBookingStep('details');
   };
 
@@ -97,11 +124,16 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     setSubmitting(true);
 
     try {
+      // For backend compatibility, keep 'now' for ASAP but also provide display text
+      const backendTime = bookingDetails.preferredTime === 'asap' ? 'now' : bookingDetails.preferredTime;
+
       const bookingData = {
         serviceId: selectedService.id,
         serviceName: selectedService.name,
+        serviceCategory: selectedService.category, // Include the service category
         hotelId,
         ...bookingDetails,
+        preferredTime: backendTime, // Send 'now' for backend compatibility
         serviceType: 'housekeeping',
         status: 'pending',
         bookingDate: new Date().toISOString(),
@@ -128,7 +160,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       guestName: '',
       roomNumber: '',
       phoneNumber: '',
-      preferredTime: 'now',
+      preferredTime: '09:00',
       scheduledDateTime: '',
       specialRequests: '',
       guestEmail: ''
@@ -146,312 +178,234 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   // Service Selection Step
   if (bookingStep === 'select') {
     return (
-      <div className="max-w-6xl mx-auto p-6">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex items-center mb-4">
+      <div className="min-h-screen bg-gray-50">
+        {/* Header with Back Button */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-4xl mx-auto px-4 py-4">
             <button
               onClick={onBack}
-              className="mr-4 p-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="flex items-center text-gray-600 hover:text-gray-800 transition-colors mb-2"
             >
-              <FaArrowLeft className="text-xl" />
+              <FaArrowLeft className="mr-2" />
+              <span>Back</span>
             </button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center">
-                <FaBroom className="mr-3 text-blue-600" />
-                Housekeeping Services
-              </h1>
-              <p className="text-gray-600">
-                Book complimentary housekeeping services for your room. All services are provided at no additional charge.
-              </p>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          {/* Housekeeping Header Card */}
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+            {/* Header Image */}
+            <div className="relative h-48 bg-gradient-to-r from-blue-500 to-blue-600">
+              <img
+                src="/housekeeping-header.jpg"
+                alt="Housekeeping"
+                className="w-full h-full object-cover mix-blend-overlay"
+              />
+              <div className="absolute inset-0 bg-blue-600/20"></div>
+            </div>
+
+            {/* Header Content */}
+            <div className="p-6">
+              <h1 className="text-2xl font-bold text-gray-900">{t('housekeeping.title', 'Housekeeping')}</h1>
             </div>
           </div>
 
-          {/* Service Categories Overview */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {serviceCategories.map(category => {
-              const categoryServices = services.filter(s => s.category === category.value);
-              const IconComponent = category.icon;
-              return (
-                <div key={category.value} className={`bg-${category.color}-50 rounded-lg p-4 text-center`}>
-                  <IconComponent className={`text-3xl text-${category.color}-600 mx-auto mb-2`} />
-                  <h3 className="font-semibold text-gray-800">{category.label}</h3>
-                  <p className="text-sm text-gray-600">{categoryServices.length} available</p>
-                </div>
-              );
-            })}
+          {/* Guest Services Section */}
+          <div className="bg-white rounded-2xl shadow-sm p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">{t('housekeeping.guestServices', 'Guest services')}</h2>
+
+            {/* Service Categories Layout */}
+            <div className="max-w-sm mx-auto space-y-4">
+              {/* Top Row - Two Items */}
+              <div className="grid grid-cols-2 gap-4">
+                {serviceCategories.slice(0, 2).map(category => {
+                  const categoryServices = services.filter(s => s.category === category.value);
+                  return (
+                    <button
+                      key={category.value}
+                      onClick={() => {
+                        const firstService = categoryServices[0];
+                        if (firstService) handleServiceSelect(firstService);
+                      }}
+                      className="group bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-all w-full"
+                    >
+                      <div className="aspect-square rounded-xl overflow-hidden mb-3 w-full">
+                        <img
+                          src={category.image}
+                          alt={category.label}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                      <h3 className="font-medium text-gray-900 text-sm text-center">{category.label}</h3>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Bottom Row - Centered Single Item */}
+              {serviceCategories.slice(2).map(category => {
+                const categoryServices = services.filter(s => s.category === category.value);
+                return (
+                  <div key={category.value} className="flex justify-center">
+                    <button
+                      onClick={() => {
+                        const firstService = categoryServices[0];
+                        if (firstService) handleServiceSelect(firstService);
+                      }}
+                      className="group bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-all w-40"
+                    >
+                      <div className="aspect-square rounded-xl overflow-hidden mb-3 w-full">
+                        <img
+                          src={category.image}
+                          alt={category.label}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                      <h3 className="font-medium text-gray-900 text-sm text-center">{category.label}</h3>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Available Services */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((service) => {
-            const categoryInfo = getCategoryInfo(service.category);
-            const IconComponent = categoryInfo.icon;
-
-            return (
-              <div
-                key={service.id}
-                className="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl cursor-pointer"
-                onClick={() => handleServiceSelect(service)}
-              >
-                {/* Service Header */}
-                <div className={`bg-gradient-to-r from-${categoryInfo.color}-500 to-${categoryInfo.color}-600 text-white p-4`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <IconComponent className="text-2xl mr-3" />
-                      <div>
-                        <h3 className="text-lg font-bold">{service.name}</h3>
-                        <p className="text-xs opacity-90">{categoryInfo.label}</p>
-                      </div>
-                    </div>
-                    <div className="bg-green-500 px-2 py-1 rounded-full text-xs font-medium">
-                      FREE
-                    </div>
-                  </div>
-                </div>
-
-                {/* Service Content */}
-                <div className="p-4">
-                  <p className="text-gray-600 text-sm mb-4">{service.description}</p>
-
-                  {/* Service Details */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <FaClock className="mr-2 text-blue-500" />
-                      <span>~{service.estimatedDuration} minutes</span>
-                    </div>
-
-                    <div className="flex items-center text-sm text-gray-600">
-                      <FaCheck className="mr-2 text-green-500" />
-                      <span>{service.availability === 'always' ? 'Available 24/7' : 'Business Hours'}</span>
-                    </div>
-                  </div>
-
-                  {/* Requirements */}
-                  {service.requirements && service.requirements.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="text-xs font-semibold text-gray-700 mb-1">Requirements:</h4>
-                      <ul className="text-xs text-gray-600 space-y-1">
-                        {service.requirements.slice(0, 2).map((req, index) => (
-                          <li key={index} className="flex items-start">
-                            <span className="text-blue-500 mr-1 text-xs">•</span>
-                            {req}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  <button className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium transition-colors">
-                    Book Now
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
+        {/* No Services Message */}
         {services.length === 0 && (
           <div className="text-center py-12">
             <FaBroom className="text-6xl text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Services Available</h3>
-            <p className="text-gray-500">Housekeeping services are currently not available.</p>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">{t('housekeeping.noServices', 'No Services Available')}</h3>
+            <p className="text-gray-500">{t('housekeeping.noServicesDescription', 'Housekeeping services are currently not available.')}</p>
           </div>
         )}
       </div>
     );
   }
 
-  // Booking Details Step
+  // Booking Details Step - Modal Design
   if (bookingStep === 'details') {
     const categoryInfo = getCategoryInfo(selectedService.category);
-    const IconComponent = categoryInfo.icon;
 
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          {/* Header */}
-          <div className="flex items-center mb-6">
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-2 sm:p-4 sm:items-center overflow-y-auto"
+        style={{ touchAction: 'manipulation' }}
+      >
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-sm mx-auto my-2 sm:my-0 max-h-[calc(100vh-1rem)] sm:max-h-[90vh] overflow-y-auto">
+          {/* Modal Header */}
+          <div className="relative p-4 sm:p-6 pb-3 sm:pb-4">
             <button
               onClick={() => setBookingStep('select')}
-              className="mr-4 p-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="absolute top-3 sm:top-4 right-3 sm:right-4 text-gray-400 hover:text-gray-600 transition-colors p-1 sm:p-0"
             >
-              <FaArrowLeft className="text-xl" />
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800 mb-2">Book Service</h1>
-              <div className="flex items-center">
-                <IconComponent className={`text-xl mr-2 text-${categoryInfo.color}-600`} />
-                <span className="font-semibold">{selectedService.name}</span>
-              </div>
+
+            <div className="text-center pr-8 sm:pr-0">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-1">
+                {categoryInfo.label}
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-500">{t('housekeeping.scheduleService', 'Schedule our service below')}</p>
             </div>
           </div>
 
-          {/* Service Summary */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <FaClock className="text-blue-500 text-xl mx-auto mb-1" />
-                <p className="text-sm text-gray-600">Duration</p>
-                <p className="font-semibold">~{selectedService.estimatedDuration} min</p>
-              </div>
-              <div className="text-center">
-                <FaCheck className="text-green-500 text-xl mx-auto mb-1" />
-                <p className="text-sm text-gray-600">Price</p>
-                <p className="font-semibold text-green-600">FREE</p>
-              </div>
-              <div className="text-center">
-                <FaCalendarAlt className="text-purple-500 text-xl mx-auto mb-1" />
-                <p className="text-sm text-gray-600">Availability</p>
-                <p className="font-semibold">{selectedService.availability === 'always' ? '24/7' : 'Business Hours'}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Booking Form */}
-          <form onSubmit={handleBookingSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Modal Content */}
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+            <form onSubmit={handleBookingSubmit} className="space-y-3 sm:space-y-4">
+              {/* Date/Time Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FaUser className="inline mr-2" />
-                  Guest Name *
-                  {isAuthenticated && currentUser && (
-                    <span className="text-xs text-green-600 ml-2">(Auto-filled from profile)</span>
-                  )}
-                </label>
-                <input
-                  type="text"
-                  value={bookingDetails.guestName}
-                  onChange={(e) => setBookingDetails(prev => ({ ...prev, guestName: e.target.value }))}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    isAuthenticated && currentUser && bookingDetails.guestName
-                      ? 'bg-green-50 border-green-300'
-                      : ''
-                  }`}
-                  readOnly={isAuthenticated && currentUser && bookingDetails.guestName}
-                  required
+                <div className="relative">
+                  <FaCalendarAlt className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="datetime-local"
+                    value={bookingDetails.scheduledDateTime}
+                    onChange={(e) => setBookingDetails(prev => ({ ...prev, scheduledDateTime: e.target.value }))}
+                    className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-600 text-sm sm:text-base"
+                    min={new Date().toISOString().slice(0, 16)}
+                    placeholder="01/08/2023"
+                  />
+                </div>
+              </div>
+
+              {/* Time Selection */}
+              <div>
+                <div className="relative">
+                  <FaClock className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+                  <select
+                    value={bookingDetails.preferredTime}
+                    onChange={(e) => setBookingDetails(prev => ({ ...prev, preferredTime: e.target.value }))}
+                    className="w-full pl-10 sm:pl-12 pr-8 sm:pr-4 py-3 sm:py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-600 appearance-none bg-white text-sm sm:text-base cursor-pointer"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundPosition: 'right 0.75rem center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: '1.5em 1.5em',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none'
+                    }}
+                  >
+                    {selectedService && selectedService.category === 'maintenance' && (
+                      <option value="asap">{t('housekeeping.asap', 'As soon as possible')}</option>
+                    )}
+                    <option value="09:00">09:00</option>
+                    <option value="10:00">10:00</option>
+                    <option value="11:00">11:00</option>
+                    <option value="12:00">12:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="14:00">14:00</option>
+                    <option value="15:00">15:00</option>
+                    <option value="16:00">16:00</option>
+                    <option value="17:00">17:00</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Room Number */}
+              <div>
+                <div className="relative">
+                  <FaMapMarkerAlt className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+                  <input
+                    type="text"
+                    value={bookingDetails.roomNumber}
+                    onChange={(e) => setBookingDetails(prev => ({ ...prev, roomNumber: e.target.value }))}
+                    className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-600 text-sm sm:text-base"
+                    placeholder={t('housekeeping.roomNumber', 'Room')}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Additional Notes */}
+              <div>
+                <textarea
+                  value={bookingDetails.specialRequests}
+                  onChange={(e) => setBookingDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
+                  className="w-full px-3 sm:px-4 py-3 sm:py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-600 resize-none text-sm sm:text-base"
+                  rows="3"
+                  placeholder={t('housekeeping.additionalNotes', 'Any additional Notes')}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FaMapMarkerAlt className="inline mr-2" />
-                  Room Number *
-                </label>
-                <input
-                  type="text"
-                  value={bookingDetails.roomNumber}
-                  onChange={(e) => setBookingDetails(prev => ({ ...prev, roomNumber: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FaPhone className="inline mr-2" />
-                  Phone Number *
-                  {isAuthenticated && currentUser && bookingDetails.phoneNumber && (
-                    <span className="text-xs text-green-600 ml-2">(Auto-filled from profile)</span>
-                  )}
-                  {isAuthenticated && currentUser && !bookingDetails.phoneNumber && (
-                    <span className="text-xs text-orange-600 ml-2">(No phone in profile - please add)</span>
-                  )}
-                </label>
-                <input
-                  type="tel"
-                  value={bookingDetails.phoneNumber}
-                  onChange={(e) => setBookingDetails(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    isAuthenticated && currentUser && bookingDetails.phoneNumber
-                      ? 'bg-green-50 border-green-300'
-                      : ''
-                  }`}
-                  readOnly={isAuthenticated && currentUser && bookingDetails.phoneNumber}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FaClock className="inline mr-2" />
-                  Preferred Time
-                </label>
-                <select
-                  value={bookingDetails.preferredTime}
-                  onChange={(e) => setBookingDetails(prev => ({ ...prev, preferredTime: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="now">As Soon As Possible</option>
-                  <option value="scheduled">Schedule for Later</option>
-                </select>
-              </div>
-            </div>
-
-            {bookingDetails.preferredTime === 'scheduled' && (
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FaCalendarAlt className="inline mr-2" />
-                  Preferred Date & Time
-                </label>
-                <input
-                  type="datetime-local"
-                  value={bookingDetails.scheduledDateTime}
-                  onChange={(e) => setBookingDetails(prev => ({ ...prev, scheduledDateTime: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  min={new Date().toISOString().slice(0, 16)}
-                />
-              </div>
-            )}
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <FaCommentDots className="inline mr-2" />
-                Special Requests or Notes
-              </label>
-              <textarea
-                value={bookingDetails.specialRequests}
-                onChange={(e) => setBookingDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                rows="3"
-                placeholder="Any special instructions or requests for the housekeeping staff..."
-              />
-            </div>
-
-            {/* Service Instructions */}
-            {selectedService.instructions && (
-              <div className="bg-blue-50 rounded-lg p-4 mb-6">
-                <h4 className="font-semibold text-blue-800 mb-2">Service Instructions:</h4>
-                <p className="text-blue-700 text-sm">{selectedService.instructions}</p>
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setBookingStep('select')}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-              >
-                Back to Services
-              </button>
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:bg-gray-400"
+                className="w-full bg-gradient-to-r from-blue-400 to-blue-500 text-white py-3 sm:py-3 px-4 sm:px-6 rounded-2xl font-medium hover:from-blue-500 hover:to-blue-600 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base min-h-[48px]"
               >
                 {submitting ? (
-                  <>
+                  <div className="flex items-center justify-center">
                     <FaSpinner className="animate-spin mr-2" />
-                    Booking...
-                  </>
+                    <span className="text-sm sm:text-base">{t('housekeeping.processing', 'Processing...')}</span>
+                  </div>
                 ) : (
-                  'Confirm Booking'
+                  <span className="text-sm sm:text-base">{t('housekeeping.submitRequest', 'Submit Request')}</span>
                 )}
               </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     );
@@ -466,11 +420,10 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
             <FaCheck className="text-3xl text-green-600" />
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Booking Confirmed!</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">{t('housekeeping.bookingConfirmed', 'Booking Confirmed!')}</h1>
 
           <p className="text-gray-600 mb-6">
-            Your housekeeping service request has been submitted successfully.
-            Our housekeeping team will contact you shortly to confirm the timing.
+            {t('housekeeping.confirmationMessage', 'Your housekeeping service request has been submitted successfully. Our housekeeping team will contact you shortly to confirm the timing.')}
           </p>
 
           <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
@@ -495,7 +448,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
               <div className="flex justify-between">
                 <span className="text-gray-600">Timing:</span>
                 <span className="font-medium">
-                  {bookingDetails.preferredTime === 'now' ? 'ASAP' : 'Scheduled'}
+                  {bookingDetails.preferredTime === 'asap' || bookingDetails.preferredTime === 'now' ? t('housekeeping.asap', 'As soon as possible') : bookingDetails.preferredTime}
                 </span>
               </div>
             </div>
@@ -506,13 +459,13 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
               onClick={resetBooking}
               className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-medium transition-colors"
             >
-              Book Another Service
+              {t('housekeeping.bookAnother', 'Book Another Service')}
             </button>
             <button
               onClick={onBack}
               className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-medium transition-colors"
             >
-              Back to Services
+              {t('common.back', 'Back to Services')}
             </button>
           </div>
         </div>

@@ -82,7 +82,7 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     category: {
       type: String,
       required: [true, 'Service category is required'],
-      enum: ['laundry', 'transportation', 'tours', 'restaurant', 'dining']
+      enum: ['laundry', 'transportation', 'tours', 'restaurant', 'dining', 'cleaning', 'amenities', 'maintenance']
     },
     subcategory: String,
     description: String
@@ -730,6 +730,15 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
       type: Boolean,
       default: false
     }
+  },
+
+  // Booking-specific details for special service types
+  bookingDetails: {
+    preferredTime: String, // Original preferred time (can be "ASAP", "now", or HH:MM)
+    scheduledDateTime: Date,
+    specialRequests: String,
+    estimatedDuration: Number, // in minutes
+    additionalInfo: String
   }
 }, {
   timestamps: true,
