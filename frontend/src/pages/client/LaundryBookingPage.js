@@ -18,7 +18,10 @@ import {
   FaCalculator,
   FaCalendarAlt,
   FaMapMarkerAlt,
-  FaStickyNote
+  FaStickyNote,
+  FaSearch,
+  FaFilter,
+  FaTimes
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
@@ -34,6 +37,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
   const { service: passedService, hotel: passedHotel } = location.state || {};
   const [service, setService] = useState(passedService || null);
   const [services, setServices] = useState([]); // Store all available services
+  // eslint-disable-next-line no-unused-vars
   const [hotel, setHotel] = useState(passedHotel || null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -43,6 +47,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
   const [selectedItems, setSelectedItems] = useState([]);
   const [serviceTypes, setServiceTypes] = useState({});
   const [expressService, setExpressService] = useState(false);
+  const [isCartExpanded, setIsCartExpanded] = useState(false);
   const [bookingDetails, setBookingDetails] = useState({
     preferredDate: '',
     preferredTime: '',
@@ -50,6 +55,10 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
     deliveryLocation: '',
     specialRequests: ''
   });
+
+  // Filter and Search State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   // Get available laundry items from all services (combine items from all service providers)
   const getAvailableLaundryItems = () => {
     let allItems = [];
@@ -136,7 +145,36 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
     console.log(`🔤 Translation result: "${translated}"`);
 
     return translated;
-  };useEffect(() => {
+  };
+
+  // Filter and search function
+  const getFilteredItems = () => {
+    let items = getAvailableLaundryItems();
+
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      items = items.filter(item => item.category === selectedCategory);
+    }
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      items = items.filter(item =>
+        getItemName(item.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        getCategoryName(item.category).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    return items;
+  };
+
+  // Get unique categories for filter buttons
+  const getAvailableCategories = () => {
+    return getAvailableLaundryItems()
+      .map(item => item.category)
+      .filter((value, index, self) => self.indexOf(value) === index);
+  };
+
+  useEffect(() => {
     const fetchServiceDetails = async () => {
       try {
         setLoading(true);
@@ -362,86 +400,168 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
     );
   }
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <button
-                onClick={handleBack}
-                className={`${isRTL ? 'ml-4' : 'mr-4'} p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors`}
-              >
-                <FaArrowLeft className={`text-xl ${isRTL ? 'transform rotate-180' : ''}`} />
-              </button>
-              <div className="flex items-center">
-                <div className={`p-3 bg-blue-100 text-blue-600 rounded-lg ${isRTL ? 'ml-4' : 'mr-4'}`}>
-                  <FaTshirt className="text-2xl" />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Modern Header with Backdrop */}
+      <div className="relative">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#3B5787] via-[#4a6694] to-[#3B5787] opacity-5"></div>
+
+        {/* Header Content */}
+        <div className="relative max-w-4xl mx-auto px-4 pt-6 pb-8">
+          {/* Back Button - Modern Style */}
+          <button
+            onClick={handleBack}
+            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#3B5787] bg-white/80 backdrop-blur-sm hover:bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 mb-6"
+          >
+            <FaArrowLeft className={`${isRTL ? 'transform rotate-180 ml-2' : 'mr-2'} text-xs`} />
+            <span>{t('common.back', 'Back')}</span>
+          </button>
+
+          {/* Modern Header Card - Mobile Optimized */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 overflow-hidden border border-white/20">
+            {/* Header Image with Overlay - Compact for Mobile */}
+            <div className="relative h-32 sm:h-48">
+              <img
+                src="https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=800&h=400&fit=crop&crop=center"
+                alt="Laundry Services"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.classList.add('bg-gradient-to-br', 'from-[#3B5787]', 'to-[#2d4265]');
+                }}
+              />
+
+              {/* Floating Icon */}
+              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg">
+                <FaTshirt className="text-lg sm:text-2xl text-[#3B5787]" />
+              </div>
+            </div>
+
+            {/* Modern Header Content - Compact */}
+            <div className="p-4 sm:p-6">
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center space-x-2">
+                  <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-[#3B5787] to-[#4a6694] rounded-full"></div>
+                  <span className="text-xs font-medium text-[#3B5787] uppercase tracking-wider">
+                    Professional Service
+                  </span>
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">
-                    {t('laundryBooking.title')}
-                  </h1>
-                  <p className="text-gray-600 mt-1">
-                    {service?.name} {t('categories.availableAt')} {hotel?.name}
-                  </p>
+
+                <h1 className="text-xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                  {t('laundryBooking.title')}
+                </h1>
+
+                {/* Remove the "Available at" text completely */}
+
+                {/* Modern Stats/Features - Mobile Optimized */}
+                <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 sm:pt-4">
+                  <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-[#3B5787]/10 to-[#4a6694]/10 rounded-lg sm:rounded-xl">
+                    <FaClock className="text-[#3B5787] text-xs sm:text-sm" />
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">Quick Service</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg sm:rounded-xl">
+                    <FaCheck className="text-green-600 text-xs sm:text-sm" />
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">Quality Assured</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg sm:rounded-xl">
+                    <FaMapMarkerAlt className="text-blue-600 text-xs sm:text-sm" />
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">Pickup & Delivery</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>      {/* Progress Indicator */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between max-w-lg mx-auto">
-          {[1, 2, 3, 4].map((stepNum) => (
-            <React.Fragment key={stepNum}>
-              <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full text-sm sm:text-base ${
-                step >= stepNum ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
-              }`}>
-                {step > stepNum ? <FaCheck className="w-4 h-4" /> : stepNum}
-              </div>
-              {stepNum < 4 && (
-                <div className={`flex-1 h-0.5 mx-2 sm:mx-4 ${
-                  step > stepNum ? 'bg-blue-500' : 'bg-gray-300'
-                }`} />
-              )}
-            </React.Fragment>
-          ))}
-        </div><div className="flex justify-center mt-2">
-          <div className={`grid grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 w-full max-w-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-            <span className={`text-center leading-tight ${step >= 1 ? 'text-blue-600 font-medium' : ''}`}>{t('laundryBooking.selectItems')}</span>
-            <span className={`text-center leading-tight ${step >= 2 ? 'text-blue-600 font-medium' : ''}`}>{t('laundryBooking.serviceTypes')}</span>
-            <span className={`text-center leading-tight ${step >= 3 ? 'text-blue-600 font-medium' : ''}`}>{t('laundryBooking.schedule')}</span>
-            <span className={`text-center leading-tight ${step >= 4 ? 'text-blue-600 font-medium' : ''}`}>{t('laundryBooking.confirm')}</span>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 pb-20 lg:pb-6">
+
+      {/* Compact Progress Indicator */}
+      <div className="max-w-4xl mx-auto px-4 py-3">
+        {/* Minimal Progress Container */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 px-3 py-2 sm:px-4 sm:py-3">
+          {/* Compact Progress Track */}
+          <div className="relative mb-3">
+            {/* Background Track - Thinner */}
+            <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              {/* Progress Fill - Simplified */}
+              <div
+                className="h-full bg-gradient-to-r from-[#3B5787] to-[#4a6694] rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${((step - 1) / 3) * 100}%` }}
+              ></div>
+            </div>
+
+            {/* Compact Step Indicators */}
+            <div className="absolute top-0 left-0 w-full flex justify-between transform -translate-y-1/2">
+              {[1, 2, 3, 4].map((stepNum) => (
+                <div key={stepNum} className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                  step >= stepNum
+                    ? 'bg-[#3B5787] border-[#3B5787] text-white shadow-sm'
+                    : step === stepNum
+                    ? 'bg-white border-[#3B5787] text-[#3B5787] shadow-sm'
+                    : 'bg-white border-gray-300 text-gray-400'
+                }`}>
+                  {step > stepNum ? <FaCheck className="w-2.5 h-2.5" /> : stepNum}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Compact Step Labels */}
+          <div className="grid grid-cols-4 gap-1 text-center">
+            {[
+              { key: 'selectItems', short: 'Items' },
+              { key: 'serviceTypes', short: 'Service' },
+              { key: 'schedule', short: 'Schedule' },
+              { key: 'confirm', short: 'Confirm' }
+            ].map((item, index) => {
+              const stepNum = index + 1;
+              const isActive = step >= stepNum;
+
+              return (
+                <div key={item.key} className={`transition-all duration-200 ${
+                  isActive ? 'text-[#3B5787]' : 'text-gray-500'
+                }`}>
+                  <div className="text-xs font-medium">
+                    <span className="hidden sm:inline">{t(`laundryBooking.${item.key}`)}</span>
+                    <span className="sm:hidden">{item.short}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-20 lg:pb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">            {step === 1 && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  {t('laundryBooking.selectLaundryItems')}
-                </h2>
+              <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-3 sm:p-6">
+                {/* Compact Header */}
+                <div className="mb-4 sm:mb-6">
+                  <h2 className="text-lg sm:text-2xl font-bold text-gray-900 mb-1">
+                    {t('laundryBooking.selectLaundryItems')}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-600">Choose items and quantities</p>
+                </div>
 
                 {/* Check if any items are available */}
                 {(() => {
                   const availableItems = getAvailableLaundryItems();
                   if (availableItems.length === 0) {
                     return (
-                      <div className="text-center py-12">
-                        <FaTshirt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      <div className="text-center py-8 sm:py-12">
+                        <FaTshirt className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
+                        <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                           {t('laundryBooking.noItemsAvailable')}
                         </h3>
-                        <p className="text-gray-600 mb-4">
+                        <p className="text-sm text-gray-600 mb-4">
                           {t('laundryBooking.noItemsDescription')}
                         </p>
                         <button
                           onClick={() => navigate(`/hotels/${hotelId}/categories`)}
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl text-white bg-[#3B5787] hover:bg-[#2d4265] transition-colors"
                         >
                           <FaArrowLeft className="mr-2" />
                           {t('laundryBooking.backToServices')}
@@ -452,23 +572,117 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                   return null;
                 })()}
 
-                {/* Only show categories if items are available */}
+                {/* Search and Filter Section */}
+                {getAvailableLaundryItems().length > 0 && (
+                  <div className="mb-4 sm:mb-6">
+                    {/* Search Bar */}
+                    <div className="relative mb-3">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FaSearch className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Search laundry items..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#3B5787]/20 focus:border-[#3B5787] transition-colors"
+                      />
+                      {searchTerm && (
+                        <button
+                          onClick={() => setSearchTerm('')}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        >
+                          <FaTimes className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Category Filter Dropdown */}
+                    <div className="relative">
+                      <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="block w-full pl-10 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3B5787]/20 focus:border-[#3B5787] transition-colors appearance-none cursor-pointer"
+                      >
+                        <option value="all">All Categories</option>
+                        {getAvailableCategories().map((category) => (
+                          <option key={category} value={category}>
+                            {getCategoryName(category)}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* Custom dropdown icon */}
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <FaFilter className="h-4 w-4 text-gray-400" />
+                      </div>
+
+                      {/* Dropdown arrow */}
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Results Count */}
+                    <div className="mt-3 text-xs text-gray-500">
+                      {getFilteredItems().length} items found
+                      {searchTerm && ` for "${searchTerm}"`}
+                      {selectedCategory !== 'all' && ` in ${getCategoryName(selectedCategory)}`}
+                    </div>
+                  </div>
+                )}
+
+                {/* Filtered Categories Layout */}
                 {getAvailableLaundryItems().length > 0 && (
                   <>
-                    {/* Categories - Dynamically generated from available items */}
-                    {getAvailableLaundryItems()
-                      .map(item => item.category)
-                      .filter((value, index, self) => self.indexOf(value) === index)
-                      .map(category => {
-                        const availableItems = getAvailableLaundryItems();
-                        const categoryItems = availableItems.filter(item => item.category === category);
+                    {/* Show filtered results */}
+                    {(() => {
+                      const filteredItems = getFilteredItems();
+                      const categories = filteredItems
+                        .map(item => item.category)
+                        .filter((value, index, self) => self.indexOf(value) === index);
+
+                      if (filteredItems.length === 0) {
+                        return (
+                          <div className="text-center py-8">
+                            <FaSearch className="mx-auto h-8 w-8 text-gray-400 mb-3" />
+                            <h3 className="text-sm font-medium text-gray-900 mb-1">No items found</h3>
+                            <p className="text-xs text-gray-500">
+                              Try adjusting your search or filter options
+                            </p>
+                            {(searchTerm || selectedCategory !== 'all') && (
+                              <button
+                                onClick={() => {
+                                  setSearchTerm('');
+                                  setSelectedCategory('all');
+                                }}
+                                className="mt-3 text-xs text-[#3B5787] hover:text-[#2d4265] font-medium"
+                              >
+                                Clear all filters
+                              </button>
+                            )}
+                          </div>
+                        );
+                      }
+
+                      return categories.map(category => {
+                        const categoryItems = filteredItems.filter(item => item.category === category);
                         if (categoryItems.length === 0) return null;
                         return (
-                          <div key={category} className="mb-8">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                              {getCategoryName(category)}
-                            </h3>
-                            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+                          <div key={category} className="mb-4 sm:mb-6">
+                            {/* Compact Category Header */}
+                            <div className="flex items-center mb-3 sm:mb-4">
+                              <div className="flex-1 h-px bg-gradient-to-r from-[#3B5787]/20 to-transparent"></div>
+                              <h3 className="px-3 text-sm sm:text-base font-semibold text-[#3B5787] bg-white/50 rounded-full">
+                                {getCategoryName(category)}
+                              </h3>
+                              <div className="flex-1 h-px bg-gradient-to-l from-[#3B5787]/20 to-transparent"></div>
+                            </div>
+
+                            {/* Mobile-Optimized Grid - 2 columns on mobile, 3 on tablet, 4 on desktop */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                               {categoryItems.map(item => {
                                 const selectedItem = selectedItems.find(selected => selected.id === item.id);
                                 const quantity = selectedItem ? selectedItem.quantity : 0;
@@ -478,49 +692,76 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                                 return (
                                   <div
                                     key={item.id}
-                                    className={`border rounded-lg transition-colors p-4 ${
-                                      isAvailable && hasAvailableServices
-                                        ? 'border-gray-200 hover:border-blue-300'
-                                        : 'border-gray-200 bg-gray-50 opacity-60'
-                                    } flex flex-col justify-between h-full`}
+                                    className={`relative border-2 rounded-xl transition-all duration-300 p-2 sm:p-3 ${
+                                      quantity > 0
+                                        ? 'border-[#3B5787] bg-gradient-to-br from-[#3B5787]/5 to-[#4a6694]/10 shadow-md'
+                                        : isAvailable && hasAvailableServices
+                                        ? 'border-gray-200 hover:border-[#3B5787]/50 hover:shadow-sm'
+                                        : 'border-gray-200 bg-gray-50/50 opacity-60'
+                                    } min-h-[100px] sm:min-h-[120px]`}
                                   >
-                                    <div className="mb-4">
-                                      <h4 className={`font-medium ${isAvailable && hasAvailableServices ? 'text-gray-900' : 'text-gray-500'}`}>
-                                        {getItemName(item.name)}
-                                        {!isAvailable && (
-                                          <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
-                                            {t('laundryBooking.unavailable')}
-                                          </span>
-                                        )}
-                                        {isAvailable && !hasAvailableServices && (
-                                          <span className="ml-2 text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded">
-                                            {t('laundryBooking.noServiceTypes')}
-                                          </span>
-                                        )}
-                                      </h4>
-                                      <p className={`text-sm ${isAvailable && hasAvailableServices ? 'text-gray-600' : 'text-gray-400'}`}>
-                                        {availableServiceTypes.length > 0
-                                          ? `From ${formatPriceByLanguage(Math.min(...availableServiceTypes.map(st => st.price)), i18n.language)}`
-                                          : item.basePrice ? formatPriceByLanguage(item.basePrice, i18n.language) : t('laundryBooking.priceNotSet')
-                                        }
-                                      </p>
-                                    </div>
-                                    <div className="flex flex-row items-center justify-center gap-2 mt-auto">
-                                      <button
-                                        onClick={() => handleItemRemove(item.id)}
-                                        disabled={quantity === 0 || !isAvailable || !hasAvailableServices}
-                                        className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                      >
-                                        <FaMinus className="text-base" />
-                                      </button>
-                                      <span className="w-9 text-center font-medium text-lg">{quantity}</span>
-                                      <button
-                                        onClick={() => handleItemAdd(item)}
-                                        disabled={!isAvailable || !hasAvailableServices}
-                                        className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                      >
-                                        <FaPlus className="text-base" />
-                                      </button>
+                                    {/* Quantity Badge */}
+                                    {quantity > 0 && (
+                                      <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-[#3B5787] text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg">
+                                        {quantity}
+                                      </div>
+                                    )}
+
+                                    {/* Item Content - Compact */}
+                                    <div className="flex flex-col h-full">
+                                      {/* Item Header */}
+                                      <div className="flex-1 mb-2">
+                                        <h4 className={`font-medium text-xs sm:text-sm leading-tight mb-1 ${
+                                          isAvailable && hasAvailableServices ? 'text-gray-900' : 'text-gray-500'
+                                        }`}>
+                                          {getItemName(item.name)}
+                                        </h4>
+
+                                        {/* Status Badges - Compact */}
+                                        <div className="flex flex-wrap gap-1 mb-1">
+                                          {!isAvailable && (
+                                            <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-md">
+                                              N/A
+                                            </span>
+                                          )}
+                                          {isAvailable && !hasAvailableServices && (
+                                            <span className="text-xs bg-yellow-100 text-yellow-600 px-1.5 py-0.5 rounded-md">
+                                              No Service
+                                            </span>
+                                          )}
+                                        </div>
+
+                                        {/* Price - Compact */}
+                                        <p className={`text-xs font-medium ${
+                                          isAvailable && hasAvailableServices ? 'text-[#3B5787]' : 'text-gray-400'
+                                        }`}>
+                                          {availableServiceTypes.length > 0
+                                            ? `${formatPriceByLanguage(Math.min(...availableServiceTypes.map(st => st.price)), i18n.language)}`
+                                            : item.basePrice ? formatPriceByLanguage(item.basePrice, i18n.language) : 'Price N/A'
+                                          }
+                                        </p>
+                                      </div>
+
+                                      {/* Compact Controls */}
+                                      <div className="flex items-center justify-center gap-1 sm:gap-2 mt-auto">
+                                        <button
+                                          onClick={() => handleItemRemove(item.id)}
+                                          disabled={quantity === 0 || !isAvailable || !hasAvailableServices}
+                                          className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#3B5787] text-white flex items-center justify-center hover:bg-[#2d4265] disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+                                        >
+                                          <FaMinus className="text-xs" />
+                                        </button>
+                                        <span className="w-6 sm:w-8 text-center font-bold text-sm sm:text-base text-[#3B5787]">
+                                          {quantity}
+                                        </span>
+                                        <button
+                                          onClick={() => handleItemAdd(item)}
+                                          disabled={!isAvailable || !hasAvailableServices}
+                                          className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#3B5787] text-white flex items-center justify-center hover:bg-[#2d4265] disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+                                        >
+                                          <FaPlus className="text-xs" />
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
                                 );
@@ -528,96 +769,128 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                             </div>
                           </div>
                         );
-                      })}
+                      });
+                    })()}
                   </>
                 )}
               </div>
             )}            {step === 2 && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  {t('laundryBooking.chooseServiceTypes')}
-                </h2>
-
-                {/* Service Type Filter Buttons */}
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {(() => {
-                    // Collect all available service type names for selected items
-                    const typeNames = Array.from(new Set(
-                      selectedItems.flatMap(item =>
-                        getAvailableServiceTypes(item.id).map(st => st.name)
-                      )
-                    ));
-                    // Determine which type is currently selected for all items
-                    const getIsActive = (typeName) => {
-                      // Active if all selected items have this type selected
-                      return selectedItems.length > 0 && selectedItems.every(item => {
-                        const serviceTypesForItem = getAvailableServiceTypes(item.id);
-                        const foundType = serviceTypesForItem.find(st => st.name === typeName);
-                        return foundType && serviceTypes[item.id] === foundType.id;
-                      });
-                    };
-                    return typeNames.map(typeName => {
-                      const isActive = getIsActive(typeName);
-                      return (
-                        <button
-                          key={typeName}
-                          className={`px-3 py-1 rounded font-medium transition-colors border ${
-                            isActive
-                              ? 'bg-blue-500 text-white border-blue-600'
-                              : 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200'
-                          }`}
-                          onClick={() => {
-                            // For each selected item, if it has this service type, select it
-                            selectedItems.forEach(item => {
-                              const serviceTypesForItem = getAvailableServiceTypes(item.id);
-                              const foundType = serviceTypesForItem.find(st => st.name === typeName);
-                              if (foundType) {
-                                handleServiceTypeChange(item.id, foundType.id);
-                              }
-                            });
-                          }}
-                        >
-                          {typeName}
-                        </button>
-                      );
-                    });
-                  })()}
+              <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-3 sm:p-6">
+                {/* Compact Header */}
+                <div className="mb-4 sm:mb-6">
+                  <h2 className="text-lg sm:text-2xl font-bold text-gray-900 mb-1">
+                    {t('laundryBooking.chooseServiceTypes')}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-600">Select service type for each item</p>
                 </div>
 
-                <div className="space-y-6">
+                {/* Quick Service Type Actions */}
+                <div className="mb-4 sm:mb-6">
+                  <div className="flex flex-wrap gap-2">
+                    {(() => {
+                      // Collect all available service type names for selected items
+                      const typeNames = Array.from(new Set(
+                        selectedItems.flatMap(item =>
+                          getAvailableServiceTypes(item.id).map(st => st.name)
+                        )
+                      ));
+                      // Determine which type is currently selected for all items
+                      const getIsActive = (typeName) => {
+                        // Active if all selected items have this type selected
+                        return selectedItems.length > 0 && selectedItems.every(item => {
+                          const serviceTypesForItem = getAvailableServiceTypes(item.id);
+                          const foundType = serviceTypesForItem.find(st => st.name === typeName);
+                          return foundType && serviceTypes[item.id] === foundType.id;
+                        });
+                      };
+                      return typeNames.map(typeName => {
+                        const isActive = getIsActive(typeName);
+                        return (
+                          <button
+                            key={typeName}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-xl transition-all duration-200 ${
+                              isActive
+                                ? 'bg-[#3B5787] text-white shadow-sm'
+                                : 'bg-gray-100 text-gray-600 hover:bg-[#3B5787]/10 hover:text-[#3B5787]'
+                            }`}
+                            onClick={() => {
+                              // For each selected item, if it has this service type, select it
+                              selectedItems.forEach(item => {
+                                const serviceTypesForItem = getAvailableServiceTypes(item.id);
+                                const foundType = serviceTypesForItem.find(st => st.name === typeName);
+                                if (foundType) {
+                                  handleServiceTypeChange(item.id, foundType.id);
+                                }
+                              });
+                            }}
+                          >
+                            Apply "{typeName}" to All
+                          </button>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+
+                {/* Compact Items Grid - 2 columns on mobile */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                   {selectedItems.map(item => (
-                    <div key={item.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center mb-4">
-                        <div>
-                          <h4 className="font-medium text-gray-900">{getItemName(item.name)}</h4>
-                          <p className="text-sm text-gray-600">{t('laundryBooking.quantity')}: {item.quantity}</p>
+                    <div key={item.id} className="border-2 border-gray-200 rounded-xl p-3 sm:p-4 bg-gradient-to-br from-gray-50/50 to-white">
+                      {/* Compact Item Header */}
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base leading-tight">
+                            {getItemName(item.name)}
+                          </h4>
+                          <div className="flex items-center mt-1">
+                            <span className="text-xs text-gray-500">Qty:</span>
+                            <span className="ml-1 px-2 py-0.5 bg-[#3B5787]/10 text-[#3B5787] text-xs font-medium rounded-full">
+                              {item.quantity}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+
+                      {/* Service Options - 2 columns on mobile */}
+                      <div className="grid grid-cols-2 sm:grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
                         {getAvailableServiceTypes(item.id).map(serviceType => (
                           <div
                             key={serviceType.id}
-                            className={`p-3 border rounded-lg cursor-pointer transition-colors flex flex-col justify-between h-full ${
+                            className={`relative p-2 sm:p-3 border-2 rounded-xl cursor-pointer transition-all duration-300 min-h-[80px] sm:min-h-[100px] ${
                               serviceTypes[item.id] === serviceType.id
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-gray-200 hover:border-gray-300'
+                                ? 'border-[#3B5787] bg-gradient-to-br from-[#3B5787]/5 to-[#4a6694]/10 shadow-md'
+                                : 'border-gray-200 hover:border-[#3B5787]/50 hover:shadow-sm'
                             }`}
                             onClick={() => handleServiceTypeChange(item.id, serviceType.id)}
                           >
-                            <div>
-                              <h5 className="font-medium text-gray-900">
-                                {serviceType.name}
-                              </h5>
-                              <p className="text-xs text-gray-600 mt-1">{serviceType.description}</p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                <FaClock className="inline mr-1" />
-                                {serviceType.duration}
-                              </p>
-                            </div>
-                            <div className="mt-2 text-right">
-                              <p className="font-medium text-gray-900">
-                                {formatPriceByLanguage(serviceType.price * item.quantity, i18n.language)}
-                              </p>
+                            {/* Selection Indicator */}
+                            {serviceTypes[item.id] === serviceType.id && (
+                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#3B5787] rounded-full flex items-center justify-center shadow-lg">
+                                <FaCheck className="w-2.5 h-2.5 text-white" />
+                              </div>
+                            )}
+
+                            <div className="flex flex-col h-full">
+                              {/* Service Info */}
+                              <div className="flex-1">
+                                <h5 className="font-medium text-gray-900 text-xs sm:text-sm leading-tight mb-1">
+                                  {serviceType.name}
+                                </h5>
+                                <p className="text-xs text-gray-600 leading-tight mb-1 line-clamp-2">
+                                  {serviceType.description}
+                                </p>
+                                <div className="flex items-center text-xs text-gray-500">
+                                  <FaClock className="mr-1 flex-shrink-0" />
+                                  <span className="truncate">{serviceType.duration}</span>
+                                </div>
+                              </div>
+
+                              {/* Price */}
+                              <div className="mt-2 pt-2 border-t border-gray-200">
+                                <p className="font-bold text-[#3B5787] text-xs sm:text-sm text-center">
+                                  {formatPriceByLanguage(serviceType.price * item.quantity, i18n.language)}
+                                </p>
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -781,8 +1054,8 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
             )}
           </div>
 
-          {/* Pricing Summary Sidebar */}
-          <div className="lg:col-span-1">
+          {/* Pricing Summary Sidebar - Hidden on Mobile */}
+          <div className="hidden lg:block lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">              <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 <FaCalculator className="inline mr-2" />
                 {t('laundryBooking.pricingSummary')}
@@ -816,7 +1089,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                     <button
                       onClick={() => setStep(step + 1)}
                       disabled={!canProceedToNext()}
-                      className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                      className="w-full bg-[#3B5787] hover:bg-[#2d4265] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors"
                     >                      {step === 1 && t('laundryBooking.nextStep')}
                       {step === 2 && t('laundryBooking.scheduleStep')}
                       {step === 3 && t('laundryBooking.reviewStep')}
@@ -825,7 +1098,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                     <button
                       onClick={handleBookingSubmit}
                       disabled={submitting}
-                      className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
+                      className="w-full bg-[#3B5787] hover:bg-[#2d4265] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
                     >
                       {submitting ? (
                         <>
@@ -841,7 +1114,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                   {step > 1 && (
                     <button
                       onClick={() => setStep(step - 1)}
-                      className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-3 px-4 rounded-lg transition-colors"
+                      className="w-full bg-[#3B5787] hover:bg-[#2d4265] text-white font-medium py-3 px-4 rounded-lg transition-colors"
                     >
                       {t('laundryBooking.back')}
                     </button>
@@ -859,6 +1132,129 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Sticky Mobile Cart */}
+      {selectedItems.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+          {/* Expandable Cart Summary */}
+          {isCartExpanded && (
+            <div className="border-b border-gray-200 max-h-64 overflow-y-auto">
+              <div className="px-4 py-3">
+                <h4 className="font-medium text-gray-900 mb-3 text-sm">Order Summary</h4>
+                <div className="space-y-2">
+                  {selectedItems.map(item => (
+                    <div key={item.id} className="flex justify-between items-center text-sm">
+                      <div className="flex-1">
+                        <span className="text-gray-900">{getItemName(item.name)}</span>
+                        <span className="text-gray-500 ml-1">×{item.quantity}</span>
+                      </div>
+                      <span className="text-gray-900 font-medium">
+                        {formatPriceByLanguage(
+                          pricing.itemCalculations.find(calc => calc.id === item.id)?.itemPrice || 0,
+                          i18n.language
+                        )}
+                      </span>
+                    </div>
+                  ))}
+
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Subtotal</span>
+                      <span>{formatPriceByLanguage(pricing.subtotal, i18n.language)}</span>
+                    </div>
+                    {expressService && (
+                      <div className="flex justify-between text-sm text-yellow-600">
+                        <span>Express Service</span>
+                        <span>+{formatPriceByLanguage(pricing.expressCharge, i18n.language)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-bold text-green-600 mt-1">
+                      <span>Total</span>
+                      <span>{formatPriceByLanguage(pricing.total, i18n.language)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Main Cart Bar */}
+          <div className="px-4 py-3">
+            <div
+              className="flex items-center justify-between mb-2 cursor-pointer"
+              onClick={() => setIsCartExpanded(!isCartExpanded)}
+            >
+              <div className="flex items-center">
+                <div className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-2">
+                  {selectedItems.reduce((sum, item) => sum + item.quantity, 0)}
+                </div>
+                <span className="text-sm text-gray-600">
+                  {selectedItems.reduce((sum, item) => sum + item.quantity, 0)} {t('laundryBooking.items')}
+                </span>
+                <div className="ml-2">
+                  <svg
+                    className={`w-4 h-4 text-gray-400 transition-transform ${isCartExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-green-600">
+                  {formatPriceByLanguage(pricing.total, i18n.language)}
+                </div>
+                {expressService && (
+                  <div className="text-xs text-yellow-600">
+                    +{formatPriceByLanguage(pricing.expressCharge, i18n.language)} express
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              {step < 4 ? (
+                <button
+                  onClick={() => setStep(step + 1)}
+                  disabled={!canProceedToNext()}
+                  className="flex-1 bg-[#3B5787] hover:bg-[#2d4265] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors text-sm"
+                >
+                  {step === 1 && t('laundryBooking.nextStep')}
+                  {step === 2 && t('laundryBooking.scheduleStep')}
+                  {step === 3 && t('laundryBooking.reviewStep')}
+                </button>
+              ) : (
+                <button
+                  onClick={handleBookingSubmit}
+                  disabled={submitting}
+                  className="flex-1 bg-[#3B5787] hover:bg-[#2d4265] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center text-sm"
+                >
+                  {submitting ? (
+                    <>
+                      <FaSpinner className="animate-spin mr-2" />
+                      {t('laundryBooking.booking')}
+                    </>
+                  ) : (
+                    t('laundryBooking.confirmStep')
+                  )}
+                </button>
+              )}
+
+              {step > 1 && (
+                <button
+                  onClick={() => setStep(step - 1)}
+                  className="px-4 py-3 bg-[#3B5787] hover:bg-[#2d4265] text-white font-medium rounded-lg transition-colors text-sm"
+                >
+                  {t('laundryBooking.back')}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

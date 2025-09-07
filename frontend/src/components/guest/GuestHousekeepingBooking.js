@@ -178,38 +178,75 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   // Service Selection Step
   if (bookingStep === 'select') {
     return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Header with Back Button */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Modern Header with Backdrop */}
+        <div className="relative">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#3B5787] via-[#4a6694] to-[#3B5787] opacity-5"></div>
+
+          {/* Header Content */}
+          <div className="relative max-w-4xl mx-auto px-4 pt-6 pb-8">
+            {/* Back Button - Modern Style */}
             <button
               onClick={onBack}
-              className="flex items-center text-gray-600 hover:text-gray-800 transition-colors mb-2"
+              className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#3B5787] bg-white/80 backdrop-blur-sm hover:bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 mb-6"
             >
-              <FaArrowLeft className="mr-2" />
+              <FaArrowLeft className="mr-2 text-xs" />
               <span>Back</span>
             </button>
+
+            {/* Modern Header Card - Mobile Optimized */}
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 overflow-hidden border border-white/20 mb-6">
+              {/* Header Image with Overlay - Compact for Mobile */}
+              <div className="relative h-32 sm:h-48">
+                <img
+                  src="/housekeeping-header.jpg"
+                  alt="Housekeeping Services"
+                  className="w-full h-full object-cover"
+                />
+
+                {/* Floating Icon */}
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg">
+                  <FaBroom className="text-lg sm:text-2xl text-[#3B5787]" />
+                </div>
+              </div>
+
+              {/* Modern Header Content - Compact */}
+              <div className="p-4 sm:p-6">
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-[#3B5787] to-[#4a6694] rounded-full"></div>
+                    <span className="text-xs font-medium text-[#3B5787] uppercase tracking-wider">
+                      Professional Service
+                    </span>
+                  </div>
+
+                  <h1 className="text-xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                    {t('housekeeping.title', 'Housekeeping')}
+                  </h1>
+
+                  {/* Modern Stats/Features - Mobile Optimized */}
+                  <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 sm:pt-4">
+                    <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-[#3B5787]/10 to-[#4a6694]/10 rounded-lg sm:rounded-xl">
+                      <FaBroom className="text-[#3B5787] text-xs sm:text-sm" />
+                      <span className="text-xs sm:text-sm font-medium text-gray-700">Expert Cleaning</span>
+                    </div>
+                    <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg sm:rounded-xl">
+                      <FaCheck className="text-green-600 text-xs sm:text-sm" />
+                      <span className="text-xs sm:text-sm font-medium text-gray-700">Quality Assured</span>
+                    </div>
+                    <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg sm:rounded-xl">
+                      <FaClock className="text-blue-600 text-xs sm:text-sm" />
+                      <span className="text-xs sm:text-sm font-medium text-gray-700">On Schedule</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          {/* Housekeeping Header Card */}
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-            {/* Header Image */}
-            <div className="relative h-48 bg-gradient-to-r from-blue-500 to-blue-600">
-              <img
-                src="/housekeeping-header.jpg"
-                alt="Housekeeping"
-                className="w-full h-full object-cover mix-blend-overlay"
-              />
-              <div className="absolute inset-0 bg-blue-600/20"></div>
-            </div>
-
-            {/* Header Content */}
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-900">{t('housekeeping.title', 'Housekeeping')}</h1>
-            </div>
-          </div>
+        <div className="max-w-4xl mx-auto px-4 pb-6">
 
           {/* Guest Services Section */}
           <div className="bg-white rounded-2xl shadow-sm p-6">

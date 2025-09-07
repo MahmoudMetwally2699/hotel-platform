@@ -18,6 +18,8 @@ import {
   FaMapMarkerAlt,
   FaSpinner,
   FaSearch,
+  FaArrowLeft,
+  FaCheck,
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import MenuItemCard from '../../components/guest/MenuItemCard';
@@ -263,7 +265,78 @@ const RestaurantBookingPage = () => {
 
   // ===== UI =====
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Modern Hero Header */}
+      <div className="relative">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#3B5787] via-[#4a6694] to-[#3B5787] opacity-5"></div>
+
+        {/* Header Content */}
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-8">
+          {/* Back Button - Modern Style */}
+          <button
+            onClick={() => navigate(`/hotels/${hotelId}/categories`)}
+            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#3B5787] bg-white/80 backdrop-blur-sm hover:bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 mb-6"
+          >
+            <FaArrowLeft className="mr-2 text-xs" />
+            <span>Back</span>
+          </button>
+
+          {/* Modern Header Card - Mobile Optimized */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 overflow-hidden border border-white/20 mb-6">
+            {/* Header Image with Overlay - Compact for Mobile */}
+            <div className="relative h-32 sm:h-48">
+              <img
+                src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=400&fit=crop&crop=center"
+                alt="Restaurant Services"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.classList.add('bg-gradient-to-br', 'from-[#3B5787]', 'to-[#2d4265]');
+                }}
+              />
+
+              {/* Floating Icon */}
+              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 sm:p-3 bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg">
+                <FaUtensils className="text-lg sm:text-2xl text-[#3B5787]" />
+              </div>
+            </div>
+
+            {/* Modern Header Content - Compact */}
+            <div className="p-4 sm:p-6">
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center space-x-2">
+                  <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-[#3B5787] to-[#4a6694] rounded-full"></div>
+                  <span className="text-xs font-medium text-[#3B5787] uppercase tracking-wider">
+                    Dining Experience
+                  </span>
+                </div>
+
+                <h1 className="text-xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                  Restaurant & Dining
+                </h1>
+
+                {/* Modern Stats/Features - Mobile Optimized */}
+                <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 sm:pt-4">
+                  <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-[#3B5787]/10 to-[#4a6694]/10 rounded-lg sm:rounded-xl">
+                    <FaUtensils className="text-[#3B5787] text-xs sm:text-sm" />
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">Fresh Menu</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg sm:rounded-xl">
+                    <FaCheck className="text-green-600 text-xs sm:text-sm" />
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">Quality Food</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg sm:rounded-xl">
+                    <FaMapMarkerAlt className="text-blue-600 text-xs sm:text-sm" />
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">Room Service</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Sticky top bar with stepper */}
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
