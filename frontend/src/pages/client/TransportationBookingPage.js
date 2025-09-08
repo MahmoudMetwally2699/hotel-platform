@@ -9,13 +9,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
 import { getVehicleIcon } from '../../utils/vehicleIconMap';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   FaCar,
   FaArrowLeft,
+  FaArrowRight,
   FaSpinner,
   FaCheck,
   FaClock,
@@ -63,7 +63,7 @@ const TransportationBookingPage = () => {
   const [selectedVehicleTypeId, setSelectedVehicleTypeId] = useState('');
   // Helper functions to translate vehicle category and type names
   const getVehicleTypeName = (vehicleType) => {
-    // Convert vehicle type to key format (lowercase, handle special characters)
+    // Convert vehicle type to key format for translation lookup
     const vehicleKey = vehicleType
       .toLowerCase()
       .replace(/\s+/g, '_')        // Replace spaces with underscores
@@ -73,10 +73,20 @@ const TransportationBookingPage = () => {
       .replace(/^_|_$/g, '');      // Remove leading/trailing underscores
 
     console.log(`🚗 Translating vehicle: "${vehicleType}" -> key: "${vehicleKey}"`);
-    const translated = t(`transportationBooking.vehicleTypes.${vehicleKey}`, { defaultValue: vehicleType });
-    console.log(`🚗 Translation result: "${translated}"`);
+    const translated = t(`transportationBooking.vehicleTypes.${vehicleKey}`, { defaultValue: null });
 
-    return translated;
+    // If translation exists, use it. Otherwise, format the original nicely
+    if (translated && translated !== `transportationBooking.vehicleTypes.${vehicleKey}`) {
+      console.log(`🚗 Translation found: "${translated}"`);
+      return translated;
+    } else {
+      // Format the original vehicle type nicely (replace underscores with spaces and capitalize)
+      const formatted = vehicleType
+        .replace(/_/g, ' ')           // Replace underscores with spaces
+        .replace(/\b\w/g, l => l.toUpperCase()); // Capitalize first letter of each word
+      console.log(`🚗 No translation, using formatted: "${formatted}"`);
+      return formatted;
+    }
   };
 
   // Add helpers to translate serviceType name and description coming from the API
@@ -428,65 +438,91 @@ const TransportationBookingPage = () => {
         </div>
       </div>
 
-      {/* Progress Indicator */}
-      <div className="max-w-4xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between max-w-lg mx-auto">
-          {[1, 2, 3, 4].map((stepNum) => (
-            <React.Fragment key={stepNum}>
-              <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full text-sm sm:text-base ${
-                step >= stepNum ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
-              }`}>
-                {step > stepNum ? <FaCheck className="w-4 h-4" /> : stepNum}
-              </div>
-              {stepNum < 4 && (
-                <div className={`flex-1 h-0.5 mx-2 sm:mx-4 ${
-                  step > stepNum ? 'bg-blue-500' : 'bg-gray-300'
-                }`} />
-              )}
-            </React.Fragment>
-          ))}
+      {/* Modern Compact Progress Bar */}
+      <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 px-4 py-3 mb-6">
+          <div className="relative">
+            {/* Progress Track */}
+            <div className="w-full h-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#3B5787] to-[#4a6694] rounded-full transition-all duration-700 ease-out"
+                style={{ width: `${((step - 1) / 3) * 100}%` }}
+              ></div>
+            </div>
 
-        </div>
+            {/* Step Indicators */}
+            <div className="absolute top-0 left-0 w-full flex justify-between transform -translate-y-1/2">
+              {[1, 2, 3, 4].map((stepNum) => (
+                <div key={stepNum} className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                  step >= stepNum
+                    ? 'bg-[#3B5787] border-[#3B5787] text-white shadow-lg'
+                    : step === stepNum
+                    ? 'bg-white border-[#3B5787] text-[#3B5787] shadow-md'
+                    : 'bg-white border-gray-300 text-gray-400'
+                }`}>
+                  {step > stepNum ? <FaCheck className="w-3 h-3" /> : stepNum}
+                </div>
+              ))}
+            </div>
+          </div>
 
-        <div className="flex justify-center mt-2">
-          <div className={`grid grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 w-full max-w-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-            <span className={`text-center leading-tight ${step >= 1 ? 'text-blue-600 font-medium' : ''}`}>{t('transportationBooking.selectVehicles')}</span>
-            <span className={`text-center leading-tight ${step >= 2 ? 'text-blue-600 font-medium' : ''}`}>{t('transportationBooking.serviceTypes')}</span>
-            <span className={`text-center leading-tight ${step >= 3 ? 'text-blue-600 font-medium' : ''}`}>{t('transportationBooking.schedule')}</span>
-            <span className={`text-center leading-tight ${step >= 4 ? 'text-blue-600 font-medium' : ''}`}>{t('transportationBooking.confirm')}</span>
+          {/* Step Labels */}
+          <div className="grid grid-cols-4 gap-2 mt-6 text-center">
+            {[
+              { key: 'selectVehicles', icon: FaCar },
+              { key: 'serviceTypes', icon: FaCheck },
+              { key: 'schedule', icon: FaCalendarAlt },
+              { key: 'confirm', icon: FaCheck }
+            ].map((item, index) => {
+              const stepNum = index + 1;
+              const isActive = step >= stepNum;
+
+              return (
+                <div key={item.key} className={`transition-all duration-200 ${
+                  isActive ? 'text-[#3B5787]' : 'text-gray-500'
+                }`}>
+                  <div className="text-xs font-medium">
+                    {t(`transportationBooking.${item.key}`)}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
+      {/* Main Content Container - Modern Layout */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32 lg:pb-8">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-8">
+          {/* Main Content Area - Takes 3 columns on XL screens */}
+          <div className="xl:col-span-3">
 
             {step === 1 && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  {t('transportationBooking.selectTransportationVehicles')}
-                </h2>
-
-                {/* Vehicle Type Dropdown - New Feature */}
+              <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-3 sm:p-6">
+                {/* Compact Header */}
+                <div className="mb-6">
+                  <h2 className="text-lg sm:text-2xl font-bold text-gray-900 mb-1">
+                    {t('transportationBooking.selectTransportationVehicles')}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-600">Choose your preferred vehicle type</p>
+                </div>
 
                 {/* Check if any vehicles are available */}
                 {(() => {
                   const availableVehicles = getAvailableTransportationVehicles();
                   if (availableVehicles.length === 0) {
                     return (
-                      <div className="text-center py-12">
-                        <FaCar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      <div className="text-center py-8 sm:py-12">
+                        <FaCar className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
+                        <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                           {t('transportationBooking.noVehiclesAvailable')}
                         </h3>
-                        <p className="text-gray-600 mb-4">
+                        <p className="text-sm text-gray-600 mb-4">
                           {t('transportationBooking.noVehiclesDescription')}
                         </p>
                         <button
                           onClick={() => navigate(`/hotels/${hotelId}/categories`)}
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+                          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl text-white bg-[#3B5787] hover:bg-[#2d4265] transition-colors"
                         >
                           <FaArrowLeft className="mr-2" />
                           {t('transportationBooking.backToServices')}
@@ -497,128 +533,312 @@ const TransportationBookingPage = () => {
                   return null;
                 })()}
 
-                {/* Two separate dropdowns for vehicle and service type */}
+                {/* Compact Mobile Vehicle Selection Cards */}
                 {getAvailableTransportationVehicles().length > 0 && (
                   <div className="space-y-4">
-                    {/* Vehicle Selection Dropdown with Icons */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('transportationBooking.selectVehicleType')}
-                      </label>
-                      <Select
-                        options={getAvailableTransportationVehicles().map(vehicle => {
-                          const capacity = vehicle.capacity ? (typeof vehicle.capacity === 'object' ? vehicle.capacity.passengers : vehicle.capacity) : 'N/A';
-                          return {
-                            value: vehicle.id,
-                            label: `${getVehicleTypeName(vehicle.vehicleType)} - ${capacity} passengers`,
-                            vehicleType: vehicle.vehicleType,
+                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+                      {getAvailableTransportationVehicles().map(vehicle => {
+                        const capacity = vehicle.capacity ? (typeof vehicle.capacity === 'object' ? vehicle.capacity.passengers : vehicle.capacity) : 'N/A';
+                        const isSelected = selectedVehicleTypeId === vehicle.id;
+
+                        // Get vehicle image URL with smart distribution for variety
+                        const getVehicleImage = (vehicleType, vehicleId) => {
+                          // Available images in order of preference for variety
+                          const availableImages = [
+                            '/car-image/EconomyCompact Car.png',
+                            '/car-image/SedanMidsize.png',
+                            '/car-image/SUVCrossover.png',
+                            '/car-image/Premium Suv.png',
+                            '/car-image/LuxuryPremium.png',
+                            '/car-image/VanMPV.png',
+                            '/car-image/Large Vehicle.png'
+                          ];
+
+                          // Primary mapping based on vehicle type
+                          const primaryImageMap = {
+                            // Economy types
+                            'economy': '/car-image/EconomyCompact Car.png',
+                            'compact': '/car-image/EconomyCompact Car.png',
+                            'economy_sedan': '/car-image/EconomyCompact Car.png',
+                            'eco_vehicle': '/car-image/EconomyCompact Car.png',
+                            'local_taxi': '/car-image/EconomyCompact Car.png',
+
+                            // Sedan types
+                            'sedan': '/car-image/SedanMidsize.png',
+                            'midsize': '/car-image/SedanMidsize.png',
+                            'comfort_sedan': '/car-image/SedanMidsize.png',
+                            'standard_sedan': '/car-image/SedanMidsize.png',
+                            'shared_ride': '/car-image/SedanMidsize.png',
+
+                            // SUV types
+                            'suv': '/car-image/SUVCrossover.png',
+                            'crossover': '/car-image/SUVCrossover.png',
+                            'premium_suv': '/car-image/Premium Suv.png',
+                            'large_suv': '/car-image/Premium Suv.png',
+                            'luxury_suv': '/car-image/Premium Suv.png',
+                            'full_size_suv': '/car-image/Premium Suv.png',
+
+                            // Luxury types
+                            'luxury': '/car-image/LuxuryPremium.png',
+                            'premium': '/car-image/LuxuryPremium.png',
+                            'executive': '/car-image/LuxuryPremium.png',
+                            'luxury_vehicle': '/car-image/LuxuryPremium.png',
+                            'convertible': '/car-image/LuxuryPremium.png',
+                            'sports': '/car-image/LuxuryPremium.png',
+
+                            // Van/MPV types
+                            'van': '/car-image/VanMPV.png',
+                            'minivan': '/car-image/VanMPV.png',
+                            'mpv': '/car-image/VanMPV.png',
+                            'van_large': '/car-image/VanMPV.png',
+                            'passenger_van': '/car-image/VanMPV.png',
+                            'accessible_vehicle': '/car-image/VanMPV.png',
+
+                            // Large vehicle types
+                            'bus': '/car-image/Large Vehicle.png',
+                            'coach': '/car-image/Large Vehicle.png',
+                            'shuttle': '/car-image/Large Vehicle.png',
+                            'truck': '/car-image/Large Vehicle.png',
+                            'pickup': '/car-image/Large Vehicle.png',
+                            'large_vehicle': '/car-image/Large Vehicle.png'
                           };
-                        })}
-                        value={(() => {
-                          const vehicles = getAvailableTransportationVehicles();
-                          return vehicles.length > 0 ? vehicles.map(vehicle => ({
-                            value: vehicle.id,
-                            label: `${getVehicleTypeName(vehicle.vehicleType)} - ${vehicle.capacity ? (typeof vehicle.capacity === 'object' ? vehicle.capacity.passengers : vehicle.capacity) : 'N/A'} passengers`,
-                            vehicleType: vehicle.vehicleType,
-                          })).find(opt => opt.value === selectedVehicleTypeId) || null : null;
-                        })()}
-                        onChange={option => handleVehicleTypeChoose(option ? option.value : '')}
-                        placeholder={t('transportationBooking.chooseVehicleTypePlaceholder')}
-                        isClearable
-                        classNamePrefix="vehicle-select"
-                        aria-label={t('transportationBooking.selectVehicleType')}
-                        styles={{
-                          control: (base, state) => ({
-                            ...base,
-                            borderRadius: '0.5rem',
-                            borderColor: state.isFocused ? '#3b82f6' : '#d1d5db',
-                            boxShadow: state.isFocused ? '0 0 0 2px #3b82f6' : 'none',
-                            minHeight: '44px',
-                          }),
-                          option: (base, state) => ({
-                            ...base,
-                            display: 'flex',
-                            alignItems: 'center',
-                            fontSize: '1rem',
-                            backgroundColor: state.isFocused ? '#eff6ff' : '#fff',
-                            color: '#1f2937',
-                          }),
-                          singleValue: (base) => ({
-                            ...base,
-                            display: 'flex',
-                            alignItems: 'center',
-                          }),
-                        }}
-                        components={{
-                          Option: (props) => (
-                            <div {...props.innerProps} className={props.className} style={{ display: 'flex', alignItems: 'center' }}>
-                              {getVehicleIcon(props.data.vehicleType)}
-                              <span>{props.data.label}</span>
+
+                          // Clean vehicle type for matching
+                          const cleanVehicleType = vehicleType.toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+                          // Get primary image
+                          let primaryImage = primaryImageMap[cleanVehicleType] || primaryImageMap[vehicleType.toLowerCase()];
+
+                          // If no primary match, create variety using vehicle ID hash
+                          if (!primaryImage) {
+                            // Create a simple hash from vehicleId for consistent but varied image selection
+                            const hash = vehicleId ? vehicleId.split('').reduce((a, b) => {
+                              a = ((a << 5) - a) + b.charCodeAt(0);
+                              return a & a;
+                            }, 0) : 0;
+
+                            const imageIndex = Math.abs(hash) % availableImages.length;
+                            primaryImage = availableImages[imageIndex];
+                          }
+
+                          // Add some variety for taxi/cab types based on ID
+                          if (vehicleType.toLowerCase().includes('taxi') || vehicleType.toLowerCase().includes('cab')) {
+                            if (vehicleId && vehicleId.includes('1')) {
+                              return '/car-image/EconomyCompact Car.png';
+                            } else if (vehicleId && vehicleId.includes('2')) {
+                              return '/car-image/SedanMidsize.png';
+                            }
+                          }
+
+                          return primaryImage || '/car-image/EconomyCompact Car.png';
+                        };
+
+                        return (
+                          <div
+                            key={vehicle.id}
+                            className={`relative border-2 rounded-xl cursor-pointer transition-all duration-300 overflow-hidden group ${
+                              isSelected
+                                ? 'border-[#3B5787] bg-gradient-to-br from-[#3B5787]/5 to-[#4a6694]/10 shadow-lg'
+                                : 'border-gray-200 hover:border-[#3B5787]/50 hover:shadow-md bg-white/90'
+                            }`}
+                            onClick={() => handleVehicleTypeChoose(vehicle.id)}
+                          >
+                            {/* Selection Indicator */}
+                            {isSelected && (
+                              <div className="absolute top-2 right-2 z-10 w-5 h-5 bg-[#3B5787] rounded-full flex items-center justify-center shadow-lg">
+                                <FaCheck className="w-2.5 h-2.5 text-white" />
+                              </div>
+                            )}
+
+                            {/* Compact Vehicle Image */}
+                            <div className="relative h-20 sm:h-24 lg:h-28 overflow-hidden">
+                              <img
+                                src={getVehicleImage(vehicle.vehicleType, vehicle.id)}
+                                alt={getVehicleTypeName(vehicle.vehicleType)}
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.parentElement.classList.add('bg-gradient-to-br', 'from-[#3B5787]', 'to-[#2d4265]');
+                                  e.target.parentElement.innerHTML = `<div class="flex items-center justify-center h-full"><div class="text-white text-2xl">${getVehicleIcon(vehicle.vehicleType)}</div></div>`;
+                                }}
+                              />
+
+                              {/* Subtle Gradient Overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+
+                              {/* Compact Vehicle Icon Badge */}
+                              <div className="absolute bottom-1 left-1 p-1 bg-white/95 backdrop-blur-sm rounded-md shadow-sm">
+                                <div className="text-[#3B5787] text-xs">
+                                  {getVehicleIcon(vehicle.vehicleType)}
+                                </div>
+                              </div>
                             </div>
-                          ),
-                          SingleValue: (props) => (
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                              {getVehicleIcon(props.data.vehicleType)}
-                              <span>{props.data.label}</span>
+
+                            {/* Compact Vehicle Details */}
+                            <div className="p-2 sm:p-3">
+                              <div className="mb-1">
+                                <h3 className="font-semibold text-gray-900 text-xs sm:text-sm leading-tight line-clamp-1">
+                                  {getVehicleTypeName(vehicle.vehicleType)}
+                                </h3>
+                                <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 hidden sm:block">
+                                  Perfect choice
+                                </p>
+                              </div>
+
+                              {/* Compact Features - Mobile Optimized */}
+                              <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                                <div className="flex items-center space-x-1 sm:space-x-2">
+                                  {/* Passenger Capacity - Compact */}
+                                  <div className="flex items-center text-gray-500">
+                                    <svg className="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className="hidden sm:inline">up to </span>
+                                    <span>{capacity}</span>
+                                  </div>
+
+                                  {/* Luggage - Mobile: Icon only, Desktop: Full */}
+                                  <div className="flex items-center text-gray-500">
+                                    <svg className="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className="sm:hidden">{Math.min(parseInt(capacity) || 3, 5)}</span>
+                                    <span className="hidden sm:inline">up to {Math.min(parseInt(capacity) || 3, 5)}</span>
+                                  </div>
+                                </div>
+
+                                {/* Estimated Time - Compact */}
+                                <div className="text-[#3B5787] font-medium">
+                                  <FaClock className="inline w-2.5 h-2.5 mr-1" />
+                                  <span className="hidden sm:inline">{Math.floor(Math.random() * 10) + 5} min</span>
+                                  <span className="sm:hidden">{Math.floor(Math.random() * 10) + 5}m</span>
+                                </div>
+                              </div>
+
+                              {/* Mobile Selection Indicator */}
+                              {isSelected && (
+                                <div className="mt-1 text-center">
+                                  <div className="inline-flex items-center text-[10px] text-[#3B5787] font-medium">
+                                    <FaCheck className="w-2 h-2 mr-1" />
+                                    <span>Selected</span>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          ),
-                        }}
-                      />
+
+                            {/* Selection Overlay */}
+                            {isSelected && (
+                              <div className="absolute inset-0 bg-[#3B5787]/5 pointer-events-none rounded-xl"></div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
 
+                    {/* Compact Additional Features */}
+                    <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
+                      <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-700 space-y-1 sm:space-y-0">
+                        <div className="flex items-center">
+                          <FaCheck className="text-green-600 mr-2 flex-shrink-0 w-3 h-3" />
+                          <span className="font-medium">Free cancellation 24h before</span>
+                        </div>
+                        <div className="flex items-center sm:ml-4">
+                          <FaCheck className="text-green-600 mr-2 flex-shrink-0 w-3 h-3" />
+                          <span className="font-medium">Meeting with nameplate</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
             {step === 2 && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  {t('transportationBooking.chooseServiceTypes')}
-                </h2>
+              <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-3 sm:p-6">
+                {/* Modern Header */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#3B5787] to-[#2d4265] rounded-2xl flex items-center justify-center shadow-lg">
+                      <FaCheck className="text-white text-xl" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+                        {t('transportationBooking.chooseServiceTypes')}
+                      </h2>
+                      <p className="text-gray-600 text-sm mt-1">Select your preferred service type</p>
+                    </div>
+                  </div>
+                </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {selectedVehicles.map(vehicle => (
-                    <div key={vehicle.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center mb-4">
+                    <div key={vehicle.id} className="bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm">
+                      {/* Vehicle Info Header */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 bg-[#3B5787] rounded-lg flex items-center justify-center">
+                          <FaCar className="text-white text-sm" />
+                        </div>
                         <div>
-                          <h4 className="font-medium text-gray-900">{getVehicleTypeName(vehicle.vehicleType)}</h4>
-                          <p className="text-sm text-gray-600">{t('transportationBooking.quantity')}: {vehicle.quantity}</p>
+                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{getVehicleTypeName(vehicle.vehicleType)}</h4>
+                          <p className="text-xs sm:text-sm text-gray-600">{t('transportationBooking.quantity')}: {vehicle.quantity}</p>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {getAvailableServiceTypes(vehicle.id).map(serviceType => (
-                          <div
-                            key={serviceType.id}
-                            className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                              serviceTypes[vehicle.id] === serviceType.id
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-gray-200 hover:border-gray-300'
-                            }`}
-                            onClick={() => handleServiceTypeChange(vehicle.id, serviceType.id)}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center">
-                                <div>
-                                  <h5 className="font-medium text-gray-900">
-                                    {getServiceTypeName(serviceType)}
-                                  </h5>
-                                  <p className="text-xs text-gray-600">{getServiceTypeDescription(serviceType)}</p>
-                                  <p className="text-xs text-gray-500">
-                                    <FaClock className="inline mr-1" />
+                      {/* Modern Service Type Grid - Two Columns on Mobile */}
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                        {getAvailableServiceTypes(vehicle.id).map(serviceType => {
+                          const isSelected = serviceTypes[vehicle.id] === serviceType.id;
+
+                          return (
+                            <div
+                              key={serviceType.id}
+                              className={`relative p-3 sm:p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${
+                                isSelected
+                                  ? 'border-[#3B5787] bg-gradient-to-br from-[#3B5787]/5 to-[#3B5787]/10 shadow-lg'
+                                  : 'border-gray-200 bg-white hover:border-[#3B5787]/30 hover:shadow-md hover:bg-gray-50'
+                              }`}
+                              onClick={() => handleServiceTypeChange(vehicle.id, serviceType.id)}
+                            >
+                              {/* Selection Indicator */}
+                              {isSelected && (
+                                <div className="absolute top-2 right-2 w-5 h-5 bg-[#3B5787] rounded-full flex items-center justify-center">
+                                  <FaCheck className="w-2.5 h-2.5 text-white" />
+                                </div>
+                              )}
+
+                              <div className="text-center">
+                                <h5 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1 leading-tight">
+                                  {getServiceTypeName(serviceType)}
+                                </h5>
+                                <p className="text-[10px] sm:text-xs text-gray-600 mb-2 line-clamp-2">
+                                  {getServiceTypeDescription(serviceType)}
+                                </p>
+
+                                {/* Duration Badge */}
+                                <div className="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-[#3B5787]/10 to-[#3B5787]/20 rounded-full">
+                                  <FaClock className="w-2.5 h-2.5 text-[#3B5787]" />
+                                  <span className="text-[10px] sm:text-xs font-medium text-[#3B5787]">
                                     {serviceType.duration}
-                                  </p>
+                                  </span>
                                 </div>
                               </div>
-                            </div>
-                          </div>
-                        ))}
 
-                        {/* Show a placeholder if no service types are available */}
+                              {/* Selected State Overlay */}
+                              {isSelected && (
+                                <div className="absolute inset-0 bg-[#3B5787]/5 rounded-xl pointer-events-none" />
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {/* No Service Types Available */}
                         {getAvailableServiceTypes(vehicle.id).length === 0 && (
-                          <div className="p-3 border rounded-lg bg-gray-50 text-center text-gray-500">
-                            {t('transportationBooking.noServiceTypesAvailable')}
+                          <div className="col-span-2 lg:col-span-3 p-4 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 text-center">
+                            <div className="text-gray-500">
+                              <FaClock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                              <p className="text-sm font-medium">{t('transportationBooking.noServiceTypesAvailable')}</p>
+                              <p className="text-xs mt-1">Please contact support for assistance</p>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -626,117 +846,69 @@ const TransportationBookingPage = () => {
                   ))}
                 </div>
 
+                {/* Selected Summary */}
+                {Object.keys(serviceTypes).length > 0 && (
+                  <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
+                    <div className="flex items-center gap-3 mb-2">
+                      <FaCheck className="w-5 h-5 text-green-600" />
+                      <h3 className="font-semibold text-gray-800">Service Types Selected</h3>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {Object.keys(serviceTypes).length} vehicle(s) configured. Ready to proceed to scheduling.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
             {step === 3 && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  {t('transportationBooking.scheduleService')}
-                </h2>
+              <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-3 sm:p-6">
+                {/* Modern Header */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="w-12 h-12 bg-gradient-to-br from-[#3B5787] to-[#2d4265] rounded-2xl flex items-center justify-center shadow-lg">
+                      <FaCalendarAlt className="text-white text-xl" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+                        {t('transportationBooking.scheduleService')}
+                      </h2>
+                      <p className="text-gray-600 text-sm mt-1">Set your pickup time and location details</p>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <FaCalendarAlt className="inline mr-2" />
-                        {t('transportationBooking.pickupDate')}
-                      </label>
-                      <input
-                        type="date"
-                        value={bookingDetails.pickupDate}
-                        onChange={(e) => setBookingDetails(prev => ({ ...prev, pickupDate: e.target.value }))}
-                        min={new Date().toISOString().split('T')[0]}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <FaClock className="inline mr-2" />
-                        {t('transportationBooking.pickupTime')}
-                      </label>
-                      <select
-                        value={bookingDetails.pickupTime}
-                        onChange={(e) => setBookingDetails(prev => ({ ...prev, pickupTime: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">{t('transportationBooking.timeSlots.selectTime')}</option>
-                        <option value="06:00">06:00 - {t('transportationBooking.timeSlots.earlyMorning')}</option>
-                        <option value="07:00">07:00 - {t('transportationBooking.timeSlots.earlyMorning')}</option>
-                        <option value="08:00">08:00 - {t('transportationBooking.timeSlots.morning')}</option>
-                        <option value="09:00">09:00 - {t('transportationBooking.timeSlots.morning')}</option>
-                        <option value="10:00">10:00 - {t('transportationBooking.timeSlots.morning')}</option>
-                        <option value="11:00">11:00 - {t('transportationBooking.timeSlots.morning')}</option>
-                        <option value="12:00">12:00 - {t('transportationBooking.timeSlots.noon')}</option>
-                        <option value="13:00">13:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
-                        <option value="14:00">14:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
-                        <option value="15:00">15:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
-                        <option value="16:00">16:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
-                        <option value="17:00">17:00 - {t('transportationBooking.timeSlots.evening')}</option>
-                        <option value="18:00">18:00 - {t('transportationBooking.timeSlots.evening')}</option>
-                        <option value="19:00">19:00 - {t('transportationBooking.timeSlots.evening')}</option>
-                        <option value="20:00">20:00 - {t('transportationBooking.timeSlots.evening')}</option>
-                        <option value="21:00">21:00 - {t('transportationBooking.timeSlots.night')}</option>
-                        <option value="22:00">22:00 - {t('transportationBooking.timeSlots.night')}</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <FaMapMarkerAlt className="inline mr-2" />
-                        {t('transportationBooking.pickupLocation')}
-                      </label>
-                      <input
-                        type="text"
-                        value={bookingDetails.pickupLocation}
-                        onChange={(e) => setBookingDetails(prev => ({ ...prev, pickupLocation: e.target.value }))}
-                        placeholder={t('transportationBooking.placeholders.pickupAddress')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <FaMapMarkerAlt className="inline mr-2" />
-                        {t('transportationBooking.dropoffLocation')}
-                      </label>
-                      <input
-                        type="text"
-                        value={bookingDetails.dropoffLocation}
-                        onChange={(e) => setBookingDetails(prev => ({ ...prev, dropoffLocation: e.target.value }))}
-                        placeholder={t('transportationBooking.placeholders.dropoffAddress')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Round trip fields for round-trip bookings */}
-                  {selectedVehicles.some(v => serviceTypes[v.id]?.includes('round_trip')) && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 rounded-lg">
+                  {/* Pickup Date & Time Section */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <FaCalendarAlt className="text-[#3B5787]" />
+                      Pickup Schedule
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          <FaCalendarAlt className="inline mr-2" />
-                          {t('transportationBooking.returnDate')}
+                          <FaCalendarAlt className="inline mr-2 text-[#3B5787]" />
+                          {t('transportationBooking.pickupDate')}
                         </label>
                         <input
                           type="date"
-                          value={bookingDetails.returnDate}
-                          onChange={(e) => setBookingDetails(prev => ({ ...prev, returnDate: e.target.value }))}
-                          min={bookingDetails.pickupDate || new Date().toISOString().split('T')[0]}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={bookingDetails.pickupDate}
+                          onChange={(e) => setBookingDetails(prev => ({ ...prev, pickupDate: e.target.value }))}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3B5787] focus:border-[#3B5787] transition-all duration-200 bg-white/90 backdrop-blur-sm"
                         />
                       </div>
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          <FaClock className="inline mr-2" />
-                          {t('transportationBooking.returnTime')}
+                          <FaClock className="inline mr-2 text-[#3B5787]" />
+                          {t('transportationBooking.pickupTime')}
                         </label>
                         <select
-                          value={bookingDetails.returnTime}
-                          onChange={(e) => setBookingDetails(prev => ({ ...prev, returnTime: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={bookingDetails.pickupTime}
+                          onChange={(e) => setBookingDetails(prev => ({ ...prev, pickupTime: e.target.value }))}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3B5787] focus:border-[#3B5787] transition-all duration-200 bg-white/90 backdrop-blur-sm"
                         >
                           <option value="">{t('transportationBooking.timeSlots.selectTime')}</option>
                           <option value="06:00">06:00 - {t('transportationBooking.timeSlots.earlyMorning')}</option>
@@ -759,40 +931,139 @@ const TransportationBookingPage = () => {
                         </select>
                       </div>
                     </div>
-                  )}
+                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('transportationBooking.passengerCount')}
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="20"
-                        value={bookingDetails.passengerCount}
-                        onChange={(e) => setBookingDetails(prev => ({ ...prev, passengerCount: parseInt(e.target.value) || 1 }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('transportationBooking.luggageCount')}
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="10"
-                        value={bookingDetails.luggageCount}
-                        onChange={(e) => setBookingDetails(prev => ({ ...prev, luggageCount: parseInt(e.target.value) || 0 }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
+                  {/* Location Section */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <FaMapMarkerAlt className="text-green-600" />
+                      Location Details
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <FaMapMarkerAlt className="inline mr-2 text-green-600" />
+                          {t('transportationBooking.pickupLocation')}
+                        </label>
+                        <input
+                          type="text"
+                          value={bookingDetails.pickupLocation}
+                          onChange={(e) => setBookingDetails(prev => ({ ...prev, pickupLocation: e.target.value }))}
+                          placeholder={t('transportationBooking.placeholders.pickupAddress')}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white/90 backdrop-blur-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <FaMapMarkerAlt className="inline mr-2 text-red-500" />
+                          {t('transportationBooking.dropoffLocation')}
+                        </label>
+                        <input
+                          type="text"
+                          value={bookingDetails.dropoffLocation}
+                          onChange={(e) => setBookingDetails(prev => ({ ...prev, dropoffLocation: e.target.value }))}
+                          placeholder={t('transportationBooking.placeholders.dropoffAddress')}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-white/90 backdrop-blur-sm"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <FaStickyNote className="inline mr-2" />
+                  {/* Round Trip Section - Only show when round trip selected */}
+                  {selectedVehicles.some(v => serviceTypes[v.id]?.includes('round_trip')) && (
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <FaArrowLeft className="text-purple-600" />
+                        Return Trip Details
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <FaCalendarAlt className="inline mr-2 text-purple-600" />
+                            {t('transportationBooking.returnDate')}
+                          </label>
+                          <input
+                            type="date"
+                            value={bookingDetails.returnDate}
+                            onChange={(e) => setBookingDetails(prev => ({ ...prev, returnDate: e.target.value }))}
+                            min={bookingDetails.pickupDate || new Date().toISOString().split('T')[0]}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white/90 backdrop-blur-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <FaClock className="inline mr-2 text-purple-600" />
+                            {t('transportationBooking.returnTime')}
+                          </label>
+                          <select
+                            value={bookingDetails.returnTime}
+                            onChange={(e) => setBookingDetails(prev => ({ ...prev, returnTime: e.target.value }))}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white/90 backdrop-blur-sm"
+                          >
+                            <option value="">{t('transportationBooking.timeSlots.selectTime')}</option>
+                            <option value="06:00">06:00 - {t('transportationBooking.timeSlots.earlyMorning')}</option>
+                            <option value="07:00">07:00 - {t('transportationBooking.timeSlots.earlyMorning')}</option>
+                            <option value="08:00">08:00 - {t('transportationBooking.timeSlots.morning')}</option>
+                            <option value="09:00">09:00 - {t('transportationBooking.timeSlots.morning')}</option>
+                            <option value="10:00">10:00 - {t('transportationBooking.timeSlots.morning')}</option>
+                            <option value="11:00">11:00 - {t('transportationBooking.timeSlots.morning')}</option>
+                            <option value="12:00">12:00 - {t('transportationBooking.timeSlots.noon')}</option>
+                            <option value="13:00">13:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
+                            <option value="14:00">14:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
+                            <option value="15:00">15:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
+                            <option value="16:00">16:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
+                            <option value="17:00">17:00 - {t('transportationBooking.timeSlots.evening')}</option>
+                            <option value="18:00">18:00 - {t('transportationBooking.timeSlots.evening')}</option>
+                            <option value="19:00">19:00 - {t('transportationBooking.timeSlots.evening')}</option>
+                            <option value="20:00">20:00 - {t('transportationBooking.timeSlots.evening')}</option>
+                            <option value="21:00">21:00 - {t('transportationBooking.timeSlots.night')}</option>
+                            <option value="22:00">22:00 - {t('transportationBooking.timeSlots.night')}</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Passenger & Luggage Section */}
+                  <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-4 border border-orange-200">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <FaCar className="text-orange-600" />
+                      Passenger Details
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          👥 {t('transportationBooking.passengerCount')}
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={bookingDetails.passengerCount}
+                          onChange={(e) => setBookingDetails(prev => ({ ...prev, passengerCount: parseInt(e.target.value) || 1 }))}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white/90 backdrop-blur-sm text-center font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          🧳 {t('transportationBooking.luggageCount')}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="10"
+                          value={bookingDetails.luggageCount}
+                          onChange={(e) => setBookingDetails(prev => ({ ...prev, luggageCount: parseInt(e.target.value) || 0 }))}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white/90 backdrop-blur-sm text-center font-semibold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Special Requests Section */}
+                  <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200">
+                    <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                      <FaStickyNote className="text-[#3B5787]" />
                       {t('transportationBooking.specialRequests')}
                     </label>
                     <textarea
@@ -800,9 +1071,24 @@ const TransportationBookingPage = () => {
                       onChange={(e) => setBookingDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
                       placeholder={t('transportationBooking.specialRequestsPlaceholder')}
                       rows="3"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3B5787] focus:border-[#3B5787] transition-all duration-200 bg-white/90 backdrop-blur-sm resize-none"
                     />
                   </div>
+
+                  {/* Schedule Summary */}
+                  {bookingDetails.pickupDate && bookingDetails.pickupTime && (
+                    <div className="bg-gradient-to-r from-[#3B5787]/5 to-[#3B5787]/10 rounded-xl p-4 border border-[#3B5787]/20">
+                      <div className="flex items-center gap-3 mb-2">
+                        <FaCheck className="w-5 h-5 text-[#3B5787]" />
+                        <h3 className="font-semibold text-gray-800">Schedule Confirmed</h3>
+                      </div>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        <p><strong>Date:</strong> {bookingDetails.pickupDate}</p>
+                        <p><strong>Time:</strong> {bookingDetails.pickupTime}</p>
+                        <p><strong>Passengers:</strong> {bookingDetails.passengerCount} • <strong>Luggage:</strong> {bookingDetails.luggageCount}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -861,8 +1147,8 @@ const TransportationBookingPage = () => {
             )}
           </div>
 
-          {/* Navigation and Choose Service Types button only */}
-          <div className="lg:col-span-1">
+          {/* Navigation and Choose Service Types button - Desktop Only */}
+          <div className="hidden lg:block lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
               {selectedVehicles.length > 0 && (
                 <div className="mt-6 space-y-3">
@@ -907,6 +1193,68 @@ const TransportationBookingPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Sticky Bottom Button - Only show when vehicle selected */}
+      {selectedVehicleTypeId && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 p-4 shadow-lg z-50">
+          <div className="max-w-lg mx-auto space-y-3">
+            {step < 4 ? (
+              <button
+                onClick={() => setStep(step + 1)}
+                disabled={!canProceedToNext()}
+                className="w-full bg-gradient-to-r from-[#3B5787] to-[#2d4265] hover:from-[#2d4265] hover:to-[#1e2d47] disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center gap-2"
+              >
+                {step === 1 && (
+                  <>
+                    <FaArrowRight className="w-4 h-4" />
+                    {t('transportationBooking.nextStep')}
+                  </>
+                )}
+                {step === 2 && (
+                  <>
+                    <FaCalendarAlt className="w-4 h-4" />
+                    {t('transportationBooking.scheduleStep')}
+                  </>
+                )}
+                {step === 3 && (
+                  <>
+                    <FaCheck className="w-4 h-4" />
+                    {t('transportationBooking.reviewStep')}
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={handleBookingSubmit}
+                disabled={submitting}
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <FaSpinner className="animate-spin w-4 h-4" />
+                    {t('transportationBooking.booking')}
+                  </>
+                ) : (
+                  <>
+                    <FaCheck className="w-4 h-4" />
+                    {t('transportationBooking.confirmStep')}
+                  </>
+                )}
+              </button>
+            )}
+
+            {step > 1 && (
+              <button
+                onClick={() => setStep(step - 1)}
+                className="w-full bg-white/90 backdrop-blur-sm border-2 border-gray-200 text-gray-700 hover:bg-white hover:border-[#3B5787]/30 font-medium py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <FaArrowLeft className="w-4 h-4" />
+                {t('transportationBooking.back')}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
