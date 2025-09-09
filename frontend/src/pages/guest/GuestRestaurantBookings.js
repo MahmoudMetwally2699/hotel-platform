@@ -49,15 +49,15 @@ const GuestRestaurantBookings = () => {
    */
   const getStatusColor = (status) => {
     const statusColors = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      confirmed: 'bg-blue-100 text-blue-800',
-      in_progress: 'bg-purple-100 text-purple-800',
-      ready: 'bg-green-100 text-green-800',
-      delivered: 'bg-green-100 text-green-800',
-      completed: 'bg-green-100 text-green-800',
-      cancelled: 'bg-red-100 text-red-800'
+      pending: 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200',
+      confirmed: 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200',
+      in_progress: 'bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 border border-purple-200',
+      ready: 'bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-200',
+      delivered: 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200',
+      completed: 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200',
+      cancelled: 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200'
     };
-    return statusColors[status] || 'bg-gray-100 text-gray-800';
+    return statusColors[status] || 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border border-gray-200';
   };
 
   /**
@@ -129,61 +129,71 @@ const GuestRestaurantBookings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            <FaUtensils className="inline mr-3 text-orange-600" />
-            My Restaurant Orders
-          </h1>
-          <p className="text-gray-600">
-            Manage your restaurant orders and track delivery status
-          </p>
+        {/* Modern Header with Glassmorphism */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 sm:p-8 mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <FaUtensils className="text-white text-xl" />
+            </div>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                My Restaurant Orders
+              </h1>
+              <p className="text-gray-600 text-lg">
+                Manage your restaurant orders and track delivery status
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6">
-              {[
-                { key: 'pending', label: 'Pending', count: filterBookings('pending').length },
-                { key: 'active', label: 'Active', count: filterBookings('active').length },
-                { key: 'completed', label: 'Completed', count: filterBookings('completed').length },
-                { key: 'cancelled', label: 'Cancelled', count: filterBookings('cancelled').length }
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                    activeTab === tab.key
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {tab.label}
+        {/* Modern Tab Navigation */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-2 mb-8">
+          <nav className="flex flex-wrap gap-2">
+            {[
+              { key: 'pending', label: 'Pending', count: filterBookings('pending').length },
+              { key: 'active', label: 'Active', count: filterBookings('active').length },
+              { key: 'completed', label: 'Completed', count: filterBookings('completed').length },
+              { key: 'cancelled', label: 'Cancelled', count: filterBookings('cancelled').length }
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 min-w-fit px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 transform hover:scale-105 ${
+                  activeTab === tab.key
+                    ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <span>{tab.label}</span>
                   {tab.count > 0 && (
-                    <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
-                      activeTab === tab.key ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
+                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                      activeTab === tab.key
+                        ? 'bg-white/20 text-white'
+                        : 'bg-orange-100 text-orange-600'
                     }`}>
                       {tab.count}
                     </span>
                   )}
-                </button>
-              ))}
-            </nav>
-          </div>
+                </div>
+              </button>
+            ))}
+          </nav>
         </div>
 
         {/* Bookings List */}
         <div className="space-y-6">
           {filteredBookings.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <FaUtensils className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-12 text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FaUtensils className="text-orange-500 text-2xl" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
                 No {activeTab} orders found
               </h3>
-              <p className="text-gray-500">
+              <p className="text-gray-600 text-lg">
                 {activeTab === 'pending' && "You don't have any pending restaurant orders."}
                 {activeTab === 'active' && "You don't have any active restaurant orders."}
                 {activeTab === 'completed' && "You don't have any completed restaurant orders."}
@@ -192,51 +202,74 @@ const GuestRestaurantBookings = () => {
             </div>
           ) : (
             filteredBookings.map((booking) => (
-              <div key={booking._id} className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Order #{booking.bookingNumber || booking._id?.slice(-8)}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {new Date(booking.createdAt).toLocaleDateString()} at{' '}
-                      {new Date(booking.createdAt).toLocaleTimeString()}
-                    </p>
-                  </div>
-
+              <div key={booking._id} className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+                {/* Header with Order Number and Status */}
+                <div className="flex justify-between items-start mb-6">
                   <div className="flex items-center gap-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-md">
+                      <FaUtensils className="text-white text-sm" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">
+                        Order #{booking.bookingNumber || booking._id?.slice(-8)}
+                      </h3>
+                      <p className="text-sm text-gray-500 font-medium">
+                        {new Date(booking.createdAt).toLocaleDateString()} at{' '}
+                        {new Date(booking.createdAt).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className={`px-4 py-2 rounded-full text-sm font-semibold shadow-md backdrop-blur-sm ${getStatusColor(booking.status)}`}>
                       {getStatusLabel(booking.status)}
                     </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                  <div>
-                    <span className="font-medium">Hotel:</span>
-                    <p>{booking.hotelId?.name || 'N/A'}</p>
+                {/* Service Information */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FaMapMarkerAlt className="text-blue-500 text-sm" />
+                      <span className="font-semibold text-blue-800 text-sm">Hotel</span>
+                    </div>
+                    <p className="text-gray-800 font-medium">{booking.hotelId?.name || 'N/A'}</p>
                   </div>
-                  <div>
-                    <span className="font-medium">Restaurant:</span>
-                    <p>{booking.serviceId?.name || 'Restaurant Service'}</p>
+
+                  <div className="bg-gradient-to-br from-orange-50 to-red-100 rounded-xl p-4 border border-orange-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FaUtensils className="text-orange-500 text-sm" />
+                      <span className="font-semibold text-orange-800 text-sm">Restaurant</span>
+                    </div>
+                    <p className="text-gray-800 font-medium">{booking.serviceId?.name || 'Restaurant Service'}</p>
                   </div>
-                  <div>
-                    <span className="font-medium">Items:</span>
-                    <p>{booking.menuItems?.length || 0} items</p>
+
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FaReceipt className="text-green-500 text-sm" />
+                      <span className="font-semibold text-green-800 text-sm">Menu Items</span>
+                    </div>
+                    <p className="text-gray-800 font-medium">{booking.menuItems?.length || 0} items</p>
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="text-lg font-bold text-green-600">
-                    {formatPriceByLanguage(booking.pricing?.total, i18n.language)}
+                {/* Total Amount and Action Button */}
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                  <div className="bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl p-4 border border-emerald-200 sm:min-w-fit">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-semibold text-emerald-800 text-sm">Total Amount</span>
+                    </div>
+                    <p className="text-2xl font-bold text-emerald-600">
+                      {formatPriceByLanguage(booking.pricing?.total, i18n.language)}
+                    </p>
                   </div>
 
                   <button
                     onClick={() => setSelectedBooking(booking)}
-                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    className="flex items-center justify-center gap-2 px-6 py-3 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 hover:border-blue-300 rounded-xl font-medium transition-all duration-200 transform hover:scale-105"
                   >
-                    <FaEye className="mr-2" />
-                    View Details
+                    <FaEye />
+                    <span>View Details</span>
                   </button>
                 </div>
               </div>

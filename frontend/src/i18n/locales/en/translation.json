@@ -301,7 +301,20 @@
       "analytics": "Analytics"
     },
     "laundry": {
-      "subtitle": "Manage your laundry services, pricing, and bookings all in one place."
+      "subtitle": "Manage your laundry services, pricing, and bookings all in one place.",
+      "myBookings": "My Laundry Bookings",
+      "bookingsSubtitle": "Manage and pay for your laundry service bookings.",
+      "noBookings": "No laundry bookings found",
+      "noBookingsDescription": "You don't have any laundry bookings yet.",
+      "startBooking": "Start Booking",
+      "labels": {
+        "pendingPayment": "Pending Payment",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "processing": "Loading...",
+        "schedule": "Schedule",
+        "totalAmount": "Total Amount"
+      }
     },
     "orders": {
       "title": "Orders Management",

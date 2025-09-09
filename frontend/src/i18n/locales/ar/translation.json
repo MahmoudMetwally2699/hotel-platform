@@ -295,7 +295,20 @@
       "analytics": "التحليلات"
     },
     "laundry": {
-      "subtitle": "إدارة جميع خدمات الغسيل والتسعير والحجوزات في مكان واحد."
+      "subtitle": "إدارة جميع خدمات الغسيل والتسعير والحجوزات في مكان واحد.",
+      "myBookings": "حجوزات الغسيل الخاصة بي",
+      "bookingsSubtitle": "إدارة ودفع حجوزات خدمة الغسيل الخاصة بك.",
+      "noBookings": "لا توجد حجوزات غسيل",
+      "noBookingsDescription": "ليس لديك أي حجوزات غسيل حتى الآن.",
+      "startBooking": "ابدأ الحجز",
+      "labels": {
+        "pendingPayment": "في انتظار الدفع",
+        "confirmed": "مؤكد",
+        "completed": "مكتمل",
+        "processing": "جار التحميل...",
+        "schedule": "الجدولة",
+        "totalAmount": "إجمالي المبلغ"
+      }
     },
     "orders": {
       "title": "إدارة الطلبات",

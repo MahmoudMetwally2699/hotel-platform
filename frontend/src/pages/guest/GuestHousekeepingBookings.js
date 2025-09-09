@@ -180,17 +180,17 @@ const GuestHousekeepingBookings = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200';
       case 'confirmed':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200';
       case 'in_progress':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 border border-purple-200';
       case 'completed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-200';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border border-gray-200';
     }
   };
 
@@ -241,91 +241,99 @@ const GuestHousekeepingBookings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center">
-              <FaBroom className="text-3xl text-blue-600 mr-4" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {t('navigation.housekeepingBookings', 'Housekeeping Bookings')}
-                </h1>
-                <p className="text-sm text-gray-600">
-                  Manage your housekeeping service requests and bookings
-                </p>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Modern Header with Glassmorphism */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 sm:p-8 mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <FaBroom className="text-white text-xl" />
+            </div>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                {t('navigation.housekeepingBookings', 'Housekeeping Bookings')}
+              </h1>
+              <p className="text-gray-600 text-lg">
+                Manage your housekeeping service requests and bookings
+              </p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6">
-              {[
-                { key: 'all', label: 'All Bookings', count: bookings.length },
-                { key: 'pending', label: 'Pending', count: bookings.filter(b => b.status === 'pending').length },
-                { key: 'in_progress', label: 'In Progress', count: bookings.filter(b => b.status === 'in_progress').length },
-                { key: 'completed', label: 'Completed', count: bookings.filter(b => b.status === 'completed').length }
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+        {/* Modern Tab Navigation */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-2 mb-8">
+          <nav className="flex flex-wrap gap-2">
+            {[
+              { key: 'all', label: 'All Bookings', count: bookings.length },
+              { key: 'pending', label: 'Pending', count: bookings.filter(b => b.status === 'pending').length },
+              { key: 'in_progress', label: 'In Progress', count: bookings.filter(b => b.status === 'in_progress').length },
+              { key: 'completed', label: 'Completed', count: bookings.filter(b => b.status === 'completed').length }
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 min-w-fit px-4 py-3 rounded-xl font-medium text-sm transition-all duration-300 transform hover:scale-105 ${
+                  activeTab === tab.key
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <span>{tab.label}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                     activeTab === tab.key
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {tab.label} ({tab.count})
-                </button>
-              ))}
-            </nav>
-          </div>
+                      ? 'bg-white/20 text-white'
+                      : 'bg-blue-100 text-blue-600'
+                  }`}>
+                    {tab.count}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </nav>
+        </div>
 
-          {/* Bookings List */}
-          <div className="p-6">
-            {filteredBookings.length === 0 ? (
-              <div className="text-center py-12">
-                <FaBroom className="text-6xl text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                  No housekeeping bookings found
-                </h3>
-                <p className="text-gray-500">
-                  {activeTab === 'all'
-                    ? "You haven't requested any housekeeping services yet."
-                    : `No ${activeTab} housekeeping bookings found.`
-                  }
-                </p>
+        {/* Bookings List */}
+        <div className="space-y-6">
+          {filteredBookings.length === 0 ? (
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-12 text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FaBroom className="text-blue-500 text-2xl" />
               </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredBookings.map((booking) => (
-                  <div
-                    key={booking.id}
-                    className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-4">
-                        <div className="p-2 bg-gray-100 rounded-lg">
-                          {getCategoryIcon(
-                            booking.category ||
-                            booking.serviceDetails?.category ||
-                            getServiceCategory(booking.serviceName || booking.serviceDetails?.name)
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {booking.serviceName || booking.serviceDetails?.name || 'Housekeeping Service'}
-                          </h3>
-                          <p className="text-sm text-gray-600 mt-1">
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                No housekeeping bookings found
+              </h3>
+              <p className="text-gray-600 text-lg">
+                {activeTab === 'all'
+                  ? "You haven't requested any housekeeping services yet."
+                  : `No ${activeTab} housekeeping bookings found.`
+                }
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {filteredBookings.map((booking) => (
+                <div
+                  key={booking.id}
+                  className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
+                >
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                        <FaBroom className="text-white text-lg" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">
+                          {booking.serviceName || booking.serviceDetails?.name || 'Housekeeping Service'}
+                        </h3>
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-4 border border-blue-200 mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <FaClock className="text-blue-500 text-sm" />
+                            <span className="font-semibold text-blue-800 text-sm">Schedule & Room</span>
+                          </div>
+                          <p className="text-gray-800 font-medium">
                             Room {booking.guestDetails?.roomNumber || booking.roomNumber} • {
                               (() => {
-                                // Check the original preferred time stored in bookingDetails first
                                 const originalPreferredTime = booking.bookingDetails?.preferredTime || booking.preferredTime;
                                 const schedulePreferredTime = booking.schedule?.preferredTime;
 
@@ -338,37 +346,42 @@ const GuestHousekeepingBookings = () => {
                               })()
                             }
                           </p>
-                          {(booking.specialRequests || booking.serviceDetails?.specialRequests || booking.bookingDetails?.specialRequests) && (
-                            <p className="text-sm text-gray-500 mt-2">
-                              <strong>Special requests:</strong> {booking.specialRequests || booking.serviceDetails?.specialRequests || booking.bookingDetails?.specialRequests}
-                            </p>
-                          )}
-                          <p className="text-xs text-gray-400 mt-2">
-                            Requested on {new Date(booking.createdAt).toLocaleDateString()}
-                          </p>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                          {booking.status.replace('_', ' ').toUpperCase()}
-                        </span>
-                        <button
-                          onClick={() => handleViewDetails(booking)}
-                          className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
-                        >
-                          <FaEye />
-                        </button>
+                        {(booking.specialRequests || booking.serviceDetails?.specialRequests || booking.bookingDetails?.specialRequests) && (
+                          <div className="bg-gradient-to-br from-amber-50 to-orange-100 rounded-xl p-4 border border-amber-200 mb-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="font-semibold text-amber-800 text-sm">Special Requests</span>
+                            </div>
+                            <p className="text-gray-800 font-medium">
+                              {booking.specialRequests || booking.serviceDetails?.specialRequests || booking.bookingDetails?.specialRequests}
+                            </p>
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-400 font-medium">
+                          Requested on {new Date(booking.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
+                    <div className="flex flex-col items-end gap-3">
+                      <span className={`px-4 py-2 rounded-full text-sm font-semibold shadow-md backdrop-blur-sm ${getStatusColor(booking.status)}`}>
+                        {booking.status.replace('_', ' ').toUpperCase()}
+                      </span>
+                      <button
+                        onClick={() => handleViewDetails(booking)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 hover:border-blue-300 rounded-xl font-medium transition-all duration-200 transform hover:scale-105"
+                      >
+                        <FaEye />
+                        <span>View Details</span>
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* Details Modal */}
+        {/* Details Modal */}
       {showDetailsModal && selectedBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -441,6 +454,7 @@ const GuestHousekeepingBookings = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

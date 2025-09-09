@@ -15,8 +15,9 @@ import {
   FaTimes,
   FaEye,
   FaMoneyBillWave,
-  FaExclamationTriangle,
-  FaSpinner
+  FaSpinner,
+  FaChevronLeft,
+  FaChevronRight
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import apiClient from '../../services/api.service';
@@ -30,6 +31,12 @@ const GuestTransportationBookings = () => {
   const [selectedTab, setSelectedTab] = useState('payment_pending');
   const [selectedBooking, setSelectedBooking] = useState(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalBookings, setTotalBookings] = useState(0);
+  const itemsPerPage = 10;
+
   const tabs = [
     { id: 'pending_quote', label: t('transportation.labels.waitingForQuote'), icon: FaClock },
     { id: 'payment_pending', label: t('transportation.labels.readyForPayment'), icon: FaMoneyBillWave },
@@ -37,16 +44,40 @@ const GuestTransportationBookings = () => {
   ];
 
   useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 when tab changes
     fetchBookings();
   }, [selectedTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    fetchBookings();
+  }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`/transportation-bookings/guest?status=${selectedTab}`);
+      const response = await apiClient.get(`/transportation-bookings/guest?status=${selectedTab}&page=${currentPage}&limit=${itemsPerPage}`);
 
       if (response.data.success) {
         setBookings(response.data.data.bookings);
+
+
+
+        const pagination = response.data.data.pagination;
+        const totalBookingsFromApi = pagination?.total || response.data.data.bookings?.length || 0;
+
+        // Calculate total pages correctly - force calculation if API doesn't provide correct totalPages
+        const calculatedTotalPages = Math.ceil(totalBookingsFromApi / itemsPerPage);
+        let totalPagesFromApi = pagination?.totalPages || calculatedTotalPages || 1;
+
+        // Override if API totalPages seems incorrect
+        if (totalBookingsFromApi > itemsPerPage && totalPagesFromApi === 1) {
+          totalPagesFromApi = calculatedTotalPages;
+        }
+
+        setTotalPages(totalPagesFromApi);
+        setTotalBookings(totalBookingsFromApi);
+
+
       }
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -93,111 +124,123 @@ const GuestTransportationBookings = () => {
 
   const getStatusColor = (status) => {
     const colors = {
-      'pending_quote': 'bg-yellow-100 text-yellow-800',
-      'payment_pending': 'bg-orange-100 text-orange-800',
-      'payment_completed': 'bg-green-100 text-green-800',
-      'completed': 'bg-gray-100 text-gray-800',
-      'cancelled': 'bg-red-100 text-red-800',
-      'quote_rejected': 'bg-red-100 text-red-800'
+      'pending_quote': 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200',
+      'payment_pending': 'bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 border border-orange-200',
+      'payment_completed': 'bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-200',
+      'completed': 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200',
+      'cancelled': 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200',
+      'quote_rejected': 'bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200'
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border border-gray-200';
   };
 
   const renderBookingCard = (booking) => (
-    <div key={booking._id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            {booking.bookingReference}
-          </h3>
-          <p className="text-sm text-gray-600">
-            {booking.serviceProvider?.businessName}
-          </p>
+    <div key={booking._id} className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-2.5 sm:p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+      {/* Compact Header */}
+      <div className="flex justify-between items-start mb-2 sm:mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 sm:w-10 sm:h-10 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-lg flex items-center justify-center shadow-md">
+            <FaCar className="text-white text-xs sm:text-sm" />
+          </div>
+          <div>
+            <h3 className="text-sm sm:text-lg font-bold text-gray-900">
+              {booking.bookingReference}
+            </h3>
+            <p className="text-xs text-gray-600 font-medium">
+              {booking.serviceProvider?.businessName}
+            </p>
+          </div>
         </div>
         <div className="text-right">
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.bookingStatus)}`}>
+          <span className={`px-4 py-2 rounded-full text-sm font-semibold shadow-md backdrop-blur-sm ${getStatusColor(booking.bookingStatus)}`}>
             {t(`transportation.status.${booking.bookingStatus}`)}
           </span>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-400 mt-2 font-medium">
             {new Date(booking.createdAt).toLocaleDateString()}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div className="space-y-2">
-          <div className="flex items-center text-sm text-gray-600">
-            <FaCar className="mr-2" />
-            {t(`transportation.vehicleTypes.${booking.vehicleDetails?.vehicleType}`)} - {t(`transportation.comfortLevels.${booking.vehicleDetails?.comfortLevel}`)}
-          </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <FaCalendarAlt className="mr-2" />
-            <span className="font-medium">{t('transportation.labels.scheduledTime')}:</span>
-            <span className="ml-1">{new Date(booking.tripDetails?.scheduledDateTime).toLocaleString()}</span>
+      {/* Ultra Compact Info */}
+      <div className="space-y-2 mb-3">
+        {/* Vehicle Type & Date in One Row */}
+        <div className="bg-gradient-to-r from-[#3B5787]/10 to-[#67BAE0]/10 rounded-lg p-2 border border-[#67BAE0]/20">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1.5">
+              <FaCar className="text-[#3B5787] text-xs" />
+              <span className="font-semibold text-gray-900 truncate">
+                {t(`transportation.vehicleTypes.${booking.vehicleDetails?.vehicleType}`)} - {t(`transportation.comfortLevels.${booking.vehicleDetails?.comfortLevel}`)}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-gray-600 ml-2">
+              <FaCalendarAlt className="text-[#67BAE0] text-xs" />
+              <span className="whitespace-nowrap">
+                {new Date(booking.tripDetails?.scheduledDateTime).toLocaleDateString()} {new Date(booking.tripDetails?.scheduledDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
           </div>
         </div>
-        <div className="space-y-2">
-          <div className="flex items-center text-sm text-gray-600">
-            <FaMapMarkerAlt className="mr-2 text-green-500" />
-            <span className="font-medium">{t('transportation.labels.pickup')}:</span>
-            <span className="ml-1 truncate">{booking.tripDetails?.pickupLocation}</span>
-          </div>
-          <div className="flex items-center text-sm text-gray-600">
-            <FaMapMarkerAlt className="mr-2 text-red-500" />
-            <span className="font-medium">{t('transportation.labels.destination')}:</span>
-            <span className="ml-1 truncate">{booking.tripDetails?.destination}</span>
+
+        {/* Pickup & Destination in One Compact Row */}
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-2 border border-gray-200">
+          <div className="flex items-start justify-between gap-2 text-xs">
+            <div className="flex items-start gap-1 min-w-0 flex-1">
+              <FaMapMarkerAlt className="text-green-600 text-xs mt-0.5 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <span className="font-medium text-gray-700 block">{t('transportation.labels.pickup')}:</span>
+                <div className="text-gray-600 truncate">{booking.tripDetails?.pickupLocation}</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-1 min-w-0 flex-1">
+              <FaMapMarkerAlt className="text-red-500 text-xs mt-0.5 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <span className="font-medium text-gray-700 block">{t('transportation.labels.destination')}:</span>
+                <div className="text-gray-600 truncate">{booking.tripDetails?.destination}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Quote Information */}
+      {/* Ultra Compact Quote */}
       {booking.quote && (
-        <div className="bg-gray-50 rounded-md p-3 mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">{t('transportation.labels.quotedPrice')}:</span>
-            <span className="text-xl font-bold text-green-600">
+        <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg p-2 mb-2 border border-emerald-200">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1.5">
+              <FaMoneyBillWave className="text-emerald-600 text-xs" />
+              <span className="text-xs font-semibold text-gray-700">{t('transportation.labels.quotedPrice')}:</span>
+            </div>
+            <span className="text-base font-bold text-emerald-600 bg-white/70 px-2 py-0.5 rounded-md">
               {formatPriceByLanguage(booking.quote.finalPrice, i18n.language)}
             </span>
           </div>
 
           {booking.quote.quoteNotes && (
-            <p className="text-sm text-gray-600 mb-2">{booking.quote.quoteNotes}</p>
-          )}
-
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>{t('transportation.labels.quotedAt')}: {new Date(booking.quote.quotedAt).toLocaleString()}</span>
-            <span>{t('transportation.labels.expiresAt')}: {new Date(booking.quote.expiresAt).toLocaleString()}</span>
-          </div>
-
-          {booking.isQuoteExpired && (
-            <div className="mt-2">
-              <span className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded-full">
-                <FaExclamationTriangle className="inline mr-1" />
-                {t('transportation.status.quote_rejected')}
-              </span>
+            <div className="bg-white/50 rounded-lg p-2 mb-2">
+              <p className="text-xs text-gray-700 italic">"{booking.quote.quoteNotes}"</p>
             </div>
           )}
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="flex justify-end space-x-2">
+      {/* Ultra Compact Action Buttons */}
+      <div className="flex gap-1.5 pt-1.5 border-t border-gray-100 mt-2">
         <button
           onClick={() => handleViewDetails(booking._id)}
-          className="px-4 py-2 text-blue-600 hover:text-blue-800 border border-blue-300 rounded-md hover:bg-blue-50 transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[#3B5787] hover:text-[#67BAE0] bg-[#3B5787]/10 hover:bg-[#67BAE0]/20 border border-[#3B5787]/20 hover:border-[#67BAE0]/30 rounded-md font-medium text-xs transition-all duration-200"
         >
-          <FaEye className="inline mr-2" />
-          {t('transportation.labels.viewDetails')}
+          <FaEye />
+          <span>Details</span>
         </button>
 
-        {/* Show Pay Now button for payment_pending status (simplified workflow) */}
+        {/* Show Pay Now button for payment_pending status */}
         {booking.bookingStatus === 'payment_pending' && (
           <button
             onClick={() => handlePayNow(booking._id)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-md font-semibold text-xs shadow-md hover:shadow-lg transition-all duration-200"
           >
-            <FaMoneyBillWave className="inline mr-2" />
-            {t('transportation.labels.payNow')}
+            <FaMoneyBillWave />
+            <span>Pay</span>
           </button>
         )}
       </div>
@@ -205,48 +248,146 @@ const GuestTransportationBookings = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          <FaCar className="inline mr-3" />
-          {t('transportation.myBookings')}
-        </h1>
-        <p className="mt-2 text-gray-600">{t('transportation.bookingsSubtitle')}</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#3B5787]/5 via-white to-[#67BAE0]/10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Modern Header */}
+        <div className="mb-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-14 h-14 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-2xl flex items-center justify-center shadow-lg">
+                <FaCar className="text-white text-2xl" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-[#3B5787] to-[#67BAE0] bg-clip-text text-transparent">
+                  {t('transportation.myBookings')}
+                </h1>
+                <p className="text-gray-600 mt-1">{t('transportation.bookingsSubtitle')}</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setSelectedTab(tab.id)}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                selectedTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <tab.icon className="inline mr-2" />
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+        {/* Modern Tabs */}
+        <div className="mb-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-lg border border-white/20">
+            <nav className="flex space-x-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setSelectedTab(tab.id)}
+                  className={`flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                    selectedTab === tab.id
+                      ? 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white shadow-lg transform scale-[1.02]'
+                      : 'text-gray-600 hover:text-[#3B5787] hover:bg-[#67BAE0]/10'
+                  }`}
+                >
+                  <tab.icon className="text-sm" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
 
       {/* Content */}
       {loading ? (
         <div className="text-center py-12">
-          <FaSpinner className="text-4xl text-blue-500 animate-spin mx-auto mb-4" />
+          <FaSpinner className="text-4xl text-[#3B5787] animate-spin mx-auto mb-4" />
           <p className="text-gray-600">{t('transportation.labels.processing')}</p>
         </div>
       ) : bookings.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {bookings.map(renderBookingCard)}
-        </div>
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {bookings.map(renderBookingCard)}
+          </div>
+
+          {/* Pagination */}
+          <div className="mt-8 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-white/20">
+
+{(totalPages > 1 || totalBookings > itemsPerPage) && (
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalBookings)} of {totalBookings} bookings
+                </div>
+
+                <div className="flex items-center gap-2">
+                {/* Previous Button */}
+                <button
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`flex items-center gap-1 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                    currentPage === 1
+                      ? 'text-gray-400 cursor-not-allowed'
+                      : 'text-[#3B5787] hover:text-[#67BAE0] bg-[#3B5787]/10 hover:bg-[#67BAE0]/20'
+                  }`}
+                >
+                  <FaChevronLeft className="text-xs" />
+                  <span className="hidden sm:inline">Previous</span>
+                </button>
+
+                {/* Page Numbers */}
+                <div className="flex gap-1">
+                  {[...Array(totalPages)].map((_, index) => {
+                    const pageNumber = index + 1;
+                    const isActive = pageNumber === currentPage;
+
+                    // Show first page, last page, current page, and pages around current
+                    if (
+                      pageNumber === 1 ||
+                      pageNumber === totalPages ||
+                      (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={pageNumber}
+                          onClick={() => setCurrentPage(pageNumber)}
+                          className={`w-8 h-8 rounded-lg font-medium text-sm transition-all duration-200 ${
+                            isActive
+                              ? 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white shadow-md'
+                              : 'text-[#3B5787] hover:text-[#67BAE0] bg-[#3B5787]/10 hover:bg-[#67BAE0]/20'
+                          }`}
+                        >
+                          {pageNumber}
+                        </button>
+                      );
+                    } else if (
+                      pageNumber === currentPage - 2 ||
+                      pageNumber === currentPage + 2
+                    ) {
+                      return (
+                        <span key={pageNumber} className="px-2 py-2 text-gray-400">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+
+                {/* Next Button */}
+                <button
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`flex items-center gap-1 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                    currentPage === totalPages
+                      ? 'text-gray-400 cursor-not-allowed'
+                      : 'text-[#3B5787] hover:text-[#67BAE0] bg-[#3B5787]/10 hover:bg-[#67BAE0]/20'
+                  }`}
+                >
+                  <span className="hidden sm:inline">Next</span>
+                  <FaChevronRight className="text-xs" />
+                </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       ) : (
         <div className="text-center py-12">
-          <FaCar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <div className="w-16 h-16 bg-gradient-to-br from-[#3B5787]/20 to-[#67BAE0]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FaCar className="text-[#3B5787] text-2xl" />
+          </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             {t('transportation.noBookings')}
           </h3>
@@ -255,7 +396,7 @@ const GuestTransportationBookings = () => {
           </p>
           <button
             onClick={() => navigate('/hotels')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white rounded-md hover:shadow-lg transition-all duration-200"
           >
             {t('transportation.bookTransportation')}
           </button>
@@ -402,6 +543,7 @@ const GuestTransportationBookings = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
