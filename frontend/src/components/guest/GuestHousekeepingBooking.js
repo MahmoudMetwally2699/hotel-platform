@@ -11,7 +11,14 @@ import {
   FaSpinner,
   FaCheck,
   FaArrowLeft,
-  FaMapMarkerAlt
+  FaMapMarkerAlt,
+  FaLightbulb,
+  FaBolt,
+  FaWrench,
+  FaSnowflake,
+  FaCouch,
+  FaSprayCan,
+  FaTv
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
@@ -36,6 +43,222 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     specialRequests: '',
     guestEmail: ''
   });
+
+  // Quick hints state
+  const [showQuickHints, setShowQuickHints] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState(null);
+
+  // Get quick hint categories based on service type
+  const getQuickHintCategories = () => {
+    const serviceCategory = selectedService?.category?.toLowerCase();
+    const serviceName = selectedService?.name?.toLowerCase() || '';
+    
+    // Base categories for maintenance
+    const maintenanceCategories = [
+      {
+        title: "Electrical Issues",
+        icon: FaBolt,
+        color: "bg-gradient-to-r from-yellow-500 to-orange-500",
+        items: [
+          "No electricity in the room (Complete power outage)",
+          "Problem with the key card / power switch (By the entrance)",
+          "Light is not working",
+          "Problem with the power outlet / socket",
+          "Bathroom light is out",
+          "AC / Air conditioner is not working",
+          "Fridge is not cooling",
+          "TV is not turning on"
+        ]
+      },
+      {
+        title: "Plumbing Issues",
+        icon: FaWrench,
+        color: "bg-gradient-to-r from-blue-500 to-cyan-500",
+        items: [
+          "Sink is clogged / blocked",
+          "Bathtub / Shower drain is clogged",
+          "Water leak in the bathroom",
+          "Problem with the toilet flush / Toilet is not flushing",
+          "AC is leaking water",
+          "No hot water",
+          "Low water pressure"
+        ]
+      },
+      {
+        title: "AC & Heating",
+        icon: FaSnowflake,
+        color: "bg-gradient-to-r from-cyan-500 to-blue-500",
+        items: [
+          "AC is not cooling",
+          "AC / Heater is not heating",
+          "AC is making a loud noise",
+          "Problem with the AC remote control"
+        ]
+      },
+      {
+        title: "Furniture & Fixtures",
+        icon: FaCouch,
+        color: "bg-gradient-to-r from-amber-600 to-orange-600",
+        items: [
+          "Chair / Table is broken",
+          "Problem with the door lock",
+          "Closet / Wardrobe door won't close",
+          "Curtain is stuck / broken",
+          "Bed needs repair",
+          "Window won't close properly"
+        ]
+      },
+      {
+        title: "Electronic Devices",
+        icon: FaTv,
+        color: "bg-gradient-to-r from-indigo-500 to-purple-500",
+        items: [
+          "TV is not working",
+          "Problem with the Wi-Fi",
+          "TV remote control is not working",
+          "Problem with the telephone"
+        ]
+      }
+    ];
+
+    // Room cleaning specific categories
+    const roomCleaningCategories = [
+      {
+        title: "Room Cleaning Requests",
+        icon: FaBroom,
+        color: "bg-gradient-to-r from-[#3B5787] to-[#67BAE0]",
+        items: [
+          "Please clean the bathroom thoroughly",
+          "Change bed sheets and pillowcases",
+          "Vacuum the carpet/floor",
+          "Clean the windows",
+          "Empty all trash bins",
+          "Clean and disinfect surfaces",
+          "Mop the bathroom floor",
+          "Clean the mirror and glass surfaces"
+        ]
+      },
+      {
+        title: "Deep Cleaning",
+        icon: FaSprayCan,
+        color: "bg-gradient-to-r from-green-500 to-emerald-500",
+        items: [
+          "Deep clean the bathroom",
+          "Clean inside the refrigerator",
+          "Clean behind furniture",
+          "Sanitize door handles and switches",
+          "Clean air vents",
+          "Polish wooden surfaces",
+          "Clean light fixtures",
+          "Disinfect remote controls and phones"
+        ]
+      },
+      {
+        title: "Stains & Spots",
+        icon: FaSprayCan,
+        color: "bg-gradient-to-r from-red-500 to-pink-500",
+        items: [
+          "Remove stains from carpet",
+          "Clean stains on upholstery",
+          "Remove marks from walls",
+          "Clean stained bathroom tiles",
+          "Remove water spots from glass",
+          "Clean coffee/tea stains",
+          "Remove food stains",
+          "Clean makeup stains from surfaces"
+        ]
+      }
+    ];
+
+    // Amenities specific categories
+    const amenitiesCategories = [
+      {
+        title: "Bathroom Amenities",
+        icon: FaSprayCan,
+        color: "bg-gradient-to-r from-blue-400 to-cyan-400",
+        items: [
+          "Need fresh towels",
+          "Need extra towels",
+          "Replace bathroom toiletries",
+          "Need toilet paper",
+          "Replace shower curtain",
+          "Need bath mat",
+          "Replace soap dispensers",
+          "Need hair dryer"
+        ]
+      },
+      {
+        title: "Room Supplies",
+        icon: FaCouch,
+        color: "bg-gradient-to-r from-purple-500 to-indigo-500",
+        items: [
+          "Need extra pillows",
+          "Need extra blankets",
+          "Replace bed linens",
+          "Need hangers",
+          "Request iron and ironing board",
+          "Need desk supplies",
+          "Request coffee/tea supplies",
+          "Need room slippers"
+        ]
+      },
+      {
+        title: "Guest Comfort",
+        icon: FaCheck,
+        color: "bg-gradient-to-r from-green-400 to-teal-400",
+        items: [
+          "Adjust room temperature",
+          "Need blackout curtains",
+          "Request wake-up call service",
+          "Need mini-fridge restocking",
+          "Request newspaper delivery",
+          "Need extension cord",
+          "Request room air freshener",
+          "Need extra lighting"
+        ]
+      }
+    ];
+
+    // Return appropriate categories based on service type
+    if (serviceCategory === 'maintenance' || serviceName.includes('maintenance')) {
+      return maintenanceCategories;
+    } else if (serviceCategory === 'cleaning' || serviceName.includes('cleaning') || serviceName.includes('housekeeping')) {
+      return roomCleaningCategories; // Only cleaning-specific categories
+    } else if (serviceCategory === 'amenities' || serviceName.includes('amenities')) {
+      return amenitiesCategories;
+    } else {
+      // Default: show cleaning and amenities categories for general housekeeping
+      return [...roomCleaningCategories, ...amenitiesCategories];
+    }
+  };
+
+  const quickHintCategories = getQuickHintCategories();
+
+  // Handle quick hint selection
+  const handleQuickHintSelect = (hint) => {
+    const currentText = bookingDetails.specialRequests;
+    const newText = currentText ? `${currentText}\n• ${hint}` : `• ${hint}`;
+    setBookingDetails(prev => ({ ...prev, specialRequests: newText }));
+
+    // Optionally collapse the category after selection
+    setExpandedCategory(null);
+
+    // Show a subtle feedback
+    toast.success('Issue added to your request', {
+      position: "bottom-center",
+      autoClose: 1500,
+      hideProgressBar: true,
+      closeOnClick: true,
+      pauseOnHover: false,
+      draggable: false,
+      style: {
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        borderRadius: '12px',
+        fontSize: '14px'
+      }
+    });
+  };
 
   const serviceCategories = [
     {
@@ -326,60 +549,69 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
     return (
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-2 sm:p-4 sm:items-center overflow-y-auto"
+        className="fixed inset-0 bg-gradient-to-br from-[#3B5787]/20 via-black/60 to-[#67BAE0]/20 backdrop-blur-sm flex items-start justify-center z-50 p-2 sm:p-4 sm:items-center overflow-y-auto"
         style={{ touchAction: 'manipulation' }}
       >
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-sm mx-auto my-2 sm:my-0 max-h-[calc(100vh-1rem)] sm:max-h-[90vh] overflow-y-auto">
-          {/* Modal Header */}
-          <div className="relative p-4 sm:p-6 pb-3 sm:pb-4">
+        <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 w-full max-w-sm sm:max-w-md mx-auto my-1 sm:my-0 max-h-[calc(100vh-0.5rem)] sm:max-h-[90vh] overflow-y-auto relative overflow-hidden">
+          {/* Subtle gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#3B5787]/5 via-transparent to-[#67BAE0]/5 pointer-events-none"></div>
+          <div className="relative z-10">
+          {/* Compact Mobile Modal Header */}
+          <div className="relative bg-gradient-to-r from-[#3B5787] to-[#67BAE0] p-4 sm:p-6 rounded-t-2xl sm:rounded-t-3xl">
             <button
               onClick={() => setBookingStep('select')}
-              className="absolute top-3 sm:top-4 right-3 sm:right-4 text-gray-400 hover:text-gray-600 transition-colors p-1 sm:p-0"
+              className="absolute top-3 right-3 text-white/80 hover:text-white transition-colors p-1.5 hover:bg-white/10 rounded-full"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
 
-            <div className="text-center pr-8 sm:pr-0">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-1">
+            <div className="text-center pr-8">
+              <div className="flex items-center justify-center mb-2 sm:mb-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl flex items-center justify-center">
+                  <categoryInfo.icon className="text-white text-lg sm:text-xl" />
+                </div>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2">
                 {categoryInfo.label}
               </h2>
-              <p className="text-xs sm:text-sm text-gray-500">{t('housekeeping.scheduleService', 'Schedule our service below')}</p>
+              <p className="text-xs sm:text-sm text-white/80">{t('housekeeping.scheduleService', 'Schedule our service below')}</p>
             </div>
           </div>
 
-          {/* Modal Content */}
-          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+          {/* Compact Modal Content */}
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-4 sm:pt-6">
             <form onSubmit={handleBookingSubmit} className="space-y-3 sm:space-y-4">
               {/* Date/Time Field */}
               <div>
+                <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">Schedule Date & Time</label>
                 <div className="relative">
-                  <FaCalendarAlt className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+                  <FaCalendarAlt className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-[#3B5787] text-xs sm:text-sm" />
                   <input
                     type="datetime-local"
                     value={bookingDetails.scheduledDateTime}
                     onChange={(e) => setBookingDetails(prev => ({ ...prev, scheduledDateTime: e.target.value }))}
-                    className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-600 text-sm sm:text-base"
+                    className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] text-xs sm:text-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:border-[#67BAE0]/50"
                     min={new Date().toISOString().slice(0, 16)}
-                    placeholder="01/08/2023"
                   />
                 </div>
               </div>
 
               {/* Time Selection */}
               <div>
+                <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">Preferred Time</label>
                 <div className="relative">
-                  <FaClock className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+                  <FaClock className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-[#3B5787] text-xs sm:text-sm" />
                   <select
                     value={bookingDetails.preferredTime}
                     onChange={(e) => setBookingDetails(prev => ({ ...prev, preferredTime: e.target.value }))}
-                    className="w-full pl-10 sm:pl-12 pr-8 sm:pr-4 py-3 sm:py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-600 appearance-none bg-white text-sm sm:text-base cursor-pointer"
+                    className="w-full pl-10 sm:pl-12 pr-8 sm:pr-10 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] appearance-none bg-white/80 backdrop-blur-sm text-xs sm:text-sm cursor-pointer transition-all duration-200 hover:border-[#67BAE0]/50"
                     style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: 'right 0.75rem center',
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23${encodeURIComponent('3B5787')}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundPosition: 'right 1rem center',
                       backgroundRepeat: 'no-repeat',
-                      backgroundSize: '1.5em 1.5em',
+                      backgroundSize: '1.2em 1.2em',
                       WebkitAppearance: 'none',
                       MozAppearance: 'none'
                     }}
@@ -402,46 +634,152 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
               {/* Room Number */}
               <div>
+                <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">Room Number</label>
                 <div className="relative">
-                  <FaMapMarkerAlt className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+                  <FaMapMarkerAlt className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-[#3B5787] text-xs sm:text-sm" />
                   <input
                     type="text"
                     value={bookingDetails.roomNumber}
                     onChange={(e) => setBookingDetails(prev => ({ ...prev, roomNumber: e.target.value }))}
-                    className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-600 text-sm sm:text-base"
-                    placeholder={t('housekeeping.roomNumber', 'Room')}
+                    className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] text-xs sm:text-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:border-[#67BAE0]/50"
+                    placeholder={t('housekeeping.roomNumber', 'Room number')}
                     required
                   />
                 </div>
               </div>
 
-              {/* Additional Notes */}
+              {/* Additional Notes with Quick Hints */}
               <div>
-                <textarea
-                  value={bookingDetails.specialRequests}
-                  onChange={(e) => setBookingDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
-                  className="w-full px-3 sm:px-4 py-3 sm:py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-gray-600 resize-none text-sm sm:text-base"
-                  rows="3"
-                  placeholder={t('housekeeping.additionalNotes', 'Any additional Notes')}
-                />
+                <div className="space-y-2 sm:space-y-3">
+                  {/* Quick Hints Section - Show for all service types */}
+                  {quickHintCategories && quickHintCategories.length > 0 && (
+                    <div className="bg-gradient-to-r from-[#3B5787]/10 to-[#67BAE0]/10 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#67BAE0]/20 backdrop-blur-sm">
+                      <button
+                        type="button"
+                        onClick={() => setShowQuickHints(prev => !prev)}
+                        className="flex items-center justify-between w-full text-left hover:bg-white/30 rounded-lg p-1.5 sm:p-2 -m-1.5 sm:-m-2 transition-all duration-200"
+                      >
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
+                            <FaLightbulb className="text-white text-xs sm:text-sm" />
+                          </div>
+                          <div>
+                            <span className="font-semibold text-[#3B5787] text-xs sm:text-sm">Quick Issue Categories</span>
+                            <p className="text-xs text-[#3B5787]/70 hidden sm:block">Tap to view common issues</p>
+                          </div>
+                        </div>
+                        <div className={`transform transition-all duration-300 ${showQuickHints ? 'rotate-180' : ''}`}>
+                          <svg className="w-5 h-5 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </button>
+
+                      {showQuickHints && (
+                        <div className="mt-3 sm:mt-4 space-y-2 sm:space-y-3 animate-fadeIn">
+                          <div className="grid grid-cols-1 gap-2 sm:gap-3 max-h-48 sm:max-h-64 overflow-y-auto custom-scrollbar">
+                            {quickHintCategories.map((category, index) => (
+                              <div key={index} className="bg-white/80 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 border border-[#67BAE0]/20 shadow-sm hover:shadow-md transition-all duration-200">
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedCategory(expandedCategory === index ? null : index)}
+                                  className="flex items-center justify-between w-full text-left hover:bg-[#67BAE0]/10 rounded-md p-1.5 sm:p-2 -m-1.5 sm:-m-2 transition-all duration-200"
+                                >
+                                  <div className="flex items-center gap-2 sm:gap-3">
+                                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center ${category.color} shadow-sm`}>
+                                      <category.icon className="text-white text-xs sm:text-sm" />
+                                    </div>
+                                    <span className="font-semibold text-[#3B5787] text-xs sm:text-sm">{category.title}</span>
+                                  </div>
+                                  <div className={`transform transition-transform duration-200 ${expandedCategory === index ? 'rotate-180' : ''}`}>
+                                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-[#3B5787]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                  </div>
+                                </button>
+
+                                {expandedCategory === index && (
+                                  <div className="mt-2 sm:mt-3 space-y-1 sm:space-y-2 animate-fadeIn">
+                                    {category.items.map((item, itemIndex) => (
+                                      <button
+                                        key={itemIndex}
+                                        type="button"
+                                        onClick={() => handleQuickHintSelect(item)}
+                                        className="w-full text-left px-3 sm:px-4 py-2 sm:py-2.5 text-xs text-[#3B5787]/80 hover:bg-gradient-to-r hover:from-[#3B5787]/10 hover:to-[#67BAE0]/10 hover:text-[#3B5787] rounded-lg sm:rounded-xl transition-all duration-200 border border-[#67BAE0]/20 hover:border-[#67BAE0]/40 hover:shadow-sm backdrop-blur-sm"
+                                      >
+                                        <span className="flex items-start gap-2">
+                                          <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-[#67BAE0] rounded-full mt-1.5 sm:mt-1 flex-shrink-0"></span>
+                                          <span className="text-xs leading-tight">{item}</span>
+                                        </span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Special Requests Textarea */}
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">Special Requests</label>
+                    <div className="relative">
+                      <textarea
+                        value={bookingDetails.specialRequests}
+                        onChange={(e) => setBookingDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
+                        className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] resize-none text-xs sm:text-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:border-[#67BAE0]/50"
+                        rows="3"
+                        maxLength="500"
+                        placeholder={t('housekeeping.additionalNotes', 'Describe your issue or request...')}
+                      />
+                      {bookingDetails.specialRequests.length > 0 && (
+                        <div className="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 flex items-center gap-1 sm:gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setBookingDetails(prev => ({ ...prev, specialRequests: '' }))}
+                            className="bg-red-50 hover:bg-red-100 text-red-600 text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-full transition-all duration-200 border border-red-200 hover:border-red-300"
+                            title="Clear all text"
+                          >
+                            Clear
+                          </button>
+                          <div className="bg-[#67BAE0]/10 backdrop-blur-sm rounded-full px-2 sm:px-3 py-1 sm:py-1.5 border border-[#67BAE0]/20">
+                            <span className="text-xs text-[#3B5787] font-medium">{bookingDetails.specialRequests.length}/500</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Submit Button */}
+              {/* Compact Mobile Submit Button */}
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-gradient-to-r from-blue-400 to-blue-500 text-white py-3 sm:py-3 px-4 sm:px-6 rounded-2xl font-medium hover:from-blue-500 hover:to-blue-600 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base min-h-[48px]"
+                className="w-full bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl sm:rounded-2xl font-semibold hover:from-[#2d4066] hover:to-[#5aa8d4] transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm transform hover:scale-[1.02] active:scale-[0.98] min-h-[48px] sm:min-h-[56px] relative overflow-hidden"
               >
-                {submitting ? (
-                  <div className="flex items-center justify-center">
-                    <FaSpinner className="animate-spin mr-2" />
-                    <span className="text-sm sm:text-base">{t('housekeeping.processing', 'Processing...')}</span>
-                  </div>
-                ) : (
-                  <span className="text-sm sm:text-base">{t('housekeeping.submitRequest', 'Submit Request')}</span>
-                )}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative z-10">
+                  {submitting ? (
+                    <div className="flex items-center justify-center gap-2 sm:gap-3">
+                      <FaSpinner className="animate-spin text-sm sm:text-lg" />
+                      <span className="font-medium">{t('housekeeping.processing', 'Processing...')}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="font-semibold">{t('housekeeping.submitRequest', 'Submit Request')}</span>
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
               </button>
             </form>
+          </div>
           </div>
         </div>
       </div>
