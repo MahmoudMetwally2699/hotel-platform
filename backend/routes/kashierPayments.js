@@ -995,6 +995,239 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
           }
         }
       }
+    } else if (bookingId.startsWith('TEMP_RESTAURANT_') || bookingId.includes('RESTAURANT') || bookingId.includes('RESTAAURANT')) {
+      // For temporary restaurant bookings, look in the Booking model by bookingNumber
+      booking = await Booking.findOne({ bookingNumber: bookingId });
+      bookingType = 'restaurant';
+      console.log('🍽️ Looking for restaurant booking with temp ID:', bookingId);
+
+      // If booking not found, check if we need to create it from temp data
+      if (!booking) {
+        global.tempBookingData = global.tempBookingData || {};
+
+        // Try exact match first, then try to find any restaurant booking with similar ID
+        let tempData = global.tempBookingData[bookingId];
+
+        if (!tempData) {
+        // Look for similar booking IDs (in case of typos)
+        const restaurantKeys = Object.keys(global.tempBookingData).filter(key =>
+          (key.includes('RESTAURANT') || key.includes('RESTAAURANT')) &&
+          key.includes(bookingId.split('_')[2])
+        );          if (restaurantKeys.length > 0) {
+            tempData = global.tempBookingData[restaurantKeys[0]];
+            console.log(`🔄 Found similar restaurant booking key: ${restaurantKeys[0]} for ${bookingId}`);
+          }
+        }
+
+        console.log('🔍 Temp data lookup for restaurant:', bookingId);
+        console.log('📊 Available temp booking keys:', Object.keys(global.tempBookingData));
+        console.log('📋 Temp data found:', tempData ? 'Yes' : 'No');
+
+        if (tempData) {
+          console.log('📋 Temp data details:', {
+            bookingType: tempData.bookingType,
+            guestId: tempData.guestId,
+            hasBookingData: !!tempData.bookingData
+          });
+        }
+
+        if (tempData && paymentData.paymentStatus === 'SUCCESS') {
+          console.log('🏗️ Creating restaurant booking from temp data for:', bookingId);
+          console.log('📋 Available temp data:', tempData);
+
+          // Get user details for missing fields
+          const user = await User.findById(tempData.guestId);
+
+          if (!user) {
+            console.log('❌ User not found for temp booking:', tempData.guestId);
+            return res.status(404).json({
+              success: false,
+              message: 'User not found for booking'
+            });
+          }
+
+          // Generate proper booking number
+          const bookingNumber = `REST${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+
+          // Create booking with all required fields, using defaults where necessary
+          const bookingData = tempData.bookingData || {};
+
+          booking = new Booking({
+            bookingNumber,
+            guestId: tempData.guestId,
+            serviceId: bookingData.serviceId,
+            serviceProviderId: bookingData.serviceProviderId || tempData.serviceProviderId || new mongoose.Types.ObjectId(),
+            hotelId: bookingData.hotelId,
+
+            // Set service type for restaurant
+            serviceType: 'restaurant',
+            category: 'restaurant',
+
+            // Guest details - use user data with fallbacks
+            guestDetails: {
+              firstName: user.firstName || 'Guest',
+              lastName: user.lastName || 'User',
+              email: user.email,
+              phone: user.phone || '+20123456789', // Provide default phone if missing
+              roomNumber: bookingData.guestDetails?.roomNumber || user.roomNumber || '101',
+              specialRequests: bookingData.guestDetails?.specialRequests || ''
+            },
+
+            // Menu items
+            menuItems: bookingData.menuItems || [],
+
+            // Service details - provide defaults for required fields
+            serviceDetails: {
+              name: bookingData.serviceDetails?.name || 'Restaurant Service',
+              category: 'restaurant',
+              subcategory: 'dining',
+              description: bookingData.serviceDetails?.description || 'Restaurant service',
+              requirements: bookingData.serviceDetails?.requirements || [],
+              estimatedDuration: {
+                value: 60,
+                unit: 'minutes'
+              },
+              items: bookingData.menuItems?.map(item => ({
+                name: item.itemName || 'Menu Item',
+                description: item.description || '',
+                quantity: item.quantity || 1,
+                icon: 'utensils'
+              })) || []
+            },
+
+            // Booking Configuration - add required quantity field
+            bookingConfig: {
+              quantity: bookingData.menuItems?.reduce((total, item) => total + (item.quantity || 1), 0) || 1,
+              menuItems: bookingData.menuItems || [],
+              isExpressService: false,
+              additionalServices: [],
+              selectedOptions: [],
+              serviceCombination: { serviceTypes: [] },
+              laundryItems: []
+            },
+
+            // Scheduling - use current date if not provided
+            schedule: {
+              preferredDate: bookingData.schedule?.preferredDate ? new Date(bookingData.schedule.preferredDate) : new Date(),
+              preferredTime: (() => {
+                const prefTime = bookingData.schedule?.preferredTime;
+                // If preferredTime is "lunch", "dinner", etc., convert to a valid time format
+                if (prefTime) {
+                  if (prefTime.match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)) {
+                    return prefTime; // Already in HH:MM format
+                  } else if (prefTime.toLowerCase() === 'lunch') {
+                    return '12:00';
+                  } else if (prefTime.toLowerCase() === 'dinner') {
+                    return '19:00';
+                  } else if (prefTime.toLowerCase() === 'breakfast') {
+                    return '08:00';
+                  }
+                }
+                return '12:00'; // Default fallback
+              })(),
+              estimatedDuration: {
+                value: 60,
+                unit: 'minutes'
+              }
+            },
+
+            // Location
+            location: {
+              pickupLocation: bookingData.location?.pickupLocation || user.roomNumber || '',
+              deliveryLocation: bookingData.location?.deliveryLocation || user.roomNumber || '',
+              pickupInstructions: bookingData.location?.pickupInstructions || ''
+            },
+
+            // Pricing - calculate from payment amount
+            pricing: {
+              basePrice: parseFloat(paymentData.amount) || 0,
+              quantity: bookingData.menuItems?.length || 1,
+              subtotal: parseFloat(paymentData.amount) || 0,
+              expressSurcharge: 0,
+              markup: {
+                percentage: 15, // Default markup
+                amount: (parseFloat(paymentData.amount) * 0.15) || 0
+              },
+              tax: {
+                rate: 0,
+                amount: 0
+              },
+              totalBeforeMarkup: (parseFloat(paymentData.amount) / 1.15) || 0,
+              totalAmount: parseFloat(paymentData.amount) || 0,
+              currency: 'EGP',
+              providerEarnings: (parseFloat(paymentData.amount) / 1.15) || 0,
+              hotelEarnings: (parseFloat(paymentData.amount) * 0.15 / 1.15) || 0
+            },
+
+            status: 'confirmed',
+
+            // Payment information
+            payment: {
+              method: 'credit-card',
+              status: 'completed',
+              paidAmount: parseFloat(paymentData.amount) || 0,
+              paymentDate: new Date(),
+              transactionId: paymentData.transactionId,
+
+              // Kashier payment details
+              kashier: {
+                sessionId: bookingId,
+                transactionId: paymentData.transactionId,
+                paymentReference: paymentData.orderReference,
+                webhookData: paymentData
+              }
+            }
+          });
+
+          try {
+            await booking.save();
+
+            console.log('🔍 Restaurant booking saved with kashier data:', {
+              sessionId: booking.payment?.kashier?.sessionId,
+              transactionId: booking.payment?.kashier?.transactionId,
+              bookingNumber: booking.bookingNumber
+            });
+
+            logger.info('Restaurant booking created from payment confirmation', {
+              bookingId: booking._id,
+              bookingNumber: booking.bookingNumber,
+              tempId: bookingId,
+              amount: paymentData.amount,
+              transactionId: paymentData.transactionId
+            });
+
+            // Clean up temporary booking data
+            delete global.tempBookingData[bookingId];
+
+            console.log('✅ Restaurant booking created successfully:', booking.bookingNumber);
+          } catch (saveError) {
+            console.error('❌ Error saving restaurant booking:', saveError);
+            return res.status(500).json({
+              success: false,
+              message: 'Failed to create restaurant booking after payment',
+              error: saveError.message
+            });
+          }
+        } else if (paymentData.paymentStatus === 'SUCCESS') {
+          // No temp data found, but payment was successful
+          // This could happen if server restarted or temp data was cleared
+          console.log('⚠️ No temp data found for restaurant booking, but payment successful');
+          console.log('🔧 Attempting to create basic restaurant booking from payment data only');
+
+          // Try to extract user ID from the booking ID if possible or use a fallback approach
+          // For now, return an error asking user to contact support
+          return res.status(202).json({
+            success: false,
+            message: 'Payment successful but booking data not found. Please contact support.',
+            data: {
+              bookingId,
+              transactionId: paymentData.transactionId,
+              amount: paymentData.amount,
+              status: 'payment_confirmed_booking_pending'
+            }
+          });
+        }
+      }
     } else {
       // Try transportation booking first
       try {

@@ -736,38 +736,75 @@ const GuestLaundryBookings = () => {
                               <div className="text-sm text-gray-600 font-medium">Qty: {item.quantity || 1}</div>
                               <div className="text-lg font-bold text-emerald-600">
                                 {(() => {
-                                  // Try item's own price first
-                                  let itemPrice = item.totalPrice ||
-                                                 item.price ||
-                                                 item.amount;
+                                  const bookingTotal = selectedBooking.pricing?.total ||
+                                                      selectedBooking.payment?.paidAmount ||
+                                                      selectedBooking.payment?.amount ||
+                                                      selectedBooking.totalAmount ||
+                                                      selectedBooking.amount;
 
-                                  // If no item price, use booking total logic
-                                  if (!itemPrice) {
-                                    const bookingTotal = selectedBooking.pricing?.total ||
-                                                        selectedBooking.payment?.paidAmount ||
-                                                        selectedBooking.payment?.amount ||
-                                                        selectedBooking.totalAmount ||
-                                                        selectedBooking.amount;
+                                  // Get all items for this booking
+                                  const allItems = selectedBooking.bookingConfig?.laundryItems ||
+                                                  selectedBooking.laundryItems ||
+                                                  selectedBooking.items || [];
 
-                                    if (bookingTotal) {
-                                      if (item.isFallback) {
-                                        // For fallback items, use the full booking total
-                                        itemPrice = bookingTotal;
-                                      } else {
-                                        // For real items without individual pricing, use the full booking total
-                                        // This makes sense because each item is part of the total service
-                                        itemPrice = bookingTotal;
-                                      }
+                                  let itemPrice;
+
+                                  // Check if this is a fallback item
+                                  if (item.isFallback) {
+                                    itemPrice = bookingTotal;
+                                  }
+                                  // PRIORITY 1: Use actual individual item pricing if available
+                                  else if (item.basePrice) {
+                                    // Use the base price from laundry booking (individual item price)
+                                    itemPrice = item.basePrice * (item.quantity || 1);
+                                    console.log(`✅ USING ACTUAL PRICE: ${item.itemName} = ${item.basePrice} × ${item.quantity || 1} = ${itemPrice}`);
+                                  }
+                                  else if (item.price && item.quantity && item.price !== bookingTotal) {
+                                    // Use individual price × quantity if it's not the booking total
+                                    itemPrice = item.price * item.quantity;
+                                    console.log(`✅ USING ITEM PRICE: ${item.itemName} = ${item.price} × ${item.quantity} = ${itemPrice}`);
+                                  }
+                                  else if (item.price && item.price !== bookingTotal) {
+                                    // Use individual price if it's not the booking total
+                                    itemPrice = item.price;
+                                    console.log(`✅ USING SINGLE PRICE: ${item.itemName} = ${item.price}`);
+                                  }
+                                  // FALLBACK: Check if multiple items all have the same price as the total (definitely wrong)
+                                  else if (allItems.length > 1) {
+                                    // Check if all items have the same totalPrice and it matches the booking total
+                                    const allItemsSamePrice = allItems.every(itm =>
+                                      itm.totalPrice && Math.abs(itm.totalPrice - bookingTotal) < 0.01
+                                    );
+
+                                    if (allItemsSamePrice) {
+                                      // All items showing total price - definitely incorrect, divide evenly
+                                      itemPrice = bookingTotal / allItems.length;
+                                      console.log(`🔧 FALLBACK FIXED: All ${allItems.length} items had same price as total (${bookingTotal}), divided evenly: ${itemPrice}`);
+                                    } else {
+                                      // Use the item's totalPrice even if it might be wrong
+                                      itemPrice = item.totalPrice || bookingTotal / allItems.length;
                                     }
                                   }
+                                  // Single item - use its own pricing
+                                  else {
+                                    itemPrice = item.totalPrice || bookingTotal;
+                                  }
 
-                                  console.log('💰 Item price for', item.itemName, ':', {
+                                  // Final fallback
+                                  if (!itemPrice && bookingTotal) {
+                                    itemPrice = bookingTotal;
+                                  }
+
+                                  console.log('💰 Enhanced item price for', item.itemName, ':', {
                                     itemTotalPrice: item.totalPrice,
                                     itemPrice: item.price,
+                                    itemQuantity: item.quantity,
                                     itemAmount: item.amount,
+                                    bookingTotal: bookingTotal,
+                                    allItemsCount: allItems.length,
                                     selectedPrice: itemPrice,
                                     isFallback: item.isFallback,
-                                    bookingTotal: selectedBooking.payment?.paidAmount
+                                    isSuspiciousPrice: item.totalPrice && Math.abs(item.totalPrice - bookingTotal) < 0.01
                                   });
 
                                   return itemPrice ? formatPriceByLanguage(itemPrice, i18n.language) : 'N/A';

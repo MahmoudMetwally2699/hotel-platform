@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FaCheckCircle, FaCar, FaCalendarAlt, FaMapMarkerAlt, FaMoneyBillWave, FaReceipt, FaHome, FaTshirt } from 'react-icons/fa';
+import { FaCheckCircle, FaCar, FaCalendarAlt, FaMapMarkerAlt, FaMoneyBillWave, FaReceipt, FaHome, FaTshirt, FaUtensils } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { formatPriceByLanguage } from '../../utils/currency';
 
@@ -110,6 +110,8 @@ const PaymentSuccess = () => {
               detectedType = 'laundry';
             } else if (bookingId.includes('TEMP_TRANSPORT_')) {
               detectedType = 'transportation';
+            } else if (bookingId.includes('TEMP_RESTAURANT_')) {
+              detectedType = 'restaurant';
             }
             // Check data structure - look for laundry items in multiple locations
             else if ((bookingData.bookingConfig?.laundryItems && bookingData.bookingConfig.laundryItems.length > 0) ||
@@ -117,6 +119,8 @@ const PaymentSuccess = () => {
               detectedType = 'laundry';
             } else if (bookingData.pickupLocation || bookingData.dropoffLocation || bookingData.tripDetails) {
               detectedType = 'transportation';
+            } else if (bookingData.restaurantDetails || bookingData.tableBooking || bookingData.reservationDetails) {
+              detectedType = 'restaurant';
             }
             // Check category field
             else if (bookingData.category) {
@@ -169,6 +173,8 @@ const PaymentSuccess = () => {
         bookingType = 'laundry';
       } else if (bookingId && bookingId.includes('TRANSPORT')) {
         bookingType = 'transportation';
+      } else if (bookingId && bookingId.includes('RESTAURANT')) {
+        bookingType = 'restaurant';
       }
 
       // Try the appropriate endpoint first based on booking type
@@ -281,6 +287,27 @@ const PaymentSuccess = () => {
     bookingConfigStructure: booking?.bookingConfig ? Object.keys(booking.bookingConfig) : []
   });
 
+  // Additional debug for restaurant bookings
+  if (booking?.bookingType === 'restaurant') {
+    console.log('🍽️ Restaurant booking debug:', {
+      fullBooking: booking,
+      reservationDetails: booking.reservationDetails,
+      bookingConfig: booking.bookingConfig,
+      guestDetails: booking.guestDetails,
+      serviceDetails: booking.serviceDetails,
+      schedule: booking.schedule,
+      pricing: booking.pricing,
+      bookingDate: booking.bookingDate,
+      bookingTime: booking.bookingTime,
+      guestCount: booking.guestCount,
+      numberOfGuests: booking.numberOfGuests,
+      partySize: booking.partySize,
+      tablePreference: booking.tablePreference,
+      scheduledDate: booking.scheduledDate,
+      scheduledTime: booking.scheduledTime
+    });
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -295,6 +322,8 @@ const PaymentSuccess = () => {
           <p className="text-xl text-gray-600">
             {booking.bookingType === 'laundry'
               ? t('paymentSuccess.laundryConfirmed')
+              : booking.bookingType === 'restaurant'
+              ? t('paymentSuccess.restaurantConfirmed', 'Your restaurant reservation has been confirmed!')
               : t('paymentSuccess.transportConfirmed')}
           </p>
         </div>
@@ -306,7 +335,11 @@ const PaymentSuccess = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold mb-1">
-                  {booking.bookingType === 'laundry' ? t('paymentSuccess.orderConfirmed') : t('paymentSuccess.bookingConfirmed')}
+                  {booking.bookingType === 'laundry'
+                    ? t('paymentSuccess.orderConfirmed')
+                    : booking.bookingType === 'restaurant'
+                    ? t('paymentSuccess.reservationConfirmed', 'Reservation Confirmed')
+                    : t('paymentSuccess.bookingConfirmed')}
                 </h2>
                 <p className="text-green-100">
                   {t('paymentSuccess.reference', { ref: booking.bookingNumber || booking.bookingReference })}
@@ -314,6 +347,8 @@ const PaymentSuccess = () => {
               </div>
               {booking.bookingType === 'laundry' ? (
                 <FaTshirt className="text-4xl text-green-200" />
+              ) : booking.bookingType === 'restaurant' ? (
+                <FaUtensils className="text-4xl text-green-200" />
               ) : (
                 <FaCar className="text-4xl text-green-200" />
               )}
@@ -407,6 +442,98 @@ const PaymentSuccess = () => {
                               t('paymentSuccess.notAvailable')
                             }</p>
                           </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : booking.bookingType === 'restaurant' ? (
+                  // Restaurant Reservation Details
+                  <>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <FaUtensils className="mr-2 text-blue-500" />
+                      {t('paymentSuccess.reservationDetails', 'Reservation Details')}
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-start">
+                        <FaCalendarAlt className="mr-3 text-blue-500 mt-1" />
+                        <div>
+                          <p className="font-medium text-gray-900">{t('paymentSuccess.dateTime', 'Date & Time')}</p>
+                          <p className="text-gray-600">
+                            {(() => {
+                              // Try multiple possible field names for date
+                              const date = booking.reservationDetails?.date ||
+                                           booking.bookingDate ||
+                                           booking.scheduledDate ||
+                                           booking.schedule?.preferredDate ||
+                                           booking.bookingConfig?.date ||
+                                           booking.bookingConfig?.scheduledDate;
+
+                              // Try multiple possible field names for time
+                              const time = booking.reservationDetails?.time ||
+                                           booking.bookingTime ||
+                                           booking.scheduledTime ||
+                                           booking.schedule?.preferredTime ||
+                                           booking.bookingConfig?.time ||
+                                           booking.bookingConfig?.scheduledTime;
+
+                              if (date && time) {
+                                // Format the date properly if it's an ISO string
+                                const formattedDate = date.includes('T') ? new Date(date).toLocaleDateString() : date;
+                                return `${formattedDate} at ${time}`;
+                              } else if (date) {
+                                const formattedDate = date.includes('T') ? new Date(date).toLocaleDateString() : date;
+                                return formattedDate;
+                              } else if (time) {
+                                return `Time: ${time}`;
+                              } else {
+                                return t('paymentSuccess.notAvailable');
+                              }
+                            })()}
+                          </p>
+                        </div>
+                      </div>
+
+                      {(booking.guestDetails?.specialRequests || booking.location?.deliveryInstructions) && (
+                        <div className="bg-gray-50 rounded-md p-4">
+                          <p className="font-medium text-gray-700">{t('paymentSuccess.specialRequests', 'Special Requests')}</p>
+                          <p className="text-gray-600">
+                            {booking.guestDetails?.specialRequests || booking.location?.deliveryInstructions}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Ordered Items */}
+                      {(booking.bookingConfig?.menuItems && booking.bookingConfig.menuItems.length > 0) && (
+                        <div>
+                          <p className="font-medium text-gray-700 mb-2">{t('paymentSuccess.orderedItems', 'Ordered Items')}</p>
+                          <div className="bg-gray-50 rounded-md p-3 space-y-2">
+                            {booking.bookingConfig.menuItems.map((item, idx) => (
+                              <div key={idx} className="flex justify-between text-sm">
+                                <div>
+                                  <p className="font-medium">{item.name || item.itemName || 'Menu Item'}</p>
+                                  <p className="text-gray-500 text-xs">
+                                    {t('paymentSuccess.quantity')}: {item.quantity || 1}
+                                  </p>
+                                </div>
+                                <div className="text-right font-medium">
+                                  {formatPriceByLanguage(item.totalPrice || item.price || 0, 'en')}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {booking.restaurantDetails && (
+                        <div className="bg-blue-50 rounded-md p-3">
+                          <h4 className="font-medium text-blue-900 mb-2">{t('paymentSuccess.restaurantInfo', 'Restaurant Information')}</h4>
+                          <p className="text-blue-800">{booking.restaurantDetails.name}</p>
+                          {booking.restaurantDetails.cuisine && (
+                            <p className="text-blue-700 text-sm">{booking.restaurantDetails.cuisine} cuisine</p>
+                          )}
+                          {booking.restaurantDetails.location && (
+                            <p className="text-blue-700 text-sm">{booking.restaurantDetails.location}</p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -577,6 +704,25 @@ const PaymentSuccess = () => {
                       {t('paymentSuccess.nextLaundry.viewHistory')}
                     </li>
                   </ul>
+                ) : booking.bookingType === 'restaurant' ? (
+                  <ul className="space-y-2 text-sm text-blue-800">
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                      {t('paymentSuccess.nextRestaurant.confirmationEmail', 'You will receive a confirmation email shortly')}
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                      {t('paymentSuccess.nextRestaurant.restaurantContact', 'The restaurant will contact you if needed')}
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                      {t('paymentSuccess.nextRestaurant.viewReservations', 'You can view this reservation in your booking history')}
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                      {t('paymentSuccess.nextRestaurant.arriveOnTime', 'Please arrive on time for your reservation')}
+                    </li>
+                  </ul>
                 ) : (
                   <ul className="space-y-2 text-sm text-blue-800">
                     <li className="flex items-center">
@@ -616,7 +762,11 @@ const PaymentSuccess = () => {
             className="flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-lg font-medium"
           >
             <FaHome className="mr-2" />
-            {booking.bookingType === 'laundry' ? t('paymentSuccess.exploreMoreServices') : t('paymentSuccess.bookAnotherTrip')}
+            {booking.bookingType === 'laundry'
+              ? t('paymentSuccess.exploreMoreServices')
+              : booking.bookingType === 'restaurant'
+              ? t('paymentSuccess.makeAnotherReservation', 'Make Another Reservation')
+              : t('paymentSuccess.bookAnotherTrip')}
           </button>
         </div>
 
