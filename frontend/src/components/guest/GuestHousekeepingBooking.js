@@ -52,7 +52,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const getQuickHintCategories = () => {
     const serviceCategory = selectedService?.category?.toLowerCase();
     const serviceName = selectedService?.name?.toLowerCase() || '';
-    
+
     // Base categories for maintenance
     const maintenanceCategories = [
       {
@@ -332,8 +332,14 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const handleServiceSelect = (service) => {
     setSelectedService(service);
 
-    // Set default time based on service category
-    if (service.category === 'maintenance') {
+    // Set default time based on service category - all housekeeping services default to ASAP
+    if (service.category === 'maintenance' ||
+        service.category === 'cleaning' ||
+        service.category === 'amenities' ||
+        (service.name && (service.name.includes('maintenance') ||
+          service.name.includes('cleaning') ||
+          service.name.includes('amenities') ||
+          service.name.includes('housekeeping')))) {
       setBookingDetails(prev => ({ ...prev, preferredTime: 'asap' }));
     } else {
       setBookingDetails(prev => ({ ...prev, preferredTime: '09:00' }));
@@ -583,17 +589,17 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
           {/* Compact Modal Content */}
           <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-4 sm:pt-6">
             <form onSubmit={handleBookingSubmit} className="space-y-3 sm:space-y-4">
-              {/* Date/Time Field */}
+              {/* Date Field */}
               <div>
-                <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">Schedule Date & Time</label>
+                <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">Schedule Date</label>
                 <div className="relative">
                   <FaCalendarAlt className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-[#3B5787] text-xs sm:text-sm" />
                   <input
-                    type="datetime-local"
-                    value={bookingDetails.scheduledDateTime}
-                    onChange={(e) => setBookingDetails(prev => ({ ...prev, scheduledDateTime: e.target.value }))}
+                    type="date"
+                    value={bookingDetails.scheduledDateTime ? bookingDetails.scheduledDateTime.split('T')[0] : ''}
+                    onChange={(e) => setBookingDetails(prev => ({ ...prev, scheduledDateTime: e.target.value + 'T09:00' }))}
                     className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] text-xs sm:text-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:border-[#67BAE0]/50"
-                    min={new Date().toISOString().slice(0, 16)}
+                    min={new Date().toISOString().split('T')[0]}
                   />
                 </div>
               </div>
@@ -616,7 +622,13 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                       MozAppearance: 'none'
                     }}
                   >
-                    {selectedService && selectedService.category === 'maintenance' && (
+                    {selectedService && (selectedService.category === 'maintenance' ||
+                      selectedService.category === 'cleaning' ||
+                      selectedService.category === 'amenities' ||
+                      (selectedService.name && (selectedService.name.includes('maintenance') ||
+                        selectedService.name.includes('cleaning') ||
+                        selectedService.name.includes('amenities') ||
+                        selectedService.name.includes('housekeeping')))) && (
                       <option value="asap">{t('housekeeping.asap', 'As soon as possible')}</option>
                     )}
                     <option value="09:00">09:00</option>

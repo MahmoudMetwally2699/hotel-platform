@@ -6,6 +6,12 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import {
+  FaTshirt,
+  FaCar,
+  FaUtensils,
+  FaBroom
+} from 'react-icons/fa';
 import useAuth from '../hooks/useAuth';
 
 const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
@@ -539,27 +545,18 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                         onClick={() => setShowMobileCategories(false)}
                         className="flex items-center space-x-4 w-full"
                       >
-                        <div className="flex-shrink-0 p-3 bg-white rounded-lg shadow-sm">
+                        <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-lg shadow-sm">
                           {booking.icon === 'truck' && (
-                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
-                            </svg>
+                            <FaCar className="w-6 h-6 text-white" />
                           )}
                           {booking.icon === 'sparkles' && (
-                            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                            </svg>
+                            <FaTshirt className="w-6 h-6 text-white" />
                           )}
                           {booking.icon === 'utensils' && (
-                            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v5a2 2 0 01-2 2H9a2 2 0 01-2-2v-5m6-5a2 2 0 012 2v3" />
-                            </svg>
+                            <FaUtensils className="w-6 h-6 text-white" />
                           )}
                           {booking.icon === 'broom' && (
-                            <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                            </svg>
+                            <FaBroom className="w-6 h-6 text-white" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
