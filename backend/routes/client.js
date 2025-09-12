@@ -808,6 +808,31 @@ router.get('/bookings/by-merchant-order/:merchantOrderId', async (req, res) => {
         });
       }
 
+      // Additional check: if this looks like a temp booking ID, wait a moment and try again
+      if (merchantOrderId.startsWith('TEMP_')) {
+        console.log('⏳ Temp booking not found immediately, waiting and retrying...');
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+
+        // Try to find the booking again after waiting
+        booking = await Booking.findOne({
+          $or: [
+            { bookingNumber: merchantOrderId },
+            { 'payment.kashier.sessionId': merchantOrderId }
+          ]
+        })
+        .populate('serviceId', 'name description category images')
+        .populate('hotelId', 'name address contactPhone contactEmail')
+        .populate('serviceProviderId', 'businessName contactPhone contactEmail');
+
+        if (booking) {
+          console.log('✅ Found booking after retry:', booking.bookingNumber);
+          return res.json({
+            success: true,
+            data: booking
+          });
+        }
+      }
+
       return res.status(404).json({
         success: false,
         message: 'Booking not found'
@@ -2111,11 +2136,50 @@ router.post('/bookings/housekeeping', async (req, res) => {
     console.log('🔧 Housekeeping booking - Hotel found:', hotel.name);
     console.log('🔧 Housekeeping booking - Hotel phone:', hotel.phone);
 
+    // Handle both database services and custom frontend services
+    let service = null;
+    let serviceProvider = null;
+
+    if (serviceId.startsWith('custom-')) {
+      // This is a custom frontend service, find the hotel's housekeeping provider
+      console.log('🔧 Housekeeping booking - Custom service detected:', serviceId);
+
+      // Find the hotel's internal housekeeping service provider
+      serviceProvider = await ServiceProvider.findOne({
+        hotelId: hotelId,
+        categories: 'housekeeping'
+      });
+
+      if (!serviceProvider) {
+        console.log('🔧 Housekeeping booking - No housekeeping provider found for hotel');
+        return res.status(404).json({
+          success: false,
+          message: 'No housekeeping service provider available'
+        });
+      }
+
+      console.log('🔧 Housekeeping booking - Using hotel housekeeping provider:', serviceProvider.businessName);
+    } else {
+      // This is a real database service
+      service = await Service.findById(serviceId).populate('providerId');
+      if (!service) {
+        console.log('🔧 Housekeeping booking - Service not found:', serviceId);
+        return res.status(404).json({
+          success: false,
+          message: 'Service not found'
+        });
+      }
+
+      serviceProvider = service.providerId;
+      console.log('🔧 Housekeeping booking - Database service found:', service.name);
+      console.log('🔧 Housekeeping booking - Service provider:', serviceProvider?.businessName);
+    }
+
     // Create booking with all required fields for housekeeping services
     const bookingData = {
-      // Core booking fields - use a real ObjectId for serviceId
-      serviceId: new mongoose.Types.ObjectId(), // Generate a new ObjectId since custom services don't have real IDs
-      serviceName: serviceName,
+      // Core booking fields - handle both custom and real services
+      serviceId: service ? service._id : new mongoose.Types.ObjectId(),
+      serviceName: service ? service.name : serviceName,
       serviceType: 'housekeeping',
       category: serviceCategory || 'cleaning', // Store the housekeeping category at the top level
       hotel: hotelId,
@@ -2123,7 +2187,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
 
       // Use authenticated user ID if available, otherwise create dummy ID
       guestId: authenticatedUser ? authenticatedUser._id : new mongoose.Types.ObjectId(),
-      serviceProviderId: new mongoose.Types.ObjectId(), // Dummy service provider ID
+      serviceProviderId: serviceProvider._id, // Use the actual service provider ID
 
       // Guest Information (mapped from our housekeeping form)
       guestDetails: {
@@ -2136,8 +2200,8 @@ router.post('/bookings/housekeeping', async (req, res) => {
 
       // Service Details - store the actual housekeeping category
       serviceDetails: {
-        name: serviceName,
-        category: serviceCategory || 'cleaning' // Use the actual service category (cleaning, amenities, maintenance)
+        name: service ? service.name : serviceName,
+        category: 'housekeeping' // Use 'housekeeping' since that's what the Booking model expects
       },
 
       // Booking Configuration

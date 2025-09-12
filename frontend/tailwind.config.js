@@ -7,16 +7,23 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          light: '#4dabf5',
-          main: '#1976d2',
-          dark: '#115293',
+          light: '#67BAE0',
+          main: '#3B5787',
+          dark: '#2A4065',
           contrastText: '#fff',
         },
         secondary: {
-          light: '#ff4081',
-          main: '#dc004e',
-          dark: '#9a0036',
+          light: '#67BAE0',
+          main: '#3B5787',
+          dark: '#2A4065',
           contrastText: '#fff',
+        },
+        modern: {
+          blue: '#3B5787',
+          lightBlue: '#67BAE0',
+          darkBlue: '#2A4065',
+          gray: '#F8FAFC',
+          darkGray: '#64748B',
         },
         background: {
           paper: '#fff',

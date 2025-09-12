@@ -56,67 +56,67 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     // Base categories for maintenance
     const maintenanceCategories = [
       {
-        title: "Electrical Issues",
+        title: t('housekeeping.quickIssues.maintenance.electrical.title'),
         icon: FaBolt,
         color: "bg-gradient-to-r from-yellow-500 to-orange-500",
         items: [
-          "No electricity in the room (Complete power outage)",
-          "Problem with the key card / power switch (By the entrance)",
-          "Light is not working",
-          "Problem with the power outlet / socket",
-          "Bathroom light is out",
-          "AC / Air conditioner is not working",
-          "Fridge is not cooling",
-          "TV is not turning on"
+          t('housekeeping.quickIssues.maintenance.electrical.items.powerOutage'),
+          t('housekeeping.quickIssues.maintenance.electrical.items.keyCardProblem'),
+          t('housekeeping.quickIssues.maintenance.electrical.items.lightNotWorking'),
+          t('housekeeping.quickIssues.maintenance.electrical.items.powerOutlet'),
+          t('housekeeping.quickIssues.maintenance.electrical.items.bathroomLight'),
+          t('housekeeping.quickIssues.maintenance.electrical.items.acNotWorking'),
+          t('housekeeping.quickIssues.maintenance.electrical.items.fridgeNotCooling'),
+          t('housekeeping.quickIssues.maintenance.electrical.items.tvNotTurning')
         ]
       },
       {
-        title: "Plumbing Issues",
+        title: t('housekeeping.quickIssues.maintenance.plumbing.title'),
         icon: FaWrench,
         color: "bg-gradient-to-r from-blue-500 to-cyan-500",
         items: [
-          "Sink is clogged / blocked",
-          "Bathtub / Shower drain is clogged",
-          "Water leak in the bathroom",
-          "Problem with the toilet flush / Toilet is not flushing",
-          "AC is leaking water",
-          "No hot water",
-          "Low water pressure"
+          t('housekeeping.quickIssues.maintenance.plumbing.items.sinkClogged'),
+          t('housekeeping.quickIssues.maintenance.plumbing.items.drainClogged'),
+          t('housekeeping.quickIssues.maintenance.plumbing.items.waterLeak'),
+          t('housekeeping.quickIssues.maintenance.plumbing.items.toiletFlush'),
+          t('housekeeping.quickIssues.maintenance.plumbing.items.acLeaking'),
+          t('housekeeping.quickIssues.maintenance.plumbing.items.noHotWater'),
+          t('housekeeping.quickIssues.maintenance.plumbing.items.lowPressure')
         ]
       },
       {
-        title: "AC & Heating",
+        title: t('housekeeping.quickIssues.maintenance.acHeating.title'),
         icon: FaSnowflake,
         color: "bg-gradient-to-r from-cyan-500 to-blue-500",
         items: [
-          "AC is not cooling",
-          "AC / Heater is not heating",
-          "AC is making a loud noise",
-          "Problem with the AC remote control"
+          t('housekeeping.quickIssues.maintenance.acHeating.items.acNotCooling'),
+          t('housekeeping.quickIssues.maintenance.acHeating.items.heaterNotHeating'),
+          t('housekeeping.quickIssues.maintenance.acHeating.items.acNoise'),
+          t('housekeeping.quickIssues.maintenance.acHeating.items.remoteControl')
         ]
       },
       {
-        title: "Furniture & Fixtures",
+        title: t('housekeeping.quickIssues.maintenance.furniture.title'),
         icon: FaCouch,
         color: "bg-gradient-to-r from-amber-600 to-orange-600",
         items: [
-          "Chair / Table is broken",
-          "Problem with the door lock",
-          "Closet / Wardrobe door won't close",
-          "Curtain is stuck / broken",
-          "Bed needs repair",
-          "Window won't close properly"
+          t('housekeeping.quickIssues.maintenance.furniture.items.chairTable'),
+          t('housekeeping.quickIssues.maintenance.furniture.items.doorLock'),
+          t('housekeeping.quickIssues.maintenance.furniture.items.closetDoor'),
+          t('housekeeping.quickIssues.maintenance.furniture.items.curtainStuck'),
+          t('housekeeping.quickIssues.maintenance.furniture.items.bedRepair'),
+          t('housekeeping.quickIssues.maintenance.furniture.items.windowClose')
         ]
       },
       {
-        title: "Electronic Devices",
+        title: t('housekeeping.quickIssues.maintenance.electronics.title'),
         icon: FaTv,
         color: "bg-gradient-to-r from-indigo-500 to-purple-500",
         items: [
-          "TV is not working",
-          "Problem with the Wi-Fi",
-          "TV remote control is not working",
-          "Problem with the telephone"
+          t('housekeeping.quickIssues.maintenance.electronics.items.tvNotWorking'),
+          t('housekeeping.quickIssues.maintenance.electronics.items.wifiProblem'),
+          t('housekeeping.quickIssues.maintenance.electronics.items.tvRemote'),
+          t('housekeeping.quickIssues.maintenance.electronics.items.telephoneProblem')
         ]
       }
     ];
@@ -124,48 +124,48 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     // Room cleaning specific categories
     const roomCleaningCategories = [
       {
-        title: "Room Cleaning Requests",
+        title: t('housekeeping.quickIssues.cleaning.roomCleaning.title'),
         icon: FaBroom,
         color: "bg-gradient-to-r from-[#3B5787] to-[#67BAE0]",
         items: [
-          "Please clean the bathroom thoroughly",
-          "Change bed sheets and pillowcases",
-          "Vacuum the carpet/floor",
-          "Clean the windows",
-          "Empty all trash bins",
-          "Clean and disinfect surfaces",
-          "Mop the bathroom floor",
-          "Clean the mirror and glass surfaces"
+          t('housekeeping.quickIssues.cleaning.roomCleaning.items.bathroomClean'),
+          t('housekeeping.quickIssues.cleaning.roomCleaning.items.changeBedSheets'),
+          t('housekeeping.quickIssues.cleaning.roomCleaning.items.vacuumFloor'),
+          t('housekeeping.quickIssues.cleaning.roomCleaning.items.cleanWindows'),
+          t('housekeeping.quickIssues.cleaning.roomCleaning.items.emptyTrash'),
+          t('housekeeping.quickIssues.cleaning.roomCleaning.items.disinfectSurfaces'),
+          t('housekeeping.quickIssues.cleaning.roomCleaning.items.mopBathroom'),
+          t('housekeeping.quickIssues.cleaning.roomCleaning.items.cleanGlass')
         ]
       },
       {
-        title: "Deep Cleaning",
+        title: t('housekeeping.quickIssues.cleaning.deepCleaning.title'),
         icon: FaSprayCan,
         color: "bg-gradient-to-r from-green-500 to-emerald-500",
         items: [
-          "Deep clean the bathroom",
-          "Clean inside the refrigerator",
-          "Clean behind furniture",
-          "Sanitize door handles and switches",
-          "Clean air vents",
-          "Polish wooden surfaces",
-          "Clean light fixtures",
-          "Disinfect remote controls and phones"
+          t('housekeeping.quickIssues.cleaning.deepCleaning.items.deepBathroom'),
+          t('housekeeping.quickIssues.cleaning.deepCleaning.items.cleanFridge'),
+          t('housekeeping.quickIssues.cleaning.deepCleaning.items.cleanBehind'),
+          t('housekeeping.quickIssues.cleaning.deepCleaning.items.sanitizeHandles'),
+          t('housekeeping.quickIssues.cleaning.deepCleaning.items.cleanVents'),
+          t('housekeeping.quickIssues.cleaning.deepCleaning.items.polishWood'),
+          t('housekeeping.quickIssues.cleaning.deepCleaning.items.cleanFixtures'),
+          t('housekeeping.quickIssues.cleaning.deepCleaning.items.disinfectControls')
         ]
       },
       {
-        title: "Stains & Spots",
+        title: t('housekeeping.quickIssues.cleaning.stains.title'),
         icon: FaSprayCan,
         color: "bg-gradient-to-r from-red-500 to-pink-500",
         items: [
-          "Remove stains from carpet",
-          "Clean stains on upholstery",
-          "Remove marks from walls",
-          "Clean stained bathroom tiles",
-          "Remove water spots from glass",
-          "Clean coffee/tea stains",
-          "Remove food stains",
-          "Clean makeup stains from surfaces"
+          t('housekeeping.quickIssues.cleaning.stains.items.carpetStains'),
+          t('housekeeping.quickIssues.cleaning.stains.items.upholsteryStains'),
+          t('housekeeping.quickIssues.cleaning.stains.items.wallMarks'),
+          t('housekeeping.quickIssues.cleaning.stains.items.tileStains'),
+          t('housekeeping.quickIssues.cleaning.stains.items.waterSpots'),
+          t('housekeeping.quickIssues.cleaning.stains.items.coffeeStains'),
+          t('housekeeping.quickIssues.cleaning.stains.items.foodStains'),
+          t('housekeeping.quickIssues.cleaning.stains.items.makeupStains')
         ]
       }
     ];
@@ -173,48 +173,48 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     // Amenities specific categories
     const amenitiesCategories = [
       {
-        title: "Bathroom Amenities",
+        title: t('housekeeping.quickIssues.amenities.bathroom.title'),
         icon: FaSprayCan,
         color: "bg-gradient-to-r from-blue-400 to-cyan-400",
         items: [
-          "Need fresh towels",
-          "Need extra towels",
-          "Replace bathroom toiletries",
-          "Need toilet paper",
-          "Replace shower curtain",
-          "Need bath mat",
-          "Replace soap dispensers",
-          "Need hair dryer"
+          t('housekeeping.quickIssues.amenities.bathroom.items.freshTowels'),
+          t('housekeeping.quickIssues.amenities.bathroom.items.extraTowels'),
+          t('housekeeping.quickIssues.amenities.bathroom.items.toiletries'),
+          t('housekeeping.quickIssues.amenities.bathroom.items.toiletPaper'),
+          t('housekeeping.quickIssues.amenities.bathroom.items.showerCurtain'),
+          t('housekeeping.quickIssues.amenities.bathroom.items.bathMat'),
+          t('housekeeping.quickIssues.amenities.bathroom.items.soapDispensers'),
+          t('housekeeping.quickIssues.amenities.bathroom.items.hairDryer')
         ]
       },
       {
-        title: "Room Supplies",
+        title: t('housekeeping.quickIssues.amenities.roomSupplies.title'),
         icon: FaCouch,
         color: "bg-gradient-to-r from-purple-500 to-indigo-500",
         items: [
-          "Need extra pillows",
-          "Need extra blankets",
-          "Replace bed linens",
-          "Need hangers",
-          "Request iron and ironing board",
-          "Need desk supplies",
-          "Request coffee/tea supplies",
-          "Need room slippers"
+          t('housekeeping.quickIssues.amenities.roomSupplies.items.extraPillows'),
+          t('housekeeping.quickIssues.amenities.roomSupplies.items.extraBlankets'),
+          t('housekeeping.quickIssues.amenities.roomSupplies.items.bedLinens'),
+          t('housekeeping.quickIssues.amenities.roomSupplies.items.hangers'),
+          t('housekeeping.quickIssues.amenities.roomSupplies.items.ironBoard'),
+          t('housekeeping.quickIssues.amenities.roomSupplies.items.deskSupplies'),
+          t('housekeeping.quickIssues.amenities.roomSupplies.items.coffeeSupplies'),
+          t('housekeeping.quickIssues.amenities.roomSupplies.items.slippers')
         ]
       },
       {
-        title: "Guest Comfort",
+        title: t('housekeeping.quickIssues.amenities.comfort.title'),
         icon: FaCheck,
         color: "bg-gradient-to-r from-green-400 to-teal-400",
         items: [
-          "Adjust room temperature",
-          "Need blackout curtains",
-          "Request wake-up call service",
-          "Need mini-fridge restocking",
-          "Request newspaper delivery",
-          "Need extension cord",
-          "Request room air freshener",
-          "Need extra lighting"
+          t('housekeeping.quickIssues.amenities.comfort.items.adjustTemp'),
+          t('housekeeping.quickIssues.amenities.comfort.items.blackoutCurtains'),
+          t('housekeeping.quickIssues.amenities.comfort.items.wakeupCall'),
+          t('housekeeping.quickIssues.amenities.comfort.items.restock'),
+          t('housekeeping.quickIssues.amenities.comfort.items.newspaper'),
+          t('housekeeping.quickIssues.amenities.comfort.items.extensionCord'),
+          t('housekeeping.quickIssues.amenities.comfort.items.airFreshener'),
+          t('housekeeping.quickIssues.amenities.comfort.items.extraLighting')
         ]
       }
     ];

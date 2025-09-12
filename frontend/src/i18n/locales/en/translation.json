@@ -1384,6 +1384,146 @@
     },
     "noServices": "No Services Available",
     "noServicesDescription": "Housekeeping services are currently not available.",
-    "asap": "As soon as possible"
+    "asap": "As soon as possible",
+    "quickIssues": {
+      "maintenance": {
+        "electrical": {
+          "title": "Electrical Issues",
+          "items": {
+            "powerOutage": "No electricity in the room (Complete power outage)",
+            "keyCardProblem": "Problem with the key card / power switch (By the entrance)",
+            "lightNotWorking": "Light is not working",
+            "powerOutlet": "Problem with the power outlet / socket",
+            "bathroomLight": "Bathroom light is out",
+            "acNotWorking": "AC / Air conditioner is not working",
+            "fridgeNotCooling": "Fridge is not cooling",
+            "tvNotTurning": "TV is not turning on"
+          }
+        },
+        "plumbing": {
+          "title": "Plumbing Issues",
+          "items": {
+            "sinkClogged": "Sink is clogged / blocked",
+            "drainClogged": "Bathtub / Shower drain is clogged",
+            "waterLeak": "Water leak in the bathroom",
+            "toiletFlush": "Problem with the toilet flush / Toilet is not flushing",
+            "acLeaking": "AC is leaking water",
+            "noHotWater": "No hot water",
+            "lowPressure": "Low water pressure"
+          }
+        },
+        "acHeating": {
+          "title": "AC & Heating",
+          "items": {
+            "acNotCooling": "AC is not cooling",
+            "heaterNotHeating": "AC / Heater is not heating",
+            "acNoise": "AC is making a loud noise",
+            "remoteControl": "Problem with the AC remote control"
+          }
+        },
+        "furniture": {
+          "title": "Furniture & Fixtures",
+          "items": {
+            "chairTable": "Chair / Table is broken",
+            "doorLock": "Problem with the door lock",
+            "closetDoor": "Closet / Wardrobe door won't close",
+            "curtainStuck": "Curtain is stuck / broken",
+            "bedRepair": "Bed needs repair",
+            "windowClose": "Window won't close properly"
+          }
+        },
+        "electronics": {
+          "title": "Electronic Devices",
+          "items": {
+            "tvNotWorking": "TV is not working",
+            "wifiProblem": "Problem with the Wi-Fi",
+            "tvRemote": "TV remote control is not working",
+            "telephoneProblem": "Problem with the telephone"
+          }
+        }
+      },
+      "cleaning": {
+        "roomCleaning": {
+          "title": "Room Cleaning Requests",
+          "items": {
+            "bathroomClean": "Please clean the bathroom thoroughly",
+            "changeBedSheets": "Change bed sheets and pillowcases",
+            "vacuumFloor": "Vacuum the carpet/floor",
+            "cleanWindows": "Clean the windows",
+            "emptyTrash": "Empty all trash bins",
+            "disinfectSurfaces": "Clean and disinfect surfaces",
+            "mopBathroom": "Mop the bathroom floor",
+            "cleanGlass": "Clean the mirror and glass surfaces"
+          }
+        },
+        "deepCleaning": {
+          "title": "Deep Cleaning",
+          "items": {
+            "deepBathroom": "Deep clean the bathroom",
+            "cleanFridge": "Clean inside the refrigerator",
+            "cleanBehind": "Clean behind furniture",
+            "sanitizeHandles": "Sanitize door handles and switches",
+            "cleanVents": "Clean air vents",
+            "polishWood": "Polish wooden surfaces",
+            "cleanFixtures": "Clean light fixtures",
+            "disinfectControls": "Disinfect remote controls and phones"
+          }
+        },
+        "stains": {
+          "title": "Stains & Spots",
+          "items": {
+            "carpetStains": "Remove stains from carpet",
+            "upholsteryStains": "Clean stains on upholstery",
+            "wallMarks": "Remove marks from walls",
+            "tileStains": "Clean stained bathroom tiles",
+            "waterSpots": "Remove water spots from glass",
+            "coffeeStains": "Clean coffee/tea stains",
+            "foodStains": "Remove food stains",
+            "makeupStains": "Clean makeup stains from surfaces"
+          }
+        }
+      },
+      "amenities": {
+        "bathroom": {
+          "title": "Bathroom Amenities",
+          "items": {
+            "freshTowels": "Need fresh towels",
+            "extraTowels": "Need extra towels",
+            "toiletries": "Replace bathroom toiletries",
+            "toiletPaper": "Need toilet paper",
+            "showerCurtain": "Replace shower curtain",
+            "bathMat": "Need bath mat",
+            "soapDispensers": "Replace soap dispensers",
+            "hairDryer": "Need hair dryer"
+          }
+        },
+        "roomSupplies": {
+          "title": "Room Supplies",
+          "items": {
+            "extraPillows": "Need extra pillows",
+            "extraBlankets": "Need extra blankets",
+            "bedLinens": "Replace bed linens",
+            "hangers": "Need hangers",
+            "ironBoard": "Request iron and ironing board",
+            "deskSupplies": "Need desk supplies",
+            "coffeeSupplies": "Request coffee/tea supplies",
+            "slippers": "Need room slippers"
+          }
+        },
+        "comfort": {
+          "title": "Guest Comfort",
+          "items": {
+            "adjustTemp": "Adjust room temperature",
+            "blackoutCurtains": "Need blackout curtains",
+            "wakeupCall": "Request wake-up call service",
+            "restock": "Need mini-fridge restocking",
+            "newspaper": "Request newspaper delivery",
+            "extensionCord": "Need extension cord",
+            "airFreshener": "Request room air freshener",
+            "extraLighting": "Need extra lighting"
+          }
+        }
+      }
+    }
   }
 }

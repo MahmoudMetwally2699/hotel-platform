@@ -54,8 +54,8 @@ const serviceSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Service category is required'],
     enum: {
-      values: ['laundry', 'transportation', 'tours', 'spa', 'dining', 'entertainment', 'shopping', 'fitness'],
-      message: 'Category must be one of: laundry, transportation, tours, spa, dining, entertainment, shopping, fitness'
+      values: ['laundry', 'transportation', 'tours', 'spa', 'dining', 'entertainment', 'shopping', 'fitness', 'housekeeping'],
+      message: 'Category must be one of: laundry, transportation, tours, spa, dining, entertainment, shopping, fitness, housekeeping'
     },
     index: true
   },
@@ -434,8 +434,8 @@ const serviceSchema = new mongoose.Schema({
       type: String,
       required: [true, 'Pricing type is required'],
       enum: {
-        values: ['fixed', 'per-item', 'per-hour', 'per-day', 'per-km', 'per-person', 'quote-based'],
-        message: 'Pricing type must be one of: fixed, per-item, per-hour, per-day, per-km, per-person, quote-based'
+        values: ['fixed', 'per-item', 'per-hour', 'per-day', 'per-km', 'per-person', 'quote-based', 'per-service'],
+        message: 'Pricing type must be one of: fixed, per-item, per-hour, per-day, per-km, per-person, quote-based, per-service'
       }
     },
 

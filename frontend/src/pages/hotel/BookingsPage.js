@@ -11,7 +11,7 @@ const BookingsPage = () => {
   const dispatch = useDispatch();
   const bookings = useSelector(selectAllBookings);
   const isLoading = useSelector(selectBookingLoading);
-  const { user } = useAuth();
+  const { currentUser: user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedBooking, setSelectedBooking] = useState(null);

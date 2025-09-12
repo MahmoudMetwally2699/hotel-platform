@@ -82,7 +82,7 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     category: {
       type: String,
       required: [true, 'Service category is required'],
-      enum: ['laundry', 'transportation', 'tours', 'restaurant', 'dining', 'cleaning', 'amenities', 'maintenance']
+      enum: ['laundry', 'transportation', 'tours', 'restaurant', 'dining', 'cleaning', 'amenities', 'maintenance', 'housekeeping']
     },
     subcategory: String,
     description: String

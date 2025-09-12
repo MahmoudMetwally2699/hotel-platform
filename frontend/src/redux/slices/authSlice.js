@@ -393,12 +393,17 @@ const authSlice = createSlice({
         console.log('🐛 fetchProfile.fulfilled - extracted userData:', userData);
         console.log('🐛 fetchProfile.fulfilled - userData.role:', userData.role);
         console.log('🐛 fetchProfile.fulfilled - typeof userData.role:', typeof userData.role);
+        console.log('🐛 fetchProfile.fulfilled - userData.hotelId:', userData.hotelId);
+        console.log('🐛 fetchProfile.fulfilled - userData.selectedHotelId:', userData.selectedHotelId);
+        console.log('🐛 fetchProfile.fulfilled - userData._id:', userData._id);
+        console.log('🐛 fetchProfile.fulfilled - ALL userData properties:', Object.keys(userData));
 
         // Extract role, ensuring it exists
         state.role = userData.role || 'guest';
 
         console.log('✅ Profile fetched! User:', userData);
         console.log('✅ Role set to:', state.role);
+        console.log('✅ Hotel ID in user data:', userData.hotelId);
         state.error = null;
       })      .addCase(fetchProfile.rejected, (state, action) => {
         state.isLoading = false;

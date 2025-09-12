@@ -42,12 +42,31 @@ export const fetchHotelById = createAsyncThunk(
   }
 );
 
+export const fetchHotelProfile = createAsyncThunk(
+  'hotel/fetchHotelProfile',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await hotelService.getProfile();
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch hotel profile');
+    }
+  }
+);
+
 export const updateHotelProfile = createAsyncThunk(
   'hotel/updateHotelProfile',
   async ({ hotelId, hotelData }, { rejectWithValue }) => {
     try {
-      const response = await hotelService.updateHotelProfile(hotelId, hotelData);
-      return response;
+      // If hotelId is provided, use the superadmin method
+      if (hotelId) {
+        const response = await hotelService.updateHotelProfile(hotelId, hotelData);
+        return response;
+      } else {
+        // If no hotelId, use the hotel admin method (for their own profile)
+        const response = await hotelService.updateProfile(hotelData);
+        return response;
+      }
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update hotel profile');
     }
@@ -155,6 +174,21 @@ const hotelSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchHotelById.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+
+      // Fetch hotel profile cases (for hotel admin)
+      .addCase(fetchHotelProfile.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchHotelProfile.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.currentHotel = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchHotelProfile.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })

@@ -1512,6 +1512,146 @@
     },
     "noServices": "لا توجد خدمات متاحة",
     "noServicesDescription": "خدمات التنظيف غير متاحة حالياً.",
-    "asap": "في أقرب وقت ممكن"
+    "asap": "في أقرب وقت ممكن",
+    "quickIssues": {
+      "maintenance": {
+        "electrical": {
+          "title": "مشاكل كهربائية",
+          "items": {
+            "powerOutage": "لا توجد كهرباء في الغرفة (انقطاع كامل في التيار)",
+            "keyCardProblem": "مشكلة في البطاقة المفتاحية / مفتاح الكهرباء (عند المدخل)",
+            "lightNotWorking": "الإضاءة لا تعمل",
+            "powerOutlet": "مشكلة في مقبس الكهرباء",
+            "bathroomLight": "إضاءة الحمام معطلة",
+            "acNotWorking": "المكيف / التكييف لا يعمل",
+            "fridgeNotCooling": "الثلاجة لا تبرد",
+            "tvNotTurning": "التلفزيون لا يشتغل"
+          }
+        },
+        "plumbing": {
+          "title": "مشاكل السباكة",
+          "items": {
+            "sinkClogged": "الحوض مسدود / مغلق",
+            "drainClogged": "مصرف الحمام / الدش مسدود",
+            "waterLeak": "تسرب مياه في الحمام",
+            "toiletFlush": "مشكلة في شطاف المرحاض / المرحاض لا يشطف",
+            "acLeaking": "المكيف يسرب مياه",
+            "noHotWater": "لا توجد مياه ساخنة",
+            "lowPressure": "ضغط مياه منخفض"
+          }
+        },
+        "acHeating": {
+          "title": "التكييف والتدفئة",
+          "items": {
+            "acNotCooling": "المكيف لا يبرد",
+            "heaterNotHeating": "المكيف / المدفأة لا تسخن",
+            "acNoise": "المكيف يصدر صوتاً عالياً",
+            "remoteControl": "مشكلة في ريموت المكيف"
+          }
+        },
+        "furniture": {
+          "title": "الأثاث والتجهيزات",
+          "items": {
+            "chairTable": "الكرسي / الطاولة مكسورة",
+            "doorLock": "مشكلة في قفل الباب",
+            "closetDoor": "باب الخزانة / الدولاب لا يُغلق",
+            "curtainStuck": "الستارة عالقة / مكسورة",
+            "bedRepair": "السرير يحتاج إصلاح",
+            "windowClose": "النافذة لا تُغلق بشكل صحيح"
+          }
+        },
+        "electronics": {
+          "title": "الأجهزة الإلكترونية",
+          "items": {
+            "tvNotWorking": "التلفزيون لا يعمل",
+            "wifiProblem": "مشكلة في الواي فاي",
+            "tvRemote": "ريموت التلفزيون لا يعمل",
+            "telephoneProblem": "مشكلة في الهاتف"
+          }
+        }
+      },
+      "cleaning": {
+        "roomCleaning": {
+          "title": "طلبات تنظيف الغرفة",
+          "items": {
+            "bathroomClean": "يرجى تنظيف الحمام بدقة",
+            "changeBedSheets": "تغيير شراشف السرير وأكياس الوسائد",
+            "vacuumFloor": "تنظيف السجاد / الأرضية بالمكنسة الكهربائية",
+            "cleanWindows": "تنظيف النوافذ",
+            "emptyTrash": "إفراغ جميع سلال المهملات",
+            "disinfectSurfaces": "تنظيف وتعقيم الأسطح",
+            "mopBathroom": "مسح أرضية الحمام",
+            "cleanGlass": "تنظيف المرآة والأسطح الزجاجية"
+          }
+        },
+        "deepCleaning": {
+          "title": "تنظيف عميق",
+          "items": {
+            "deepBathroom": "تنظيف عميق للحمام",
+            "cleanFridge": "تنظيف داخل الثلاجة",
+            "cleanBehind": "تنظيف خلف الأثاث",
+            "sanitizeHandles": "تعقيم مقابض الأبواب والمفاتيح",
+            "cleanVents": "تنظيف فتحات التهوية",
+            "polishWood": "تلميع الأسطح الخشبية",
+            "cleanFixtures": "تنظيف وحدات الإضاءة",
+            "disinfectControls": "تعقيم أجهزة التحكم والهواتف"
+          }
+        },
+        "stains": {
+          "title": "البقع والعلامات",
+          "items": {
+            "carpetStains": "إزالة البقع من السجاد",
+            "upholsteryStains": "تنظيف البقع من المفروشات",
+            "wallMarks": "إزالة العلامات من الجدران",
+            "tileStains": "تنظيف بلاط الحمام المتسخ",
+            "waterSpots": "إزالة بقع المياه من الزجاج",
+            "coffeeStains": "تنظيف بقع القهوة / الشاي",
+            "foodStains": "إزالة بقع الطعام",
+            "makeupStains": "تنظيف بقع المكياج من الأسطح"
+          }
+        }
+      },
+      "amenities": {
+        "bathroom": {
+          "title": "لوازم الحمام",
+          "items": {
+            "freshTowels": "أحتاج مناشف نظيفة",
+            "extraTowels": "أحتاج مناشف إضافية",
+            "toiletries": "استبدال لوازم الحمام",
+            "toiletPaper": "أحتاج ورق تواليت",
+            "showerCurtain": "استبدال ستارة الدش",
+            "bathMat": "أحتاج سجادة حمام",
+            "soapDispensers": "استبدال موزعات الصابون",
+            "hairDryer": "أحتاج مجفف شعر"
+          }
+        },
+        "roomSupplies": {
+          "title": "مستلزمات الغرفة",
+          "items": {
+            "extraPillows": "أحتاج وسائد إضافية",
+            "extraBlankets": "أحتاج بطانيات إضافية",
+            "bedLinens": "استبدال شراشف السرير",
+            "hangers": "أحتاج علاقات ملابس",
+            "ironBoard": "طلب مكواة وطاولة كي",
+            "deskSupplies": "أحتاج لوازم مكتب",
+            "coffeeSupplies": "طلب مستلزمات قهوة / شاي",
+            "slippers": "أحتاج شباشب غرفة"
+          }
+        },
+        "comfort": {
+          "title": "راحة الضيف",
+          "items": {
+            "adjustTemp": "ضبط درجة حرارة الغرفة",
+            "blackoutCurtains": "أحتاج ستائر معتمة",
+            "wakeupCall": "طلب خدمة الإيقاظ",
+            "restock": "أحتاج إعادة تعبئة الثلاجة الصغيرة",
+            "newspaper": "طلب توصيل الجريدة",
+            "extensionCord": "أحتاج سلك تمديد",
+            "airFreshener": "طلب معطر جو للغرفة",
+            "extraLighting": "أحتاج إضاءة إضافية"
+          }
+        }
+      }
+    }
   }
 }

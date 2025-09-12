@@ -15,16 +15,149 @@ const Hotel = require('../models/Hotel');
 const ServiceProvider = require('../models/ServiceProvider');
 const Service = require('../models/Service');
 const Booking = require('../models/Booking');
+const TransportationBooking = require('../models/TransportationBooking');
 const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
 const crypto = require('crypto');
 
 const router = express.Router();
 
+// Helper function to get or create hotel's internal service provider
+async function getOrCreateHotelProvider(hotelId) {
+  const hotel = await Hotel.findById(hotelId);
+  if (!hotel) {
+    throw new AppError('Hotel not found', 404);
+  }
+
+  // Check if hotel already has an internal service provider
+  let hotelProvider = await ServiceProvider.findOne({
+    hotelId: hotelId,
+    businessName: `${hotel.name} - Internal Services`,
+    categories: { $in: ['housekeeping', 'dining', 'entertainment'] }
+  });
+
+  if (!hotelProvider) {
+    // Create internal service provider for the hotel
+    hotelProvider = await ServiceProvider.create({
+      businessName: `${hotel.name} - Internal Services`,
+      description: 'Internal hotel services managed directly by the hotel staff',
+      categories: ['housekeeping', 'dining', 'entertainment'],
+      hotelId: hotelId,
+      adminId: hotel.adminId,
+      email: hotel.contactEmail || 'internal@hotel.com',
+      phone: hotel.contactPhone || '+1234567890',
+      address: {
+        street: hotel.address?.street || 'Hotel Address',
+        city: hotel.address?.city || 'City',
+        state: hotel.address?.state || 'State',
+        country: hotel.address?.country || 'Country',
+        zipCode: hotel.address?.zipCode || '12345'
+      },
+      businessLicense: {
+        number: hotel.businessLicense?.number || 'INTERNAL-001',
+        issuedBy: 'Hotel Management',
+        issuedDate: new Date('2024-01-01'),
+        expiryDate: new Date('2030-12-31')
+      },
+      taxId: hotel.taxId || 'INTERNAL-TAX-001',
+      insurance: {
+        provider: 'Hotel Insurance',
+        policyNumber: 'INTERNAL-INS-001',
+        coverage: 100000,
+        expiryDate: new Date('2030-12-31')
+      },
+      capacity: {
+        maxOrdersPerDay: 100,
+        maxOrdersPerHour: 10
+      },
+      staff: {
+        totalEmployees: 5,
+        managers: 1,
+        operators: 4
+      },
+      isActive: true,
+      isVerified: true,
+      verificationStatus: 'approved'
+    });
+
+    logger.info(`Created internal service provider for hotel: ${hotel.name}`, {
+      hotelId,
+      providerId: hotelProvider._id
+    });
+  }
+
+  return hotelProvider;
+}
+
 // Protect all routes after this middleware
 router.use(protect);
 router.use(restrictTo('hotel'));
 router.use(restrictToOwnHotel);
+
+/**
+ * @route   GET /api/hotel/profile
+ * @desc    Get hotel profile (for hotel admin)
+ * @access  Private/HotelAdmin
+ */
+router.get('/profile', protect, restrictTo('hotel'), catchAsync(async (req, res, next) => {
+  try {
+    const hotelId = req.user.hotelId;
+
+    if (!hotelId) {
+      return next(new AppError('Hotel ID not found in user profile', 400));
+    }
+
+    const hotel = await Hotel.findById(hotelId);
+
+    if (!hotel) {
+      return next(new AppError('Hotel not found', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: hotel
+    });
+  } catch (error) {
+    logger.error('Error fetching hotel profile:', error);
+    return next(new AppError('Failed to fetch hotel profile', 500));
+  }
+}));
+
+/**
+ * @route   PUT /api/hotel/profile
+ * @desc    Update hotel profile (for hotel admin)
+ * @access  Private/HotelAdmin
+ */
+router.put('/profile', protect, restrictTo('hotel'), catchAsync(async (req, res, next) => {
+  try {
+    const hotelId = req.user.hotelId;
+
+    if (!hotelId) {
+      return next(new AppError('Hotel ID not found in user profile', 400));
+    }
+
+    const hotel = await Hotel.findByIdAndUpdate(
+      hotelId,
+      req.body,
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!hotel) {
+      return next(new AppError('Hotel not found', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: hotel
+    });
+  } catch (error) {
+    logger.error('Error updating hotel profile:', error);
+    return next(new AppError('Failed to update hotel profile', 500));
+  }
+}));
 
 /**
  * @route   GET /api/hotel/dashboard
@@ -54,10 +187,34 @@ router.get('/dashboard', catchAsync(async (req, res) => {
     ServiceProvider.countDocuments({ hotelId, isActive: true, isVerified: true }),
     Service.countDocuments({ hotelId }),
     Service.countDocuments({ hotelId, isActive: true, isApproved: true }),
-    Booking.countDocuments({ hotelId }),    Booking.find({ hotelId })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .populate('serviceId serviceProviderId guestId', 'name businessName firstName lastName'),
+    // Count both regular bookings and transportation bookings
+    Promise.all([
+      Booking.countDocuments({ hotelId }),
+      TransportationBooking.countDocuments({ hotelId })
+    ]).then(([regularCount, transportationCount]) => regularCount + transportationCount),
+    // Fetch both regular bookings and transportation bookings, then merge them
+    Promise.all([
+      Booking.find({ hotelId })
+        .sort({ createdAt: -1 })
+        .populate('serviceProviderId', 'businessName categories')
+        .populate('serviceId', 'name category')
+        .populate('guestId', 'firstName lastName'),
+      TransportationBooking.find({ hotelId })
+        .sort({ createdAt: -1 })
+        .populate('serviceProviderId', 'businessName categories')
+        .populate('serviceId', 'name category')
+        .populate('guestId', 'firstName lastName')
+    ]).then(([regularBookings, transportationBookings]) => {
+      // Add booking type identifier and merge the arrays
+      const allBookings = [
+        ...regularBookings.map(booking => ({ ...booking.toObject(), bookingType: 'regular' })),
+        ...transportationBookings.map(booking => ({ ...booking.toObject(), bookingType: 'transportation' }))
+      ];
+      // Sort by creation date and limit to 10
+      return allBookings
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 10);
+    }),
     Booking.getRevenueStats({ hotelId }),
     Service.find({ hotelId, isActive: true })
       .sort({ 'performance.totalBookings': -1 })
@@ -79,42 +236,101 @@ router.get('/dashboard', catchAsync(async (req, res) => {
       }
     ])
   ]);
-  // Get monthly booking trends
-  const monthlyTrends = await Booking.aggregate([
-    { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
-    {
-      $group: {
-        _id: {
-          year: { $year: '$createdAt' },
-          month: { $month: '$createdAt' }
-        },
-        count: { $sum: 1 },
-        revenue: { $sum: '$pricing.totalAmount' }
+  // Get monthly booking trends from both regular and transportation bookings
+  const monthlyTrends = await Promise.all([
+    Booking.aggregate([
+      { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          count: { $sum: 1 },
+          revenue: { $sum: '$pricing.totalAmount' }
+        }
       }
-    },
-    { $sort: { '_id.year': 1, '_id.month': 1 } }
-  ]);
-  // Get category performance
-  const categoryPerformance = await Booking.aggregate([
-    { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
-    {
-      $lookup: {
-        from: 'services',
-        localField: 'serviceId',
-        foreignField: '_id',
-        as: 'serviceData'
+    ]),
+    TransportationBooking.aggregate([
+      { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          count: { $sum: 1 },
+          revenue: { $sum: '$payment.totalAmount' }
+        }
       }
-    },
-    { $unwind: '$serviceData' },
-    {
-      $group: {
-        _id: '$serviceData.category',
-        bookings: { $sum: 1 },
-        revenue: { $sum: '$pricing.totalAmount' }
+    ])
+  ]).then(([regularTrends, transportationTrends]) => {
+    // Merge and combine trends by month/year
+    const trendsMap = new Map();
+
+    [...regularTrends, ...transportationTrends].forEach(trend => {
+      const key = `${trend._id.year}-${trend._id.month}`;
+      if (trendsMap.has(key)) {
+        const existing = trendsMap.get(key);
+        existing.count += trend.count;
+        existing.revenue += trend.revenue;
+      } else {
+        trendsMap.set(key, trend);
       }
-    },
-    { $sort: { revenue: -1 } }
-  ]);
+    });
+
+    return Array.from(trendsMap.values()).sort((a, b) => {
+      if (a._id.year !== b._id.year) return a._id.year - b._id.year;
+      return a._id.month - b._id.month;
+    });
+  });
+  // Get category performance from both regular and transportation bookings
+  const categoryPerformance = await Promise.all([
+    Booking.aggregate([
+      { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
+      {
+        $lookup: {
+          from: 'services',
+          localField: 'serviceId',
+          foreignField: '_id',
+          as: 'serviceData'
+        }
+      },
+      { $unwind: '$serviceData' },
+      {
+        $group: {
+          _id: '$serviceData.category',
+          bookings: { $sum: 1 },
+          revenue: { $sum: '$pricing.totalAmount' }
+        }
+      }
+    ]),
+    TransportationBooking.aggregate([
+      { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
+      {
+        $group: {
+          _id: 'transportation', // Transportation bookings are always in the transportation category
+          bookings: { $sum: 1 },
+          revenue: { $sum: '$payment.totalAmount' }
+        }
+      }
+    ])
+  ]).then(([regularPerformance, transportationPerformance]) => {
+    // Merge category performance data
+    const performanceMap = new Map();
+
+    [...regularPerformance, ...transportationPerformance].forEach(category => {
+      if (performanceMap.has(category._id)) {
+        const existing = performanceMap.get(category._id);
+        existing.bookings += category.bookings;
+        existing.revenue += category.revenue;
+      } else {
+        performanceMap.set(category._id, category);
+      }
+    });
+
+    return Array.from(performanceMap.values()).sort((a, b) => b.revenue - a.revenue);
+  });
 
   res.status(200).json({
     status: 'success',
@@ -1513,116 +1729,171 @@ router.get('/available-providers/:category', catchAsync(async (req, res, next) =
 
 /**
  * @route   GET /api/hotel/bookings
- * @desc    Get all bookings for the hotel with filtering options
+ * @desc    Get ALL bookings (regular + transportation) for the hotel with filtering, search & pagination
+ *          Mirrors dashboard recentBookings logic but returns full paginated list
+ * @query   category (optional) - service category or 'transportation' or 'all'
+ *          status (optional)   - generic status (pending|processing|confirmed|completed|cancelled)
+ *          search (optional)   - guest name / email / booking id / service name
+ *          page (default 1)
+ *          limit (default 50)
  * @access  Private/HotelAdmin
  */
 router.get('/bookings', catchAsync(async (req, res) => {
   const hotelId = req.user.hotelId;
-  const { category, status, page = 1, limit = 50 } = req.query;
+  const { category = 'all', status, search, page = 1, limit = 50 } = req.query;
 
-  // Build the query object
-  const query = { hotelId };
+  const numericPage = parseInt(page) || 1;
+  const numericLimit = parseInt(limit) || 50;
 
-  // Add category filter if provided
-  if (category && category !== 'all') {
-    // Need to populate service first to filter by category
-    // We'll handle this in the aggregation pipeline
-  }
-
-  // Add status filter if provided
-  if (status) {
-    query.status = status;
-  }
+  // Helper to normalize transportation booking statuses to generic ones used in UI
+  const mapTransportationStatus = (bookingStatus) => {
+    switch (bookingStatus) {
+      case 'pending_quote':
+      case 'quote_sent':
+      case 'payment_pending':
+        return 'pending';
+      case 'quote_accepted':
+      case 'payment_completed':
+        return 'confirmed';
+      case 'service_active':
+        return 'processing';
+      case 'completed':
+        return 'completed';
+      case 'cancelled':
+      case 'quote_rejected':
+      case 'quote_expired':
+        return 'cancelled';
+      default:
+        return 'processing';
+    }
+  };
 
   try {
-    let bookings;
+    // ---------- Regular Bookings ---------- //
+    const regularQuery = { hotelId };
+    if (status) regularQuery.status = status; // status already matches regular booking status values
 
-    if (category && category !== 'all') {
-      // Use aggregation when filtering by category
-      bookings = await Booking.aggregate([
-        { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
-        {
-          $lookup: {
-            from: 'services',
-            localField: 'serviceId',
-            foreignField: '_id',
-            as: 'service'
-          }
-        },
-        { $unwind: { path: '$service', preserveNullAndEmptyArrays: true } },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'guestId',
-            foreignField: '_id',
-            as: 'guestDetails'
-          }
-        },
-        { $unwind: { path: '$guestDetails', preserveNullAndEmptyArrays: true } },
-        {
-          $lookup: {
-            from: 'serviceproviders',
-            localField: 'service.providerId',
-            foreignField: '_id',
-            as: 'provider'
-          }
-        },
-        { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
-        {
-          $match: {
-            'service.category': category,
-            ...(status && { status })
-          }
-        },
-        { $sort: { createdAt: -1 } },
-        { $skip: (page - 1) * limit },
-        { $limit: parseInt(limit) }
-      ]);
-    } else {
-      // Use regular query when not filtering by category
-      bookings = await Booking.find(query)
-        .populate({
-          path: 'serviceId',
-          select: 'name category description pricing images',
-          populate: {
-            path: 'providerId',
-            select: 'businessName contactInfo'
-          }
-        })
-        .populate({
-          path: 'guestId',
-          select: 'firstName lastName email phone'
-        })
+    let regularBookings = [];
+
+    // Fetch regular bookings only if category isn't strictly 'transportation'
+    if (category !== 'transportation') {
+      if (category && category !== 'all') {
+        // Need service.category; use aggregation
+        const matchStage = { hotelId: new mongoose.Types.ObjectId(hotelId) };
+        if (status) matchStage.status = status;
+        regularBookings = await Booking.aggregate([
+          { $match: matchStage },
+          { $lookup: { from: 'services', localField: 'serviceId', foreignField: '_id', as: 'service' } },
+          { $unwind: { path: '$service', preserveNullAndEmptyArrays: true } },
+          {
+            $match: {
+              $or: [
+                { 'service.category': category },
+                { 'serviceType': category }
+              ]
+            }
+          },
+          { $lookup: { from: 'users', localField: 'guestId', foreignField: '_id', as: 'guestDetails' } },
+          { $unwind: { path: '$guestDetails', preserveNullAndEmptyArrays: true } },
+          { $lookup: { from: 'serviceproviders', localField: 'serviceProviderId', foreignField: '_id', as: 'serviceProvider' } },
+          { $unwind: { path: '$serviceProvider', preserveNullAndEmptyArrays: true } },
+          { $sort: { createdAt: -1 } }
+        ]);
+      } else {
+        // Simpler populate path when no category filter
+        const docs = await Booking.find(regularQuery)
+          .populate({
+            path: 'serviceId',
+            select: 'name category description pricing images providerId',
+            populate: { path: 'providerId', select: 'businessName contactInfo' }
+          })
+          .populate({ path: 'serviceProviderId', select: 'businessName contactInfo categories' })
+          .populate({ path: 'guestId', select: 'firstName lastName email phone' })
+          .sort({ createdAt: -1 });
+        regularBookings = docs.map(b => ({
+          ...b.toObject(),
+            service: b.serviceId,
+            guestDetails: b.guestId,
+            serviceProvider: b.serviceProviderId || b.serviceId?.providerId,
+            bookingType: 'regular'
+        }));
+      }
+    }
+
+    // ---------- Transportation Bookings ---------- //
+    let transportationBookings = [];
+    if (category === 'all' || category === 'transportation') {
+      const transportMatch = { hotelId: new mongoose.Types.ObjectId(hotelId) };
+      // Map generic status filter -> underlying bookingStatus possibilities
+      if (status) {
+        // We'll later map; for filtering keep broad to reduce data returned.
+        // Simple approach: fetch all and filter after mapping.
+      }
+      transportationBookings = await TransportationBooking.find(transportMatch)
+        .populate({ path: 'serviceId', select: 'name category description pricing images', populate: { path: 'providerId', select: 'businessName contactInfo' } })
+        .populate({ path: 'serviceProviderId', select: 'businessName contactInfo categories' })
+        .populate({ path: 'guestId', select: 'firstName lastName email phone' })
         .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(parseInt(limit));
+        .lean();
 
-      // Transform to match aggregation structure
-      bookings = bookings.map(booking => ({
-        ...booking.toObject(),
-        service: booking.serviceId,
-        guestDetails: booking.guestId,
-        provider: booking.serviceId?.providerId
+      transportationBookings = transportationBookings.map(t => ({
+        ...t,
+        service: t.serviceId,
+        guestDetails: t.guestId || t.guestDetails,
+        serviceProvider: t.serviceProviderId || t.serviceId?.providerId,
+        bookingType: 'transportation',
+        status: mapTransportationStatus(t.bookingStatus)
       }));
     }
 
-    // Get total count for pagination
-    const totalCount = await Booking.countDocuments(query);
+    // Combine & initial filter
+    let allBookings = [...regularBookings, ...transportationBookings];
+
+    // Ensure uniform status for regular bookings (alias remains)
+    allBookings = allBookings.map(b => ({
+      ...b,
+      status: b.status || b.bookingStatus || b.status || 'processing'
+    }));
+
+    // Search filtering (in-memory for now)
+    if (search) {
+      const term = search.toLowerCase();
+      allBookings = allBookings.filter(b => {
+        const guestName = `${b.guestDetails?.firstName || ''} ${b.guestDetails?.lastName || ''}`.toLowerCase();
+        const serviceName = (b.service?.name || '').toLowerCase();
+        const providerName = (b.serviceProvider?.businessName || '').toLowerCase();
+        const idStr = (b.bookingId || b.bookingReference || b._id?.toString() || '').toLowerCase();
+        const email = (b.guestDetails?.email || '').toLowerCase();
+        return [guestName, serviceName, providerName, idStr, email].some(v => v.includes(term));
+      });
+    }
+
+    // After combining, apply status filter for transportation mapped statuses (if not already applied)
+    if (status) {
+      allBookings = allBookings.filter(b => b.status === status);
+    }
+
+    // Total count BEFORE pagination
+    const totalCount = allBookings.length;
+
+    // Pagination slice
+    const start = (numericPage - 1) * numericLimit;
+    const paginated = allBookings.slice(start, start + numericLimit);
 
     res.status(200).json({
       status: 'success',
       data: {
-        bookings,
+        bookings: paginated,
         pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
+          page: numericPage,
+          limit: numericLimit,
           total: totalCount,
-          pages: Math.ceil(totalCount / limit)
+          pages: Math.ceil(totalCount / numericLimit)
         }
       }
     });
   } catch (error) {
-    logger.error('Error fetching hotel bookings:', error);
+    logger.error('Error fetching hotel bookings (merged):', error);
     throw new AppError('Failed to fetch bookings', 500);
   }
 }));
@@ -1635,92 +1906,177 @@ router.get('/bookings', catchAsync(async (req, res) => {
 router.get('/inside-services', catchAsync(async (req, res) => {
   const hotelId = req.user.hotelId;
 
-  const hotel = await Hotel.findById(hotelId).populate('insideServices');
+  // Get or create hotel's internal service provider
+  const hotelProvider = await getOrCreateHotelProvider(hotelId);
 
-  // Default inside services if none exist
-  const defaultServices = [
+  // Get all services provided by the hotel's internal provider
+  const hotelServices = await Service.find({
+    hotelId: hotelId,
+    providerId: hotelProvider._id
+  }).populate('providerId', 'businessName');
+
+  // Default inside service templates if none exist
+  const defaultServiceTemplates = [
     {
       id: 'room-service',
       name: 'Room Service',
       description: 'In-room dining and service requests',
       category: 'dining',
-      isActive: false,
-      operatingHours: { start: '06:00', end: '23:00' },
-      features: ['24/7 availability option', 'Menu customization', 'Special dietary accommodations']
+      subcategory: 'in_room',
+      serviceType: 'room_dining'
     },
     {
       id: 'hotel-restaurant',
       name: 'Hotel Restaurant',
       description: 'Main dining facilities and reservations',
       category: 'dining',
-      isActive: false,
-      operatingHours: { start: '07:00', end: '22:00' },
-      features: ['Table reservations', 'Private dining', 'Event catering']
+      subcategory: 'restaurant',
+      serviceType: 'restaurant'
+    },
+    {
+      id: 'housekeeping-requests',
+      name: 'Housekeeping Services',
+      description: 'Room cleaning and maintenance requests',
+      category: 'housekeeping',
+      subcategory: 'cleaning',
+      serviceType: 'housekeeping'
     },
     {
       id: 'concierge-services',
       name: 'Concierge Services',
       description: 'Guest assistance and recommendations',
       category: 'assistance',
-      isActive: false,
-      operatingHours: { start: '24/7', end: '24/7' },
-      features: ['Local recommendations', 'Booking assistance', 'Special requests']
-    },
-    {
-      id: 'housekeeping-requests',
-      name: 'Housekeeping Requests',
-      description: 'Room cleaning and maintenance requests',
-      category: 'maintenance',
-      isActive: false,
-      operatingHours: { start: '08:00', end: '18:00' },
-      features: ['Extra cleaning', 'Amenity requests', 'Maintenance issues']
+      subcategory: 'concierge',
+      serviceType: 'assistance'
     }
   ];
 
-  const insideServices = hotel.insideServices || defaultServices;
+  // If no services exist, return templates for creation
+  if (hotelServices.length === 0) {
+    return res.status(200).json({
+      status: 'success',
+      data: defaultServiceTemplates.map(template => ({
+        ...template,
+        isActive: false,
+        providerId: hotelProvider._id,
+        providerName: hotelProvider.businessName
+      }))
+    });
+  }
 
   res.status(200).json({
     status: 'success',
-    data: insideServices
+    data: hotelServices
   });
 }));
 
 /**
  * @route   POST /api/hotel/inside-services/:serviceId/activate
- * @desc    Activate an inside hotel service
+ * @desc    Activate an inside hotel service (create if doesn't exist)
  * @access  Private/HotelAdmin
  */
 router.post('/inside-services/:serviceId/activate', catchAsync(async (req, res) => {
   const hotelId = req.user.hotelId;
   const { serviceId } = req.params;
 
-  const hotel = await Hotel.findById(hotelId);
-  if (!hotel) {
-    throw new AppError('Hotel not found', 404);
-  }
+  // Get or create hotel's internal service provider
+  const hotelProvider = await getOrCreateHotelProvider(hotelId);
 
-  // Initialize insideServices if it doesn't exist
-  if (!hotel.insideServices) {
-    hotel.insideServices = [];
-  }
+  // Check if service already exists
+  let service = await Service.findOne({
+    hotelId: hotelId,
+    providerId: hotelProvider._id,
+    $or: [
+      { _id: serviceId },
+      { 'metadata.templateId': serviceId }
+    ]
+  });
 
-  // Find and activate the service
-  const serviceIndex = hotel.insideServices.findIndex(service => service.id === serviceId);
-  if (serviceIndex !== -1) {
-    hotel.insideServices[serviceIndex].isActive = true;
+  if (service) {
+    // Activate existing service
+    service.isActive = true;
+    service.isApproved = true;
+    service.moderationStatus = 'approved';
+    await service.save();
   } else {
-    // Add new service if it doesn't exist
-    hotel.insideServices.push({
-      id: serviceId,
-      isActive: true
+    // Create new service based on template
+    const serviceTemplates = {
+      'room-service': {
+        name: 'Room Service',
+        description: 'In-room dining and service requests',
+        category: 'dining',
+        subcategory: 'in_room',
+        serviceType: 'room_dining'
+      },
+      'hotel-restaurant': {
+        name: 'Hotel Restaurant',
+        description: 'Main dining facilities and reservations',
+        category: 'dining',
+        subcategory: 'restaurant',
+        serviceType: 'restaurant'
+      },
+      'housekeeping-requests': {
+        name: 'Housekeeping Services',
+        description: 'Room cleaning and maintenance requests',
+        category: 'housekeeping',
+        subcategory: 'cleaning',
+        serviceType: 'housekeeping'
+      },
+      'concierge-services': {
+        name: 'Concierge Services',
+        description: 'Guest assistance and recommendations',
+        category: 'assistance',
+        subcategory: 'concierge',
+        serviceType: 'assistance'
+      }
+    };
+
+    const template = serviceTemplates[serviceId];
+    if (!template) {
+      throw new AppError('Invalid service template', 400);
+    }
+
+    service = await Service.create({
+      ...template,
+      providerId: hotelProvider._id,
+      hotelId: hotelId,
+      isActive: true,
+      isApproved: true,
+      moderationStatus: 'approved',
+      pricing: {
+        basePrice: 0,
+        pricingType: 'variable',
+        currency: 'EGP'
+      },
+      availability: {
+        isAvailable: true,
+        schedule: {
+          monday: { isAvailable: true, timeSlots: [{ startTime: '00:00', endTime: '23:59', maxBookings: 100 }] },
+          tuesday: { isAvailable: true, timeSlots: [{ startTime: '00:00', endTime: '23:59', maxBookings: 100 }] },
+          wednesday: { isAvailable: true, timeSlots: [{ startTime: '00:00', endTime: '23:59', maxBookings: 100 }] },
+          thursday: { isAvailable: true, timeSlots: [{ startTime: '00:00', endTime: '23:59', maxBookings: 100 }] },
+          friday: { isAvailable: true, timeSlots: [{ startTime: '00:00', endTime: '23:59', maxBookings: 100 }] },
+          saturday: { isAvailable: true, timeSlots: [{ startTime: '00:00', endTime: '23:59', maxBookings: 100 }] },
+          sunday: { isAvailable: true, timeSlots: [{ startTime: '00:00', endTime: '23:59', maxBookings: 100 }] }
+        }
+      },
+      metadata: {
+        templateId: serviceId,
+        isHotelManaged: true
+      }
+    });
+
+    logger.info(`Created and activated hotel service: ${service.name}`, {
+      hotelId,
+      serviceId: service._id,
+      providerId: hotelProvider._id
     });
   }
 
-  await hotel.save();
-
   res.status(200).json({
     status: 'success',
-    message: 'Service activated successfully'
+    message: 'Service activated successfully',
+    data: { service }
   });
 }));
 
@@ -1733,23 +2089,36 @@ router.post('/inside-services/:serviceId/deactivate', catchAsync(async (req, res
   const hotelId = req.user.hotelId;
   const { serviceId } = req.params;
 
-  const hotel = await Hotel.findById(hotelId);
-  if (!hotel) {
-    throw new AppError('Hotel not found', 404);
-  }
+  // Get hotel's internal service provider
+  const hotelProvider = await getOrCreateHotelProvider(hotelId);
 
   // Find and deactivate the service
-  if (hotel.insideServices) {
-    const serviceIndex = hotel.insideServices.findIndex(service => service.id === serviceId);
-    if (serviceIndex !== -1) {
-      hotel.insideServices[serviceIndex].isActive = false;
-      await hotel.save();
-    }
+  const service = await Service.findOne({
+    hotelId: hotelId,
+    providerId: hotelProvider._id,
+    $or: [
+      { _id: serviceId },
+      { 'metadata.templateId': serviceId }
+    ]
+  });
+
+  if (!service) {
+    throw new AppError('Service not found', 404);
   }
+
+  service.isActive = false;
+  await service.save();
+
+  logger.info(`Deactivated hotel service: ${service.name}`, {
+    hotelId,
+    serviceId: service._id,
+    providerId: hotelProvider._id
+  });
 
   res.status(200).json({
     status: 'success',
-    message: 'Service deactivated successfully'
+    message: 'Service deactivated successfully',
+    data: { service }
   });
 }));
 

@@ -1986,6 +1986,7 @@ router.post('/categories/transportation/vehicles', catchAsync(async (req, res) =
         },
 
         isActive: true,
+        isApproved: true, // Automatically approved for immediate availability
         createdAt: new Date(),
         updatedAt: new Date()
       });
@@ -2389,7 +2390,8 @@ router.get('/housekeeping-services', catchAsync(async (req, res) => {
  */
 router.post('/housekeeping-services', catchAsync(async (req, res) => {
   const providerId = req.user.serviceProviderId;
-  const { name, description, category, estimatedDuration, availability, requirements, instructions } = req.body;
+  const hotelId = req.user.hotelId;
+  const { name, description, category, estimatedDuration, availability, requirements, instructions, basePrice } = req.body;
 
   const provider = await ServiceProvider.findById(providerId);
   if (!provider) {
@@ -2399,30 +2401,56 @@ router.post('/housekeeping-services', catchAsync(async (req, res) => {
     });
   }
 
-  // Initialize housekeeping services array if it doesn't exist
-  if (!provider.housekeepingServices) {
-    provider.housekeepingServices = [];
-  }
-
-  const newService = {
-    id: `custom-${Date.now()}`,
-    name,
-    description,
-    category,
-    estimatedDuration: estimatedDuration || 30,
-    availability: availability || 'always',
+  // Create proper Service document instead of embedded service
+  const serviceData = {
+    providerId: providerId,
+    hotelId: hotelId,
+    name: name,
+    description: description || 'Housekeeping service',
+    category: 'housekeeping',
+    subcategory: category || 'cleaning',
+    serviceType: 'housekeeping',
+    pricing: {
+      basePrice: basePrice || 0,
+      currency: 'EGP',
+      pricingType: 'per-service'
+    },
+    specifications: {
+      duration: {
+        estimated: estimatedDuration || 30,
+        unit: 'minutes'
+      },
+      requirements: requirements || [],
+      instructions: instructions || ''
+    },
+    availability: {
+      isAvailable: true,
+      schedule: {
+        monday: { isAvailable: true, timeSlots: [{ startTime: '08:00', endTime: '18:00', maxBookings: 10 }] },
+        tuesday: { isAvailable: true, timeSlots: [{ startTime: '08:00', endTime: '18:00', maxBookings: 10 }] },
+        wednesday: { isAvailable: true, timeSlots: [{ startTime: '08:00', endTime: '18:00', maxBookings: 10 }] },
+        thursday: { isAvailable: true, timeSlots: [{ startTime: '08:00', endTime: '18:00', maxBookings: 10 }] },
+        friday: { isAvailable: true, timeSlots: [{ startTime: '08:00', endTime: '18:00', maxBookings: 10 }] },
+        saturday: { isAvailable: true, timeSlots: [{ startTime: '08:00', endTime: '18:00', maxBookings: 10 }] },
+        sunday: { isAvailable: true, timeSlots: [{ startTime: '08:00', endTime: '16:00', maxBookings: 5 }] }
+      }
+    },
     isActive: true,
-    requirements: requirements || [],
-    instructions: instructions || '',
-    createdAt: new Date()
+    isApproved: true, // Auto-approve housekeeping services
+    moderationStatus: 'approved'
   };
 
-  provider.housekeepingServices.push(newService);
-  await provider.save();
+  const service = await Service.create(serviceData);
+
+  logger.info(`New housekeeping service created: ${service.name}`, {
+    serviceProviderId: providerId,
+    serviceId: service._id,
+    hotelId: hotelId
+  });
 
   res.status(201).json({
     status: 'success',
-    data: newService,
+    data: { service },
     message: 'Housekeeping service created successfully'
   });
 }));

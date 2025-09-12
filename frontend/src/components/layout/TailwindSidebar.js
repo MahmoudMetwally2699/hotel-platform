@@ -105,7 +105,7 @@ const categoryIcons = {
 };
 
 const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
-  const { user } = useAuth();
+  const { currentUser: user } = useAuth();
   const { t } = useTranslation();
   const location = useLocation();
   const userRole = user ? user.role : 'guest';

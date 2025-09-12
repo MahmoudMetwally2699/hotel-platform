@@ -10,6 +10,7 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const TransportationBooking = require('../models/TransportationBooking');
 const Booking = require('../models/Booking'); // Add laundry booking model
+const Service = require('../models/Service'); // Add service model to get provider info
 const User = require('../models/User'); // Add user model for guest details
 const { protect, restrictTo } = require('../middleware/auth');
 const logger = require('../utils/logger');
@@ -800,6 +801,43 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
 
     console.log('🔵 Public payment confirmation request:', { bookingId, paymentData });
 
+    // Prevent concurrent processing of the same transaction
+    const lockKey = `payment_lock_${paymentData.transactionId}`;
+    global.paymentLocks = global.paymentLocks || {};
+
+    if (global.paymentLocks[lockKey]) {
+      console.log('🔒 Payment already being processed:', paymentData.transactionId);
+
+      // Wait a moment and try to find the completed booking
+      console.log('⏳ Waiting for booking to complete...');
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+
+      const completedBooking = await Booking.findOne({
+        'payment.transactionId': paymentData.transactionId
+      });
+
+      if (completedBooking) {
+        console.log('✅ Found completed booking:', completedBooking.bookingNumber);
+        return res.json({
+          success: true,
+          message: 'Payment already confirmed',
+          data: { booking: completedBooking }
+        });
+      } else {
+        console.log('⏳ Booking still processing, asking client to retry...');
+        return res.status(202).json({
+          success: false,
+          message: 'Payment is being processed, please try again in a moment',
+          data: { booking: null }
+        });
+      }
+    }
+
+    // Set lock
+    global.paymentLocks[lockKey] = true;
+
+    try {
+
     // Find the booking (try both transportation and laundry models)
     let booking = null;
     let bookingType = 'transportation';
@@ -813,7 +851,19 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
 
       // If booking not found, check if we need to create it from temp data
       if (!booking) {
-        global.tempBookingData = global.tempBookingData || {};
+        // Double-check for existing booking with this transaction ID
+        const existingBooking = await Booking.findOne({
+          'payment.transactionId': paymentData.transactionId
+        });
+
+        if (existingBooking) {
+          console.log('✅ Booking already exists for transaction:', paymentData.transactionId);
+          return res.json({
+            success: true,
+            message: 'Payment already confirmed',
+            data: { booking: existingBooking }
+          });
+        }        global.tempBookingData = global.tempBookingData || {};
         const tempData = global.tempBookingData[bookingId];
 
         console.log('🔍 Temp data lookup for:', bookingId);
@@ -823,6 +873,19 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
         if (tempData && paymentData.paymentStatus === 'SUCCESS') {
           console.log('🏗️ Creating laundry booking from temp data for:', bookingId);
           console.log('📋 Available temp data:', tempData);
+
+          // Get the service to find the actual provider ID
+          const service = await Service.findById(tempData.bookingData?.serviceId).populate('providerId');
+          if (!service) {
+            console.log('❌ Service not found for laundry booking:', tempData.bookingData?.serviceId);
+            return res.status(404).json({
+              success: false,
+              message: 'Service not found for booking'
+            });
+          }
+
+          console.log('🔍 Service found:', service.name);
+          console.log('🔍 Service provider:', service.providerId?.businessName);
 
           // Get user details for missing fields
           const user = await User.findById(tempData.guestId);
@@ -845,7 +908,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
             bookingNumber,
             guestId: tempData.guestId,
             serviceId: bookingData.serviceId,
-            serviceProviderId: bookingData.serviceProviderId || tempData.serviceProviderId || new mongoose.Types.ObjectId(), // Provide default ObjectId
+            serviceProviderId: service.providerId._id, // Use the actual service provider ID
             hotelId: bookingData.hotelId,
 
             // Guest details - use user data with fallbacks
@@ -986,12 +1049,31 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
 
             console.log('✅ Laundry booking created successfully:', booking.bookingNumber);
           } catch (saveError) {
-            console.error('❌ Error saving laundry booking:', saveError);
-            return res.status(500).json({
-              success: false,
-              message: 'Failed to create booking after payment',
-              error: saveError.message
-            });
+            // Check if this is a duplicate transaction error
+            if (saveError.code === 11000 || saveError.message.includes('duplicate') || saveError.message.includes('transactionId')) {
+              console.log('🔍 Duplicate transaction detected, finding existing booking...');
+              const existingBooking = await Booking.findOne({
+                'payment.transactionId': paymentData.transactionId
+              });
+
+              if (existingBooking) {
+                console.log('✅ Using existing booking for duplicate transaction:', existingBooking.bookingNumber);
+                booking = existingBooking;
+              } else {
+                console.error('❌ Duplicate error but no existing booking found');
+                return res.status(500).json({
+                  success: false,
+                  message: 'Duplicate transaction error but no existing booking found'
+                });
+              }
+            } else {
+              console.error('❌ Error saving laundry booking:', saveError);
+              return res.status(500).json({
+                success: false,
+                message: 'Failed to create booking after payment',
+                error: saveError.message
+              });
+            }
           }
         }
       }
@@ -1032,8 +1114,33 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
         }
 
         if (tempData && paymentData.paymentStatus === 'SUCCESS') {
-          console.log('🏗️ Creating restaurant booking from temp data for:', bookingId);
+          // Double-check for existing booking with this transaction ID
+          const existingBooking = await Booking.findOne({
+            'payment.transactionId': paymentData.transactionId
+          });
+
+          if (existingBooking) {
+            console.log('✅ Restaurant booking already exists for transaction:', paymentData.transactionId);
+            return res.json({
+              success: true,
+              message: 'Payment already confirmed',
+              data: { booking: existingBooking }
+            });
+          }          console.log('🏗️ Creating restaurant booking from temp data for:', bookingId);
           console.log('📋 Available temp data:', tempData);
+
+          // Get the service to find the actual provider ID
+          const service = await Service.findById(tempData.bookingData?.serviceId).populate('providerId');
+          if (!service) {
+            console.log('❌ Service not found for restaurant booking:', tempData.bookingData?.serviceId);
+            return res.status(404).json({
+              success: false,
+              message: 'Service not found for booking'
+            });
+          }
+
+          console.log('🔍 Restaurant service found:', service.name);
+          console.log('🔍 Restaurant service provider:', service.providerId?.businessName);
 
           // Get user details for missing fields
           const user = await User.findById(tempData.guestId);
@@ -1056,7 +1163,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
             bookingNumber,
             guestId: tempData.guestId,
             serviceId: bookingData.serviceId,
-            serviceProviderId: bookingData.serviceProviderId || tempData.serviceProviderId || new mongoose.Types.ObjectId(),
+            serviceProviderId: service.providerId._id, // Use the actual service provider ID
             hotelId: bookingData.hotelId,
 
             // Set service type for restaurant
@@ -1201,12 +1308,31 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
 
             console.log('✅ Restaurant booking created successfully:', booking.bookingNumber);
           } catch (saveError) {
-            console.error('❌ Error saving restaurant booking:', saveError);
-            return res.status(500).json({
-              success: false,
-              message: 'Failed to create restaurant booking after payment',
-              error: saveError.message
-            });
+            // Check if this is a duplicate transaction error
+            if (saveError.code === 11000 || saveError.message.includes('duplicate') || saveError.message.includes('transactionId')) {
+              console.log('🔍 Duplicate restaurant transaction detected, finding existing booking...');
+              const existingBooking = await Booking.findOne({
+                'payment.transactionId': paymentData.transactionId
+              });
+
+              if (existingBooking) {
+                console.log('✅ Using existing restaurant booking for duplicate transaction:', existingBooking.bookingNumber);
+                booking = existingBooking;
+              } else {
+                console.error('❌ Duplicate error but no existing restaurant booking found');
+                return res.status(500).json({
+                  success: false,
+                  message: 'Duplicate transaction error but no existing booking found'
+                });
+              }
+            } else {
+              console.error('❌ Error saving restaurant booking:', saveError);
+              return res.status(500).json({
+                success: false,
+                message: 'Failed to create restaurant booking after payment',
+                error: saveError.message
+              });
+            }
           }
         } else if (paymentData.paymentStatus === 'SUCCESS') {
           // No temp data found, but payment was successful
@@ -1425,9 +1551,25 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
       });
     }
 
+    } catch (innerError) {
+      throw innerError;
+    } finally {
+      // Release lock
+      if (global.paymentLocks) {
+        delete global.paymentLocks[lockKey];
+      }
+    }
+
   } catch (error) {
     console.error('❌ Public payment confirmation error:', error);
     logger.error('Public payment confirmation error:', error);
+
+    // Ensure lock is released on error
+    const lockKey = `payment_lock_${req.body.paymentData?.transactionId}`;
+    if (global.paymentLocks) {
+      delete global.paymentLocks[lockKey];
+    }
+
     res.status(500).json({
       success: false,
       message: 'Server error while confirming payment'

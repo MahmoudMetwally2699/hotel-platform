@@ -18,6 +18,14 @@ export const useAuth = () => {
 
   const currentUser = useSelector(selectCurrentUser);
   const isAuthenticated = useSelector(selectIsAuthenticated);
+
+  // Debug auth state immediately when hook is called
+  console.log('🔍 useAuth hook called - Current state:', {
+    isAuthenticated,
+    currentUser: currentUser ? 'Present' : 'Missing',
+    currentUserId: currentUser?._id,
+    currentUserRole: currentUser?.role
+  });
   const role = useSelector(selectAuthRole);
 
   // Track if we've already checked authentication to prevent loops
@@ -54,11 +62,13 @@ export const useAuth = () => {
           // Token is valid but user might not be authenticated in Redux
           // Check if we have user data in localStorage first
           const storedUser = localStorage.getItem('user');
+          console.log('🔍 useAuth - Checking stored user data:', storedUser ? 'Found' : 'Not found');
 
           if (storedUser) {
             try {
               const userData = JSON.parse(storedUser);
               console.log('✅ Restoring authentication from localStorage:', userData.email);
+              console.log('🔍 useAuth - Stored user data:', userData);
                 // Manually update Redux state to restore authentication
               // This is faster than making an API call
               dispatch(restoreFromLocalStorage({
@@ -74,29 +84,35 @@ export const useAuth = () => {
           }
 
           // No stored user data or invalid, fetch profile from server
-          console.log('Token valid, fetching profile from server...');          dispatch(fetchProfile())
+          console.log('🔄 useAuth - Token valid, fetching profile from server...');
+          dispatch(fetchProfile())
             .unwrap()
             .then(data => {
-              console.log('Profile fetch successful:', data);
+              console.log('✅ useAuth - Profile fetch successful:', data);
               setAuthChecked(true);
               // Initialize socket connection only after profile is loaded
               // socketService.init(dispatch, token, data?.role || decoded.role);
             })
             .catch(error => {
-              console.error('Profile fetch failed:', error);
+              console.error('❌ useAuth - Profile fetch failed:', error);
               setAuthChecked(true);
               // If profile fetch fails but token is valid, try to recover
               if (decoded.role) {
-                console.log('Attempting recovery with token data');
+                console.log('🔄 useAuth - Attempting recovery with token data');
                 // We could set some basic user data from the token here if needed
               } else {
                 // No way to recover, log out
+                console.log('❌ useAuth - No way to recover, logging out');
                 dispatch(logout());
                 navigate('/login');
               }
             });
-        } else {          // We're authenticated, ensure socket is connected
-          console.log('Already authenticated, ensuring socket connection');
+        } else {
+          // We're authenticated, ensure socket is connected
+          console.log('✅ useAuth - Already authenticated, ensuring socket connection');
+          console.log('🔍 useAuth - Current user in Redux:', currentUser);
+          console.log('🔍 useAuth - Is authenticated:', isAuthenticated);
+          console.log('🔍 useAuth - Role:', role);
           setAuthChecked(true);
           // socketService.init(dispatch, token, decoded.role || role);
         }

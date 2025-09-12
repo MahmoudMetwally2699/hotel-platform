@@ -67,52 +67,81 @@ const RevenuePage = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">Revenue Management</h1>
+    <div className="min-h-screen bg-gradient-to-br from-modern-lightBlue via-white to-modern-gray">
+      <div className="p-6 max-w-7xl mx-auto">
+        {/* Modern Header Section */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-2xl p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center space-x-3 mb-2">
+                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  </div>
+                  <h1 className="text-2xl font-bold text-white">Revenue Analytics</h1>
+                </div>
+                <p className="text-blue-100 text-sm">Track your hotel's financial performance and revenue streams</p>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-bold text-white">
+                  ${totalRevenue.toLocaleString()}
+                </div>
+                <div className="text-blue-100 text-sm">Total Revenue</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      {/* Date Range Selection */}
-      <div className="flex space-x-2 mb-6">
-        <button
-          onClick={() => handleDateRangeChange('week')}
-          className={`px-4 py-2 rounded-md ${
-            dateRange === 'week'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          This Week
-        </button>
-        <button
-          onClick={() => handleDateRangeChange('month')}
-          className={`px-4 py-2 rounded-md ${
-            dateRange === 'month'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          This Month
-        </button>
-        <button
-          onClick={() => handleDateRangeChange('quarter')}
-          className={`px-4 py-2 rounded-md ${
-            dateRange === 'quarter'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          This Quarter
-        </button>
-        <button
-          onClick={() => handleDateRangeChange('year')}
-          className={`px-4 py-2 rounded-md ${
-            dateRange === 'year'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          This Year
-        </button>
-      </div>
+        {/* Date Range Selection */}
+        <div className="mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+            <h3 className="text-sm font-semibold text-modern-darkGray mb-3">Time Period</h3>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => handleDateRangeChange('week')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  dateRange === 'week'
+                    ? 'bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white shadow-md'
+                    : 'bg-gray-50 text-modern-darkGray hover:bg-gray-100 hover:shadow-sm'
+                }`}
+              >
+                This Week
+              </button>
+              <button
+                onClick={() => handleDateRangeChange('month')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  dateRange === 'month'
+                    ? 'bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white shadow-md'
+                    : 'bg-gray-50 text-modern-darkGray hover:bg-gray-100 hover:shadow-sm'
+                }`}
+              >
+                This Month
+              </button>
+              <button
+                onClick={() => handleDateRangeChange('quarter')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  dateRange === 'quarter'
+                    ? 'bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white shadow-md'
+                    : 'bg-gray-50 text-modern-darkGray hover:bg-gray-100 hover:shadow-sm'
+                }`}
+              >
+                This Quarter
+              </button>
+              <button
+                onClick={() => handleDateRangeChange('year')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  dateRange === 'year'
+                    ? 'bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white shadow-md'
+                    : 'bg-gray-50 text-modern-darkGray hover:bg-gray-100 hover:shadow-sm'
+                }`}
+              >
+                This Year
+              </button>
+            </div>
+          </div>
+        </div>
 
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
@@ -121,144 +150,215 @@ const RevenuePage = () => {
       ) : (
         <>
           {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h3 className="text-gray-500 text-sm">Total Revenue</h3>
-              <p className="text-2xl font-bold">${totalRevenue.toLocaleString()}</p>
-              <div className="text-gray-500 text-sm mt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-gradient-to-r from-modern-blue to-modern-lightBlue p-6 rounded-xl shadow-lg text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm">Total Revenue</p>
+                  <p className="text-2xl font-bold">${totalRevenue.toLocaleString()}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-blue-100 text-sm mt-2">
                 <span className="font-medium">Based on completed orders</span>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h3 className="text-gray-500 text-sm">Total Bookings</h3>
-              <p className="text-2xl font-bold">{totalBookings.toLocaleString()}</p>
-              <div className="text-gray-500 text-sm mt-2">
+            <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 rounded-xl shadow-lg text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-emerald-100 text-sm">Total Bookings</p>
+                  <p className="text-2xl font-bold">{totalBookings.toLocaleString()}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-emerald-100 text-sm mt-2">
                 <span className="font-medium">All time bookings</span>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h3 className="text-gray-500 text-sm">Avg. Booking Value</h3>
-              <p className="text-2xl font-bold">${avgBookingValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-              <div className="text-gray-500 text-sm mt-2">
+            <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-xl shadow-lg text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm">Avg. Booking Value</p>
+                  <p className="text-2xl font-bold">${avgBookingValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-purple-100 text-sm mt-2">
                 <span className="font-medium">Average order value</span>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h3 className="text-gray-500 text-sm">Completion Rate</h3>
-              <p className="text-2xl font-bold">
-                {completionRate.toFixed(1)}%
-              </p>
-              <div className="text-gray-500 text-sm mt-2">
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-xl shadow-lg text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100 text-sm">Completion Rate</p>
+                  <p className="text-2xl font-bold">{completionRate.toFixed(1)}%</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-orange-100 text-sm mt-2">
                 <span className="font-medium">Orders completed</span>
               </div>
             </div>
-          </div>          {/* Revenue Chart */}
-          <div className="bg-white p-6 rounded-lg shadow border border-gray-200 mb-8">
-            <h2 className="text-lg font-semibold mb-4">Revenue Trends</h2>
-            {monthlyTrends.length > 0 ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500">Total Months</p>
-                    <p className="text-2xl font-bold">{monthlyTrends.length}</p>
+          </div>
+
+          {/* Revenue Chart */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 mb-8 overflow-hidden">
+            <div className="bg-gradient-to-r from-modern-blue to-modern-lightBlue p-6">
+              <h2 className="text-xl font-semibold text-white">Revenue Trends</h2>
+              <p className="text-blue-100 text-sm mt-1">Monthly performance overview</p>
+            </div>
+            <div className="p-6">
+              {monthlyTrends.length > 0 ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                      <p className="text-sm text-modern-darkGray font-medium">Total Months</p>
+                      <p className="text-3xl font-bold text-modern-blue mt-1">{monthlyTrends.length}</p>
+                    </div>
+                    <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                      <p className="text-sm text-modern-darkGray font-medium">Peak Month Revenue</p>
+                      <p className="text-3xl font-bold text-green-600 mt-1">
+                        ${Math.max(...chartRevenue).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                      <p className="text-sm text-modern-darkGray font-medium">Avg Monthly Revenue</p>
+                      <p className="text-3xl font-bold text-purple-600 mt-1">
+                        ${(chartRevenue.reduce((a, b) => a + b, 0) / chartRevenue.length).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500">Peak Month Revenue</p>
-                    <p className="text-2xl font-bold">
-                      ${Math.max(...chartRevenue).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500">Avg Monthly Revenue</p>
-                    <p className="text-2xl font-bold">
-                      ${(chartRevenue.reduce((a, b) => a + b, 0) / chartRevenue.length).toLocaleString()}
-                    </p>
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl">
+                    <p className="text-modern-darkGray font-semibold mb-4">Monthly Revenue Data</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {monthlyTrends.slice(-8).map((trend, index) => (
+                        <div key={index} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                          <p className="font-semibold text-modern-darkGray">
+                            {new Date(2024, trend._id.month - 1).toLocaleString('default', { month: 'short' })} {trend._id.year}
+                          </p>
+                          <p className="text-emerald-600 font-bold text-lg">${trend.revenue.toLocaleString()}</p>
+                          <p className="text-modern-gray text-sm">{trend.count} orders</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <div className="bg-gray-50 p-4 rounded">
-                  <p className="text-sm text-gray-600 mb-2">Monthly Revenue Data:</p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                    {monthlyTrends.slice(-8).map((trend, index) => (
-                      <div key={index} className="bg-white p-2 rounded">
-                        <p className="font-medium">
-                          {new Date(2024, trend._id.month - 1).toLocaleString('default', { month: 'short' })} {trend._id.year}
-                        </p>
-                        <p className="text-green-600">${trend.revenue.toLocaleString()}</p>
-                        <p className="text-gray-500">{trend.count} orders</p>
-                      </div>
-                    ))}
+              ) : (
+                <div className="h-64 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-modern-lightBlue/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-modern-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <p className="text-modern-darkGray font-medium mb-2">No revenue data available yet</p>
+                    <p className="text-modern-gray">Revenue trends will appear here once orders are completed</p>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="h-64 flex items-center justify-center bg-gray-50">
-                <div className="text-center">
-                  <p className="text-gray-400 mb-2">No revenue data available yet</p>
-                  <p className="text-sm text-gray-500">Revenue trends will appear here once orders are completed</p>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Revenue by Category & Service */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h2 className="text-lg font-semibold mb-4">Revenue by Category</h2>
-              <div className="space-y-4">
-                {topCategories.length > 0 ? (
-                  topCategories.map((category, index) => {
-                    const percentage = totalCategoryRevenue > 0
-                      ? ((category.revenue / totalCategoryRevenue) * 100).toFixed(0)
-                      : 0;
-                    return (
-                      <div key={index} className="flex justify-between items-center">
-                        <div>
-                          <h3 className="font-medium capitalize">{category._id || 'Unknown'}</h3>
-                          <p className="text-sm text-gray-500">{percentage}% of total • {category.bookings} bookings</p>
-                        </div>
-                        <span className="font-semibold">${category.revenue.toLocaleString()}</span>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No category data available</p>
-                  </div>
-                )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6">
+                <h2 className="text-xl font-semibold text-white">Revenue by Category</h2>
+                <p className="text-emerald-100 text-sm mt-1">Performance breakdown</p>
               </div>
-            </div>            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-              <h2 className="text-lg font-semibold mb-4">Recent High-Value Orders</h2>
-              <div className="space-y-4">
-                {recentBookings.length > 0 ? (
-                  recentBookings
-                    .filter(booking => booking.pricing?.totalAmount > 0)
-                    .slice(0, 5)
-                    .map((booking, index) => (
-                      <div key={index} className="flex justify-between items-center">
-                        <div>
-                          <h3 className="font-medium">{booking.serviceId?.name || 'Service Name'}</h3>
-                          <p className="text-sm text-gray-500">
-                            {booking.serviceId?.category || 'Category'} •
-                            Status: {booking.status} •
-                            Guest: {booking.guestId?.firstName || 'Unknown'} {booking.guestId?.lastName || ''}
-                          </p>
+              <div className="p-6">
+                <div className="space-y-4">
+                  {topCategories.length > 0 ? (
+                    topCategories.map((category, index) => {
+                      const percentage = totalCategoryRevenue > 0
+                        ? ((category.revenue / totalCategoryRevenue) * 100).toFixed(0)
+                        : 0;
+                      return (
+                        <div key={index} className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg hover:shadow-md transition-shadow">
+                          <div>
+                            <h3 className="font-semibold capitalize text-modern-darkGray">{category._id || 'Unknown'}</h3>
+                            <p className="text-sm text-modern-gray">{percentage}% of total • {category.bookings} bookings</p>
+                          </div>
+                          <span className="font-bold text-emerald-600 text-lg">${category.revenue.toLocaleString()}</span>
                         </div>
-                        <span className="font-semibold">${booking.pricing?.totalAmount?.toFixed(2) || '0.00'}</span>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
                       </div>
-                    ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No recent orders available</p>
-                  </div>
-                )}
+                      <p className="text-modern-gray">No category data available</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6">
+                <h2 className="text-xl font-semibold text-white">Recent High-Value Orders</h2>
+                <p className="text-purple-100 text-sm mt-1">Top performing bookings</p>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  {recentBookings.length > 0 ? (
+                    recentBookings
+                      .filter(booking => booking.pricing?.totalAmount > 0)
+                      .slice(0, 5)
+                      .map((booking, index) => (
+                        <div key={index} className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg hover:shadow-md transition-shadow">
+                          <div>
+                            <h3 className="font-semibold text-modern-darkGray">{booking.serviceId?.name || 'Service Name'}</h3>
+                            <p className="text-sm text-modern-gray">
+                              {booking.serviceId?.category || 'Category'} • Status: <span className="font-medium">{booking.status}</span>
+                            </p>
+                            <p className="text-xs text-modern-gray mt-1">
+                              Guest: {booking.guestId?.firstName || 'Unknown'} {booking.guestId?.lastName || ''}
+                            </p>
+                          </div>
+                          <span className="font-bold text-purple-600 text-lg">${booking.pricing?.totalAmount?.toFixed(2) || '0.00'}</span>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                      </div>
+                      <p className="text-modern-gray">No recent orders available</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Download Report Button */}
           <div className="flex justify-end">
-            <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition flex items-center">
+            <button className="px-6 py-3 bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white rounded-xl hover:from-modern-blue/90 hover:to-modern-lightBlue/90 transition-all duration-200 flex items-center shadow-lg hover:shadow-xl">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
@@ -267,6 +367,7 @@ const RevenuePage = () => {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 };

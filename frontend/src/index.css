@@ -5,9 +5,10 @@
 /* Custom styles that don't conflict with Tailwind */
 body {
   margin: 0;
-  font-family: 'Roboto', 'Arial', sans-serif;
+  font-family: 'Inter', 'Roboto', 'Arial', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #f8fafc;
 }
 
 code {
@@ -18,23 +19,37 @@ code {
 /* Custom utility classes */
 @layer components {
   .btn-primary {
-    @apply bg-primary-main text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors;
+    @apply bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white px-6 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium;
   }
 
   .btn-secondary {
-    @apply bg-secondary-main text-white px-4 py-2 rounded-md hover:bg-secondary-dark transition-colors;
+    @apply bg-gradient-to-r from-modern-lightBlue to-modern-blue text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300 font-medium;
   }
 
   .form-input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main;
+    @apply w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-modern-lightBlue focus:border-transparent transition-all duration-300;
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply bg-white rounded-2xl shadow-lg p-8 border border-gray-50 hover:shadow-xl transition-all duration-300;
   }
 
   .page-container {
     @apply p-6 mt-[64px];
+  }
+
+  /* Modern glass effect */
+  .glass-effect {
+    @apply backdrop-blur-lg bg-white/70 border border-white/20;
+  }
+
+  /* Modern gradient backgrounds */
+  .gradient-primary {
+    @apply bg-gradient-to-r from-modern-blue to-modern-lightBlue;
+  }
+
+  .gradient-secondary {
+    @apply bg-gradient-to-br from-modern-lightBlue to-modern-blue;
   }
 
   /* Text truncation utilities */
@@ -50,5 +65,25 @@ code {
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  /* Modern scroll bars */
+  .modern-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .modern-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+
+  .modern-scrollbar::-webkit-scrollbar-thumb {
+    background: #3B5787;
+    border-radius: 3px;
+  }
+
+  .modern-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #67BAE0;
   }
 }

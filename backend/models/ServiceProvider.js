@@ -34,8 +34,8 @@ const serviceProviderSchema = new mongoose.Schema({
   categories: [{
     type: String,
     enum: {
-      values: ['laundry', 'transportation', 'tours', 'spa', 'dining', 'entertainment', 'shopping', 'fitness'],
-      message: 'Category must be one of: laundry, transportation, tours, spa, dining, entertainment, shopping, fitness'
+      values: ['laundry', 'transportation', 'tours', 'spa', 'dining', 'entertainment', 'shopping', 'fitness', 'housekeeping'],
+      message: 'Category must be one of: laundry, transportation, tours, spa, dining, entertainment, shopping, fitness, housekeeping'
     }
   }],
 

@@ -47,15 +47,11 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
     maxOrdersPerDay: '',
     totalEmployees: '',
 
-    // User Credentials (Optional)
+    // User Credentials (Required)
     userEmail: '',
     userPassword: '',
     firstName: '',
-    lastName: '',
-
-    // Options
-    generateCredentials: true, // Whether to auto-generate credentials
-    sendEmail: true // Whether to send credentials via email
+    lastName: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -148,22 +144,20 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
       newErrors.totalEmployees = 'Total employees count is required';
     }
 
-    // If not generating credentials automatically, validate user fields
-    if (!formData.generateCredentials) {
-      if (!formData.userEmail.trim()) {
-        newErrors.userEmail = 'User email is required';
-      }
-      if (!formData.userPassword.trim()) {
-        newErrors.userPassword = 'User password is required';
-      } else if (formData.userPassword.length < 6) {
-        newErrors.userPassword = 'Password must be at least 6 characters';
-      }
-      if (!formData.firstName.trim()) {
-        newErrors.firstName = 'First name is required';
-      }
-      if (!formData.lastName.trim()) {
-        newErrors.lastName = 'Last name is required';
-      }
+    // User credentials are required
+    if (!formData.userEmail.trim()) {
+      newErrors.userEmail = 'User email is required';
+    }
+    if (!formData.userPassword.trim()) {
+      newErrors.userPassword = 'User password is required';
+    } else if (formData.userPassword.length < 6) {
+      newErrors.userPassword = 'Password must be at least 6 characters';
+    }
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    }
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
     }
 
     setErrors(newErrors);
@@ -226,19 +220,21 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
           totalEmployees: parseInt(formData.totalEmployees)
         },
 
-        // User credentials (only if not auto-generating)
-        ...((!formData.generateCredentials) && {
-          userCredentials: {
-            email: formData.userEmail,
-            password: formData.userPassword,
-            firstName: formData.firstName,
-            lastName: formData.lastName
-          }
-        }),
+        // User credentials
+        userCredentials: {
+          email: formData.userEmail,
+          password: formData.userPassword,
+          firstName: formData.firstName,
+          lastName: formData.lastName
+        },
 
-        // Options
-        sendEmail: formData.sendEmail
-      };const result = await dispatch(createServiceProvider(apiData)).unwrap();
+        // Set as active by default
+        isActive: true,
+        isVerified: true,
+        verificationStatus: 'approved'
+      };
+
+      const result = await dispatch(createServiceProvider(apiData)).unwrap();
 
       // Show success message
       setShowSuccess(true);
@@ -271,9 +267,7 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
         userEmail: '',
         userPassword: '',
         firstName: '',
-        lastName: '',
-        generateCredentials: true,
-        sendEmail: true
+        lastName: ''
       });
 
       // Close modal after showing success message briefly
@@ -297,43 +291,75 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900">Add New Service Provider</h2>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Modal Header */}
+        <div className="px-6 py-4 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-white">Add New Service Provider</h3>
+              <p className="text-blue-100 text-sm mt-1">Register a new service provider for your hotel</p>
+            </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl"
+              className="text-white hover:text-gray-200 transition-colors duration-200"
               disabled={isLoading}
             >
-              ×
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
+        </div>
+
+        {/* Modal Content */}
+        <div className="p-6">
 
           {/* Success Message */}
           {showSuccess && (
-            <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mb-6 shadow-sm">
               <div className="flex items-center">
-                <svg className="h-5 w-5 text-green-400 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <p className="text-green-600 font-medium">
-                  Service provider created successfully!
-                  {formData.sendEmail && ' Login credentials have been sent via email.'}
-                </p>
+                <div className="flex-shrink-0">
+                  <svg className="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-green-800 font-medium">
+                    Service provider created successfully!
+                  </p>
+                </div>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Business Information */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Business Information</h3>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Business Information Section */}
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-modern-darkGray">Business Information</h3>
+                  <p className="text-sm text-modern-gray">Basic business details and contact information</p>
+                </div>
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Business Name *
                   </label>
                   <input
@@ -341,18 +367,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="businessName"
                     value={formData.businessName}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.businessName ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.businessName
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="Enter business name"
                     disabled={isLoading}
                   />
                   {errors.businessName && (
-                    <p className="text-red-500 text-sm mt-1">{errors.businessName}</p>                  )}
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.businessName}
+                    </p>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Contact Email *
                   </label>
                   <input
@@ -360,19 +394,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="contactEmail"
                     value={formData.contactEmail}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.contactEmail ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.contactEmail
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="business@example.com"
                     disabled={isLoading}
                   />
                   {errors.contactEmail && (
-                    <p className="text-red-500 text-sm mt-1">{errors.contactEmail}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.contactEmail}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Contact Phone *
                   </label>
                   <input
@@ -380,40 +421,61 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="contactPhone"
                     value={formData.contactPhone}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.contactPhone ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.contactPhone
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="+1234567890"
                     disabled={isLoading}
                   />
                   {errors.contactPhone && (
-                    <p className="text-red-500 text-sm mt-1">{errors.contactPhone}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.contactPhone}
+                    </p>
                   )}
                 </div>
               </div>
 
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-modern-darkGray">
+                  Business Description
                 </label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Brief description of the business"
+                  rows={4}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue hover:border-modern-lightBlue transition-all duration-200 bg-white"
+                  placeholder="Brief description of the business and services offered..."
                   disabled={isLoading}
                 />
-              </div>            </div>
+              </div>
+            </div>
 
-            {/* Address Information */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Address Information</h3>
+            {/* Address Information Section */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-modern-darkGray">Address Information</h3>
+                  <p className="text-sm text-modern-gray">Physical location and contact details</p>
+                </div>
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2 space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Street Address *
                   </label>
                   <input
@@ -421,19 +483,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="street"
                     value={formData.street}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.street ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.street
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="123 Main Street"
                     disabled={isLoading}
                   />
                   {errors.street && (
-                    <p className="text-red-500 text-sm mt-1">{errors.street}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.street}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     City *
                   </label>
                   <input
@@ -441,19 +510,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.city ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.city
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="City name"
                     disabled={isLoading}
                   />
                   {errors.city && (
-                    <p className="text-red-500 text-sm mt-1">{errors.city}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.city}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     State *
                   </label>
                   <input
@@ -461,19 +537,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="state"
                     value={formData.state}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.state ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.state
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="State/Province"
                     disabled={isLoading}
                   />
                   {errors.state && (
-                    <p className="text-red-500 text-sm mt-1">{errors.state}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.state}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Country *
                   </label>
                   <input
@@ -481,19 +564,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="country"
                     value={formData.country}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.country ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.country
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="Country"
                     disabled={isLoading}
                   />
                   {errors.country && (
-                    <p className="text-red-500 text-sm mt-1">{errors.country}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.country}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     ZIP Code *
                   </label>
                   <input
@@ -501,26 +591,45 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="zipCode"
                     value={formData.zipCode}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.zipCode ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.zipCode
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="ZIP/Postal Code"
                     disabled={isLoading}
                   />
                   {errors.zipCode && (
-                    <p className="text-red-500 text-sm mt-1">{errors.zipCode}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.zipCode}
+                    </p>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Business License Information */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Business License</h3>
+            {/* Business License Information Section */}
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-modern-darkGray">Business License</h3>
+                  <p className="text-sm text-modern-gray">Legal licensing and authorization details</p>
+                </div>
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     License Number *
                   </label>
                   <input
@@ -528,19 +637,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="licenseNumber"
                     value={formData.licenseNumber}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.licenseNumber ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.licenseNumber
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="License number"
                     disabled={isLoading}
                   />
                   {errors.licenseNumber && (
-                    <p className="text-red-500 text-sm mt-1">{errors.licenseNumber}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.licenseNumber}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Issued By *
                   </label>
                   <input
@@ -548,19 +664,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="licenseIssuedBy"
                     value={formData.licenseIssuedBy}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.licenseIssuedBy ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.licenseIssuedBy
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="Issuing authority"
                     disabled={isLoading}
                   />
                   {errors.licenseIssuedBy && (
-                    <p className="text-red-500 text-sm mt-1">{errors.licenseIssuedBy}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.licenseIssuedBy}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Issue Date *
                   </label>
                   <input
@@ -568,18 +691,25 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="licenseIssuedDate"
                     value={formData.licenseIssuedDate}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.licenseIssuedDate ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.licenseIssuedDate
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     disabled={isLoading}
                   />
                   {errors.licenseIssuedDate && (
-                    <p className="text-red-500 text-sm mt-1">{errors.licenseIssuedDate}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.licenseIssuedDate}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Expiry Date *
                   </label>
                   <input
@@ -587,24 +717,43 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="licenseExpiryDate"
                     value={formData.licenseExpiryDate}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.licenseExpiryDate ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.licenseExpiryDate
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     disabled={isLoading}
                   />
                   {errors.licenseExpiryDate && (
-                    <p className="text-red-500 text-sm mt-1">{errors.licenseExpiryDate}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.licenseExpiryDate}
+                    </p>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Tax Information */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Tax Information</h3>
+            {/* Tax Information Section */}
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-200">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-modern-darkGray">Tax Information</h3>
+                  <p className="text-sm text-modern-gray">Tax identification and compliance details</p>
+                </div>
+              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-modern-darkGray">
                   Tax ID *
                 </label>
                 <input
@@ -612,25 +761,44 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                   name="taxId"
                   value={formData.taxId}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.taxId ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                    errors.taxId
+                      ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                      : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                   }`}
                   placeholder="Tax identification number"
                   disabled={isLoading}
                 />
                 {errors.taxId && (
-                  <p className="text-red-500 text-sm mt-1">{errors.taxId}</p>
+                  <p className="text-red-500 text-sm font-medium flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {errors.taxId}
+                  </p>
                 )}
               </div>
             </div>
 
-            {/* Insurance Information */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Insurance Information</h3>
+            {/* Insurance Information Section */}
+            <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-6 border border-green-200">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-modern-darkGray">Insurance Information</h3>
+                  <p className="text-sm text-modern-gray">Insurance coverage and policy details</p>
+                </div>
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Insurance Provider *
                   </label>
                   <input
@@ -638,19 +806,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="insuranceProvider"
                     value={formData.insuranceProvider}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.insuranceProvider ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.insuranceProvider
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="Insurance company name"
                     disabled={isLoading}
                   />
                   {errors.insuranceProvider && (
-                    <p className="text-red-500 text-sm mt-1">{errors.insuranceProvider}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.insuranceProvider}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Policy Number *
                   </label>
                   <input
@@ -658,19 +833,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="insurancePolicyNumber"
                     value={formData.insurancePolicyNumber}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.insurancePolicyNumber ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.insurancePolicyNumber
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="Policy number"
                     disabled={isLoading}
                   />
                   {errors.insurancePolicyNumber && (
-                    <p className="text-red-500 text-sm mt-1">{errors.insurancePolicyNumber}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.insurancePolicyNumber}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Coverage Amount * ($)
                   </label>
                   <input
@@ -678,20 +860,27 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="insuranceCoverage"
                     value={formData.insuranceCoverage}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.insuranceCoverage ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.insuranceCoverage
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="50000"
                     min="1"
                     disabled={isLoading}
                   />
                   {errors.insuranceCoverage && (
-                    <p className="text-red-500 text-sm mt-1">{errors.insuranceCoverage}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.insuranceCoverage}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Expiry Date *
                   </label>
                   <input
@@ -699,25 +888,44 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="insuranceExpiryDate"
                     value={formData.insuranceExpiryDate}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.insuranceExpiryDate ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.insuranceExpiryDate
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     disabled={isLoading}
                   />
                   {errors.insuranceExpiryDate && (
-                    <p className="text-red-500 text-sm mt-1">{errors.insuranceExpiryDate}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.insuranceExpiryDate}
+                    </p>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Capacity and Staff Information */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Capacity & Staff</h3>
+            {/* Capacity and Staff Information Section */}
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-200">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-modern-darkGray">Capacity & Staff</h3>
+                  <p className="text-sm text-modern-gray">Service capacity and operational details</p>
+                </div>
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Max Orders Per Day *
                   </label>
                   <input
@@ -725,20 +933,27 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="maxOrdersPerDay"
                     value={formData.maxOrdersPerDay}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.maxOrdersPerDay ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.maxOrdersPerDay
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="10"
                     min="1"
                     disabled={isLoading}
                   />
                   {errors.maxOrdersPerDay && (
-                    <p className="text-red-500 text-sm mt-1">{errors.maxOrdersPerDay}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.maxOrdersPerDay}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-modern-darkGray">
                     Total Employees *
                   </label>
                   <input
@@ -746,47 +961,46 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     name="totalEmployees"
                     value={formData.totalEmployees}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.totalEmployees ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                      errors.totalEmployees
+                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                     }`}
                     placeholder="1"
                     min="1"
                     disabled={isLoading}
                   />
                   {errors.totalEmployees && (
-                    <p className="text-red-500 text-sm mt-1">{errors.totalEmployees}</p>
+                    <p className="text-red-500 text-sm font-medium flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.totalEmployees}
+                    </p>
                   )}
                 </div>
               </div>
             </div>
 
             {/* User Credentials Section */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">User Account</h3>
-
-              <div className="mb-4">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="generateCredentials"
-                    checked={formData.generateCredentials}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    disabled={isLoading}
-                  />
-                  <span className="ml-2 text-sm text-gray-700">
-                    Auto-generate login credentials
-                  </span>
-                </label>
-                <p className="text-xs text-gray-500 mt-1">
-                  If checked, we'll create a random email and password for the service provider
-                </p>
+            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl p-6 border border-cyan-200">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-modern-darkGray">User Account</h3>
+                  <p className="text-sm text-modern-gray">Login credentials and account setup</p>
+                </div>
               </div>
 
-              {!formData.generateCredentials && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-modern-darkGray">
                       User Email *
                     </label>
                     <input
@@ -794,19 +1008,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                       name="userEmail"
                       value={formData.userEmail}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.userEmail ? 'border-red-500' : 'border-gray-300'
+                      className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                        errors.userEmail
+                          ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                          : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                       }`}
                       placeholder="user@example.com"
                       disabled={isLoading}
                     />
                     {errors.userEmail && (
-                      <p className="text-red-500 text-sm mt-1">{errors.userEmail}</p>
+                      <p className="text-red-500 text-sm font-medium flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.userEmail}
+                      </p>
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-modern-darkGray">
                       Password *
                     </label>
                     <input
@@ -814,19 +1035,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                       name="userPassword"
                       value={formData.userPassword}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.userPassword ? 'border-red-500' : 'border-gray-300'
+                      className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                        errors.userPassword
+                          ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                          : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                       }`}
                       placeholder="Minimum 6 characters"
                       disabled={isLoading}
                     />
                     {errors.userPassword && (
-                      <p className="text-red-500 text-sm mt-1">{errors.userPassword}</p>
+                      <p className="text-red-500 text-sm font-medium flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.userPassword}
+                      </p>
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-modern-darkGray">
                       First Name *
                     </label>
                     <input
@@ -834,19 +1062,26 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.firstName ? 'border-red-500' : 'border-gray-300'
+                      className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                        errors.firstName
+                          ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                          : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                       }`}
                       placeholder="First name"
                       disabled={isLoading}
                     />
                     {errors.firstName && (
-                      <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
+                      <p className="text-red-500 text-sm font-medium flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.firstName}
+                      </p>
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-modern-darkGray">
                       Last Name *
                     </label>
                     <input
@@ -854,86 +1089,72 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        errors.lastName ? 'border-red-500' : 'border-gray-300'
+                      className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
+                        errors.lastName
+                          ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
+                          : 'border-gray-200 bg-white hover:border-modern-lightBlue'
                       }`}
                       placeholder="Last name"
                       disabled={isLoading}
                     />
                     {errors.lastName && (
-                      <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
+                      <p className="text-red-500 text-sm font-medium flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.lastName}
+                      </p>
                     )}
                   </div>
-                </div>
-              )}
-
-              <div className="mt-4">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="sendEmail"
-                    checked={formData.sendEmail}
-                    onChange={handleInputChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    disabled={isLoading}
-                  />
-                  <span className="ml-2 text-sm text-gray-700">
-                    Send login credentials via email
-                  </span>
-                </label>
-                <p className="text-xs text-gray-500 mt-1">
-                  If checked, login credentials will be sent to the contact email
-                </p>
               </div>
             </div>
 
             {/* Error Message */}
             {errors.submit && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                <p className="text-red-600 text-sm">{errors.submit}</p>
-              </div>
-            )}
-
-            {/* Success Message */}
-            {showSuccess && (
-              <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+              <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl p-4">
                 <div className="flex items-center">
-                  <svg className="h-5 w-5 text-green-400 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <p className="text-green-600 font-medium">
-                    Service provider created successfully!
-                    {formData.sendEmail && ' Login credentials have been sent via email.'}
-                  </p>
+                  <div className="flex-shrink-0">
+                    <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-red-800 font-medium">{errors.submit}</p>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <div className="flex justify-end space-x-4 pt-6">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-6 py-3 border-2 border-gray-300 rounded-xl text-modern-darkGray font-semibold hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue transition-all duration-200"
                 disabled={isLoading}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                     </svg>
-                    Creating...
+                    Creating Service Provider...
                   </span>
                 ) : (
-                  'Create Service Provider'
+                  <span className="flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Create Service Provider
+                  </span>
                 )}
               </button>
             </div>

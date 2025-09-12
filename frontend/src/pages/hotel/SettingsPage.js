@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchHotelById, updateHotelProfile, selectCurrentHotel, selectHotelLoading } from '../../redux/slices/hotelSlice';
+import { fetchHotelProfile, updateHotelProfile, selectCurrentHotel, selectHotelLoading } from '../../redux/slices/hotelSlice';
 import useAuth from '../../hooks/useAuth';
 
 /**
@@ -8,10 +8,13 @@ import useAuth from '../../hooks/useAuth';
  * @returns {JSX.Element} Settings page
  */
 const SettingsPage = () => {
+  // IMMEDIATE ALERT TO CATCH REDIRECT ISSUES
   const dispatch = useDispatch();
   const hotel = useSelector(selectCurrentHotel);
   const isLoading = useSelector(selectHotelLoading);
-  const { user } = useAuth();
+  const { currentUser: user } = useAuth();
+
+
   const [activeTab, setActiveTab] = useState('profile');
   const [formData, setFormData] = useState({
     name: '',
@@ -37,33 +40,43 @@ const SettingsPage = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    if (user?.hotelId) {
-      dispatch(fetchHotelById(user.hotelId));
+    // Fetch hotel profile data when user is available
+    console.log('🔍 Initial effect - User:', { user: !!user, role: user?.role });
+    if (user?.role === 'hotel') {
+      console.log('🔍 Fetching hotel profile...');
+      dispatch(fetchHotelProfile());
     }
   }, [dispatch, user]);
 
   useEffect(() => {
-    if (hotel) {
-      setFormData({
-        name: hotel.name || '',
-        description: hotel.description || '',
+    console.log('🔍 Hotel data effect triggered:', { hotel, hasHotel: !!hotel });
+    if (hotel?.data) {
+      const hotelData = hotel.data;
+      console.log('🔍 Setting form data with hotel data:', hotelData);
+      const newFormData = {
+        name: hotelData.name || '',
+        description: hotelData.description || '',
         address: {
-          street: hotel.address?.street || '',
-          city: hotel.address?.city || '',
-          state: hotel.address?.state || '',
-          zipCode: hotel.address?.zipCode || '',
-          country: hotel.address?.country || ''
+          street: hotelData.address?.street || '',
+          city: hotelData.address?.city || '',
+          state: hotelData.address?.state || '',
+          zipCode: hotelData.address?.zipCode || '',
+          country: hotelData.address?.country || ''
         },
-        contactEmail: hotel.contactEmail || '',
-        contactPhone: hotel.contactPhone || '',
-        website: hotel.website || '',
-        defaultMarkupPercentage: hotel.defaultMarkupPercentage || 0,
-        defaultCurrency: hotel.defaultCurrency || 'USD',
-        checkInTime: hotel.checkInTime || '14:00',
-        checkOutTime: hotel.checkOutTime || '12:00',
-        acceptsBookingsCutoff: hotel.acceptsBookingsCutoff || 2,
-        cancellationPolicy: hotel.cancellationPolicy || ''
-      });
+        contactEmail: hotelData.email || '',
+        contactPhone: hotelData.phone || '',
+        website: hotelData.website || '',
+        defaultMarkupPercentage: hotelData.markupSettings?.global?.defaultPercentage || 0,
+        defaultCurrency: hotelData.paymentSettings?.currency || 'USD',
+        checkInTime: hotelData.operatingHours?.checkIn || '14:00',
+        checkOutTime: hotelData.operatingHours?.checkOut || '12:00',
+        acceptsBookingsCutoff: hotelData.acceptsBookingsCutoff || 2,
+        cancellationPolicy: hotelData.cancellationPolicy || ''
+      };
+      console.log('🔍 New form data:', newFormData);
+      setFormData(newFormData);
+    } else {
+      console.log('⚠️ No hotel data available');
     }
   }, [hotel]);
 
@@ -92,9 +105,9 @@ const SettingsPage = () => {
       setSuccessMessage('');
       setErrorMessage('');
 
-      if (user?.hotelId) {
+      // For hotel admin, update their own profile (no hotelId needed)
+      if (user?.role === 'hotel') {
         await dispatch(updateHotelProfile({
-          hotelId: user.hotelId,
           hotelData: formData
         })).unwrap();
 
@@ -116,412 +129,284 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">Hotel Settings</h1>
-
-      {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'profile'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Hotel Profile
-          </button>
-          <button
-            onClick={() => setActiveTab('services')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'services'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Service Settings
-          </button>
-          <button
-            onClick={() => setActiveTab('notifications')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'notifications'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Notifications
-          </button>
-        </nav>
-      </div>
-
-      {/* Success and Error Messages */}
-      {successMessage && (
-        <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-md">
-          {successMessage}
-        </div>
-      )}
-
-      {errorMessage && (
-        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
-          {errorMessage}
-        </div>
-      )}
-
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        </div>
-      ) : (
-        <>
-          {/* Hotel Profile Form */}
-          {activeTab === 'profile' && (
-            <form onSubmit={handleSubmit}>
-              <div className="bg-white p-6 rounded-lg shadow border border-gray-200 mb-6">
-                <h2 className="text-lg font-medium mb-4">Basic Information</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Hotel Name</label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-                    <input
-                      type="url"
-                      id="website"
-                      name="website"
-                      value={formData.website}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <textarea
-                      id="description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      rows="3"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow border border-gray-200 mb-6">
-                <h2 className="text-lg font-medium mb-4">Contact Information</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700 mb-1">Contact Email</label>
-                    <input
-                      type="email"
-                      id="contactEmail"
-                      name="contactEmail"
-                      value={formData.contactEmail}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="contactPhone" className="block text-sm font-medium text-gray-700 mb-1">Contact Phone</label>
-                    <input
-                      type="tel"
-                      id="contactPhone"
-                      name="contactPhone"
-                      value={formData.contactPhone}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg shadow border border-gray-200 mb-6">
-                <h2 className="text-lg font-medium mb-4">Address</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="md:col-span-2">
-                    <label htmlFor="address.street" className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
-                    <input
-                      type="text"
-                      id="address.street"
-                      name="address.street"
-                      value={formData.address.street}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="address.city" className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                    <input
-                      type="text"
-                      id="address.city"
-                      name="address.city"
-                      value={formData.address.city}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="address.state" className="block text-sm font-medium text-gray-700 mb-1">State/Province</label>
-                    <input
-                      type="text"
-                      id="address.state"
-                      name="address.state"
-                      value={formData.address.state}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="address.zipCode" className="block text-sm font-medium text-gray-700 mb-1">ZIP/Postal Code</label>
-                    <input
-                      type="text"
-                      id="address.zipCode"
-                      name="address.zipCode"
-                      value={formData.address.zipCode}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="address.country" className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                    <input
-                      type="text"
-                      id="address.country"
-                      name="address.country"
-                      value={formData.address.country}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* Service Settings Form */}
-          {activeTab === 'services' && (
-            <form onSubmit={handleSubmit}>
-              <div className="bg-white p-6 rounded-lg shadow border border-gray-200 mb-6">
-                <h2 className="text-lg font-medium mb-4">Service Settings</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="defaultMarkupPercentage" className="block text-sm font-medium text-gray-700 mb-1">Default Markup Percentage</label>
-                    <div className="relative mt-1 rounded-md shadow-sm">
-                      <input
-                        type="number"
-                        id="defaultMarkupPercentage"
-                        name="defaultMarkupPercentage"
-                        value={formData.defaultMarkupPercentage}
-                        onChange={handleInputChange}
-                        min="0"
-                        max="100"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12"
-                      />
-                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 sm:text-sm">%</span>
-                      </div>
-                    </div>
-                    <p className="mt-1 text-sm text-gray-500">Default markup applied to all services. Can be overridden per service.</p>
-                  </div>
-
-                  <div>
-                    <label htmlFor="defaultCurrency" className="block text-sm font-medium text-gray-700 mb-1">Default Currency</label>
-                    <select
-                      id="defaultCurrency"
-                      name="defaultCurrency"
-                      value={formData.defaultCurrency}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="USD">USD - US Dollar</option>
-                      <option value="EUR">EUR - Euro</option>
-                      <option value="GBP">GBP - British Pound</option>
-                      <option value="JPY">JPY - Japanese Yen</option>
-                      <option value="AUD">AUD - Australian Dollar</option>
-                      <option value="CAD">CAD - Canadian Dollar</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="acceptsBookingsCutoff" className="block text-sm font-medium text-gray-700 mb-1">Booking Cutoff Time (hours)</label>
-                    <input
-                      type="number"
-                      id="acceptsBookingsCutoff"
-                      name="acceptsBookingsCutoff"
-                      value={formData.acceptsBookingsCutoff}
-                      onChange={handleInputChange}
-                      min="0"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <p className="mt-1 text-sm text-gray-500">Minimum hours before service time that bookings are allowed.</p>
-                  </div>
-
-                  <div>
-                    <label htmlFor="checkInTime" className="block text-sm font-medium text-gray-700 mb-1">Check-in Time</label>
-                    <input
-                      type="time"
-                      id="checkInTime"
-                      name="checkInTime"
-                      value={formData.checkInTime}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="checkOutTime" className="block text-sm font-medium text-gray-700 mb-1">Check-out Time</label>
-                    <input
-                      type="time"
-                      id="checkOutTime"
-                      name="checkOutTime"
-                      value={formData.checkOutTime}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label htmlFor="cancellationPolicy" className="block text-sm font-medium text-gray-700 mb-1">Cancellation Policy</label>
-                    <textarea
-                      id="cancellationPolicy"
-                      name="cancellationPolicy"
-                      value={formData.cancellationPolicy}
-                      onChange={handleInputChange}
-                      rows="4"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Describe your cancellation policy..."
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* Notifications Settings */}
-          {activeTab === 'notifications' && (
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200 mb-6">
-              <h2 className="text-lg font-medium mb-4">Notification Settings</h2>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-md">
-                  <div>
-                    <h3 className="font-medium">New Booking Notifications</h3>
-                    <p className="text-sm text-gray-500">Get notified when a new booking is made</p>
-                  </div>
-                  <div className="flex items-center">
-                    <label className="inline-flex relative items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-md">
-                  <div>
-                    <h3 className="font-medium">Booking Status Updates</h3>
-                    <p className="text-sm text-gray-500">Get notified when a booking status changes</p>
-                  </div>
-                  <div className="flex items-center">
-                    <label className="inline-flex relative items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-md">
-                  <div>
-                    <h3 className="font-medium">New Service Provider Applications</h3>
-                    <p className="text-sm text-gray-500">Get notified when a service provider applies to your hotel</p>
-                  </div>
-                  <div className="flex items-center">
-                    <label className="inline-flex relative items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-md">
-                  <div>
-                    <h3 className="font-medium">Guest Reviews</h3>
-                    <p className="text-sm text-gray-500">Get notified when a guest leaves a review</p>
-                  </div>
-                  <div className="flex items-center">
-                    <label className="inline-flex relative items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-md">
-                  <div>
-                    <h3 className="font-medium">Marketing Updates</h3>
-                    <p className="text-sm text-gray-500">Receive marketing and promotional materials</p>
-                  </div>
-                  <div className="flex items-center">
-                    <label className="inline-flex relative items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end mt-6">
-                <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition">
-                  Save Notification Preferences
-                </button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
+      <div className="max-w-6xl mx-auto p-6">
+        {/* Header Section */}
+        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 rounded-2xl shadow-xl p-8 mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">Hotel Settings</h1>
+              <p className="text-blue-100 text-lg">Manage your hotel profile and configuration</p>
+            </div>
+            <div className="hidden md:block">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
               </div>
             </div>
-          )}
-        </>
-      )}
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="bg-white rounded-xl shadow-lg mb-8 overflow-hidden">
+          <div className="border-b border-gray-200">
+            <nav className="flex">
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`flex-1 py-4 px-6 text-center font-medium text-sm transition-all duration-200 ${
+                  activeTab === 'profile'
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  <span>Hotel Profile</span>
+                </div>
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Success and Error Messages */}
+        {successMessage && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl shadow-lg">
+            <div className="flex items-center space-x-3">
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p className="text-green-800 font-medium">{successMessage}</p>
+            </div>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl shadow-lg">
+            <div className="flex items-center space-x-3">
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p className="text-red-800 font-medium">{errorMessage}</p>
+            </div>
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64 bg-white rounded-xl shadow-lg">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 font-medium">Loading hotel profile...</p>
+            </div>
+          </div>
+        ) : (
+          <div>
+            {/* Hotel Profile Form */}
+            {activeTab === 'profile' && (
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Basic Information Section */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
+                    <h2 className="text-xl font-semibold text-gray-800 flex items-center space-x-2">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Basic Information</span>
+                    </h2>
+                  </div>
+                  <div className="p-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">Hotel Name</label>
+                        <input
+                          type="text"
+                          id="name"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="website" className="block text-sm font-semibold text-gray-700 mb-2">Website</label>
+                        <input
+                          type="url"
+                          id="website"
+                          name="website"
+                          value={formData.website}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 bg-gray-50 focus:bg-white"
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                        <textarea
+                          id="description"
+                          name="description"
+                          value={formData.description}
+                          onChange={handleInputChange}
+                          rows="4"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                          placeholder="Describe your hotel's unique features and amenities..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Information Section */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-200">
+                    <h2 className="text-xl font-semibold text-gray-800 flex items-center space-x-2">
+                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span>Contact Information</span>
+                    </h2>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label htmlFor="contactEmail" className="block text-sm font-semibold text-gray-700 mb-2">Contact Email</label>
+                        <input
+                          type="email"
+                          id="contactEmail"
+                          name="contactEmail"
+                          value={formData.contactEmail}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="contactPhone" className="block text-sm font-semibold text-gray-700 mb-2">Contact Phone</label>
+                        <input
+                          type="tel"
+                          id="contactPhone"
+                          name="contactPhone"
+                          value={formData.contactPhone}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Address Information Section */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-gray-200">
+                    <h2 className="text-xl font-semibold text-gray-800 flex items-center space-x-2">
+                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span>Address Information</span>
+                    </h2>
+                  </div>
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="md:col-span-2">
+                        <label htmlFor="address.street" className="block text-sm font-semibold text-gray-700 mb-2">Street Address</label>
+                        <input
+                          type="text"
+                          id="address.street"
+                          name="address.street"
+                          value={formData.address.street}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="address.city" className="block text-sm font-semibold text-gray-700 mb-2">City</label>
+                        <input
+                          type="text"
+                          id="address.city"
+                          name="address.city"
+                          value={formData.address.city}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="address.state" className="block text-sm font-semibold text-gray-700 mb-2">State/Province</label>
+                        <input
+                          type="text"
+                          id="address.state"
+                          name="address.state"
+                          value={formData.address.state}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="address.zipCode" className="block text-sm font-semibold text-gray-700 mb-2">ZIP/Postal Code</label>
+                        <input
+                          type="text"
+                          id="address.zipCode"
+                          name="address.zipCode"
+                          value={formData.address.zipCode}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="address.country" className="block text-sm font-semibold text-gray-700 mb-2">Country</label>
+                        <input
+                          type="text"
+                          id="address.country"
+                          name="address.country"
+                          value={formData.address.country}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <div className="flex justify-end pt-6">
+                  <button
+                    type="submit"
+                    className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Saving...
+                      </div>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
