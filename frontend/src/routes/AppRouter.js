@@ -61,6 +61,7 @@ const HotelAdminRevenuePage = lazy(() => import('../pages/hotel/RevenuePage'));
 const HotelAdminMarkupSettingsPage = lazy(() => import('../pages/hotel/MarkupSettingsPage'));
 const HotelAdminProviderAnalyticsPage = lazy(() => import('../pages/hotel/ProviderAnalyticsPage'));
 const HotelAdminSettingsPage = lazy(() => import('../pages/hotel/SettingsPage'));
+const HotelAdminQRCodePage = lazy(() => import('../pages/hotel/QRCodePage'));
 const CategoryProviderManagement = lazy(() => import('../components/hotel/CategoryProviderManagement'));
 const ServiceProviderClients = lazy(() => import('../components/hotel/ServiceProviderClients'));
 const HotelServiceProviderAnalytics = lazy(() => import('../components/hotel/HotelServiceProviderAnalytics'));
@@ -367,6 +368,16 @@ const AppRouter = () => {
               </TailwindLayout>
             </ProtectedRoute>
           }        />
+        <Route
+          path="/hotel/qr-codes"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminQRCodePage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/hotel/settings"
           element={

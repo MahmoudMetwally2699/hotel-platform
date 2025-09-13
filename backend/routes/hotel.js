@@ -18,6 +18,7 @@ const Booking = require('../models/Booking');
 const TransportationBooking = require('../models/TransportationBooking');
 const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
+const qrUtils = require('../utils/qr');
 const crypto = require('crypto');
 
 const router = express.Router();
@@ -156,6 +157,226 @@ router.put('/profile', protect, restrictTo('hotel'), catchAsync(async (req, res,
   } catch (error) {
     logger.error('Error updating hotel profile:', error);
     return next(new AppError('Failed to update hotel profile', 500));
+  }
+}));
+
+/**
+ * @route   GET /api/hotel/qr/generate
+ * @desc    Generate QR code for hotel guest registration
+ * @access  Private/HotelAdmin
+ */
+router.get('/qr/generate', catchAsync(async (req, res, next) => {
+  try {
+    const hotelId = req.user.hotelId;
+
+    if (!hotelId) {
+      return next(new AppError('Hotel ID not found in user profile', 400));
+    }
+
+    // Get hotel information
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return next(new AppError('Hotel not found', 404));
+    }
+
+    if (!hotel.isActive) {
+      return next(new AppError('Cannot generate QR code for inactive hotel', 400));
+    }
+
+    // Prepare hotel data for QR generation
+    const hotelData = {
+      hotelId: hotel._id.toString(),
+      hotelName: hotel.name,
+      hotelAddress: hotel.address ? `${hotel.address.street}, ${hotel.address.city}` : null
+    };
+
+    // Generate QR code with display size (300px)
+    const qrResult = await qrUtils.generateQRCode(hotelData, { size: 300 });
+
+    // Get QR metadata
+    const metadata = qrUtils.getQRMetadata(hotelId);
+
+    logger.info('QR code generated for hotel admin', {
+      hotelId,
+      hotelName: hotel.name,
+      adminId: req.user._id
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        ...qrResult,
+        metadata,
+        hotelInfo: {
+          id: hotel._id,
+          name: hotel.name,
+          address: hotel.address
+        }
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error generating QR code:', error);
+    return next(new AppError('Failed to generate QR code', 500));
+  }
+}));
+
+/**
+ * @route   GET /api/hotel/qr/download
+ * @desc    Download QR code as PNG file for printing
+ * @access  Private/HotelAdmin
+ */
+router.get('/qr/download', catchAsync(async (req, res, next) => {
+  try {
+    const hotelId = req.user.hotelId;
+    const { size = 600 } = req.query; // Default print size
+
+    if (!hotelId) {
+      return next(new AppError('Hotel ID not found in user profile', 400));
+    }
+
+    // Get hotel information
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return next(new AppError('Hotel not found', 404));
+    }
+
+    if (!hotel.isActive) {
+      return next(new AppError('Cannot generate QR code for inactive hotel', 400));
+    }
+
+    // Prepare hotel data for QR generation
+    const hotelData = {
+      hotelId: hotel._id.toString(),
+      hotelName: hotel.name,
+      hotelAddress: hotel.address ? `${hotel.address.street}, ${hotel.address.city}` : null
+    };
+
+    // Generate QR code buffer for download
+    const qrBuffer = await qrUtils.generateQRCodeBuffer(hotelData, { size: parseInt(size) });
+
+    // Set appropriate headers for download
+    const filename = `${hotel.name.replace(/[^a-zA-Z0-9]/g, '_')}_QR_Code.png`;
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', qrBuffer.length);
+
+    logger.info('QR code downloaded by hotel admin', {
+      hotelId,
+      hotelName: hotel.name,
+      adminId: req.user._id,
+      size: parseInt(size)
+    });
+
+    res.send(qrBuffer);
+
+  } catch (error) {
+    logger.error('Error downloading QR code:', error);
+    return next(new AppError('Failed to download QR code', 500));
+  }
+}));
+
+/**
+ * @route   POST /api/hotel/qr/regenerate
+ * @desc    Regenerate QR code with new token (for security)
+ * @access  Private/HotelAdmin
+ */
+router.post('/qr/regenerate', catchAsync(async (req, res, next) => {
+  try {
+    const hotelId = req.user.hotelId;
+
+    if (!hotelId) {
+      return next(new AppError('Hotel ID not found in user profile', 400));
+    }
+
+    // Get hotel information
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return next(new AppError('Hotel not found', 404));
+    }
+
+    if (!hotel.isActive) {
+      return next(new AppError('Cannot regenerate QR code for inactive hotel', 400));
+    }
+
+    // Prepare hotel data for QR generation
+    const hotelData = {
+      hotelId: hotel._id.toString(),
+      hotelName: hotel.name,
+      hotelAddress: hotel.address ? `${hotel.address.street}, ${hotel.address.city}` : null
+    };
+
+    // Generate new QR code
+    const qrResult = await qrUtils.generateQRCode(hotelData, { size: 300 });
+
+    // Get QR metadata
+    const metadata = qrUtils.getQRMetadata(hotelId);
+
+    logger.logSecurity('QR_CODE_REGENERATED', req.user, req, {
+      hotelId,
+      hotelName: hotel.name,
+      reason: 'Admin requested regeneration'
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'QR code regenerated successfully',
+      data: {
+        ...qrResult,
+        metadata,
+        hotelInfo: {
+          id: hotel._id,
+          name: hotel.name,
+          address: hotel.address
+        }
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error regenerating QR code:', error);
+    return next(new AppError('Failed to regenerate QR code', 500));
+  }
+}));
+
+/**
+ * @route   GET /api/hotel/qr/info
+ * @desc    Get QR code information and metadata
+ * @access  Private/HotelAdmin
+ */
+router.get('/qr/info', catchAsync(async (req, res, next) => {
+  try {
+    const hotelId = req.user.hotelId;
+
+    if (!hotelId) {
+      return next(new AppError('Hotel ID not found in user profile', 400));
+    }
+
+    // Get hotel information
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return next(new AppError('Hotel not found', 404));
+    }
+
+    // Get QR metadata
+    const metadata = qrUtils.getQRMetadata(hotelId);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        hotelInfo: {
+          id: hotel._id,
+          name: hotel.name,
+          address: hotel.address,
+          isActive: hotel.isActive
+        },
+        metadata,
+        registrationUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/register`
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error getting QR info:', error);
+    return next(new AppError('Failed to get QR code information', 500));
   }
 }));
 
@@ -2160,6 +2381,169 @@ router.post('/inside-services', catchAsync(async (req, res) => {
     data: newService,
     message: 'Service created successfully'
   });
+}));
+
+/**
+ * @route   GET /api/hotel/qr/generate
+ * @desc    Generate QR code for hotel guest registration
+ * @access  Private/HotelAdmin
+ */
+router.get('/qr/generate', catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+
+  // Get hotel information
+  const hotel = await Hotel.findById(hotelId);
+  if (!hotel) {
+    return next(new AppError('Hotel not found', 404));
+  }
+
+  try {
+    // Generate QR code with hotel information
+    const qrData = await qrUtils.generateQRCode({
+      hotelId: hotel._id.toString(),
+      hotelName: hotel.name,
+      hotelAddress: hotel.address
+    });
+
+    // Get QR metadata
+    const metadata = qrUtils.getQRMetadata(hotelId);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        ...qrData,
+        hotelInfo: {
+          name: hotel.name,
+          address: hotel.address
+        },
+        metadata
+      }
+    });
+
+  } catch (error) {
+    logger.error('QR code generation failed:', error);
+    return next(new AppError('Failed to generate QR code', 500));
+  }
+}));
+
+/**
+ * @route   POST /api/hotel/qr/regenerate
+ * @desc    Regenerate QR code with new token for security
+ * @access  Private/HotelAdmin
+ */
+router.post('/qr/regenerate', catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+
+  // Get hotel information
+  const hotel = await Hotel.findById(hotelId);
+  if (!hotel) {
+    return next(new AppError('Hotel not found', 404));
+  }
+
+  try {
+    // Generate new QR code
+    const qrData = await qrUtils.generateQRCode({
+      hotelId: hotel._id.toString(),
+      hotelName: hotel.name,
+      hotelAddress: hotel.address
+    });
+
+    // Log QR regeneration for security
+    logger.logSecurity('QR_CODE_REGENERATED', req.user, req, {
+      hotelId,
+      hotelName: hotel.name
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        ...qrData,
+        hotelInfo: {
+          name: hotel.name,
+          address: hotel.address
+        },
+        message: 'QR code regenerated successfully'
+      }
+    });
+
+  } catch (error) {
+    logger.error('QR code regeneration failed:', error);
+    return next(new AppError('Failed to regenerate QR code', 500));
+  }
+}));
+
+/**
+ * @route   GET /api/hotel/qr/download
+ * @desc    Download QR code as PNG file
+ * @access  Private/HotelAdmin
+ */
+router.get('/qr/download', catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const { size } = req.query;
+
+  // Get hotel information
+  const hotel = await Hotel.findById(hotelId);
+  if (!hotel) {
+    return next(new AppError('Hotel not found', 404));
+  }
+
+  try {
+    // Generate QR code buffer for download
+    const buffer = await qrUtils.generateQRCodeBuffer({
+      hotelId: hotel._id.toString(),
+      hotelName: hotel.name,
+      hotelAddress: hotel.address
+    }, { size: parseInt(size) || 600 });
+
+    // Set headers for file download
+    res.set({
+      'Content-Type': 'image/png',
+      'Content-Disposition': `attachment; filename="${hotel.name.replace(/[^a-zA-Z0-9]/g, '_')}_QR_Code.png"`,
+      'Content-Length': buffer.length
+    });
+
+    res.send(buffer);
+
+  } catch (error) {
+    logger.error('QR code download failed:', error);
+    return next(new AppError('Failed to download QR code', 500));
+  }
+}));
+
+/**
+ * @route   GET /api/hotel/qr/info
+ * @desc    Get QR code information and metadata
+ * @access  Private/HotelAdmin
+ */
+router.get('/qr/info', catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+
+  // Get hotel information
+  const hotel = await Hotel.findById(hotelId);
+  if (!hotel) {
+    return next(new AppError('Hotel not found', 404));
+  }
+
+  try {
+    // Get QR metadata
+    const metadata = qrUtils.getQRMetadata(hotelId);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        hotelInfo: {
+          id: hotel._id,
+          name: hotel.name,
+          address: hotel.address
+        },
+        metadata
+      }
+    });
+
+  } catch (error) {
+    logger.error('QR info retrieval failed:', error);
+    return next(new AppError('Failed to get QR information', 500));
+  }
 }));
 
 module.exports = router;

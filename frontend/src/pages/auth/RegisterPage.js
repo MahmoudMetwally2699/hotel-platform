@@ -5,17 +5,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import useRTL from '../../hooks/useRTL';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
+import QRScanner from '../../components/common/QRScanner';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import * as Yup from 'yup';
-import { HiUser, HiMail, HiLockClosed, HiOfficeBuilding } from 'react-icons/hi';
+import { HiUser, HiMail, HiLockClosed, HiQrcode } from 'react-icons/hi';
 import { register, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole } from '../../redux/slices/authSlice';
 import hotelService from '../../services/hotel.service';
+import { toast } from 'react-hot-toast';
 
 const RegisterPage = () => {
   const { t } = useTranslation();
@@ -27,8 +29,15 @@ const RegisterPage = () => {
   const isLoading = useSelector(selectAuthLoading);
   const role = useSelector(selectAuthRole);
 
-  const [showError, setShowError] = useState(false);  const [hotels, setHotels] = useState([]);
+  const [showError, setShowError] = useState(false);
+  const [hotels, setHotels] = useState([]);
   const [loadingHotels, setLoadingHotels] = useState(true);
+
+  // QR Code functionality
+  const [searchParams] = useSearchParams();
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [qrHotelInfo, setQrHotelInfo] = useState(null);
+  const [validatingQR, setValidatingQR] = useState(false);
 
   // Validation schema with translations
   const validationSchema = Yup.object({
@@ -96,12 +105,74 @@ const RegisterPage = () => {
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [authError]);  // Initial form values
+  }, [authError]);
+
+  // Handle QR code from URL parameter
+  useEffect(() => {
+    const qrToken = searchParams.get('qr');
+    if (qrToken) {
+      validateQRToken(qrToken);
+    }
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Validate QR token and extract hotel information
+   */
+  const validateQRToken = async (qrToken) => {
+    setValidatingQR(true);
+    try {
+      const response = await hotelService.validateQRToken(qrToken);
+
+      if (response.data && response.data.hotelId) {
+        setQrHotelInfo(response.data);
+        toast.success(`Hotel "${response.data.hotelName}" selected from QR code!`);
+
+        // Clear QR parameter from URL
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete('qr');
+        navigate({
+          pathname: '/register',
+          search: newSearchParams.toString()
+        }, { replace: true });
+      }
+    } catch (error) {
+      console.error('QR validation error:', error);
+      toast.error(error.response?.data?.message || 'Invalid QR code. Please try again or select hotel manually.');
+    } finally {
+      setValidatingQR(false);
+    }
+  };
+
+  /**
+   * Handle successful QR scan
+   */
+  const handleQRScanSuccess = (qrToken) => {
+    setShowQRScanner(false);
+    validateQRToken(qrToken);
+  };
+
+  /**
+   * Handle QR scan error
+   */
+  const handleQRScanError = (error) => {
+    console.error('QR scan error:', error);
+    toast.error('Failed to scan QR code. Please try again.');
+  };
+
+  /**
+   * Clear QR hotel selection
+   */
+  const clearQRSelection = () => {
+    setQrHotelInfo(null);
+    toast.info('QR hotel selection cleared. You can now select manually.');
+  };
+
+  // Initial form values - use QR hotel if available
   const initialValues = {
     firstName: '',
     email: '',
     phone: '',
-    selectedHotelId: '',
+    selectedHotelId: qrHotelInfo?.hotelId || '',
     password: '',
     confirmPassword: '',
     role: 'guest', // Fixed role for client registration
@@ -114,6 +185,7 @@ const RegisterPage = () => {
       phone: values.phone,
       password: values.password,
       selectedHotelId: values.selectedHotelId,
+      qrBased: !!qrHotelInfo, // Flag to indicate QR-based registration
     };
 
     dispatch(register({ userData, role: values.role }));
@@ -155,6 +227,7 @@ const RegisterPage = () => {
           initialValues={initialValues}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
+          enableReinitialize={true}
         >
           {({ isSubmitting }) => (
             <Form className="space-y-4">              <div>
@@ -315,32 +388,74 @@ const RegisterPage = () => {
                   )}
                 </Field>
                 <ErrorMessage name="phone" component="div" className="mt-1 text-sm text-red-600" />
-              </div>              <div>
+              </div>              {/* Hotel Selection with QR Support */}
+              <div>
                 <label htmlFor="selectedHotelId" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('register.selectHotel')} <span className="text-red-500">*</span>
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <HiOfficeBuilding className="h-5 w-5 text-gray-400" />
+
+                {/* QR Code Hotel Info Display */}
+                {qrHotelInfo && (
+                  <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <HiQrcode className="h-5 w-5 text-green-600" />
+                        <div>
+                          <p className="text-sm font-medium text-green-800">{qrHotelInfo.hotelName}</p>
+                          <p className="text-xs text-green-600">Selected via QR code</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={clearQRSelection}
+                        className="text-xs text-green-600 hover:text-green-800 underline"
+                      >
+                        Change
+                      </button>
+                    </div>
                   </div>
-                  <Field
-                    as="select"
-                    name="selectedHotelId"
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={loadingHotels}
-                  >
-                    <option value="">
-                      {loadingHotels ? t('register.loadingHotels') : t('register.chooseAHotel')}
-                    </option>
-                    {hotels.map((hotel) => (
-                      <option key={hotel._id || hotel.id} value={hotel._id || hotel.id}>
-                        {hotel.name}
-                      </option>
-                    ))}
+                )}
+
+                {/* QR Scanner or Hotel Dropdown */}
+                {!qrHotelInfo ? (
+                  <div className="space-y-3">
+                    {/* QR Scan Option */}
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowQRScanner(true)}
+                        className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        disabled={validatingQR}
+                      >
+                        <HiQrcode className="h-5 w-5" />
+                        <span>{validatingQR ? 'Validating...' : 'Scan QR Code'}</span>
+                      </button>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Scan the QR code at hotel reception for quick registration
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  // Use Field with render prop to ensure proper form state management
+                  <Field name="selectedHotelId">
+                    {({ field, form }) => {
+                      // Ensure the field value is set when QR info is available
+                      if (qrHotelInfo && field.value !== qrHotelInfo.hotelId) {
+                        form.setFieldValue('selectedHotelId', qrHotelInfo.hotelId);
+                      }
+                      return (
+                        <input
+                          type="hidden"
+                          {...field}
+                          value={qrHotelInfo.hotelId}
+                        />
+                      );
+                    }}
                   </Field>
-                </div>
+                )}
+
                 <ErrorMessage name="selectedHotelId" component="div" className="mt-1 text-sm text-red-600" />
-                {hotels.length === 0 && !loadingHotels && (
+                {hotels.length === 0 && !loadingHotels && !qrHotelInfo && (
                   <p className="mt-1 text-sm text-yellow-600">{t('register.noHotelsAvailable')}</p>
                 )}
               </div>
@@ -418,6 +533,15 @@ const RegisterPage = () => {
           </p>
         </div>
       </div>
+
+      {/* QR Scanner Modal */}
+      {showQRScanner && (
+        <QRScanner
+          onScanSuccess={handleQRScanSuccess}
+          onScanError={handleQRScanError}
+          onClose={() => setShowQRScanner(false)}
+        />
+      )}
     </div>
   );
 };

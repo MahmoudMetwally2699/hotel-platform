@@ -402,6 +402,76 @@ class HotelService {
       userData: userData ? JSON.parse(userData) : null
     };
   }
+
+  /**
+   * Generate QR code for hotel guest registration
+   * @returns {Promise} - Response from API
+   */
+  async generateQRCode() {
+    try {
+      const response = await apiClient.get('/hotel/qr/generate');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Regenerate QR code with new token
+   * @returns {Promise} - Response from API
+   */
+  async regenerateQRCode() {
+    try {
+      const response = await apiClient.post('/hotel/qr/regenerate');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Download QR code as PNG file
+   * @param {Object} options - Download options (size, etc.)
+   * @returns {Promise} - Response from API
+   */
+  async downloadQRCode(options = {}) {
+    try {
+      const response = await apiClient.get('/hotel/qr/download', {
+        params: options,
+        responseType: 'blob'
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Get QR code information and metadata
+   * @returns {Promise} - Response from API
+   */
+  async getQRInfo() {
+    try {
+      const response = await apiClient.get('/hotel/qr/info');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Validate QR token for guest registration
+   * @param {string} qrToken - QR token to validate
+   * @returns {Promise} - Response from API
+   */
+  async validateQRToken(qrToken) {
+    try {
+      const response = await apiClient.post('/auth/validate-qr', { qrToken });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 const hotelService = new HotelService();

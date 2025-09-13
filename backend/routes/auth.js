@@ -110,7 +110,8 @@ router.post('/register', catchAsync(async (req, res, next) => {
     email,
     password,
     phone,
-    selectedHotelId
+    selectedHotelId,
+    qrBased // Optional flag to indicate QR-based registration
   } = req.body;
 
   console.log('Registration data received:', {
@@ -160,7 +161,18 @@ router.post('/register', catchAsync(async (req, res, next) => {
     isActive: true
   });
 
-  logger.logAuth('USER_REGISTERED', newUser, req, { hotelId: selectedHotelId });
+  // Log registration with QR indication
+  const logData = {
+    hotelId: selectedHotelId,
+    hotelName: hotel.name,
+    qrBased: qrBased || false
+  };
+
+  if (qrBased) {
+    logger.logAuth('USER_REGISTERED_VIA_QR', newUser, req, logData);
+  } else {
+    logger.logAuth('USER_REGISTERED', newUser, req, logData);
+  }
 
   createSendToken(newUser, 201, res, 'User registered successfully. You can now log in to your account.');
 }));
@@ -519,6 +531,46 @@ router.get('/debug/me', protect, catchAsync(async (req, res) => {
       }
     }
   });
+}));
+
+// Import QR utilities
+const qrUtils = require('../utils/qr');
+
+/**
+ * @route   POST /api/auth/validate-qr
+ * @desc    Validate QR token and return hotel information for registration
+ * @access  Public
+ */
+router.post('/validate-qr', catchAsync(async (req, res, next) => {
+  const { qrToken } = req.body;
+
+  if (!qrToken) {
+    return next(new AppError('QR token is required', 400));
+  }
+
+  try {
+    // Process QR token and validate hotel
+    const hotelInfo = await qrUtils.processQRRegistration(qrToken);
+
+    logger.info('QR token validated for registration', {
+      hotelId: hotelInfo.hotelId,
+      hotelName: hotelInfo.hotelName
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: hotelInfo
+    });
+
+  } catch (error) {
+    // Pass through AppError instances (they have appropriate status codes)
+    if (error instanceof AppError) {
+      return next(error);
+    }
+
+    logger.error('QR validation error:', error);
+    return next(new AppError('Failed to validate QR code', 500));
+  }
 }));
 
 module.exports = router;
