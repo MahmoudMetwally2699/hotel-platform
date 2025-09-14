@@ -11,7 +11,8 @@ import {
   FaDumbbell,
   FaCheck,
   FaPlus,
-  FaSpinner
+  FaSpinner,
+  FaTimes
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
@@ -45,40 +46,78 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
       console.error('Error fetching categories:', error);
 
       // Fallback to local category data if API fails
-      const fallbackCategories = {        laundry: {
-          name: t('categorySelection.categories.laundry.name'),
-          description: t('categorySelection.categories.laundry.description'),
+      const fallbackCategories = {
+        laundry: {
+          name: 'Laundry Services', // t('categorySelection.categories.laundry.name'),
+          description: 'Professional laundry and dry cleaning', // t('categorySelection.categories.laundry.description'),
           items: [
-            { name: t('categorySelection.sampleItems.shirts'), category: 'clothing' },
-            { name: t('categorySelection.sampleItems.pants'), category: 'clothing' },
-            { name: t('categorySelection.sampleItems.dresses'), category: 'clothing' },
-            { name: t('categorySelection.sampleItems.suits'), category: 'formal' }
+            { name: 'T-Shirt', category: 'clothing' },
+            { name: 'Dress Shirt', category: 'clothing' },
+            { name: 'Short Sleeve Shirt', category: 'clothing' },
+            { name: 'Suits', category: 'formal' }
           ]
         },
         transportation: {
-          name: t('categorySelection.categories.transportation.name'),
-          description: t('categorySelection.categories.transportation.description'),
+          name: 'Transportation Services', // t('categorySelection.categories.transportation.name'),
+          description: 'Vehicle rental and transportation', // t('categorySelection.categories.transportation.description'),
           vehicleTypes: [
-            { name: t('categorySelection.sampleItems.sedan'), capacity: 4 },
-            { name: t('categorySelection.sampleItems.suv'), capacity: 7 },
-            { name: t('categorySelection.sampleItems.van'), capacity: 12 }
+            { name: 'Economy Sedan', capacity: 4 },
+            { name: 'Comfort Sedan', capacity: 4 },
+            { name: 'Van', capacity: 12 }
           ]
         },
         tours: {
-          name: t('categorySelection.categories.tours.name'),
-          description: t('categorySelection.categories.tours.description'),
+          name: 'Tours & Activities',
+          description: 'Guided tours and recreational activities',
+          comingSoon: true,
           tourTypes: [
-            { name: t('categorySelection.sampleItems.cityTour'), duration: '4 hours' },
-            { name: t('categorySelection.sampleItems.historicalTour'), duration: '6 hours' },
-            { name: t('categorySelection.sampleItems.natureTour'), duration: '8 hours' }
+            { name: 'City Sightseeing', duration: '4 hours' },
+            { name: 'Cultural Heritage', duration: '6 hours' }
           ]
         },
         spa: {
-          name: t('categorySelection.categories.spa.name'),
-          description: t('categorySelection.categories.spa.description'),
+          name: 'Spa & Wellness',
+          description: 'Relaxation and wellness services',
+          comingSoon: true,
           items: [
-            { name: t('categorySelection.sampleItems.massage'), duration: '60 min' },
-            { name: t('categorySelection.sampleItems.facial'), duration: '45 min' }
+            { name: 'Massage Therapy', duration: '60 min' },
+            { name: 'Facial Treatment', duration: '45 min' }
+          ]
+        },
+        dining: {
+          name: 'Dining Services',
+          description: 'Food delivery and catering services',
+          comingSoon: true,
+          items: [
+            { name: 'Food Delivery', category: 'delivery' },
+            { name: 'Event Catering', category: 'catering' }
+          ]
+        },
+        entertainment: {
+          name: 'Entertainment',
+          description: 'Live music, DJ services, and events',
+          comingSoon: true,
+          items: [
+            { name: 'Live Music', category: 'music' },
+            { name: 'DJ Services', category: 'events' }
+          ]
+        },
+        shopping: {
+          name: 'Shopping Services',
+          description: 'Personal shopping and delivery services',
+          comingSoon: true,
+          items: [
+            { name: 'Personal Shopping', category: 'shopping' },
+            { name: 'Delivery Service', category: 'delivery' }
+          ]
+        },
+        fitness: {
+          name: 'Fitness Services',
+          description: 'Personal training and sports activities',
+          comingSoon: true,
+          items: [
+            { name: 'Personal Training', category: 'fitness' },
+            { name: 'Sports Activities', category: 'sports' }
           ]
         }
       };
@@ -159,93 +198,121 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('categorySelection.title')}</h1>
-            <p className="text-gray-600 mb-6">
-              {t('categorySelection.description')}
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        {/* Modern Header Section - Mobile Responsive */}
+        <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
+          <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
+
+          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Service Categories</h1>
+              <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">
+                Select the service categories you want to offer. You can activate multiple categories and manage them independently.
+              </p>
+            </div>
+            {onBackToCategories && (
+              <button
+                onClick={onBackToCategories}
+                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-medium transition-all duration-300 border border-white/20 text-sm sm:text-base shrink-0"
+              >
+                Back to Categories
+              </button>
+            )}
           </div>
-          {onBackToCategories && (
-            <button
-              onClick={onBackToCategories}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-            >
-              Back to Categories
-            </button>
-          )}
         </div>
 
         {activeCategories.length > 0 && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <h3 className="text-lg font-semibold text-green-800 mb-2">{t('categorySelection.activeCategories')}</h3>
-            <div className="flex flex-wrap gap-2">              {activeCategories.map(categoryKey => {
+          <div className="mb-4 sm:mb-6 lg:mb-8 p-4 sm:p-6 bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100">
+            <div className="flex items-center mb-3 sm:mb-4">
+              <div className="w-1 h-6 sm:h-8 bg-gradient-to-b from-[#3B5787] to-[#67BAE0] rounded-full mr-3 sm:mr-4"></div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Active Categories</h3>
+            </div>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              {activeCategories.map(categoryKey => {
                 const IconComponent = categoryIcons[categoryKey];
-                return (<div key={categoryKey} className="flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                    {IconComponent && <IconComponent className="mr-2" />}
-                    {t(`categorySelection.categories.${categoryKey}.name`)}
-                    <FaCheck className="ml-2 text-green-600" />
+                const categoryName = categories[categoryKey]?.name || categoryKey;
+                return (
+                  <div key={categoryKey} className="flex items-center bg-gradient-to-r from-green-50 to-green-100 text-green-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium border border-green-200 shadow-sm">
+                    {IconComponent && <IconComponent className="mr-1.5 sm:mr-2 text-green-600 text-sm sm:text-base" />}
+                    <span className="truncate max-w-[120px] sm:max-w-none">{categoryName}</span>
+                    <FaCheck className="ml-1.5 sm:ml-2 text-green-600 text-xs sm:text-sm shrink-0" />
                   </div>
                 );
               })}
             </div>
           </div>
         )}
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
         {Object.entries(categories).map(([categoryKey, category]) => {
           const IconComponent = categoryIcons[categoryKey];
           const isActive = isCategoryActive(categoryKey);
           const isActivating = activating === categoryKey;
+          const isComingSoon = category.comingSoon;
 
           return (
             <div
               key={categoryKey}
               className={`
-                relative bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl
+                group relative bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden transition-all duration-500 border border-gray-100
                 ${isActive
-                  ? 'ring-2 ring-green-500 bg-green-50'
-                  : 'hover:transform hover:scale-105 cursor-pointer'
+                  ? 'ring-2 ring-green-500 bg-gradient-to-br from-green-50 to-white sm:scale-105'
+                  : isComingSoon
+                  ? 'opacity-75 cursor-not-allowed border-gray-200'
+                  : 'hover:shadow-2xl sm:hover:scale-105 sm:hover:-translate-y-2 cursor-pointer hover:border-[#67BAE0]/30'
                 }
               `}
-              onClick={!isActive && !isActivating ? () => activateCategory(categoryKey) : undefined}
+              onClick={!isActive && !isActivating && !isComingSoon ? () => activateCategory(categoryKey) : undefined}
             >
               {isActive && (
-                <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
-                  <FaCheck className="w-4 h-4" />
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full p-1.5 sm:p-2 shadow-lg">
+                  <FaCheck className="w-3 h-3 sm:w-5 sm:h-5" />
                 </div>
               )}
 
-              <div className="p-6">
-                <div className="flex items-center justify-center mb-4">
+              {isComingSoon && (
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full px-2 py-0.5 sm:px-3 sm:py-1 shadow-lg">
+                  <span className="text-xs font-semibold">Coming Soon</span>
+                </div>
+              )}
+
+              <div className="p-4 sm:p-6 lg:p-8">
+                <div className="flex items-center justify-center mb-4 sm:mb-6">
                   <div className={`
-                    p-4 rounded-full
+                    p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl transition-all duration-300
                     ${isActive
-                      ? 'bg-green-100 text-green-600'
-                      : 'bg-blue-100 text-blue-600'
+                      ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg'
+                      : isComingSoon
+                      ? 'bg-gray-100 text-gray-400'
+                      : 'bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 text-[#3B5787] group-hover:from-[#3B5787] group-hover:to-[#67BAE0] group-hover:text-white group-hover:shadow-lg'
                     }
                   `}>
-                    {IconComponent && <IconComponent className="text-3xl" />}
+                    {IconComponent && <IconComponent className="text-2xl sm:text-3xl lg:text-4xl" />}
                   </div>
-                </div>                <h3 className="text-xl font-bold text-center mb-2 text-gray-800">
-                  {t(`categorySelection.categories.${categoryKey}.name`)}
+                </div>
+
+                <h3 className="text-lg sm:text-xl font-bold text-center mb-2 sm:mb-3 text-gray-900">
+                  {category.name}
                 </h3>
 
-                <p className="text-gray-600 text-center text-sm mb-4">
-                  {t(`categorySelection.categories.${categoryKey}.description`)}
+                <p className={`text-center text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed ${
+                  isComingSoon ? 'text-gray-500' : 'text-gray-600'
+                }`}>
+                  {category.description}
                 </p>
 
                 {isActive ? (
                   <button
                     disabled={isActivating}
                     className={`
-                      w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200
+                      w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 shadow-lg text-sm sm:text-base
                       ${isActivating
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-red-500 hover:bg-red-600 text-white'
+                        : 'bg-red-500 hover:bg-red-600 text-white hover:shadow-xl transform sm:hover:scale-105'
                       }
                     `}
                     onClick={(e) => {
@@ -255,61 +322,67 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                   >
                     {isActivating ? (
                       <div className="flex items-center justify-center">
-                        <FaSpinner className="animate-spin mr-2" />
-                        {t('categorySelection.deactivating')}
+                        <FaSpinner className="animate-spin mr-1.5 sm:mr-2 text-sm" />
+                        <span>Deactivate</span>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center">
-                        <FaCheck className="mr-2" />
-                        {t('categorySelection.deactivate')}
+                        <FaTimes className="mr-1.5 sm:mr-2 text-sm" />
+                        <span>Deactivate</span>
                       </div>
                     )}
                   </button>
                 ) : (
                   <button
-                    disabled={isActivating}
+                    disabled={isActivating || isComingSoon}
                     className={`
-                      w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200
+                      w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 shadow-lg text-sm sm:text-base
                       ${isActivating
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                        : isComingSoon
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#2A4065] hover:to-[#3B5787] text-white transform sm:hover:scale-105 group-hover:shadow-xl'
                       }
                     `}
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (!isActivating) activateCategory(categoryKey);
+                      if (!isActivating && !isComingSoon) activateCategory(categoryKey);
                     }}
                   >
                     {isActivating ? (
                       <div className="flex items-center justify-center">
-                        <FaSpinner className="animate-spin mr-2" />
-                        {t('categorySelection.activating')}
+                        <FaSpinner className="animate-spin mr-1.5 sm:mr-2 text-sm" />
+                        <span>Activate</span>
+                      </div>
+                    ) : isComingSoon ? (
+                      <div className="flex items-center justify-center">
+                        <span>Coming Soon</span>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center">
-                        <FaPlus className="mr-2" />
-                        {t('categorySelection.activate')}
+                        <FaPlus className="mr-1.5 sm:mr-2 text-sm" />
+                        <span>Activate</span>
                       </div>
                     )}
                   </button>
                 )}
 
-                {/* Show sample items/services for preview */}
+                {/* Modern Sample Services Preview */}
                 {category.items && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">{t('categorySelection.sampleServices')}</p>
-                    <div className="flex flex-wrap gap-1">
+                  <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">Sample Services:</p>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {category.items.slice(0, 3).map((item, index) => (
                         <span
                           key={index}
-                          className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs"
+                          className="bg-gradient-to-r from-[#3B5787]/5 to-[#67BAE0]/5 text-[#3B5787] px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium border border-[#67BAE0]/20"
                         >
                           {item.name}
                         </span>
                       ))}
                       {category.items.length > 3 && (
-                        <span className="text-gray-400 text-xs">
-                          +{category.items.length - 3} {t('categorySelection.more')}
+                        <span className="text-gray-500 text-xs font-medium bg-gray-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+                          +{category.items.length - 3} more
                         </span>
                       )}
                     </div>
@@ -317,20 +390,20 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                 )}
 
                 {category.vehicleTypes && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">{t('categorySelection.vehicleTypes')}</p>
-                    <div className="flex flex-wrap gap-1">
+                  <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">Vehicle Types:</p>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {category.vehicleTypes.slice(0, 2).map((vehicle, index) => (
                         <span
                           key={index}
-                          className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs"
+                          className="bg-gradient-to-r from-[#67BAE0]/5 to-[#3B5787]/5 text-[#3B5787] px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium border border-[#3B5787]/20"
                         >
                           {vehicle.name}
                         </span>
                       ))}
                       {category.vehicleTypes.length > 2 && (
-                        <span className="text-gray-400 text-xs">
-                          +{category.vehicleTypes.length - 2} {t('categorySelection.more')}
+                        <span className="text-gray-500 text-xs font-medium bg-gray-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
+                          +{category.vehicleTypes.length - 2} more
                         </span>
                       )}
                     </div>
@@ -338,20 +411,20 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                 )}
 
                 {category.tourTypes && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">{t('categorySelection.tourTypes')}</p>
-                    <div className="flex flex-wrap gap-1">
+                  <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">Tour Types:</p>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {category.tourTypes.slice(0, 2).map((tour, index) => (
                         <span
                           key={index}
-                          className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs"
+                          className="bg-gradient-to-r from-[#3B5787]/5 to-[#67BAE0]/5 text-[#67BAE0] px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium border border-[#67BAE0]/20"
                         >
                           {tour.name}
                         </span>
                       ))}
                       {category.tourTypes.length > 2 && (
-                        <span className="text-gray-400 text-xs">
-                          +{category.tourTypes.length - 2} {t('categorySelection.more')}
+                        <span className="text-gray-500 text-xs font-medium bg-gray-100 px-3 py-1 rounded-full">
+                          +{category.tourTypes.length - 2} more
                         </span>
                       )}
                     </div>
@@ -363,20 +436,23 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
         })}
       </div>
 
-      {activeCategories.length > 0 && (
-        <div className="mt-8 text-center">
-          <p className="text-gray-600 mb-4">
-            {t('categorySelection.successMessage')} {activeCategories.length} {activeCategories.length === 1 ? t('categorySelection.categorySingle') : t('categorySelection.categoryPlural')}.
-            {' '}{t('categorySelection.successDescription')}
-          </p>
-          <button
-            onClick={() => window.location.href = '/service/services'}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
-          >
-            {t('categorySelection.manageServices')}
-          </button>
-        </div>
-      )}
+        {activeCategories.length > 0 && (
+          <div className="mt-6 sm:mt-8 text-center bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 border border-gray-100">
+            <div className="max-w-2xl mx-auto">
+              <p className="text-sm sm:text-base lg:text-lg text-gray-700 mb-4 sm:mb-6 leading-relaxed">
+                🎉 You have successfully activated {activeCategories.length} service {activeCategories.length === 1 ? 'category' : 'categories'}!
+                You can now start managing your services and accepting bookings.
+              </p>
+              <button
+                onClick={() => window.location.href = '/service/services'}
+                className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#2A4065] hover:to-[#3B5787] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base lg:text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform sm:hover:scale-105 w-full sm:w-auto"
+              >
+                Manage Services
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

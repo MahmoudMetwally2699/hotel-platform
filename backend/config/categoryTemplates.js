@@ -231,6 +231,7 @@ const categoryTemplates = {
     name: 'Tours & Activities',
     icon: 'map',
     description: 'Guided tours and recreational activities',
+    comingSoon: true,
     tourTypes: [
       {
         id: 'city_tour',
@@ -280,6 +281,7 @@ const categoryTemplates = {
     name: 'Spa & Wellness',
     icon: 'spa',
     description: 'Relaxation and wellness services',
+    comingSoon: true,
     treatments: [
       {
         id: 'massage',
@@ -309,6 +311,7 @@ const categoryTemplates = {
     name: 'Dining Services',
     icon: 'restaurant',
     description: 'Food delivery and catering services',
+    comingSoon: true,
     cuisineTypes: [
       { id: 'local', name: 'Local Cuisine', isPopular: true },
       { id: 'italian', name: 'Italian' },
@@ -388,6 +391,7 @@ const categoryTemplates = {
     name: 'Entertainment',
     icon: 'music',
     description: 'Entertainment and event services',
+    comingSoon: true,
     eventTypes: [
       {
         id: 'live_music',
@@ -570,6 +574,7 @@ const categoryTemplates = {
     name: 'Shopping Services',
     icon: 'shopping-bag',
     description: 'Personal shopping and delivery services',
+    comingSoon: true,
     storeTypes: [
       { id: 'grocery', name: 'Grocery & Essentials', deliveryFee: 5 },
       { id: 'pharmacy', name: 'Pharmacy', deliveryFee: 3 },
@@ -583,6 +588,7 @@ const categoryTemplates = {
     name: 'Fitness & Sports',
     icon: 'dumbbell',
     description: 'Fitness training and sports activities',
+    comingSoon: true,
     activities: [
       {
         id: 'personal_training',

@@ -7,9 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  FaConciergeBell,
   FaCoffee,
-  FaHotel,
   FaBroom,
   FaCheck,
   FaPlus,
@@ -21,9 +19,7 @@ import { toast } from 'react-toastify';
 import { showErrorToast } from '../../utils/errorHandler';
 
 const categoryIcons = {
-  'room-service': FaConciergeBell,
   'hotel-restaurant': FaCoffee,
-  'concierge-services': FaConciergeBell,
   'housekeeping-requests': FaBroom
 };
 
@@ -41,16 +37,6 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
 
       // Transform the response into category format
       const categoriesData = {
-        'room-service': {
-          name: 'Room Service',
-          description: 'In-room dining and service requests',
-          items: [
-            { name: 'Breakfast in bed', category: 'dining' },
-            { name: 'Late night snacks', category: 'dining' },
-            { name: 'Mini bar restocking', category: 'service' },
-            { name: 'Special dietary meals', category: 'dining' }
-          ]
-        },
         'hotel-restaurant': {
           name: 'Hotel Restaurant',
           description: 'Main dining facilities and reservations',
@@ -59,16 +45,6 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
             { name: 'Private dining', category: 'special' },
             { name: 'Event catering', category: 'events' },
             { name: 'Wine selection', category: 'beverage' }
-          ]
-        },
-        'concierge-services': {
-          name: 'Concierge Services',
-          description: 'Guest assistance and recommendations',
-          items: [
-            { name: 'Local recommendations', category: 'guidance' },
-            { name: 'Booking assistance', category: 'booking' },
-            { name: 'Transportation arrangements', category: 'transport' },
-            { name: 'Special requests', category: 'service' }
           ]
         },
         'housekeeping-requests': {
@@ -201,34 +177,45 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Inside Hotel Services</h1>
-            <p className="text-gray-600 mb-6">
-              Select and activate the inside hotel services you want to offer. These services are provided within the hotel premises.
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Modern Header Section */}
+        <div className="bg-gradient-to-r from-[#67BAE0] to-[#3B5787] rounded-2xl shadow-2xl p-8 mb-8 text-white relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full"></div>
+          <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full"></div>
+
+          <div className="relative flex items-center justify-between">
+            <div className="max-w-4xl">
+              <h1 className="text-4xl font-bold mb-4">Inside Hotel Services</h1>
+              <p className="text-xl text-white/90 leading-relaxed">
+                Select and activate the inside hotel services you want to offer. These services are provided within the hotel premises.
+              </p>
+            </div>
+            {onBackToCategories && (
+              <button
+                onClick={onBackToCategories}
+                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 border border-white/20"
+              >
+                Back to Categories
+              </button>
+            )}
           </div>
-          {onBackToCategories && (
-            <button
-              onClick={onBackToCategories}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-            >
-              Back to Categories
-            </button>
-          )}
         </div>
 
         {activeCategories.length > 0 && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <h3 className="text-lg font-semibold text-green-800 mb-2">Active Inside Services</h3>
-            <div className="flex flex-wrap gap-2">
+          <div className="mb-8 p-6 bg-white rounded-2xl shadow-xl border border-gray-100">
+            <div className="flex items-center mb-4">
+              <div className="w-1 h-8 bg-gradient-to-b from-[#67BAE0] to-[#3B5787] rounded-full mr-4"></div>
+              <h3 className="text-xl font-bold text-gray-900">Active Inside Services</h3>
+            </div>
+            <div className="flex flex-wrap gap-3">
               {activeCategories.map(categoryKey => {
                 const IconComponent = categoryIcons[categoryKey];
                 return (
-                  <div key={categoryKey} className="flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                    {IconComponent && <IconComponent className="mr-2" />}
+                  <div key={categoryKey} className="flex items-center bg-gradient-to-r from-green-50 to-green-100 text-green-800 px-4 py-2 rounded-xl text-sm font-medium border border-green-200 shadow-sm">
+                    {IconComponent && <IconComponent className="mr-2 text-green-600" />}
                     {categories[categoryKey]?.name}
                     <FaCheck className="ml-2 text-green-600" />
                   </div>
@@ -237,24 +224,23 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
             </div>
           </div>
         )}
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {Object.entries(categories).map(([categoryKey, category]) => {
-          const IconComponent = categoryIcons[categoryKey];
-          const isActive = isCategoryActive(categoryKey);
-          const isActivating = activating === categoryKey;
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {Object.entries(categories).map(([categoryKey, category]) => {
+            const IconComponent = categoryIcons[categoryKey];
+            const isActive = isCategoryActive(categoryKey);
+            const isActivating = activating === categoryKey;
 
-          return (
-            <div
-              key={categoryKey}
-              className={`
-                relative bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl
-                ${isActive
-                  ? 'ring-2 ring-green-500 bg-green-50'
-                  : 'hover:transform hover:scale-105 cursor-pointer'
-                }
-              `}
+            return (
+              <div
+                key={categoryKey}
+                className={`
+                  group relative bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-500 border border-gray-100
+                  ${isActive
+                    ? 'ring-2 ring-green-500 bg-gradient-to-br from-green-50 to-white scale-105'
+                    : 'hover:shadow-2xl hover:scale-105 hover:-translate-y-2 cursor-pointer hover:border-[#67BAE0]/30'
+                  }
+                `}
               onClick={!isActivating ? () => {
                 if (isActive) {
                   // Navigate to management page if already active
@@ -268,157 +254,160 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
                 }
               } : undefined}
             >
-              {isActive && (
-                <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-1">
-                  <FaCheck className="w-4 h-4" />
-                </div>
-              )}
-
-              <div className="p-6">
-                <div className="flex items-center justify-center mb-4">
-                  <div className={`
-                    p-4 rounded-full
-                    ${isActive
-                      ? 'bg-green-100 text-green-600'
-                      : 'bg-blue-100 text-blue-600'
-                    }
-                  `}>
-                    {IconComponent && <IconComponent className="text-3xl" />}
+                {isActive && (
+                  <div className="absolute top-4 right-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full p-2 shadow-lg">
+                    <FaCheck className="w-5 h-5" />
                   </div>
-                </div>
+                )}
 
-                <h3 className="text-xl font-bold text-center mb-2 text-gray-800">
-                  {category.name}
-                </h3>
+                <div className="p-8">
+                  <div className="flex items-center justify-center mb-6">
+                    <div className={`
+                      p-5 rounded-2xl transition-all duration-300
+                      ${isActive
+                        ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg'
+                        : 'bg-gradient-to-br from-[#67BAE0]/10 to-[#3B5787]/10 text-[#67BAE0] group-hover:from-[#67BAE0] group-hover:to-[#3B5787] group-hover:text-white group-hover:shadow-lg'
+                      }
+                    `}>
+                      {IconComponent && <IconComponent className="text-4xl" />}
+                    </div>
+                  </div>
 
-                <p className="text-gray-600 text-center text-sm mb-4">
-                  {category.description}
-                </p>
+                  <h3 className="text-xl font-bold text-center mb-3 text-gray-900">
+                    {category.name}
+                  </h3>
 
-                {isActive ? (
-                  <div className="space-y-2">
+                  <p className="text-gray-600 text-center text-sm mb-6 leading-relaxed">
+                    {category.description}
+                  </p>
+
+                  {isActive ? (
+                    <div className="space-y-3">
+                      <button
+                        disabled={isActivating}
+                        className={`
+                          w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg
+                          ${isActivating
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-green-500 hover:bg-green-600 text-white hover:shadow-xl transform hover:scale-105'
+                          }
+                        `}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isActivating) {
+                            if (categoryKey === 'hotel-restaurant') {
+                              navigate('/service/restaurant');
+                            } else if (categoryKey === 'housekeeping-requests') {
+                              navigate('/service/housekeeping');
+                            }
+                          }
+                        }}
+                      >
+                        {isActivating ? (
+                          <div className="flex items-center justify-center">
+                            <FaSpinner className="animate-spin mr-2" />
+                            Processing...
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <FaCheck className="mr-2" />
+                            Manage Service
+                          </div>
+                        )}
+                      </button>
+                      <button
+                        disabled={isActivating}
+                        className={`
+                          w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg
+                          ${isActivating
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-red-500 hover:bg-red-600 text-white hover:shadow-xl transform hover:scale-105'
+                          }
+                        `}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isActivating) deactivateCategory(categoryKey);
+                        }}
+                      >
+                        <div className="flex items-center justify-center">
+                          <FaTimes className="mr-2" />
+                          Deactivate
+                        </div>
+                      </button>
+                    </div>
+                  ) : (
                     <button
                       disabled={isActivating}
                       className={`
-                        w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200
+                        w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 shadow-lg group-hover:shadow-xl
                         ${isActivating
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-green-500 hover:bg-green-600 text-white'
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-[#67BAE0] to-[#3B5787] hover:from-[#3B5787] hover:to-[#2A4065] text-white transform hover:scale-105'
                         }
                       `}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (!isActivating) {
-                          if (categoryKey === 'hotel-restaurant') {
-                            navigate('/service/restaurant');
-                          } else if (categoryKey === 'housekeeping-requests') {
-                            navigate('/service/housekeeping');
-                          }
-                        }
+                        if (!isActivating) activateCategory(categoryKey);
                       }}
                     >
                       {isActivating ? (
                         <div className="flex items-center justify-center">
                           <FaSpinner className="animate-spin mr-2" />
-                          Processing...
+                          Activating...
                         </div>
                       ) : (
                         <div className="flex items-center justify-center">
-                          <FaCheck className="mr-2" />
-                          Manage Service
+                          <FaPlus className="mr-2" />
+                          Activate
                         </div>
                       )}
                     </button>
-                    <button
-                      disabled={isActivating}
-                      className={`
-                        w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200
-                        ${isActivating
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-red-500 hover:bg-red-600 text-white'
-                        }
-                      `}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!isActivating) deactivateCategory(categoryKey);
-                      }}
-                    >
-                      <div className="flex items-center justify-center">
-                        <FaTimes className="mr-2" />
-                        Deactivate
-                      </div>
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    disabled={isActivating}
-                    className={`
-                      w-full py-2 px-4 rounded-lg font-medium transition-colors duration-200
-                      ${isActivating
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-blue-500 hover:bg-blue-600 text-white'
-                      }
-                    `}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!isActivating) activateCategory(categoryKey);
-                    }}
-                  >
-                    {isActivating ? (
-                      <div className="flex items-center justify-center">
-                        <FaSpinner className="animate-spin mr-2" />
-                        Activating...
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center">
-                        <FaPlus className="mr-2" />
-                        Activate
-                      </div>
-                    )}
-                  </button>
-                )}
+                  )}
 
-                {/* Show sample items/services for preview */}
-                {category.items && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2">Sample Services:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {category.items.slice(0, 3).map((item, index) => (
-                        <span
-                          key={index}
-                          className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs"
-                        >
-                          {item.name}
-                        </span>
-                      ))}
-                      {category.items.length > 3 && (
-                        <span className="text-gray-400 text-xs">
-                          +{category.items.length - 3} more
-                        </span>
-                      )}
+                  {/* Modern Sample Services Preview */}
+                  {category.items && (
+                    <div className="mt-6 pt-6 border-t border-gray-100">
+                      <p className="text-sm font-medium text-gray-700 mb-3">Sample Services:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {category.items.slice(0, 3).map((item, index) => (
+                          <span
+                            key={index}
+                            className="bg-gradient-to-r from-[#67BAE0]/5 to-[#3B5787]/5 text-[#3B5787] px-3 py-1 rounded-full text-xs font-medium border border-[#67BAE0]/20"
+                          >
+                            {item.name}
+                          </span>
+                        ))}
+                        {category.items.length > 3 && (
+                          <span className="text-gray-500 text-xs font-medium bg-gray-100 px-3 py-1 rounded-full">
+                            +{category.items.length - 3} more
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {activeCategories.length > 0 && (
-        <div className="mt-8 text-center">
-          <p className="text-gray-600 mb-4">
-            You have {activeCategories.length} active inside hotel services.
-            Guests can now book these services directly within the hotel premises.
-          </p>
-          <button
-            onClick={() => window.location.href = '/service/inside-services/manage'}
-            className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-          >
-            Manage Service Details
-          </button>
+            );
+          })}
         </div>
-      )}
+
+        {activeCategories.length > 0 && (
+          <div className="mt-8 text-center bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <div className="max-w-2xl mx-auto">
+              <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+                🏨 Excellent! You have activated {activeCategories.length} inside hotel service{activeCategories.length === 1 ? '' : 's'}!
+                Guests can now book these services directly within the hotel premises.
+              </p>
+              <button
+                onClick={() => window.location.href = '/service/inside-services/manage'}
+                className="bg-gradient-to-r from-[#67BAE0] to-[#3B5787] hover:from-[#3B5787] hover:to-[#2A4065] text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                Manage Service Details
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

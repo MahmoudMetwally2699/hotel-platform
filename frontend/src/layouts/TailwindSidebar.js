@@ -68,7 +68,8 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
               { name: `👕 ${t('categorySelection.sidebar.laundryManagement')}`, path: '/service/services?category=laundry', icon: 'laundry' },
               { name: `🚗 ${t('categorySelection.sidebar.transportationManagement')}`, path: '/service/services?category=transportation', icon: 'truck' },
               { name: `📋 ${t('categorySelection.sidebar.transportationBookings')}`, path: '/service/transportation-bookings', icon: 'truck' },
-              { name: `🧹 Housekeeping Services`, path: '/service/housekeeping', icon: 'broom' }
+              { name: `🧹 Housekeeping Services`, path: '/service/housekeeping', icon: 'broom' },
+              { name: `🍽️ Restaurant Services`, path: '/service/restaurant', icon: 'restaurant' }
             ]
           },
           { name: t('navigation.earnings'), path: '/service/earnings', icon: 'cash' },
@@ -232,10 +233,10 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
           </svg>
         );
-      case 'utensils':
+      case 'restaurant':
         return (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v5a2 2 0 01-2 2H9a2 2 0 01-2-2v-5m6-5a2 2 0 012 2v3" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4v8l2 2v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7l2-2V4M3 4L9 4M19 4v8c0 1.1-.9 2-2 2h-1v7c0 .55-.45 1-1 1s-1-.45-1-1v-7h-1c-1.1 0-2-.9-2-2V4" />
           </svg>
         );
       case 'user':
