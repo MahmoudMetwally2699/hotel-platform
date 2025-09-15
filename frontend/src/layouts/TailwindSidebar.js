@@ -58,22 +58,29 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
       case 'service':
         return [
           { name: t('navigation.dashboard'), path: '/service/dashboard', icon: 'home' },
-          { name: t('navigation.orders'), path: '/service/orders', icon: 'shopping-bag' },
+          {
+            name: t('navigation.orders'),
+            icon: 'shopping-bag',
+            isExpandable: true,
+            key: 'orders-bookings',
+            children: [
+              { name: t('navigation.orders'), path: '/service/orders', icon: 'shopping-bag' },
+              { name: t('categorySelection.sidebar.transportationBookings'), path: '/service/transportation-bookings', icon: 'truck' }
+            ]
+          },
           {
             name: t('categorySelection.manageServices'),
             icon: 'cog-services',
             isExpandable: true,
             key: 'manage-services',
             children: [
-              { name: `👕 ${t('categorySelection.sidebar.laundryManagement')}`, path: '/service/services?category=laundry', icon: 'laundry' },
-              { name: `🚗 ${t('categorySelection.sidebar.transportationManagement')}`, path: '/service/services?category=transportation', icon: 'truck' },
-              { name: `📋 ${t('categorySelection.sidebar.transportationBookings')}`, path: '/service/transportation-bookings', icon: 'truck' },
-              { name: `🧹 Housekeeping Services`, path: '/service/housekeeping', icon: 'broom' },
-              { name: `🍽️ Restaurant Services`, path: '/service/restaurant', icon: 'restaurant' }
+              { name: t('categorySelection.sidebar.laundryManagement'), path: '/service/services?category=laundry', icon: 'laundry' },
+              { name: t('categorySelection.sidebar.transportationManagement'), path: '/service/services?category=transportation', icon: 'truck' },
+              { name: 'Housekeeping Services', path: '/service/housekeeping', icon: 'broom' },
+              { name: 'Restaurant Services', path: '/service/restaurant', icon: 'restaurant' }
             ]
           },
-          { name: t('navigation.earnings'), path: '/service/earnings', icon: 'cash' },
-          { name: t('navigation.settings'), path: '/service/settings', icon: 'cog' }
+          { name: t('navigation.earnings'), path: '/service/earnings', icon: 'cash' }
         ];
       case 'guest':
         return [
@@ -213,12 +220,6 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         return (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        );
-      case 'sparkles':
-        return (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
           </svg>
         );
       case 'utensils':

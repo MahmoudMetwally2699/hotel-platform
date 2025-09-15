@@ -21,6 +21,7 @@ const initialState = {
   providerRecentOrders: [],
   providerOrders: [],
   providerEarnings: null,
+  categoryAnalytics: null,
   providerPayouts: [],
   serviceProviderStats: null,  // For Super Admin view
   providerProfile: null,
@@ -198,6 +199,19 @@ export const fetchProviderEarnings = createAsyncThunk(
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch earnings');
+    }
+  }
+);
+
+// Service Provider Category Analytics
+export const fetchCategoryAnalytics = createAsyncThunk(
+  'service/fetchCategoryAnalytics',
+  async (timeRange = 'month', { rejectWithValue }) => {
+    try {
+      const response = await serviceProviderService.getCategoryAnalytics(timeRange);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch category analytics');
     }
   }
 );
@@ -614,6 +628,21 @@ const serviceSlice = createSlice({
         state.error = action.payload;
       })
 
+      // Fetch category analytics cases
+      .addCase(fetchCategoryAnalytics.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchCategoryAnalytics.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.categoryAnalytics = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchCategoryAnalytics.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+
       // Fetch provider payouts cases
       .addCase(fetchProviderPayouts.pending, (state) => {
         state.isLoading = true;
@@ -796,6 +825,7 @@ export const selectProviderRecentOrders = (state) => state.service.providerRecen
 export const selectProviderOrders = (state) => state.service.providerOrders;
 export const selectCurrentOrder = (state) => state.service.currentOrder;
 export const selectProviderEarnings = (state) => state.service.providerEarnings;
+export const selectCategoryAnalytics = (state) => state.service.categoryAnalytics;
 export const selectProviderPayouts = (state) => state.service.providerPayouts;
 export const selectProviderProfile = (state) => state.service.providerProfile;
 export const selectIsLoading = (state) => state.service.isLoading;

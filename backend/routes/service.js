@@ -14,6 +14,7 @@ const User = require('../models/User');
 const ServiceProvider = require('../models/ServiceProvider');
 const Service = require('../models/Service');
 const Booking = require('../models/Booking');
+const TransportationBooking = require('../models/TransportationBooking');
 const Hotel = require('../models/Hotel');
 const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
@@ -309,6 +310,10 @@ router.post('/services', catchAsync(async (req, res, next) => {
     availability: req.body.availability || {},
     options: req.body.options || [],
     menuItems: req.body.menuItems || [],
+    // Add transportation items for transportation services
+    transportationItems: req.body.transportationItems || [],
+    // Add laundry items for laundry services
+    laundryItems: req.body.laundryItems || [],
     isActive: req.body.isActive || true,
     isApproved: true // Services are automatically approved
   };
@@ -353,9 +358,9 @@ router.put('/services/:id', catchAsync(async (req, res, next) => {
   }
 
   // Update other fields
-  ['name', 'description', 'category', 'duration', 'availability', 'options', 'isActive'].forEach(field => {
+  ['name', 'description', 'category', 'cuisineType', 'duration', 'availability', 'options', 'isActive', 'menuItems'].forEach(field => {
     if (req.body[field] !== undefined) {
-      if (field === 'availability' || field === 'options') {
+      if (field === 'availability' || field === 'options' || field === 'menuItems') {
         service[field] = req.body[field];
       } else {
         service[field] = req.body[field];
@@ -429,12 +434,54 @@ router.delete('/services/:id', catchAsync(async (req, res, next) => {
 }));
 
 /**
+ * @route   PATCH /api/service/services/:id/toggle-availability
+ * @desc    Toggle service availability (active/inactive)
+ * @access  Private/ServiceProvider
+ */
+router.patch('/services/:id/toggle-availability', catchAsync(async (req, res, next) => {
+  const providerId = req.user.serviceProviderId;
+  const serviceId = req.params.id;
+
+  // Find service and make sure it belongs to this provider
+  const service = await Service.findOne({
+    _id: serviceId,
+    providerId: providerId
+  });
+
+  if (!service) {
+    return next(new AppError('No service found with that ID for this provider', 404));
+  }
+
+  // Toggle the isActive status
+  service.isActive = !service.isActive;
+  await service.save();
+
+  logger.info(`Service availability toggled: ${service.name} - ${service.isActive ? 'Active' : 'Inactive'}`, {
+    serviceProviderId: providerId,
+    serviceId: service._id,
+    isActive: service.isActive
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      service: {
+        _id: service._id,
+        name: service.name,
+        isActive: service.isActive
+      }
+    },
+    message: `Service ${service.isActive ? 'activated' : 'deactivated'} successfully`
+  });
+}));
+
+/**
  * @route   GET /api/service/orders
  * @desc    Get all orders (alias for bookings) for the provider
  * @access  Private/ServiceProvider
  */
 router.get('/orders', catchAsync(async (req, res) => {
-  const providerId = req.user.serviceProviderId;
+  const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
 
   // Query filters
   const filter = { serviceProviderId: providerId };
@@ -825,12 +872,27 @@ router.get('/earnings', catchAsync(async (req, res) => {
   const totalEarnings = completedBookings.reduce((sum, booking) => {return sum + (booking.pricing?.providerEarnings || 0);
   }, 0);
 
-  // Calculate earnings by service category
+  // Calculate earnings by service category with counts and averages
   const earningsByCategory = {};
+  const ordersByCategory = {};
+
   completedBookings.forEach(booking => {
     const category = booking.serviceId?.category || 'other';
-    earningsByCategory[category] = (earningsByCategory[category] || 0) + (booking.pricing?.providerEarnings || 0);
+    const earnings = booking.pricing?.providerEarnings || 0;
+
+    earningsByCategory[category] = (earningsByCategory[category] || 0) + earnings;
+    ordersByCategory[category] = (ordersByCategory[category] || 0) + 1;
   });
+
+  // Create comprehensive category breakdown
+  const categoryBreakdown = Object.keys(earningsByCategory).map(category => ({
+    category,
+    earnings: Math.round(earningsByCategory[category] * 100) / 100,
+    totalBookings: ordersByCategory[category] || 0,
+    averagePerBooking: ordersByCategory[category] > 0
+      ? Math.round((earningsByCategory[category] / ordersByCategory[category]) * 100) / 100
+      : 0
+  }));
 
   // Get monthly earnings breakdown
   const monthlyEarnings = await Booking.aggregate([
@@ -908,10 +970,7 @@ router.get('/earnings', catchAsync(async (req, res) => {
         pendingBookings: pendingBookings.length
       },
       breakdown: {
-        byCategory: Object.keys(earningsByCategory).map(category => ({
-          category,
-          earnings: Math.round(earningsByCategory[category] * 100) / 100
-        })),
+        byCategory: categoryBreakdown,
         monthly: monthlyEarnings.map(month => ({
           year: month._id.year,
           month: month._id.month,
@@ -919,6 +978,214 @@ router.get('/earnings', catchAsync(async (req, res) => {
           bookings: month.bookings
         }))
       }
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/service/analytics/categories
+ * @desc    Get detailed analytics for each service category
+ * @access  Private/ServiceProvider
+ */
+router.get('/analytics/categories', catchAsync(async (req, res) => {
+  const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
+  const timeRange = req.query.timeRange || 'month';
+
+  console.log('🔍 Provider ID:', providerId);
+  console.log('🔍 Time Range:', timeRange);
+
+  // Define date range based on timeRange parameter
+  let startDate = new Date();
+  let endDate = new Date();
+
+  switch (timeRange) {
+    case 'week':
+      startDate.setDate(startDate.getDate() - 7);
+      break;
+    case 'month':
+      startDate.setMonth(startDate.getMonth() - 1);
+      break;
+    case 'quarter':
+      startDate.setMonth(startDate.getMonth() - 3);
+      break;
+    case 'year':
+      startDate.setFullYear(startDate.getFullYear() - 1);
+      break;
+    default:
+      startDate.setMonth(startDate.getMonth() - 1);
+  }
+
+  console.log('🔍 Category Analytics - Provider ID:', providerId);
+  console.log('🔍 Category Analytics - Time Range:', { startDate, endDate });
+
+  // Get regular booking analytics
+  const regularBookingAnalytics = await Booking.aggregate([
+    {
+      $match: {
+        serviceProviderId: new mongoose.Types.ObjectId(providerId),
+        status: 'completed'
+      }
+    },
+    {
+      $lookup: {
+        from: 'services',
+        localField: 'serviceId',
+        foreignField: '_id',
+        as: 'service'
+      }
+    },
+    {
+      $unwind: {
+        path: '$service',
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $addFields: {
+        effectiveCategory: {
+          $ifNull: ['$service.category', '$serviceType']
+        }
+      }
+    },
+    {
+      $group: {
+        _id: '$effectiveCategory',
+        allTimeEarnings: { $sum: '$pricing.providerEarnings' },
+        allTimeOrders: { $sum: 1 },
+        currentPeriodEarnings: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ['$createdAt', startDate] },
+                  { $lte: ['$createdAt', endDate] }
+                ]
+              },
+              '$pricing.providerEarnings',
+              0
+            ]
+          }
+        },
+        currentPeriodOrders: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ['$createdAt', startDate] },
+                  { $lte: ['$createdAt', endDate] }
+                ]
+              },
+              1,
+              0
+            ]
+          }
+        }
+      }
+    }
+  ]);
+
+  // Get transportation booking analytics
+  const transportationAnalytics = await TransportationBooking.aggregate([
+    {
+      $match: {
+        serviceProviderId: new mongoose.Types.ObjectId(providerId),
+        bookingStatus: 'payment_completed' // Use the correct status for completed transportation bookings
+      }
+    },
+    {
+      $group: {
+        _id: 'transportation',
+        allTimeEarnings: { $sum: '$payment.breakdown.serviceProviderAmount' },
+        allTimeOrders: { $sum: 1 },
+        currentPeriodEarnings: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ['$createdAt', startDate] },
+                  { $lte: ['$createdAt', endDate] }
+                ]
+              },
+              '$payment.breakdown.serviceProviderAmount',
+              0
+            ]
+          }
+        },
+        currentPeriodOrders: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ['$createdAt', startDate] },
+                  { $lte: ['$createdAt', endDate] }
+                ]
+              },
+              1,
+              0
+            ]
+          }
+        }
+      }
+    }
+  ]);
+
+  // Combine analytics from both sources
+  const combinedAnalytics = [...regularBookingAnalytics, ...transportationAnalytics];
+
+  // Process and format the combined data
+  const categoryAnalytics = combinedAnalytics.map(item => ({
+    category: item._id,
+    allTime: {
+      totalEarnings: Math.round((item.allTimeEarnings || 0) * 100) / 100,
+      totalOrders: item.allTimeOrders || 0,
+      averagePerOrder: item.allTimeOrders > 0
+        ? Math.round(((item.allTimeEarnings || 0) / item.allTimeOrders) * 100) / 100
+        : 0
+    },
+    currentPeriod: {
+      totalEarnings: Math.round((item.currentPeriodEarnings || 0) * 100) / 100,
+      totalOrders: item.currentPeriodOrders || 0,
+      averagePerOrder: item.currentPeriodOrders > 0
+        ? Math.round(((item.currentPeriodEarnings || 0) / item.currentPeriodOrders) * 100) / 100
+        : 0
+    }
+  }));
+
+  // Ensure all main categories are included (even with zero values)
+  const mainCategories = ['transportation', 'laundry', 'housekeeping', 'dining', 'restaurant'];
+  const completeAnalytics = mainCategories.map(category => {
+    const existing = categoryAnalytics.find(item =>
+      item.category && (
+        item.category.toLowerCase() === category.toLowerCase() ||
+        (category === 'restaurant' && item.category.toLowerCase() === 'dining') ||
+        (category === 'dining' && item.category.toLowerCase() === 'restaurant')
+      )
+    );
+
+    return existing || {
+      category,
+      allTime: {
+        totalEarnings: 0,
+        totalOrders: 0,
+        averagePerOrder: 0
+      },
+      currentPeriod: {
+        totalEarnings: 0,
+        totalOrders: 0,
+        averagePerOrder: 0
+      }
+    };
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      timeRange,
+      period: {
+        startDate,
+        endDate
+      },
+      categories: completeAnalytics
     }
   });
 }));
@@ -1510,120 +1777,6 @@ router.get('/orders/by-category', catchAsync(async (req, res) => {
         category: category || 'all',
         status: status || 'all'
       }
-    }
-  });
-}));
-
-/**
- * @route   GET /api/service/analytics/categories
- * @desc    Get analytics data by category
- * @access  Private/ServiceProvider
- */
-router.get('/analytics/categories', catchAsync(async (req, res) => {
-  const providerId = req.user.serviceProviderId;
-  const { timeRange = '30' } = req.query;
-
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - parseInt(timeRange));
-
-  // Get performance by category
-  const categoryPerformance = await Booking.aggregate([
-    {
-      $match: {
-        serviceProviderId: new mongoose.Types.ObjectId(providerId),
-        createdAt: { $gte: startDate }
-      }
-    },
-    {
-      $lookup: {
-        from: 'services',
-        localField: 'serviceId',
-        foreignField: '_id',
-        as: 'service'
-      }
-    },
-    { $unwind: '$service' },
-    {
-      $group: {
-        _id: '$service.category',
-        totalOrders: { $sum: 1 },
-        totalRevenue: { $sum: '$providerAmount' },
-        averageRating: { $avg: '$rating' },
-        completedOrders: {
-          $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] }
-        },
-        cancelledOrders: {
-          $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] }
-        }
-      }
-    },
-    {
-      $addFields: {
-        completionRate: {
-          $multiply: [
-            { $divide: ['$completedOrders', '$totalOrders'] },
-            100
-          ]
-        },
-        categoryName: {
-          $switch: {
-            branches: [
-              { case: { $eq: ['$_id', 'laundry'] }, then: 'Laundry Services' },
-              { case: { $eq: ['$_id', 'transportation'] }, then: 'Transportation' },
-              { case: { $eq: ['$_id', 'tours'] }, then: 'Tours & Activities' },
-              { case: { $eq: ['$_id', 'spa'] }, then: 'Spa & Wellness' },
-              { case: { $eq: ['$_id', 'dining'] }, then: 'Dining Services' },
-              { case: { $eq: ['$_id', 'entertainment'] }, then: 'Entertainment' },
-              { case: { $eq: ['$_id', 'shopping'] }, then: 'Shopping Services' },
-              { case: { $eq: ['$_id', 'fitness'] }, then: 'Fitness & Sports' }
-            ],
-            default: 'Other'
-          }
-        }
-      }
-    },
-    { $sort: { totalRevenue: -1 } }
-  ]);
-
-  // Get monthly trends by category
-  const monthlyTrends = await Booking.aggregate([
-    {
-      $match: {
-        serviceProviderId: new mongoose.Types.ObjectId(providerId),
-        createdAt: { $gte: startDate }
-      }
-    },
-    {
-      $lookup: {
-        from: 'services',
-        localField: 'serviceId',
-        foreignField: '_id',
-        as: 'service'
-      }
-    },
-    { $unwind: '$service' },
-    {
-      $group: {
-        _id: {
-          category: '$service.category',
-          year: { $year: '$createdAt' },
-          month: { $month: '$createdAt' },
-          day: { $dayOfMonth: '$createdAt' }
-        },
-        dailyOrders: { $sum: 1 },
-        dailyRevenue: { $sum: '$providerAmount' }
-      }
-    },
-    { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
-  ]);
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      categoryPerformance,
-      monthlyTrends,
-      timeRange: parseInt(timeRange),
-      totalCategories: categoryPerformance.length
     }
   });
 }));
@@ -2414,8 +2567,12 @@ router.get('/housekeeping-services', catchAsync(async (req, res) => {
     });
   }
 
-  // Get existing housekeeping services
-  const housekeepingServices = provider.housekeepingServices || [];
+  // Get housekeeping services from Service collection
+  const housekeepingServices = await Service.find({
+    providerId: providerId,
+    category: 'housekeeping',
+    isActive: true
+  }).sort({ createdAt: -1 });
 
   res.status(200).json({
     status: 'success',
@@ -2441,7 +2598,7 @@ router.post('/housekeeping-services', catchAsync(async (req, res) => {
     });
   }
 
-  // Create proper Service document instead of embedded service
+  // Create proper Service document for housekeeping services
   const serviceData = {
     providerId: providerId,
     hotelId: hotelId,
@@ -2567,36 +2724,45 @@ router.post('/housekeeping-services/:serviceId/deactivate', catchAsync(async (re
 
 /**
  * @route   DELETE /api/service/housekeeping-services/:serviceId
- * @desc    Delete a custom housekeeping service
+ * @desc    Delete a housekeeping service
  * @access  Private/ServiceProvider
  */
 router.delete('/housekeeping-services/:serviceId', catchAsync(async (req, res) => {
-  const providerId = req.user.serviceProviderId;
+  const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
   const { serviceId } = req.params;
 
-  const provider = await ServiceProvider.findById(providerId);
-  if (!provider) {
+  logger.info(`Delete housekeeping service request: ${serviceId} by provider: ${providerId}`);
+
+  // Only work with the Services collection (newer system)
+  const service = await Service.findOne({
+    _id: serviceId,
+    providerId: providerId,
+    category: 'housekeeping'
+  });
+
+  if (!service) {
     return res.status(404).json({
       status: 'error',
-      message: 'Service provider not found'
+      message: 'Service not found'
     });
   }
 
-  // Only allow deletion of custom services
-  if (!serviceId.startsWith('custom-')) {
+  // Check for active bookings
+  const activeBookings = await Booking.countDocuments({
+    serviceId: serviceId,
+    status: { $nin: ['completed', 'cancelled', 'refunded'] }
+  });
+
+  if (activeBookings > 0) {
     return res.status(400).json({
       status: 'error',
-      message: 'Cannot delete default services'
+      message: 'Cannot delete service with active bookings'
     });
   }
 
-  // Remove the service
-  if (provider.housekeepingServices) {
-    provider.housekeepingServices = provider.housekeepingServices.filter(
-      service => service.id !== serviceId
-    );
-    await provider.save();
-  }
+  // Delete from Services collection
+  await Service.findByIdAndDelete(serviceId);
+  logger.info(`Housekeeping service deleted successfully: ${serviceId}`);
 
   res.status(200).json({
     status: 'success',
@@ -2610,7 +2776,7 @@ router.delete('/housekeeping-services/:serviceId', catchAsync(async (req, res) =
  * @access  Private/ServiceProvider
  */
 router.get('/housekeeping-bookings', catchAsync(async (req, res) => {
-  const providerId = req.user.serviceProviderId;
+  const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
   const hotelId = req.user.hotelId;
   const { status, limit = 50, page = 1 } = req.query;
 
@@ -2619,7 +2785,7 @@ router.get('/housekeeping-bookings', catchAsync(async (req, res) => {
 
   let query = {
     serviceType: 'housekeeping',
-    hotelId: hotelId
+    serviceProviderId: providerId  // ✅ FIXED: Filter by service provider, not hotel
   };
 
   if (status) {
@@ -2628,26 +2794,6 @@ router.get('/housekeeping-bookings', catchAsync(async (req, res) => {
 
   console.log('🔧 Housekeeping bookings query:', query);
 
-  // Let's also check all housekeeping bookings regardless of hotel to debug
-  const allHousekeepingBookings = await Booking.find({ serviceType: 'housekeeping' }).lean();
-  console.log('🔧 All housekeeping bookings in DB:', allHousekeepingBookings.map(b => ({
-    id: b._id,
-    hotelId: b.hotelId,
-    hotel: b.hotel,
-    serviceName: b.serviceName,
-    status: b.status,
-    serviceType: b.serviceType
-  })));
-
-  // Let's also check all bookings in this hotel
-  const allHotelBookings = await Booking.find({ hotelId: hotelId }).lean();
-  console.log('🔧 All bookings for this hotel:', allHotelBookings.map(b => ({
-    id: b._id,
-    serviceType: b.serviceType,
-    serviceName: b.serviceName || b.serviceDetails?.name,
-    status: b.status
-  })));
-
   const bookings = await Booking.find(query)
     .sort({ bookingDate: -1 })
     .limit(limit * 1)
@@ -2655,8 +2801,6 @@ router.get('/housekeeping-bookings', catchAsync(async (req, res) => {
     .populate('hotelId', 'name location')
     .populate('hotel', 'name location')
     .lean();
-
-  console.log('🔧 Filtered housekeeping bookings found:', bookings.length);
 
   const totalBookings = await Booking.countDocuments(query);
 

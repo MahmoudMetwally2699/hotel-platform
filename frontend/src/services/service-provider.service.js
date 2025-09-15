@@ -272,6 +272,20 @@ class ServiceProviderService {  /**
   }
 
   /**
+   * Get detailed category analytics
+   * @param {string} timeRange - Time range for analytics data
+   * @returns {Promise} - Response from API
+   */
+  async getCategoryAnalytics(timeRange = 'month') {
+    try {
+      const response = await apiClient.get(`/service/analytics/categories?timeRange=${timeRange}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Get provider payout history
    * @returns {Promise} - Response from API
    */

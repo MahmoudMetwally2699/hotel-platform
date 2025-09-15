@@ -128,11 +128,11 @@ const GuestCategorySelection = () => {
       try {
         setLoading(true);
 
-        // Fetch hotel details (unchanged)
+        // Fetch hotel details
         const hotelResponse = await apiClient.get(`/client/hotels/${hotelId}`);
         setHotel(hotelResponse.data.data);
 
-        // Fetch services (unchanged)
+        // Fetch ALL services including housekeeping from Service collection
         const servicesResponse = await apiClient.get(`/client/hotels/${hotelId}/services`, {
           params: { limit: 100 }
         });
@@ -145,8 +145,8 @@ const GuestCategorySelection = () => {
           serviceCounts[service.category]++;
         });
 
-        // Always show housekeeping
-        serviceCounts['housekeeping'] = 1;
+        // No need for separate housekeeping API call since it's included above
+        console.log('Service counts from Service collection:', serviceCounts);
 
         const categoryDescriptions = getCategoryDescriptions();
 

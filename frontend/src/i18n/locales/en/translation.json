@@ -1130,8 +1130,20 @@
   },
 
   "transportation": {
+    "title": "Transportation Bookings",
+    "subtitle": "Manage quotes, bookings, and payments for your transportation services",
     "myBookings": "My Transportation Bookings",
     "bookingsSubtitle": "Manage and pay for your transportation quotes and bookings.",
+    "createQuote": "Create Quote",
+    "createQuoteFor": "Create Quote for",
+    "tripDetails": "Trip Details",
+    "noBookings": "No Bookings Found",
+    "noBookingsDescription": "No transportation bookings found for the selected status.",
+    "tabs": {
+      "pendingQuotes": "Pending Quotes",
+      "pendingPayment": "Pending Payment",
+      "confirmed": "Confirmed"
+    },
     "labels": {
       "waitingForQuote": "Waiting for quote",
       "readyForPayment": "Ready for payment",
@@ -1144,7 +1156,18 @@
       "quotedAt": "Quoted at",
       "expiresAt": "Expires at",
       "viewDetails": "View details",
-      "payNow": "Pay now"
+      "payNow": "Pay now",
+      "vehicle": "Vehicle",
+      "passengers": "passengers"
+    },
+    "errors": {
+      "fetchBookings": "Failed to fetch bookings",
+      "invalidPrice": "Please enter a valid price",
+      "createQuote": "Failed to create quote",
+      "fetchBookingDetails": "Failed to fetch booking details"
+    },
+    "success": {
+      "quoteCreated": "Quote created successfully"
     },
     "status": {
       "pending_quote": "Pending quote",
@@ -1363,7 +1386,50 @@
     }
   },
   "housekeeping": {
-    "title": "Housekeeping",
+    "title": "Housekeeping Services",
+    "subtitle": "Manage your housekeeping services. These services are provided free of charge to hotel guests.",
+    "management": {
+      "title": "Housekeeping Services Management",
+      "addService": "Add Service",
+      "createNew": "Create New Housekeeping Service",
+      "createDescription": "Fill out the form below to create a new housekeeping service for your guests",
+      "basicInformation": "Basic Information",
+      "serviceConfiguration": "Service Configuration",
+      "additionalDetails": "Additional Details",
+      "serviceName": "Service Name",
+      "category": "Category",
+      "description": "Description",
+      "estimatedDuration": "Estimated Duration",
+      "minutes": "minutes",
+      "min": "min",
+      "availability": "Availability",
+      "specialInstructions": "Special Instructions",
+      "instructionsHelp": "Optional instructions for guests when booking this service",
+      "requirements": "Requirements",
+      "activeServices": "Active Services",
+      "always": "24/7 Available",
+      "businessHours": "Business Hours Only",
+      "createService": "Create Service",
+      "creating": "Creating...",
+      "cancel": "Cancel",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "active": "Active",
+      "inactive": "Inactive",
+      "duration": "Duration",
+      "available": "Available",
+      "placeholders": {
+        "serviceName": "Enter service name (e.g., Deep Room Cleaning)",
+        "description": "Describe what this service includes and how it benefits guests",
+        "instructions": "Special instructions or requirements for this service"
+      }
+    },
+    "categories": {
+      "cleaning": "Room Cleaning",
+      "maintenance": "Maintenance",
+      "amenities": "Amenities",
+      "laundry": "Laundry Service"
+    },
     "guestServices": "Guest services",
     "scheduleService": "Schedule our service below",
     "roomNumber": "Room",
@@ -1373,11 +1439,6 @@
     "bookingConfirmed": "Booking Confirmed!",
     "confirmationMessage": "Your housekeeping service request has been submitted successfully. Our housekeeping team will contact you shortly to confirm the timing.",
     "bookAnother": "Book Another Service",
-    "categories": {
-      "amenities": "Amenities",
-      "cleaning": "Room Cleaning",
-      "maintenance": "Maintenance"
-    },
     "descriptions": {
       "amenities": "Fresh towels and supplies",
       "cleaning": "Professional room cleaning",

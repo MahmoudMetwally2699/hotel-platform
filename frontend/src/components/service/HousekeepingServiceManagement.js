@@ -1,6 +1,9 @@
 /**
- * Housekeeping Service Management
+ * Housekeeping Service Management — Modern Restyle
  * Allows service providers to manage their housekeeping services
+ * - Brand: #3B5787 / #67BAE0
+ * - Mobile-first, glass gradient header, modern cards
+ * - Enhanced animations and modern UI components
  */
 
 import React, { useState, useEffect } from 'react';
@@ -8,7 +11,6 @@ import { useTranslation } from 'react-i18next';
 import {
   FaBroom,
   FaPlus,
-  FaEdit,
   FaTrash,
   FaCheck,
   FaTimes,
@@ -20,13 +22,95 @@ import {
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
 
+// ---------------- UI Design Tokens ----------------
+const BTN = {
+  primary:
+    "inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-white " +
+    "bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#2A4A6B] hover:to-[#5BA8CC] " +
+    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] transition-all duration-300 " +
+    "shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+  secondary:
+    "inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-[#3B5787] " +
+    "bg-white border-2 border-[#3B5787] hover:bg-[#3B5787] hover:text-white focus:outline-none " +
+    "focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] transition-all duration-300 shadow-md hover:shadow-lg",
+  danger:
+    "inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-white " +
+    "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 " +
+    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300 " +
+    "shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+  ghost:
+    "inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 " +
+    "bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 " +
+    "transition-all duration-300"
+};
+
+const CARD = "bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300";
+const INPUT = "w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#3B5787]/20 focus:border-[#3B5787] transition-colors";
+
+// Add custom styles for animations and scrollbar
+const modalStyles = `
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slideUp {
+    animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #3B5787 0%, #67BAE0 100%);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #2A4A6B 0%, #5BA8CC 100%);
+  }
+`;
+
 const HousekeepingServiceManagement = ({ onBack }) => {
   const { t } = useTranslation();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingService, setEditingService] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Inject custom styles for modal animations
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = modalStyles;
+    document.head.appendChild(styleElement);
+
+    return () => {
+      if (document.head.contains(styleElement)) {
+        document.head.removeChild(styleElement);
+      }
+    };
+  }, []);
 
   const [newService, setNewService] = useState({
     name: '',
@@ -39,10 +123,10 @@ const HousekeepingServiceManagement = ({ onBack }) => {
   });
 
   const serviceCategories = [
-    { value: 'cleaning', label: 'Room Cleaning', icon: FaBroom },
-    { value: 'maintenance', label: 'Maintenance', icon: FaUsers },
-    { value: 'amenities', label: 'Amenities', icon: FaCheck },
-    { value: 'laundry', label: 'Laundry Service', icon: FaClock }
+    { value: 'cleaning', label: t('housekeeping.categories.cleaning'), icon: FaBroom },
+    { value: 'maintenance', label: t('housekeeping.categories.maintenance'), icon: FaUsers },
+    { value: 'amenities', label: t('housekeeping.categories.amenities'), icon: FaCheck },
+    { value: 'laundry', label: t('housekeeping.categories.laundry'), icon: FaClock }
   ];
 
   useEffect(() => {
@@ -52,6 +136,22 @@ const HousekeepingServiceManagement = ({ onBack }) => {
   const fetchServices = async () => {
     try {
       const response = await apiClient.get('/service/housekeeping-services');
+      console.log('Fetched services:', response.data);
+      console.log('Services structure:', response.data.data);
+
+      // Debug: Log each service's ID structure
+      if (response.data.data && response.data.data.length > 0) {
+        response.data.data.forEach((service, index) => {
+          console.log(`Service ${index + 1}:`, {
+            _id: service._id,
+            id: service.id,
+            name: service.name,
+            hasUnderscore: !!service._id,
+            hasRegularId: !!service.id
+          });
+        });
+      }
+
       setServices(response.data.data || []);
     } catch (error) {
       console.error('Error fetching housekeeping services:', error);
@@ -67,7 +167,12 @@ const HousekeepingServiceManagement = ({ onBack }) => {
 
     try {
       const response = await apiClient.post('/service/housekeeping-services', newService);
-      setServices(prev => [...prev, { ...newService, id: `custom-${Date.now()}`, isActive: true }]);
+      console.log('Create service response:', response.data);
+
+      // Use the actual service returned from the backend
+      const createdService = response.data.data.service;
+      setServices(prev => [...prev, createdService]);
+
       setNewService({
         name: '',
         description: '',
@@ -81,10 +186,7 @@ const HousekeepingServiceManagement = ({ onBack }) => {
       toast.success('Housekeeping service created successfully');
     } catch (error) {
       console.error('Error creating service:', error);
-      // Optimistic update for demo
-      setServices(prev => [...prev, { ...newService, id: `custom-${Date.now()}`, isActive: true }]);
-      setShowCreateForm(false);
-      toast.success('Housekeeping service created successfully');
+      toast.error('Failed to create service');
     } finally {
       setSubmitting(false);
     }
@@ -96,7 +198,7 @@ const HousekeepingServiceManagement = ({ onBack }) => {
       await apiClient.post(`/service/housekeeping-services/${serviceId}/${action}`);
 
       setServices(prev => prev.map(service =>
-        service.id === serviceId
+        (service._id || service.id) === serviceId
           ? { ...service, isActive: !currentStatus }
           : service
       ));
@@ -106,7 +208,7 @@ const HousekeepingServiceManagement = ({ onBack }) => {
       console.error('Error toggling service status:', error);
       // Optimistic update
       setServices(prev => prev.map(service =>
-        service.id === serviceId
+        (service._id || service.id) === serviceId
           ? { ...service, isActive: !currentStatus }
           : service
       ));
@@ -115,16 +217,31 @@ const HousekeepingServiceManagement = ({ onBack }) => {
   };
 
   const deleteService = async (serviceId) => {
+    if (!serviceId) {
+      console.error('Service ID is undefined');
+      toast.error('Cannot delete service: Invalid service ID');
+      return;
+    }
+
     if (!window.confirm('Are you sure you want to delete this service?')) return;
 
     try {
-      await apiClient.delete(`/service/housekeeping-services/${serviceId}`);
-      setServices(prev => prev.filter(service => service.id !== serviceId));
+      console.log('Deleting housekeeping service:', serviceId);
+      const response = await apiClient.delete(`/service/housekeeping-services/${serviceId}`);
+      console.log('Delete response:', response.data);
+
+      // Only update UI if backend deletion was successful
+      setServices(prev => prev.filter(service => (service._id || service.id) !== serviceId));
       toast.success('Service deleted successfully');
     } catch (error) {
       console.error('Error deleting service:', error);
-      setServices(prev => prev.filter(service => service.id !== serviceId));
-      toast.success('Service deleted successfully');
+      console.error('Error response:', error.response?.data);
+
+      // Show the actual error message from the backend
+      const errorMessage = error.response?.data?.message || 'Failed to delete service';
+      toast.error(errorMessage);
+
+      // Don't optimistically update the UI if there was an error
     }
   };
 
@@ -142,111 +259,149 @@ const HousekeepingServiceManagement = ({ onBack }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <button
-              onClick={onBack}
-              className="mr-4 p-2 text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              <FaArrowLeft className="text-xl" />
-            </button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center">
-                <FaBroom className="mr-3 text-blue-600" />
-                Housekeeping Services Management
-              </h1>
-              <p className="text-gray-600">
-                Manage your housekeeping services. These services are provided free of charge to hotel guests.
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        {/* Modern Header */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#3B5787] via-[#4A6B95] to-[#67BAE0] p-8 sm:p-12 text-white shadow-2xl mb-8">
+          {/* Decorative Elements */}
+          <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-white/10 blur-xl"></div>
+          <div className="absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/15"></div>
+          <div className="absolute top-8 right-1/4 h-6 w-6 rounded-full bg-white/20"></div>
+          <div className="absolute bottom-12 right-12 h-4 w-4 rounded-full bg-white/25"></div>
+
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <button
+                  onClick={onBack}
+                  className="mr-6 p-3 rounded-2xl bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300"
+                >
+                  <FaArrowLeft className="text-xl" />
+                </button>
+                <div className="flex items-center">
+                  <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm mr-6">
+                    <FaBroom className="text-4xl" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-2">
+                      {t('housekeeping.title')}
+                    </h1>
+                    <div className="h-1 w-20 bg-gradient-to-r from-white/60 to-transparent rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCreateForm(true)}
+                className={BTN.secondary + " bg-white text-[#3B5787] hover:bg-blue-50"}
+              >
+                <FaPlus className="mr-2" />
+                {t('housekeeping.management.addService')}
+              </button>
             </div>
+            <p className="text-lg text-blue-100 max-w-2xl">
+              {t('housekeeping.subtitle')}
+            </p>
           </div>
-          <button
-            onClick={() => setShowCreateForm(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center"
-          >
-            <FaPlus className="mr-2" />
-            Add Service
-          </button>
         </div>
 
-        {/* Active Services Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Modern Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {serviceCategories.map(category => {
-            const categoryServices = services.filter(s => s.category === category.value && s.isActive);
+            const categoryServices = services.filter(s => s.subcategory === category.value && s.isActive);
             const IconComponent = category.icon;
             return (
-              <div key={category.value} className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center mb-2">
-                  <IconComponent className="text-blue-600 mr-2" />
-                  <h3 className="font-semibold text-gray-800">{category.label}</h3>
+              <div key={category.value} className={CARD + " group hover:scale-105 transition-all duration-300 relative overflow-hidden"}>
+                {/* Background Pattern */}
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-[#67BAE0]/10 to-transparent rounded-bl-full"></div>
+
+                <div className="relative z-10 p-6">
+                  <div className="flex items-center mb-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 mr-4">
+                      <IconComponent className="text-2xl text-[#3B5787]" />
+                    </div>
+                    <h3 className="font-bold text-gray-800">{category.label}</h3>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-[#3B5787] mb-1">{categoryServices.length}</p>
+                    <p className="text-sm text-gray-600">{t('housekeeping.management.activeServices')}</p>
+                  </div>
                 </div>
-                <p className="text-2xl font-bold text-blue-600">{categoryServices.length}</p>
-                <p className="text-sm text-gray-600">Active Services</p>
               </div>
             );
           })}
         </div>
-      </div>
 
-      {/* Services Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {services.map((service) => {
-          const categoryInfo = getCategoryInfo(service.category);
+        {/* Modern Services Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.map((service) => {
+          const categoryInfo = getCategoryInfo(service.subcategory);
           const IconComponent = categoryInfo.icon;
 
           return (
             <div
-              key={service.id}
-              className={`bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl ${
-                service.isActive ? 'ring-2 ring-green-500' : 'opacity-75'
-              }`}
+              key={service._id || service.id}
+              className={CARD + " group hover:scale-105 transition-all duration-300 relative overflow-hidden " +
+                (service.isActive ? 'ring-2 ring-green-400 shadow-lg' : 'opacity-75')}
             >
+              {/* Background Pattern */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#67BAE0]/10 to-transparent rounded-bl-full"></div>
+
               {/* Service Header */}
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4">
+              <div className="relative z-10 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <IconComponent className="text-2xl mr-3" />
+                    <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm mr-4">
+                      <IconComponent className="text-2xl" />
+                    </div>
                     <div>
-                      <h3 className="text-lg font-bold">{service.name}</h3>
+                      <h3 className="text-xl font-bold">{service.name}</h3>
                       <p className="text-blue-100 text-sm">{categoryInfo.label}</p>
                     </div>
                   </div>
-                  <div className={`px-2 py-1 rounded-full text-xs ${
-                    service.isActive ? 'bg-green-500' : 'bg-red-500'
+                  <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    service.isActive
+                      ? 'bg-green-500 text-white'
+                      : 'bg-red-500 text-white'
                   }`}>
-                    {service.isActive ? 'Active' : 'Inactive'}
+                    {service.isActive ? t('housekeeping.management.active') : t('housekeeping.management.inactive')}
                   </div>
                 </div>
               </div>
 
               {/* Service Content */}
-              <div className="p-4">
-                <p className="text-gray-600 text-sm mb-4">{service.description}</p>
+              <div className="relative z-10 p-6">
+                <p className="text-gray-600 mb-6 leading-relaxed">{service.description}</p>
 
                 {/* Service Details */}
-                <div className="space-y-3 mb-4">
+                <div className="space-y-4 mb-6">
                   <div className="flex items-center text-sm text-gray-600">
-                    <FaClock className="mr-2 text-blue-500" />
-                    <span>Duration: {service.estimatedDuration} minutes</span>
+                    <div className="p-2 rounded-lg bg-blue-50 mr-3">
+                      <FaClock className="text-blue-500" />
+                    </div>
+                    <span>{t('housekeeping.management.duration')}: <span className="font-semibold">{service.estimatedDuration} minutes</span></span>
                   </div>
 
                   <div className="flex items-center text-sm text-gray-600">
-                    <FaCheck className="mr-2 text-green-500" />
-                    <span>Available: {service.availability === 'always' ? '24/7' : 'Business Hours'}</span>
+                    <div className="p-2 rounded-lg bg-green-50 mr-3">
+                      <FaCheck className="text-green-500" />
+                    </div>
+                    <span>{t('housekeeping.management.available')}: <span className="font-semibold">{service.availability === 'always' ? t('housekeeping.management.always') : t('housekeeping.management.businessHours')}</span></span>
                   </div>
                 </div>
 
                 {/* Requirements */}
                 {service.requirements && service.requirements.length > 0 && (
-                  <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Requirements:</h4>
-                    <ul className="text-xs text-gray-600 space-y-1">
+                  <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                    <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center">
+                      <div className="p-1 rounded-lg bg-blue-100 mr-2">
+                        <FaCheck className="text-blue-600 text-xs" />
+                      </div>
+                      {t('housekeeping.management.requirements')}
+                    </h4>
+                    <ul className="text-sm text-gray-600 space-y-2">
                       {service.requirements.map((req, index) => (
                         <li key={index} className="flex items-start">
-                          <span className="text-blue-500 mr-1">•</span>
+                          <span className="text-[#3B5787] mr-2 font-bold">•</span>
                           {req}
                         </li>
                       ))}
@@ -254,37 +409,34 @@ const HousekeepingServiceManagement = ({ onBack }) => {
                   </div>
                 )}
 
-                {/* Actions */}
-                <div className="flex gap-2">
+                {/* Modern Action Buttons */}
+                <div className="flex gap-3">
                   <button
-                    onClick={() => toggleServiceStatus(service.id, service.isActive)}
-                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                      service.isActive
-                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                        : 'bg-green-100 text-green-700 hover:bg-green-200'
+                    onClick={() => toggleServiceStatus(service._id || service.id, service.isActive)}
+                    className={`flex-1 ${
+                      service.isActive ? BTN.danger : BTN.primary
                     }`}
                   >
                     {service.isActive ? (
                       <>
-                        <FaTimes className="inline mr-1" />
-                        Deactivate
+                        <FaTimes className="mr-2" />
+                        {t('housekeeping.management.deactivate')}
                       </>
                     ) : (
                       <>
-                        <FaCheck className="inline mr-1" />
-                        Activate
+                        <FaCheck className="mr-2" />
+                        {t('housekeeping.management.activate')}
                       </>
                     )}
                   </button>
 
-                  {service.id.startsWith('custom-') && (
-                    <button
-                      onClick={() => deleteService(service.id)}
-                      className="px-3 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-sm transition-colors"
-                    >
-                      <FaTrash />
-                    </button>
-                  )}
+                  {/* Always show delete button for services */}
+                  <button
+                    onClick={() => deleteService(service._id || service.id)}
+                    className="px-4 py-3 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl text-sm font-semibold transition-all duration-300 hover:shadow-md"
+                  >
+                    <FaTrash />
+                  </button>
                 </div>
               </div>
             </div>
@@ -292,125 +444,202 @@ const HousekeepingServiceManagement = ({ onBack }) => {
         })}
       </div>
 
-      {/* Create Service Modal */}
+      {/* Modern Create Service Modal */}
       {showCreateForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-screen overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Create New Housekeeping Service</h2>
-            <form onSubmit={handleCreateService}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newService.name}
-                    onChange={(e) => setNewService(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className={CARD + " w-full max-w-3xl max-h-[95vh] overflow-hidden shadow-2xl animate-slideUp"}>
+            {/* Enhanced Modal Header with Decorative Elements */}
+            <div className="relative bg-gradient-to-br from-[#3B5787] via-[#4A6B95] to-[#67BAE0] text-white p-8">
+              {/* Background Decorations */}
+              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-white/10 blur-xl"></div>
+              <div className="absolute -bottom-4 -left-4 h-16 w-16 rounded-full bg-white/15"></div>
+              <div className="absolute top-4 right-1/3 h-3 w-3 rounded-full bg-white/25"></div>
+
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm mr-6 shadow-lg">
+                    <FaPlus className="text-2xl" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold mb-1">{t('housekeeping.management.createNew')}</h2>
+                    <p className="text-blue-100 text-sm">{t('housekeeping.management.createDescription')}</p>
+                  </div>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category
-                  </label>
-                  <select
-                    value={newService.category}
-                    onChange={(e) => setNewService(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {serviceCategories.map(cat => (
-                      <option key={cat.value} value={cat.value}>{cat.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={newService.description}
-                  onChange={(e) => setNewService(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows="3"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Estimated Duration (minutes)
-                  </label>
-                  <input
-                    type="number"
-                    value={newService.estimatedDuration}
-                    onChange={(e) => setNewService(prev => ({ ...prev, estimatedDuration: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    min="5"
-                    max="240"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Availability
-                  </label>
-                  <select
-                    value={newService.availability}
-                    onChange={(e) => setNewService(prev => ({ ...prev, availability: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="always">24/7 Available</option>
-                    <option value="business-hours">Business Hours Only</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Special Instructions
-                </label>
-                <textarea
-                  value={newService.instructions}
-                  onChange={(e) => setNewService(prev => ({ ...prev, instructions: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows="2"
-                  placeholder="Instructions for guests when booking this service"
-                />
-              </div>
-
-              <div className="flex gap-3">
                 <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium transition-colors disabled:bg-gray-400"
-                >
-                  {submitting ? (
-                    <>
-                      <FaSpinner className="animate-spin mr-2" />
-                      Creating...
-                    </>
-                  ) : (
-                    'Create Service'
-                  )}
-                </button>
-                <button
-                  type="button"
                   onClick={() => setShowCreateForm(false)}
-                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+                  className="p-3 hover:bg-white/20 rounded-xl transition-all duration-300 hover:rotate-90"
                 >
-                  Cancel
+                  <FaTimes className="text-xl" />
                 </button>
               </div>
-            </form>
+            </div>
+
+            {/* Enhanced Modal Content with Better Layout */}
+            <div className="p-8 max-h-[calc(95vh-120px)] overflow-y-auto custom-scrollbar">
+              <form onSubmit={handleCreateService} className="space-y-8">
+                {/* Service Basic Information Section */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+                  <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 rounded-lg bg-blue-500 mr-3">
+                      <FaBroom className="text-white text-sm" />
+                    </div>
+                    {t('housekeeping.management.basicInformation')}
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-gray-700">
+                        {t('housekeeping.management.serviceName')} *
+                      </label>
+                      <input
+                        type="text"
+                        value={newService.name}
+                        onChange={(e) => setNewService(prev => ({ ...prev, name: e.target.value }))}
+                        className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
+                        placeholder={t('housekeeping.management.placeholders.serviceName')}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-gray-700">
+                        {t('housekeeping.management.category')} *
+                      </label>
+                      <select
+                        value={newService.category}
+                        onChange={(e) => setNewService(prev => ({ ...prev, category: e.target.value }))}
+                        className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
+                      >
+                        {serviceCategories.map(cat => (
+                          <option key={cat.value} value={cat.value}>{cat.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mt-6">
+                    <label className="block text-sm font-bold text-gray-700">
+                      {t('housekeeping.management.description')} *
+                    </label>
+                    <textarea
+                      value={newService.description}
+                      onChange={(e) => setNewService(prev => ({ ...prev, description: e.target.value }))}
+                      className={INPUT + " resize-none transition-all duration-300 focus:scale-[1.02]"}
+                      rows="4"
+                      placeholder={t('housekeeping.management.placeholders.description')}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Service Configuration Section */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+                  <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 rounded-lg bg-green-500 mr-3">
+                      <FaClock className="text-white text-sm" />
+                    </div>
+                    {t('housekeeping.management.serviceConfiguration')}
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-gray-700">
+                        {t('housekeeping.management.estimatedDuration')} ({t('housekeeping.management.minutes')})
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={newService.estimatedDuration}
+                          onChange={(e) => setNewService(prev => ({ ...prev, estimatedDuration: parseInt(e.target.value) }))}
+                          className={INPUT + " transition-all duration-300 focus:scale-[1.02] pr-16"}
+                          min="5"
+                          max="240"
+                          placeholder="30"
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium">
+                          {t('housekeeping.management.min')}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-gray-700">
+                        {t('housekeeping.management.availability')}
+                      </label>
+                      <select
+                        value={newService.availability}
+                        onChange={(e) => setNewService(prev => ({ ...prev, availability: e.target.value }))}
+                        className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
+                      >
+                        <option value="always">{t('housekeeping.management.always')}</option>
+                        <option value="business-hours">{t('housekeeping.management.businessHours')}</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Special Instructions Section */}
+                <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-2xl p-6 border border-purple-100">
+                  <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 rounded-lg bg-purple-500 mr-3">
+                      <FaCheck className="text-white text-sm" />
+                    </div>
+                    {t('housekeeping.management.additionalDetails')}
+                  </h3>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-gray-700">
+                      {t('housekeeping.management.specialInstructions')}
+                    </label>
+                    <textarea
+                      value={newService.instructions}
+                      onChange={(e) => setNewService(prev => ({ ...prev, instructions: e.target.value }))}
+                      className={INPUT + " resize-none transition-all duration-300 focus:scale-[1.02]"}
+                      rows="4"
+                      placeholder={t('housekeeping.management.placeholders.instructions')}
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      {t('housekeeping.management.instructionsHelp')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Enhanced Action Buttons */}
+                <div className="sticky bottom-0 bg-white border-t border-gray-100 p-6 -mx-8 -mb-8">
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateForm(false)}
+                      className={BTN.ghost + " flex-1 hover:bg-gray-200"}
+                    >
+                      <FaTimes className="mr-2" />
+                      {t('housekeeping.management.cancel')}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className={BTN.primary + " flex-2 shadow-xl hover:shadow-2xl"}
+                    >
+                      {submitting ? (
+                        <>
+                          <FaSpinner className="animate-spin mr-2" />
+                          {t('housekeeping.management.creating')}
+                        </>
+                      ) : (
+                        <>
+                          <FaPlus className="mr-2" />
+                          {t('housekeeping.management.createService')}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

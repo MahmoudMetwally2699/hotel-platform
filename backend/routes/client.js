@@ -1995,6 +1995,13 @@ router.get('/hotels/:hotelId/housekeeping-services', async (req, res) => {
   try {
     const { hotelId } = req.params;
 
+    // Add cache-busting headers to prevent stale service data
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+
     logger.info('🏨 Housekeeping services request:', {
       hotelId,
       timestamp: new Date().toISOString()
@@ -2015,54 +2022,22 @@ router.get('/hotels/:hotelId/housekeeping-services', async (req, res) => {
       hotelName: hotel.name
     });
 
-    // Get all service providers for this hotel (not just housekeeping category)
-    const providers = await ServiceProvider.find({
+    // Get all housekeeping services from Service collection for this hotel
+    const services = await Service.find({
       hotelId: hotelId,
+      category: 'housekeeping',
       isActive: true
-    }).select('businessName housekeepingServices categories');
-
-    // Collect all active housekeeping services
-    let allServices = [];
-
-    logger.info('Housekeeping services debug:', {
-      hotelId,
-      providersFound: providers.length,
-      providers: providers.map(p => ({
-        id: p._id,
-        businessName: p.businessName,
-        categories: p.categories,
-        housekeepingServicesCount: p.housekeepingServices ? p.housekeepingServices.length : 0
-      }))
-    });
-
-    providers.forEach(provider => {
-      if (provider.housekeepingServices && provider.housekeepingServices.length > 0) {
-        const activeServices = provider.housekeepingServices.filter(service => service.isActive);
-        logger.info('Provider housekeeping services:', {
-          providerId: provider._id,
-          businessName: provider.businessName,
-          totalServices: provider.housekeepingServices.length,
-          activeServices: activeServices.length,
-          services: activeServices.map(s => ({ id: s.id, name: s.name, isActive: s.isActive }))
-        });
-        allServices = allServices.concat(activeServices);
-      }
-    });
-
-    logger.info('Final housekeeping services:', {
-      totalActiveServices: allServices.length,
-      services: allServices.map(s => ({ id: s.id, name: s.name }))
-    });
+    }).populate('providerId', 'businessName rating').sort({ createdAt: -1 });
 
     logger.info('📤 Returning housekeeping services to guest:', {
       hotelId,
-      servicesCount: allServices.length,
-      servicesList: allServices.map(s => s.name)
+      servicesCount: services.length,
+      servicesList: services.map(s => s.name)
     });
 
     res.status(200).json({
       success: true,
-      data: allServices,
+      data: services,
       hotel: {
         id: hotel._id,
         name: hotel.name
@@ -2136,13 +2111,13 @@ router.post('/bookings/housekeeping', async (req, res) => {
     console.log('🔧 Housekeeping booking - Hotel found:', hotel.name);
     console.log('🔧 Housekeeping booking - Hotel phone:', hotel.phone);
 
-    // Handle both database services and custom frontend services
+    // Handle both database services and generic/custom frontend services
     let service = null;
     let serviceProvider = null;
 
-    if (serviceId.startsWith('custom-')) {
-      // This is a custom frontend service, find the hotel's housekeeping provider
-      console.log('🔧 Housekeeping booking - Custom service detected:', serviceId);
+    if (serviceId.startsWith('custom-') || serviceId.startsWith('generic-')) {
+      // This is a custom/generic frontend service, find the hotel's housekeeping provider
+      console.log('🔧 Housekeeping booking - Custom/Generic service detected:', serviceId);
 
       // Find the hotel's internal housekeeping service provider
       serviceProvider = await ServiceProvider.findOne({

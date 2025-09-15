@@ -40,30 +40,40 @@ const Icon = ({ type, className = "" }) => {
 // ---------------- UI tokens ----------------
 const BTN = {
   primary:
-    "inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white " +
+    "inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-white " +
     "bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#2A4A6B] hover:to-[#5BA8CC] " +
-    "shadow-sm hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787]",
+    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] transition-all duration-300 " +
+    "shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+  secondary:
+    "inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-[#3B5787] " +
+    "bg-white border-2 border-[#3B5787] hover:bg-[#3B5787] hover:text-white focus:outline-none " +
+    "focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] transition-all duration-300 shadow-md hover:shadow-lg",
   ghost:
-    "inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-[#3B5787] border border-gray-200 " +
-    "bg-white/70 hover:bg-white shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787]",
+    "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 " +
+    "bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 focus:outline-none " +
+    "focus:ring-2 focus:ring-offset-2 focus:ring-[#67BAE0] transition-all duration-200 shadow-sm",
   warn:
-    "inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-white " +
-    "bg-orange-600 hover:bg-orange-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500",
+    "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white " +
+    "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 focus:outline-none " +
+    "focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-300 shadow-md hover:shadow-lg",
   success:
-    "inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-white " +
-    "bg-green-600 hover:bg-green-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500",
+    "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white " +
+    "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 focus:outline-none " +
+    "focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-300 shadow-md hover:shadow-lg",
   danger:
-    "inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-white " +
-    "bg-red-600 hover:bg-red-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500",
+    "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white " +
+    "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:outline-none " +
+    "focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300 shadow-md hover:shadow-lg",
 };
 
 const INPUT =
-  "w-full rounded-xl border border-gray-200 bg-white/80 px-3 py-2 text-sm " +
-  "focus:outline-none focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0]";
+  "w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition-all duration-200 " +
+  "focus:outline-none focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] focus:bg-white " +
+  "hover:border-gray-300 placeholder-gray-400";
 
 const CARD =
-  "rounded-2xl border border-gray-100 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 " +
-  "shadow-sm hover:shadow-md transition-shadow";
+  "p-6 sm:p-8 rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-all duration-200 " +
+  "backdrop-blur-sm bg-white/90";
 
 // ---------------- Component ----------------
 const TransportationServiceCreator = () => {
@@ -109,15 +119,22 @@ const TransportationServiceCreator = () => {
   const fetchExistingServices = async () => {
     try {
       setLoading(true);
+      console.log("Fetching existing transportation services...");
       const response = await apiClient.get("/service/services?category=transportation");
+      console.log("Fetch response:", response.data);
+
       let services = [];
       if (response.data?.data?.services) services = response.data.data.services;
       else if (response.data?.services) services = response.data.services;
       else if (Array.isArray(response.data?.data)) services = response.data.data;
       else if (Array.isArray(response.data)) services = response.data;
+
+      console.log("Parsed services:", services);
+      console.log("Services count:", services.length);
+
       setExistingServices(services || []);
     } catch (error) {
-      console.error(error);
+      console.error("Fetch services error:", error);
       toast.error(t("serviceProvider.transportation.services.messages.loadFailed"));
     } finally {
       setLoading(false);
@@ -150,6 +167,85 @@ const TransportationServiceCreator = () => {
       description: service.description,
       transportationItems: service.transportationItems || [],
     });
+  };
+
+  // Edit mode vehicle management functions
+  const addVehicleToEditForm = (vehicleTypeId) => {
+    if (!vehicleTypeId) return;
+    const vehicleTemplate = availableVehicles.find((v) => v.id === vehicleTypeId);
+    if (!vehicleTemplate) return;
+    if (editFormData.transportationItems.some((item) => item.vehicleType === vehicleTypeId)) {
+      toast.error(t("serviceProvider.transportation.services.messages.vehicleAlreadyAdded"));
+      return;
+    }
+    const serviceTypes = (categoryTemplate?.serviceTypes || []).map((st) => ({
+      serviceTypeId: st.id,
+      name: st.name,
+      description: st.description,
+      pricingModel: st.pricingModel,
+      availability: {
+        days: [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday",
+        ],
+        hours: { start: "06:00", end: "23:00" },
+      },
+      advanceBooking: {
+        required: st.advanceRequired || false,
+        minimumHours: st.minimumHours || 0,
+        maximumDays: 30,
+      },
+      isPopular: st.isPopular || false,
+      isAvailable: true,
+    }));
+    const newVehicleItem = {
+      vehicleType: vehicleTypeId,
+      name: vehicleTemplate.name,
+      description: vehicleTemplate.description,
+      capacity: vehicleTemplate.capacity,
+      features: vehicleTemplate.features,
+      isAvailable: true,
+      serviceTypes,
+      notes: "",
+      dateAdded: new Date(),
+    };
+    setEditFormData((prev) => ({
+      ...prev,
+      transportationItems: [...prev.transportationItems, newVehicleItem],
+    }));
+    toast.success(
+      `${vehicleTemplate.name} ${t(
+        "serviceProvider.transportation.services.messages.vehicleAddedSuccessfully"
+      )}`
+    );
+  };
+
+  const removeVehicleFromEditForm = (vehicleIndex) => {
+    setEditFormData((prev) => ({
+      ...prev,
+      transportationItems: prev.transportationItems.filter((_, idx) => idx !== vehicleIndex),
+    }));
+    toast.success("Vehicle removed successfully");
+  };
+
+  const toggleEditFormServiceTypeAvailability = (vehicleIdx, serviceTypeId, isAvailable) => {
+    setEditFormData((prev) => ({
+      ...prev,
+      transportationItems: prev.transportationItems.map((vehicle, vIdx) => {
+        if (vIdx !== vehicleIdx) return vehicle;
+        return {
+          ...vehicle,
+          serviceTypes: vehicle.serviceTypes.map((st) =>
+            st.serviceTypeId === serviceTypeId ? { ...st, isAvailable } : st
+          ),
+        };
+      }),
+    }));
   };
   const cancelEditing = () => {
     setEditingService(null);
@@ -308,19 +404,38 @@ const TransportationServiceCreator = () => {
         subcategory: "vehicle_based",
         serviceType: "transportation_vehicles",
         transportationItems,
-        pricing: { basePrice: 0, pricingType: "quote-based", currency: "USD" },
+        pricing: {
+          basePrice: 1, // Minimum required value for validation
+          pricingType: "quote-based",
+          currency: "USD",
+          isQuoteBased: true // Flag to indicate this is quote-based pricing
+        },
         isActive: true,
       };
-      await apiClient.post("/service/categories/transportation/vehicles", serviceData);
+
+      // Debug logging
+      console.log("Creating new transportation service:", serviceData);
+      console.log("Current existing services count:", existingServices.length);
+
+      // Use the general services endpoint instead of transportation-specific endpoint
+      // to allow multiple transportation services per provider
+      const response = await apiClient.post("/service/services", serviceData);
+      console.log("Service creation response:", response.data);
+
       toast.success(
         t("serviceProvider.transportation.services.messages.quoteServiceCreatedSuccessfully")
       );
       setServiceDetails({ name: "", description: "", shortDescription: "", isActive: true });
       setTransportationItems([]);
       setActiveTab("manage");
-      fetchExistingServices();
+
+      // Force refresh the services list after a short delay to ensure DB has updated
+      setTimeout(async () => {
+        await fetchExistingServices();
+      }, 1000);
     } catch (error) {
-      console.error(error);
+      console.error("Service creation error:", error);
+      console.error("Error response:", error?.response?.data);
       toast.error(
         error?.response?.data?.message ||
           t("serviceProvider.transportation.services.messages.failedToCreateService")
@@ -398,132 +513,144 @@ const TransportationServiceCreator = () => {
 
   // ---------------- Render ----------------
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6">
-      {/* Glass Gradient Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#3B5787] via-[#4D6EA0] to-[#67BAE0] text-white shadow-2xl mb-6">
-        <div className="absolute -top-16 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-        <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        {/* Modern Header */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#3B5787] via-[#4A6B95] to-[#67BAE0] p-8 sm:p-12 text-white shadow-2xl mb-8">
+          {/* Decorative Elements */}
+          <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-white/10 blur-xl"></div>
+          <div className="absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/15"></div>
+          <div className="absolute top-8 right-1/4 h-6 w-6 rounded-full bg-white/20"></div>
+          <div className="absolute bottom-12 right-12 h-4 w-4 rounded-full bg-white/25"></div>
 
-        <div className="relative p-6 sm:p-10">
-          <div className="flex items-center gap-3 text-white/90">
-            <Icon type="list" />
-            <span className="uppercase tracking-wider text-xs font-semibold">
-              {t("serviceProvider.transportation.services.manageTitle") || "Transportation"}
-            </span>
-          </div>
-          <h1 className="mt-2 text-2xl sm:text-4xl font-extrabold leading-tight">
-            Build & Operate Transportation Services
-          </h1>
-          <p className="mt-2 sm:mt-3 text-white/85 max-w-2xl">
-            Create vehicle offerings, enable service types, and keep your catalog sharp.
-          </p>
-
-          {/* Tabs */}
-          <div className="mt-6 inline-flex rounded-2xl border border-white/20 bg-white/10 backdrop-blur shadow-sm">
-            <button
-              onClick={() => setActiveTab("manage")}
-              className={
-                "px-4 sm:px-6 py-2 rounded-2xl text-sm font-semibold transition " +
-                (activeTab === "manage"
-                  ? "bg-white text-[#3B5787]"
-                  : "text-white/90 hover:bg-white/20")
-              }
-            >
-              Manage
-            </button>
-            <button
-              onClick={() => setActiveTab("add")}
-              className={
-                "px-4 sm:px-6 py-2 rounded-2xl text-sm font-semibold transition " +
-                (activeTab === "add"
-                  ? "bg-white text-[#3B5787]"
-                  : "text-white/90 hover:bg-white/20")
-              }
-            >
-              Add New
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Sticky Toolbar (Manage only) */}
-      {activeTab === "manage" && (
-        <div className="sticky top-0 z-20 mb-5">
-          <div className={CARD + " p-3 sm:p-4"}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-gray-400">
-                  <Icon type="search" />
-                </span>
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search by name or description…"
-                  className={INPUT + " pl-9"}
-                />
+          <div className="relative z-10">
+            <div className="flex items-center mb-4">
+              <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm mr-4">
+                <Icon type="car" className="text-3xl" />
               </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 shrink-0">
-                  <Icon type="filter" className="mr-1" />
-                  Status
-                </span>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className={INPUT}
-                >
-                  <option value="all">All</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+              <div>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
+                  Transportation Services
+                </h1>
+                <div className="h-1 w-20 bg-gradient-to-r from-white/60 to-transparent rounded-full mt-2"></div>
               </div>
+            </div>
+            <p className="text-lg sm:text-xl text-white/90 max-w-2xl leading-relaxed">
+              Create vehicle offerings, enable service types, and keep your catalog sharp.
+            </p>
 
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 shrink-0">
-                  <Icon type="sort" className="mr-1" />
-                  Sort
+            {/* Stats Quick View */}
+            <div className="flex flex-wrap gap-6 mt-8">
+              <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-2">
+                <Icon type="car" className="text-xl mr-2" />
+                <span className="text-sm font-medium">
+                  {existingServices.length} Services
                 </span>
-                <select
-                  value={sortKey}
-                  onChange={(e) => setSortKey(e.target.value)}
-                  className={INPUT}
-                >
-                  <option value="updated">Recently Updated</option>
-                  <option value="name">Name</option>
-                  <option value="bookings">Bookings</option>
-                  <option value="revenue">Revenue</option>
-                </select>
-                <button
-                  onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-                  className={BTN.ghost + " shrink-0"}
-                  title="Toggle sort direction"
-                >
-                  {sortDir === "asc" ? "↑" : "↓"}
-                </button>
               </div>
-
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-sm text-[#3B5787] font-semibold">
-                  <Icon type="stats" className="mr-1" />
-                  {total} results
-                </div>
-                <select
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                  className={INPUT + " w-28"}
-                  title="Page size"
-                >
-                  <option value={4}>4 / page</option>
-                  <option value={6}>6 / page</option>
-                  <option value={8}>8 / page</option>
-                  <option value={12}>12 / page</option>
-                </select>
+              <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-2">
+                <Icon type="stats" className="text-xl mr-2" />
+                <span className="text-sm font-medium">
+                  Active: {existingServices.filter(s => s.isActive).length}
+                </span>
               </div>
             </div>
           </div>
         </div>
-      )}
+
+        {/* Modern Tab Navigation */}
+        <div className="relative mb-8">
+          <div className="flex bg-gray-100 rounded-2xl p-1 max-w-md mx-auto">
+            <button
+              onClick={() => setActiveTab("manage")}
+              className={
+                'flex-1 py-3 px-6 text-sm font-semibold rounded-xl transition-all duration-300 ' +
+                (activeTab === "manage"
+                  ? 'bg-white text-[#3B5787] shadow-lg transform scale-105'
+                  : 'text-gray-600 hover:text-[#3B5787] hover:bg-white/50')
+              }
+            >
+              <Icon type="list" className="mr-2" />
+              Manage Services
+            </button>
+            <button
+              onClick={() => setActiveTab("add")}
+              className={
+                'flex-1 py-3 px-6 text-sm font-semibold rounded-xl transition-all duration-300 ' +
+                (activeTab === "add"
+                  ? 'bg-white text-[#3B5787] shadow-lg transform scale-105'
+                  : 'text-gray-600 hover:text-[#3B5787] hover:bg-white/50')
+              }
+            >
+              <Icon type="plus" className="mr-2" />
+              Add New Service
+            </button>
+          </div>
+        </div>
+
+        {/* Modern Sticky Toolbar (Manage only) */}
+        {activeTab === "manage" && (
+          <div className="sticky top-0 z-20 mb-8">
+            <div className={CARD + " border-2 border-[#67BAE0]/20 bg-gradient-to-r from-white via-blue-50/30 to-white"}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#3B5787]">
+                    <Icon type="search" />
+                  </span>
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search services..."
+                    className={INPUT + " pl-12 bg-white border-[#67BAE0]/30 focus:border-[#3B5787]"}
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-[#3B5787] shrink-0 flex items-center">
+                    <Icon type="filter" className="mr-2" />
+                    Status
+                  </span>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className={INPUT + " bg-white border-[#67BAE0]/30 focus:border-[#3B5787]"}
+                  >
+                    <option value="all">All Services</option>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive Only</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-[#3B5787] shrink-0 flex items-center">
+                    <Icon type="sort" className="mr-2" />
+                    Sort
+                  </span>
+                  <select
+                    value={sortKey}
+                    onChange={(e) => setSortKey(e.target.value)}
+                    className={INPUT + " bg-white border-[#67BAE0]/30 focus:border-[#3B5787]"}
+                  >
+                    <option value="updated">Recently Updated</option>
+                    <option value="name">Name A-Z</option>
+                    <option value="bookings">Most Bookings</option>
+                    <option value="revenue">Highest Revenue</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+                    className={BTN.ghost + " flex-1 justify-center"}
+                    title="Toggle sort direction"
+                  >
+                    <Icon type="sort" />
+                    {sortDir === "asc" ? "↑ Ascending" : "↓ Descending"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
       {/* Content */}
       {activeTab === "manage" ? (
@@ -542,6 +669,11 @@ const TransportationServiceCreator = () => {
           toggleServiceAvailability={toggleServiceAvailability}
           deleteService={deleteService}
           getVehicleIcon={getVehicleIcon}
+          availableVehicles={availableVehicles}
+          categoryTemplate={categoryTemplate}
+          addVehicleToEditForm={addVehicleToEditForm}
+          removeVehicleFromEditForm={removeVehicleFromEditForm}
+          toggleEditFormServiceTypeAvailability={toggleEditFormServiceTypeAvailability}
         />
       ) : (
         <AddTab
@@ -558,6 +690,7 @@ const TransportationServiceCreator = () => {
           createService={createService}
         />
       )}
+      </div>
     </div>
   );
 };
@@ -578,6 +711,11 @@ const ManageTab = ({
   toggleServiceAvailability,
   deleteService,
   getVehicleIcon,
+  availableVehicles,
+  categoryTemplate,
+  addVehicleToEditForm,
+  removeVehicleFromEditForm,
+  toggleEditFormServiceTypeAvailability,
 }) => {
   const { t } = useTranslation();
 
@@ -595,119 +733,261 @@ const ManageTab = ({
 
   if (loading && pageData.length === 0) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} />
-        ))}
+      <div className={CARD + ' flex flex-col items-center justify-center py-16 text-[#3B5787]'}>
+        <div className="relative">
+          <div className="animate-spin h-12 w-12 border-4 border-[#67BAE0]/30 border-t-[#67BAE0] rounded-full" />
+          <div className="absolute inset-0 animate-pulse">
+            <div className="h-12 w-12 border-4 border-transparent border-t-[#3B5787]/20 rounded-full" />
+          </div>
+        </div>
+        <p className="mt-6 text-lg font-medium">Loading services...</p>
+        <p className="text-sm text-gray-500 mt-2">Please wait while we fetch your transportation services</p>
       </div>
     );
   }
 
   if (pageData.length === 0) {
     return (
-      <div className={CARD + " p-10 text-center"}>
-        <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 flex items-center justify-center">
-          <span className="text-2xl">🚗</span>
+      <div className={CARD + ' text-center py-20'}>
+        <div className="relative inline-block mb-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#3B5787]/20 to-[#67BAE0]/20 rounded-full blur-2xl"></div>
+          <Icon type="car" className="relative text-8xl text-gray-300" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-800">
-          {t("serviceProvider.transportation.services.noServicesFound")}
+        <h3 className="text-2xl font-bold text-gray-900 mb-4">
+          No Transportation Services Found
         </h3>
-        <p className="text-gray-500 mt-1">
-          {t("serviceProvider.transportation.services.noServicesDescription") ||
-            "Nothing to show just yet."}
+        <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+          Ready to get started? Create your first transportation service and start managing your fleet.
         </p>
       </div>
     );
   }
 
   return (
-    <>
-      {/* Card grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            Your Transportation Services
+          </h3>
+          <p className="text-gray-600">
+            {pageData.length} of {totalPages > 1 ? `${totalPages} pages` : 'total services'}
+          </p>
+        </div>
+      </div>
+
+      {/* Modern Cards grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {pageData.map((service) => (
           <div
             key={service._id}
             className={
-              CARD +
-              " p-5 hover:-translate-y-0.5 transition-transform duration-150 border border-gray-100"
+              editingService === service._id
+                ? 'lg:col-span-2 xl:col-span-3 ' + CARD + ' group transition-all duration-300 relative overflow-hidden'
+                : CARD + ' group hover:scale-105 transition-all duration-300 relative overflow-hidden'
             }
           >
+            {/* Background Pattern */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#67BAE0]/10 to-transparent rounded-bl-full"></div>
+
             {editingService === service._id ? (
-              // ------------ Edit Mode ------------
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t("serviceProvider.transportation.services.serviceName")}
-                  </label>
-                  <input
-                    className={INPUT}
-                    value={editFormData.name}
-                    onChange={(e) =>
-                      setEditFormData((p) => ({ ...p, name: e.target.value }))
-                    }
-                  />
+              // ------------ Enhanced Edit Mode with Vehicle Management ------------
+              <div className="relative z-10 space-y-8 p-8">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900">Edit Service</h3>
+                  <p className="text-gray-600 mt-2">Update your transportation service details</p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t("serviceProvider.transportation.services.description")}
-                  </label>
-                  <textarea
-                    rows={3}
-                    className={INPUT}
-                    value={editFormData.description}
-                    onChange={(e) =>
-                      setEditFormData((p) => ({ ...p, description: e.target.value }))
-                    }
-                  />
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Left Column - Basic Information */}
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-3">
+                        Service Name
+                      </label>
+                      <input
+                        className={INPUT + " text-lg"}
+                        value={editFormData.name}
+                        onChange={(e) =>
+                          setEditFormData((p) => ({ ...p, name: e.target.value }))
+                        }
+                        placeholder="Enter service name..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-3">
+                        Description
+                      </label>
+                      <textarea
+                        rows={6}
+                        className={INPUT}
+                        value={editFormData.description}
+                        onChange={(e) =>
+                          setEditFormData((p) => ({ ...p, description: e.target.value }))
+                        }
+                        placeholder="Describe your transportation service..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right Column - Vehicle Management */}
+                  <div className="space-y-6">
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-lg font-semibold text-gray-800">Vehicle Types</h4>
+                        <select
+                          onChange={(e) => addVehicleToEditForm(e.target.value)}
+                          className="text-sm border border-gray-300 rounded-lg px-4 py-2 focus:border-[#3B5787] focus:ring-[#3B5787]/20 min-w-[200px]"
+                          value=""
+                        >
+                          <option value="">Add Vehicle Type</option>
+                          {availableVehicles
+                            .filter((v) => !editFormData.transportationItems?.some((item) => item.vehicleType === v.id))
+                            .map((v) => (
+                              <option key={v.id} value={v.id}>
+                                {v.name} ({typeof v.capacity === "object" ? v.capacity.passengers : v.capacity} passengers)
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+
+                      {/* Display Current Vehicles */}
+                      {editFormData.transportationItems && editFormData.transportationItems.length > 0 ? (
+                        <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+                          {editFormData.transportationItems.map((vehicle, idx) => (
+                            <div key={idx} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-start gap-4 flex-1">
+                                  <div className="p-3 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-xl">
+                                    <Icon type={getVehicleIcon(vehicle.vehicleType)} className="text-white text-lg" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <h6 className="font-semibold text-gray-800 text-base mb-1">{vehicle.name}</h6>
+                                    <p className="text-gray-600 text-sm mb-3">{vehicle.description}</p>
+                                    <div className="flex items-center gap-3 text-sm mb-4">
+                                      <span className="bg-blue-100 text-[#3B5787] px-3 py-1 rounded-full font-medium">
+                                        👥 {vehicle?.capacity?.passengers} passengers
+                                      </span>
+                                      {vehicle?.capacity?.luggage != null && (
+                                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+                                          🧳 {vehicle.capacity.luggage} luggage
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {/* Service Types for this vehicle */}
+                                    <div>
+                                      <div className="grid grid-cols-1 gap-3">
+                                        {vehicle.serviceTypes.map((st, sIdx) => (
+                                          <div key={sIdx} className="bg-white border border-gray-200 rounded-lg p-3">
+                                            <div className="flex items-center justify-between">
+                                              <span className="text-sm font-medium text-gray-700">{st.name}</span>
+                                              <label className="flex items-center gap-2">
+                                                <input
+                                                  type="checkbox"
+                                                  checked={st.isAvailable}
+                                                  onChange={(e) =>
+                                                    toggleEditFormServiceTypeAvailability(idx, st.serviceTypeId, e.target.checked)
+                                                  }
+                                                  className="w-4 h-4 text-[#3B5787] border-gray-300 rounded focus:ring-[#3B5787]"
+                                                />
+                                                <span className="text-sm text-gray-600">Active</span>
+                                              </label>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => removeVehicleFromEditForm(idx)}
+                                  className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Remove vehicle"
+                                >
+                                  <Icon type="trash" className="text-lg" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 bg-gray-50 border border-gray-200 rounded-xl">
+                          <div className="text-gray-500 text-sm">
+                            No vehicle types added yet. Use the dropdown above to add vehicles.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2 pt-1">
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-4 pt-6 border-t border-gray-200 justify-center">
                   <button
                     onClick={() => saveEditedService(service._id)}
-                    className={BTN.success}
+                    className={BTN.primary + ' px-8 py-3 text-lg'}
                   >
                     <Icon type="save" />
-                    {t("serviceProvider.transportation.services.save")}
+                    Save Changes
                   </button>
-                  <button onClick={cancelEditing} className={BTN.ghost}>
+                  <button
+                    onClick={cancelEditing}
+                    className={BTN.ghost + ' px-8 py-3 text-lg'}
+                  >
                     <Icon type="times" />
-                    {t("common.cancel") || "Cancel"}
+                    Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              // ------------ View Mode ------------
-              <div className="space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900">{service.name}</h4>
-                    <p className="text-sm text-gray-600 mt-1">{service.description}</p>
+              // ------------ Enhanced View Mode ------------
+              <div className="relative z-10 space-y-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Icon type={getVehicleIcon(service.transportationItems?.[0]?.vehicleType)} className="text-2xl" />
+                      <h4 className="text-xl font-bold text-gray-900">{service.name}</h4>
+                    </div>
+                    <p className="text-gray-600 leading-relaxed">{service.description}</p>
                   </div>
-                  <span
-                    className={
-                      "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium " +
-                      (service.isActive
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800")
-                    }
-                  >
-                    {service.isActive ? t("common.active") || "Active" : t("common.inactive") || "Inactive"}
-                  </span>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={
+                      service.isActive
+                        ? 'px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200'
+                        : 'px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200'
+                    }>
+                      {service.isActive ? '● Active' : '● Inactive'}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Metrics */}
-                <div className="grid grid-cols-3 gap-3 rounded-xl border border-[#67BAE0]/20 bg-gradient-to-r from-[#3B5787]/5 to-[#67BAE0]/5 p-3">
-                  <Metric
-                    label={t("serviceProvider.transportation.services.vehicleTypes")}
-                    value={service.transportationItems?.length || 0}
-                  />
-                  <Metric
-                    label={t("serviceProvider.transportation.services.bookings")}
-                    value={service?.performance?.totalBookings || 0}
-                  />
-                  <Metric
-                    label={t("serviceProvider.transportation.services.revenue")}
-                    value={`$${service?.performance?.totalRevenue || 0}`}
-                  />
+                {/* Enhanced Stats */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 rounded-2xl p-4 text-center border border-[#67BAE0]/20">
+                    <div className="text-2xl font-bold text-[#3B5787] mb-1">
+                      {service.transportationItems?.length || 0}
+                    </div>
+                    <div className="text-xs text-gray-600 font-medium">
+                      Vehicles
+                    </div>
+                  </div>
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 text-center border border-blue-200">
+                    <div className="text-2xl font-bold text-blue-600 mb-1">
+                      {service?.performance?.totalBookings || service.stats?.bookings || service.totalBookings || 0}
+                    </div>
+                    <div className="text-xs text-gray-600 font-medium">
+                      Bookings
+                    </div>
+                  </div>
+                  <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-4 text-center border border-emerald-200">
+                    <div className="text-2xl font-bold text-emerald-600 mb-1">
+                      ${service?.performance?.totalRevenue || service.stats?.revenue || service.totalRevenue || 0}
+                    </div>
+                    <div className="text-xs text-gray-600 font-medium">
+                      Revenue
+                    </div>
+                  </div>
                 </div>
 
                 {/* Vehicle chips */}
@@ -728,22 +1008,28 @@ const ManageTab = ({
                   </div>
                 )}
 
-                {/* Actions */}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <button onClick={() => startEditingService(service)} className={BTN.primary}>
+                {/* Modern Actions */}
+                <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100">
+                  <button
+                    onClick={() => startEditingService(service)}
+                    className={BTN.secondary + ' flex-1 sm:flex-none'}
+                  >
                     <Icon type="edit" />
-                    {t("common.edit") || "Edit"}
+                    Edit
                   </button>
                   <button
                     onClick={() => toggleServiceAvailability(service._id, service.isActive)}
-                    className={service.isActive ? BTN.warn : BTN.success}
+                    className={(service.isActive ? BTN.warn : BTN.success) + ' flex-1 sm:flex-none'}
                   >
                     <Icon type="toggle" />
-                    {service.isActive ? t("common.deactivate") || "Deactivate" : t("common.activate") || "Activate"}
+                    {service.isActive ? 'Deactivate' : 'Activate'}
                   </button>
-                  <button onClick={() => deleteService(service._id)} className={BTN.danger}>
+                  <button
+                    onClick={() => deleteService(service._id)}
+                    className={BTN.danger + ' flex-1 sm:flex-none'}
+                  >
                     <Icon type="trash" />
-                    {t("common.delete") || "Delete"}
+                    Delete
                   </button>
                 </div>
               </div>
@@ -772,7 +1058,7 @@ const ManageTab = ({
           Next →
         </button>
       </div>
-    </>
+    </div>
   );
 };
 
@@ -809,177 +1095,231 @@ const AddTab = ({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Service Information */}
-      <div className={CARD + " p-5 sm:p-6"}>
-        <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
-          {t("serviceProvider.transportation.services.createTitle")}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field
-            label={t("serviceProvider.transportation.services.serviceNameRequired")}
-            value={serviceDetails.name}
-            onChange={(v) => setServiceDetails((p) => ({ ...p, name: v }))}
-            placeholder={t("serviceProvider.transportation.services.serviceNamePlaceholder")}
-          />
-          <Field
-            label={t("serviceProvider.transportation.services.shortDescription")}
-            value={serviceDetails.shortDescription}
-            onChange={(v) => setServiceDetails((p) => ({ ...p, shortDescription: v }))}
-            placeholder={t("serviceProvider.transportation.services.shortDescriptionPlaceholder")}
-          />
+    <div className="space-y-8">
+      {/* Modern Service Information Card */}
+      <div className={CARD + " border-2 border-[#67BAE0]/20 bg-gradient-to-br from-white via-blue-50/30 to-white"}>
+        <div className="border-b border-[#67BAE0]/20 p-6">
+          <div className="flex items-center">
+            <div className="p-3 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-2xl mr-4">
+              <Icon type="plus" className="text-white text-xl" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-[#3B5787]">
+                Create New Transportation Service
+              </h3>
+              <p className="text-gray-600 text-sm mt-1">
+                Set up your transportation service details and vehicle options
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t("serviceProvider.transportation.services.descriptionRequired")}
-          </label>
-          <textarea
-            rows={3}
-            className={INPUT}
-            value={serviceDetails.description}
-            onChange={(e) => setServiceDetails((p) => ({ ...p, description: e.target.value }))}
-            placeholder={t("serviceProvider.transportation.services.descriptionPlaceholder")}
-          />
+
+        <div className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-1">
+              <label className="block text-sm font-semibold text-[#3B5787] mb-2">
+                Service Name *
+              </label>
+              <input
+                value={serviceDetails.name}
+                onChange={(e) => setServiceDetails((p) => ({ ...p, name: e.target.value }))}
+                placeholder="e.g., Airport Transfer Service"
+                className={INPUT + " bg-white border-[#67BAE0]/30 focus:border-[#3B5787] focus:ring-[#3B5787]/20"}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Tip: Use unique names for each service to avoid conflicts
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-semibold text-[#3B5787] mb-2">
+                Short Description
+              </label>
+              <input
+                value={serviceDetails.description}
+                onChange={(e) => setServiceDetails((p) => ({ ...p, description: e.target.value }))}
+                placeholder="Brief service description..."
+                className={INPUT + " bg-white border-[#67BAE0]/30 focus:border-[#3B5787] focus:ring-[#3B5787]/20"}
+              />
+            </div>
+
+            <div className="lg:col-span-2 space-y-1">
+              <label className="block text-sm font-semibold text-[#3B5787] mb-2">
+                Service Details
+              </label>
+              <textarea
+                value={serviceDetails.details}
+                onChange={(e) => setServiceDetails((p) => ({ ...p, details: e.target.value }))}
+                placeholder="Provide detailed information about your transportation service..."
+                rows={4}
+                className={INPUT + " bg-white border-[#67BAE0]/30 focus:border-[#3B5787] focus:ring-[#3B5787]/20 resize-none"}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Vehicle Types */}
-      <div className={CARD + " p-5 sm:p-6"}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <h4 className="text-lg font-semibold text-gray-800">
-            {t("serviceProvider.transportation.services.availableVehicleTypes")}
-          </h4>
-          <select
-            onChange={(e) => addVehicleFromDropdown(e.target.value)}
-            className={INPUT + " sm:w-80"}
-            value=""
-          >
-            <option value="">{t("serviceProvider.transportation.services.addVehicleType")}</option>
-            {availableVehicles.map((v) => (
-              <option key={v.id} value={v.id}>
-                {t(`transportation.vehicleTypes.${v.id}`)}{" "}
-                ({typeof v.capacity === "object" ? v.capacity.passengers : v.capacity}{" "}
-                {t("serviceProvider.transportation.services.passengers")})
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* Modern Vehicle Types Section */}
+      <div className={CARD + " border-2 border-[#67BAE0]/20 bg-gradient-to-br from-white via-blue-50/30 to-white"}>
+        <div className="border-b border-[#67BAE0]/20 p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center">
+              <div className="p-3 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-2xl mr-4">
+                <Icon type="car" className="text-white text-xl" />
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-[#3B5787]">
+                  Available Vehicle Types
+                </h4>
+                <p className="text-gray-600 text-sm">
+                  Add and configure vehicle options for your service
+                </p>
+              </div>
+            </div>
 
-        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-4">
-          <div className="flex items-center gap-2 text-blue-900 font-medium">
-            <Icon type="info" /> {t("serviceProvider.transportation.services.quoteBased")}
+            <div className="sm:w-80">
+              <select
+                onChange={(e) => addVehicleFromDropdown(e.target.value)}
+                className={INPUT + " bg-white border-[#67BAE0]/30 focus:border-[#3B5787] focus:ring-[#3B5787]/20"}
+                value=""
+              >
+                <option value="">Add Vehicle Type</option>
+                {availableVehicles.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name} ({typeof v.capacity === "object" ? v.capacity.passengers : v.capacity} passengers)
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <p className="text-sm text-blue-800 mt-1">
-            {t("serviceProvider.transportation.services.quoteBasedDescription")}
-          </p>
         </div>
 
-        {transportationItems.length > 0 ? (
-          <div className="space-y-4">
-            {transportationItems.map((vehicle, idx) => (
-              <div key={idx} className="rounded-2xl border border-gray-200 bg-white p-4">
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-start">
-                    <span className="text-2xl mr-3">
-                      <Icon type={getVehicleIcon(vehicle.vehicleType)} />
-                    </span>
-                    <div>
-                      <h5 className="font-semibold text-gray-900">{vehicle.name}</h5>
-                      <p className="text-sm text-gray-600">{vehicle.description}</p>
-                      <p className="text-xs text-[#3B5787] mt-1">
-                        {t("serviceProvider.transportation.services.capacity") || "Capacity"}:{" "}
-                        {vehicle?.capacity?.passengers}{" "}
-                        {t("serviceProvider.transportation.services.passengers")}
-                        {vehicle?.capacity?.luggage != null &&
-                          `, ${vehicle.capacity.luggage} ${t("serviceProvider.transportation.services.luggage") || "luggage"}`}
-                      </p>
-                      {Array.isArray(vehicle.features) && vehicle.features.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {vehicle.features.map((f, i) => (
-                            <span key={i} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                              {f}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => removeTransportationItem(idx)}
-                    className="text-red-600 hover:text-red-800"
-                    title={t("common.remove") || "Remove"}
-                  >
-                    <Icon type="trash" className="text-xl" />
-                  </button>
-                </div>
+        <div className="p-6">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 mb-6">
+            <div className="flex items-center gap-3 text-[#3B5787] font-semibold mb-2">
+              <Icon type="info" className="text-lg" />
+              Quote-Based Pricing System
+            </div>
+            <p className="text-sm text-gray-700">
+              Transportation services use quote-based pricing. Customers will request quotes for their specific trips,
+              and you can provide customized pricing based on distance, duration, and service type.
+            </p>
+          </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {vehicle.serviceTypes.map((st, sIdx) => (
-                    <div key={sIdx} className="rounded-xl border border-gray-200 p-3 bg-white">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-sm">{st.name}</span>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={st.isAvailable}
-                            onChange={(e) =>
-                              toggleItemServiceTypeAvailability(idx, st.serviceTypeId, e.target.checked)
-                            }
-                            className="h-4 w-4"
-                          />
-                          <span className="ml-1 text-xs">{t("common.available") || "Available"}</span>
-                        </label>
+          {transportationItems.length > 0 ? (
+          <div className="space-y-6">
+            {transportationItems.map((vehicle, idx) => (
+              <div key={idx} className={CARD + " border-2 border-[#67BAE0]/20 bg-gradient-to-r from-white to-blue-50/30 hover:shadow-xl transition-all duration-300"}>
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-2xl">
+                        <Icon type={getVehicleIcon(vehicle.vehicleType)} className="text-white text-xl" />
                       </div>
-                      <p className="text-xs text-gray-600 mb-1">{st.description}</p>
-                      <p className="text-xs text-blue-700">
-                        {t("serviceProvider.transportation.services.model") || "Model"}:{" "}
-                        {String(st.pricingModel || "").replace("_", " ")}
-                      </p>
-                      {st.isPopular && (
-                        <div className="text-xs text-amber-700 font-medium flex items-center mt-1">
-                          <Icon type="info" className="mr-1" />
-                          {t("serviceProvider.transportation.services.popularChoice")}
+                      <div>
+                        <h5 className="text-lg font-bold text-[#3B5787] mb-1">{vehicle.name}</h5>
+                        <p className="text-gray-600 text-sm mb-2">{vehicle.description}</p>
+                        <div className="flex items-center gap-4 text-xs">
+                          <span className="bg-blue-100 text-[#3B5787] px-3 py-1 rounded-full font-medium">
+                            👥 {vehicle?.capacity?.passengers} passengers
+                          </span>
+                          {vehicle?.capacity?.luggage != null && (
+                            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+                              🧳 {vehicle.capacity.luggage} luggage
+                            </span>
+                          )}
                         </div>
-                      )}
+                        {Array.isArray(vehicle.features) && vehicle.features.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {vehicle.features.map((f, i) => (
+                              <span key={i} className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white text-xs px-3 py-1 rounded-full font-medium">
+                                {f}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  ))}
+                    <button
+                      onClick={() => removeTransportationItem(idx)}
+                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors"
+                      title="Remove vehicle"
+                    >
+                      <Icon type="trash" className="text-xl" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {vehicle.serviceTypes.map((st, sIdx) => (
+                      <div key={sIdx} className="bg-white border border-[#67BAE0]/20 rounded-2xl p-4 hover:shadow-lg transition-all duration-300">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="font-semibold text-[#3B5787]">{st.name}</span>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={st.isAvailable}
+                              onChange={(e) =>
+                                toggleItemServiceTypeAvailability(idx, st.serviceTypeId, e.target.checked)
+                              }
+                              className="w-4 h-4 text-[#3B5787] border-[#67BAE0] rounded focus:ring-[#3B5787]"
+                            />
+                            <span className="text-xs font-medium text-gray-600">Available</span>
+                          </label>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">{st.description}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="bg-gradient-to-r from-[#3B5787]/10 to-[#67BAE0]/10 text-[#3B5787] text-xs px-2 py-1 rounded-lg font-medium">
+                            {String(st.pricingModel || "").replace("_", " ")}
+                          </span>
+                          {st.isPopular && (
+                            <span className="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded-lg font-medium flex items-center">
+                              ⭐ Popular
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-10 border-2 border-dashed border-gray-300 rounded-2xl bg-white">
-            <div className="mx-auto mb-3 h-12 w-12 rounded-full bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 flex items-center justify-center">
-              <span className="text-2xl">🚗</span>
+          <div className="text-center py-12 border-2 border-dashed border-[#67BAE0]/30 rounded-2xl bg-gradient-to-br from-white to-blue-50/30">
+            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 flex items-center justify-center">
+              <span className="text-3xl">🚗</span>
             </div>
-            <div className="font-semibold text-gray-800">
-              {t("serviceProvider.transportation.services.noVehicleTypesAdded")}
+            <div className="font-bold text-[#3B5787] text-lg mb-2">
+              No Vehicle Types Added Yet
             </div>
-            <div className="text-sm text-gray-500">
-              {t("serviceProvider.transportation.services.useDropdownToAdd")}
+            <div className="text-gray-600 text-sm">
+              Use the dropdown above to add vehicle types to your transportation service
             </div>
           </div>
         )}
-      </div>
+        </div>
 
-      {/* Create CTA */}
+      {/* Modern Create Button */}
       <div className="flex justify-center sm:justify-end">
         <button
           onClick={createService}
           disabled={loading || transportationItems.length === 0}
           className={
-            BTN.primary +
-            " px-6 py-3 " +
-            (loading || transportationItems.length === 0 ? " opacity-70 cursor-not-allowed" : "")
+            'px-8 py-4 rounded-2xl font-semibold text-white text-sm transition-all duration-300 flex items-center gap-3 ' +
+            (loading || transportationItems.length === 0
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:shadow-lg hover:scale-105 active:scale-95'
+            )
           }
         >
-          <Icon type="save" />
+          <Icon type="save" className="text-lg" />
           {loading
-            ? t("serviceProvider.transportation.services.messages.creatingService")
-            : t("serviceProvider.transportation.services.createTransportationService")}
+            ? "Creating Service..."
+            : "Create Transportation Service"}
         </button>
       </div>
     </div>
+  </div>
   );
 };
 

@@ -69,6 +69,22 @@ const serviceSchema = new mongoose.Schema({
   serviceType: {
     type: String,
     required: [true, 'Service type is required']
+  },
+
+  // Cuisine Type (for restaurant/dining services)
+  cuisineType: {
+    type: String,
+    enum: [
+      'local',
+      'italian',
+      'chinese',
+      'indian',
+      'mexican',
+      'japanese',
+      'american',
+      'mediterranean',
+      'international'
+    ]
   },  // Service Combinations (for complex services like laundry)
   serviceCombinations: [{
     id: {

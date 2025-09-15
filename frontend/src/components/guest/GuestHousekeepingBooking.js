@@ -305,7 +305,9 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const fetchAvailableServices = useCallback(async () => {
     try {
       console.log('Fetching housekeeping services for hotel:', hotelId);
-      const response = await apiClient.get(`/client/hotels/${hotelId}/housekeeping-services`);
+      // Add cache-busting timestamp to prevent browser caching
+      const timestamp = new Date().getTime();
+      const response = await apiClient.get(`/client/hotels/${hotelId}/housekeeping-services?_t=${timestamp}`);
       console.log('Housekeeping services response:', response.data);
 
       const activeServices = (response.data.data || []).filter(service => service.isActive);
@@ -486,13 +488,16 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
               {/* Top Row - Two Items */}
               <div className="grid grid-cols-2 gap-4">
                 {serviceCategories.slice(0, 2).map(category => {
-                  const categoryServices = services.filter(s => s.category === category.value);
+                  const categoryServices = services.filter(s => s.category === category.value || s.subcategory === category.value);
+                  // Only show category if there are actual services for it
+                  if (categoryServices.length === 0) return null;
+
                   return (
                     <button
                       key={category.value}
                       onClick={() => {
                         const firstService = categoryServices[0];
-                        if (firstService) handleServiceSelect(firstService);
+                        handleServiceSelect(firstService);
                       }}
                       className="group bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-all w-full"
                     >
@@ -506,18 +511,21 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                       <h3 className="font-medium text-gray-900 text-sm text-center">{category.label}</h3>
                     </button>
                   );
-                })}
+                }).filter(Boolean)}
               </div>
 
               {/* Bottom Row - Centered Single Item */}
               {serviceCategories.slice(2).map(category => {
-                const categoryServices = services.filter(s => s.category === category.value);
+                const categoryServices = services.filter(s => s.category === category.value || s.subcategory === category.value);
+                // Only show category if there are actual services for it
+                if (categoryServices.length === 0) return null;
+
                 return (
                   <div key={category.value} className="flex justify-center">
                     <button
                       onClick={() => {
                         const firstService = categoryServices[0];
-                        if (firstService) handleServiceSelect(firstService);
+                        handleServiceSelect(firstService);
                       }}
                       className="group bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-all w-40"
                     >
@@ -532,7 +540,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                     </button>
                   </div>
                 );
-              })}
+              }).filter(Boolean)}
             </div>
           </div>
         </div>

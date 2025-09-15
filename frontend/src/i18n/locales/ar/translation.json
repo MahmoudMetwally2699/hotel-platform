@@ -1191,11 +1191,25 @@
     "subtitle": "إدارة طلبات وعروض أسعار المواصلات",
     "myBookings": "حجوزات المواصلات الخاصة بي",
     "bookingsSubtitle": "عرض وإدارة طلبات وحجوزات المواصلات الخاصة بك",
+    "createQuote": "إنشاء عرض سعر",
+    "createQuoteFor": "إنشاء عرض سعر لـ",
+    "tripDetails": "تفاصيل الرحلة",
+    "noBookings": "لا توجد حجوزات",
+    "noBookingsDescription": "لم يتم العثور على حجوزات مواصلات للحالة المحددة.",
     "tabs": {
       "pendingQuotes": "عروض الأسعار المعلقة",
       "pendingPayment": "في انتظار الدفع",
       "confirmed": "مؤكد",
       "completed": "مكتمل"
+    },
+    "errors": {
+      "fetchBookings": "فشل في تحميل الحجوزات",
+      "invalidPrice": "يرجى إدخال سعر صحيح",
+      "createQuote": "فشل في إنشاء عرض السعر",
+      "fetchBookingDetails": "فشل في تحميل تفاصيل الحجز"
+    },
+    "success": {
+      "quoteCreated": "تم إنشاء عرض السعر بنجاح"
     },
     "status": {
       "pending_quote": "في انتظار عرض السعر",
@@ -1216,7 +1230,7 @@
       "to": "إلى",
       "quotedPrice": "السعر المعروض",
       "vehicle": "المركبة",
-      "passengers": "المسافرون",
+      "passengers": "مسافرين",
       "scheduledTime": "الوقت المجدول",
       "viewDetails": "عرض التفاصيل",
       "payNow": "ادفع الآن",

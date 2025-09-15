@@ -164,16 +164,38 @@ const TransportationBookingPage = () => {
             // Keep the first service as primary for backwards compatibility
             setService(transportationServices[0]);
           } else {
-            toast.error(t('errors.loadServices'));
-            navigate(`/hotels/${hotelId}/categories`);
+            // Show specific error message for transportation services
+            const errorMessage = '🚗 Transportation services are currently unavailable.\n\nNo vehicles are configured for this hotel.\n\nPlease contact the hotel staff or try again later.';
+
+            // Show browser alert for immediate attention
+            alert(errorMessage);
+
+            // Also show toast notification
+            toast.error('🚗 Transportation services are currently unavailable. No vehicles are configured for this hotel.');
+
+            // Add a delay before redirect to let user read the message
+            setTimeout(() => {
+              navigate(`/hotels/${hotelId}/categories`);
+            }, 2000);
             return;
           }
         }
 
       } catch (error) {
         console.error('Error fetching service details:', error);
-        toast.error(t('errors.loadServices'));
-        navigate(`/hotels/${hotelId}/categories`);
+
+        const errorMessage = '❌ Failed to load transportation services.\n\nPlease try again or contact support.\n\nError: ' + (error.response?.data?.message || error.message || 'Unknown error');
+
+        // Show browser alert for immediate attention
+        alert(errorMessage);
+
+        // Also show toast notification
+        toast.error('❌ Failed to load transportation services. Please try again or contact support.');
+
+        // Add a delay before redirect to let user read the message
+        setTimeout(() => {
+          navigate(`/hotels/${hotelId}/categories`);
+        }, 2000);
       } finally {
         setLoading(false);
       }

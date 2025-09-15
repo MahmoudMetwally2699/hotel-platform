@@ -1,17 +1,16 @@
 /**
- * Restaurant Service Creator Component
- *
- * Similar to LaundryServiceCreator but for restaurant services
+ * Restaurant Service Creator Component — Modern Restyle
  * Allows service providers to create and manage restaurant services with menu items
+ * - Brand: #3B5787 / #67BAE0
+ * - Mobile-first, glass gradient header, modern cards
+ * - Enhanced animations and modern UI components
  */
 
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import {
   FaUtensils,
   FaPlus,
-  FaMinus,
   FaTrash,
   FaEdit,
   FaSave,
@@ -20,12 +19,102 @@ import {
   FaEyeSlash,
   FaSpinner,
   FaListUl,
-  FaCog
+  FaCog,
+  FaArrowLeft
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 
-const RestaurantServiceCreator = () => {
-  const { t } = useTranslation();
+// ---------------- UI Design Tokens ----------------
+const BTN = {
+  primary:
+    "inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-white " +
+    "bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#2A4A6B] hover:to-[#5BA8CC] " +
+    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] transition-all duration-300 " +
+    "shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+  secondary:
+    "inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-[#3B5787] " +
+    "bg-white border-2 border-[#3B5787] hover:bg-[#3B5787] hover:text-white focus:outline-none " +
+    "focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] transition-all duration-300 shadow-md hover:shadow-lg",
+  danger:
+    "inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-white " +
+    "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 " +
+    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300 " +
+    "shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+  ghost:
+    "inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 " +
+    "bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 " +
+    "transition-all duration-300",
+  tab:
+    "inline-flex items-center justify-center px-6 py-3 rounded-t-xl text-sm font-semibold transition-all duration-300",
+  tabActive:
+    "text-white bg-gradient-to-r from-[#3B5787] to-[#67BAE0] shadow-lg",
+  tabInactive:
+    "text-gray-600 bg-gray-100 hover:bg-gray-200 hover:text-gray-800"
+};
+
+const CARD = "bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300";
+const INPUT = "w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#3B5787]/20 focus:border-[#3B5787] transition-colors";
+
+// Add custom styles for animations and scrollbar
+const modalStyles = `
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slideUp {
+    animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #3B5787 0%, #67BAE0 100%);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #2A4A6B 0%, #5BA8CC 100%);
+  }
+`;
+
+const RestaurantServiceCreator = ({ onBack }) => {
+  // const { t } = useTranslation(); // Currently not used
+
+  // Inject custom styles for modal animations
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = modalStyles;
+    document.head.appendChild(styleElement);
+
+    return () => {
+      if (document.head.contains(styleElement)) {
+        document.head.removeChild(styleElement);
+      }
+    };
+  }, []);
 
   // Active tab management
   const [activeTab, setActiveTab] = useState('add');
@@ -42,10 +131,16 @@ const RestaurantServiceCreator = () => {
   // Menu items state
   const [menuItems, setMenuItems] = useState([]);
 
+  // Menu item editing state
+  const [editingItemIndex, setEditingItemIndex] = useState(null);
+
   // Management state
   const [existingServices, setExistingServices] = useState([]);
   const [editingService, setEditingService] = useState(null);
   const [editFormData, setEditFormData] = useState({});
+
+  // Service menu item editing state
+  const [editingServiceMenuItem, setEditingServiceMenuItem] = useState(null);
 
   useEffect(() => {
     if (activeTab === 'manage') {
@@ -59,6 +154,8 @@ const RestaurantServiceCreator = () => {
   const fetchExistingServices = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Fetching existing services...');
+
       const response = await apiClient.get('/service/services?category=dining');
 
       let services = [];
@@ -69,9 +166,9 @@ const RestaurantServiceCreator = () => {
       }
 
       setExistingServices(services);
-      console.log('Restaurant services loaded:', services);
+      console.log('✅ Restaurant services loaded:', services.length, 'services');
     } catch (error) {
-      console.error('Error fetching restaurant services:', error);
+      console.error('❌ Error fetching restaurant services:', error);
       toast.error('Failed to load restaurant services');
     } finally {
       setLoading(false);
@@ -102,13 +199,13 @@ const RestaurantServiceCreator = () => {
   };
 
   /**
-   * Update item price
+   * Update item price (legacy function - now handled by edit form)
    */
-  const updateItemPrice = (itemName, price) => {
-    setMenuItems(prev => prev.map(item =>
-      item.name === itemName ? { ...item, price: parseFloat(price) || 0 } : item
-    ));
-  };
+  // const updateItemPrice = (itemName, price) => {
+  //   setMenuItems(prev => prev.map(item =>
+  //     item.name === itemName ? { ...item, price: parseFloat(price) || 0 } : item
+  //   ));
+  // };
 
   /**
    * Update item availability
@@ -120,12 +217,113 @@ const RestaurantServiceCreator = () => {
   };
 
   /**
-   * Update item details
+   * Update item details (legacy function - now handled by edit form)
    */
-  const updateItemDetails = (itemName, field, value) => {
-    setMenuItems(prev => prev.map(item =>
-      item.name === itemName ? { ...item, [field]: value } : item
+  // const updateItemDetails = (itemName, field, value) => {
+  //   setMenuItems(prev => prev.map(item =>
+  //     item.name === itemName ? { ...item, [field]: value } : item
+  //   ));
+  // };
+
+  /**
+   * Start editing a menu item
+   */
+  const startEditingItem = (index) => {
+    setEditingItemIndex(index);
+  };
+
+  /**
+   * Cancel editing a menu item
+   */
+  const cancelEditingItem = () => {
+    setEditingItemIndex(null);
+  };
+
+  /**
+   * Update menu item with new data
+   */
+  const updateMenuItem = (index, updatedItem) => {
+    setMenuItems(prev => prev.map((item, i) =>
+      i === index ? updatedItem : item
     ));
+    setEditingItemIndex(null);
+  };
+
+  /**
+   * Start editing a service menu item
+   */
+  const startEditingServiceMenuItem = (serviceId, itemIndex) => {
+    setEditingServiceMenuItem({ serviceId, itemIndex });
+  };
+
+  /**
+   * Cancel editing service menu item
+   */
+  const cancelEditingServiceMenuItem = () => {
+    setEditingServiceMenuItem(null);
+  };
+
+  /**
+   * Update service menu item
+   */
+  const updateServiceMenuItem = async (serviceId, itemIndex, updatedItem) => {
+    console.log('🔄 Starting updateServiceMenuItem:', { serviceId, itemIndex, updatedItem });
+
+    try {
+      // Show loading toast
+      toast.info('Updating menu item...');
+
+      // Find the service and update its menu item
+      const service = existingServices.find(s => s._id === serviceId);
+      if (!service) {
+        console.error('❌ Service not found:', serviceId);
+        toast.error('Service not found');
+        return;
+      }
+
+      console.log('✅ Service found:', service.name);
+
+      const updatedMenuItems = [...service.menuItems];
+      updatedMenuItems[itemIndex] = updatedItem;
+
+      console.log('🔄 Sending update request with:', {
+        serviceId,
+        menuItemsCount: updatedMenuItems.length,
+        updatedItem
+      });
+
+      const response = await apiClient.put(`/service/services/${serviceId}`, {
+        ...service,
+        menuItems: updatedMenuItems
+      });
+
+      console.log('📥 Response received:', response.data);
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response data status:', response.data.status);
+
+      if (response.data.status === 'success') {
+        toast.success('✅ Menu item updated successfully!');
+        console.log('✅ Update successful, refreshing services...');
+        await fetchExistingServices(); // Refresh the services list
+        console.log('✅ About to close edit form...');
+        setEditingServiceMenuItem(null);
+        console.log('✅ Edit form should be closed now');
+        return true; // Indicate success
+      } else {
+        console.error('❌ Update failed - response not successful:', response.data);
+        toast.error('Failed to update menu item - server response not successful');
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error updating service menu item:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      toast.error(`Failed to update menu item: ${error.response?.data?.message || error.message}`);
+      return false;
+    }
   };
 
   /**
@@ -196,13 +394,21 @@ const RestaurantServiceCreator = () => {
 
       const response = await apiClient.post('/service/services', serviceData);
 
-      if (response.data.success) {
-        toast.success('Restaurant service created successfully!');
+      console.log('📥 Create restaurant service response:', response.data);
+
+      if (response.data.status === 'success') {
+        toast.success('✅ Restaurant service created successfully!');
+        console.log('✅ Service created successfully, resetting form...');
         // Reset form
         setServiceDetails({ name: '', description: '', cuisineType: '', mealTypes: [] });
         setMenuItems([]);
+        console.log('✅ Form reset, refreshing services list...');
+        // Refresh the services list to show the new service
+        await fetchExistingServices();
+        console.log('✅ Services list refreshed, switching to manage tab...');
         // Switch to manage tab to see the created service
         setActiveTab('manage');
+        console.log('✅ Switched to manage tab');
       } else {
         throw new Error(response.data.message || 'Failed to create service');
       }
@@ -222,6 +428,14 @@ const RestaurantServiceCreator = () => {
     setEditFormData({
       name: service.name,
       description: service.description,
+      cuisineType: service.cuisineType,
+      menuItems: service.menuItems || []
+    });
+    console.log('🔄 Starting to edit service:', service);
+    console.log('🔄 Edit form data set to:', {
+      name: service.name,
+      description: service.description,
+      cuisineType: service.cuisineType,
       menuItems: service.menuItems || []
     });
   };
@@ -241,13 +455,18 @@ const RestaurantServiceCreator = () => {
     try {
       setLoading(true);
 
+      console.log('🔄 Saving edited service:', { serviceId, editFormData });
+
       const response = await apiClient.put(`/service/services/${serviceId}`, editFormData);
 
-      if (response.data.success) {
+      console.log('📥 Save response:', response.data);
+
+      if (response.data.status === 'success') {
         toast.success('Restaurant service updated successfully!');
         setEditingService(null);
         setEditFormData({});
-        fetchExistingServices();
+        await fetchExistingServices();
+        console.log('✅ Service updated and form closed');
       } else {
         throw new Error(response.data.message || 'Failed to update service');
       }
@@ -264,15 +483,51 @@ const RestaurantServiceCreator = () => {
    */
   const toggleServiceAvailability = async (serviceId, currentStatus) => {
     try {
+      console.log('🔄 Toggling service availability:', { serviceId, currentStatus });
+
       const response = await apiClient.patch(`/service/services/${serviceId}/toggle-availability`);
 
-      if (response.data.success) {
+      console.log('📥 Toggle response:', response.data);
+
+      if (response.data.status === 'success') {
         toast.success(`Service ${currentStatus ? 'deactivated' : 'activated'} successfully`);
-        fetchExistingServices();
+        await fetchExistingServices();
+        console.log('✅ Service availability toggled successfully');
+      } else {
+        throw new Error(response.data.message || 'Failed to toggle service availability');
       }
     } catch (error) {
       console.error('Error toggling service availability:', error);
       toast.error('Failed to update service availability');
+    }
+  };
+
+  /**
+   * Delete a service
+   */
+  const handleDeleteService = async (serviceId) => {
+    if (!window.confirm('Are you sure you want to delete this service? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      console.log('🔄 Deleting service:', serviceId);
+
+      const response = await apiClient.delete(`/service/services/${serviceId}`);
+
+      console.log('📥 Delete response:', response.data);
+
+      if (response.data.status === 'success') {
+        toast.success('Service deleted successfully');
+        console.log('✅ Service deleted, refreshing services...');
+        await fetchExistingServices();
+        console.log('✅ Services list refreshed');
+      } else {
+        throw new Error(response.data.message || 'Failed to delete service');
+      }
+    } catch (error) {
+      console.error('Error deleting service:', error);
+      toast.error('Failed to delete service');
     }
   };
 
@@ -295,36 +550,38 @@ const RestaurantServiceCreator = () => {
    */
   const renderAddItemsTab = () => {
     return (
-      <div className="space-y-6">
-        {/* Service Details */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-xl font-semibold mb-4">
-            <FaUtensils className="inline mr-2" />
+      <div className="space-y-8">
+        {/* Service Details Section */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+          <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+            <div className="p-2 rounded-lg bg-blue-500 mr-3">
+              <FaUtensils className="text-white text-sm" />
+            </div>
             Restaurant Service Details
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-gray-700">
                 Service Name *
               </label>
               <input
                 type="text"
                 value={serviceDetails.name}
                 onChange={(e) => setServiceDetails(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
                 placeholder="e.g., Downtown Restaurant, Rooftop Dining"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-gray-700">
                 Cuisine Type
               </label>
               <select
                 value={serviceDetails.cuisineType}
                 onChange={(e) => setServiceDetails(prev => ({ ...prev, cuisineType: e.target.value }))}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
               >
                 <option value="">Select Cuisine Type</option>
                 <option value="local">Local Cuisine</option>
@@ -340,24 +597,26 @@ const RestaurantServiceCreator = () => {
             </div>
           </div>
 
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="space-y-2 mt-6">
+            <label className="block text-sm font-bold text-gray-700">
               Service Description
             </label>
             <textarea
               value={serviceDetails.description}
               onChange={(e) => setServiceDetails(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              rows="3"
+              className={INPUT + " resize-none transition-all duration-300 focus:scale-[1.02]"}
+              rows="4"
               placeholder="Describe your restaurant service, specialties, dining experience..."
             />
           </div>
         </div>
 
         {/* Add Custom Menu Items Section */}
-        <div className="p-6 bg-blue-50 rounded-lg">
-          <h3 className="text-xl font-semibold mb-4">
-            <FaPlus className="inline mr-2" />
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+          <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+            <div className="p-2 rounded-lg bg-green-500 mr-3">
+              <FaPlus className="text-white text-sm" />
+            </div>
             Add Custom Menu Item
           </h3>
 
@@ -366,139 +625,174 @@ const RestaurantServiceCreator = () => {
 
         {/* Menu Items List */}
         {menuItems.length > 0 && (
-          <div>
-            <h3 className="text-xl font-semibold mb-4">
-              <FaListUl className="inline mr-2" />
+          <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-2xl p-6 border border-purple-100">
+            <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+              <div className="p-2 rounded-lg bg-purple-500 mr-3">
+                <FaListUl className="text-white text-sm" />
+              </div>
               Your Menu Items ({menuItems.length})
             </h3>
 
             <div className="space-y-6">
               {menuItems.map((item, itemIndex) => (
-                <div key={itemIndex} className="p-6 border border-gray-200 rounded-lg bg-white">
-                  {/* Item Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                      {item.imageUrl ? (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.name}
-                          className="w-16 h-16 object-cover rounded-lg mr-3"
-                        />
-                      ) : (
-                        <span className="text-2xl mr-3">{item.icon}</span>
-                      )}
-                      <div>
-                        <h4 className="text-lg font-semibold">{item.name}</h4>
-                        <p className="text-sm text-gray-500">Category: {getCategoryName(item.category)}</p>
+                <div key={itemIndex} className={CARD + " group hover:scale-[1.02] transition-all duration-300 relative"}>
+                  {/* Background Pattern */}
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#67BAE0]/10 to-transparent rounded-bl-full"></div>
+
+                  {editingItemIndex === itemIndex ? (
+                    // Edit Mode
+                    <EditMenuItemForm
+                      item={item}
+                      onSave={(updatedItem) => updateMenuItem(itemIndex, updatedItem)}
+                      onCancel={cancelEditingItem}
+                    />
+                  ) : (
+                    // View Mode
+                    <>
+                      {/* Item Header */}
+                      <div className="relative z-10 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white p-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            {item.imageUrl ? (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.name}
+                                className="w-16 h-16 object-cover rounded-xl mr-4 border-2 border-white/20"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl mr-4 flex items-center justify-center text-2xl">
+                                {item.icon}
+                              </div>
+                            )}
+                            <div>
+                              <h4 className="text-xl font-bold">{item.name}</h4>
+                              <p className="text-blue-100 text-sm">
+                                {getCategoryName(item.category)} • ${item.price} • {item.preparationTime || 15} min
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-4">
+                            {/* Item Availability Toggle */}
+                            <label className="flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={item.isAvailable}
+                                onChange={(e) => updateItemAvailability(item.name, e.target.checked)}
+                                className="sr-only"
+                              />
+                              <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                item.isAvailable ? 'bg-green-500' : 'bg-red-500'
+                              }`}>
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                  item.isAvailable ? 'translate-x-6' : 'translate-x-1'
+                                }`} />
+                              </div>
+                              <span className="ml-3 text-sm font-medium">
+                                {item.isAvailable ? (
+                                  <>
+                                    <FaEye className="inline mr-1" />
+                                    Available
+                                  </>
+                                ) : (
+                                  <>
+                                    <FaEyeSlash className="inline mr-1" />
+                                    Unavailable
+                                  </>
+                                )}
+                              </span>
+                            </label>
+
+                            <button
+                              onClick={() => startEditingItem(itemIndex)}
+                              className="p-2 hover:bg-white/20 rounded-lg transition-colors text-blue-200 hover:text-white"
+                            >
+                              <FaEdit />
+                            </button>
+
+                            <button
+                              onClick={() => removeItem(item.name)}
+                              className="p-2 hover:bg-white/20 rounded-lg transition-colors text-red-200 hover:text-white"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-4">
-                      {/* Item Availability Toggle */}
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={item.isAvailable}
-                          onChange={(e) => updateItemAvailability(item.name, e.target.checked)}
-                          className="mr-2"
-                        />
-                        <span className={`text-sm ${item.isAvailable ? 'text-green-600' : 'text-red-600'}`}>
-                          {item.isAvailable ? <FaEye className="inline mr-1" /> : <FaEyeSlash className="inline mr-1" />}
-                          {item.isAvailable ? 'Available' : 'Unavailable'}
-                        </span>
-                      </label>
+                      {/* Item Details */}
+                      <div className="relative z-10 p-6">
+                        {/* Description */}
+                        {item.description && (
+                          <div className="mb-4">
+                            <h5 className="text-sm font-bold text-gray-700 mb-2">Description</h5>
+                            <p className="text-gray-600 leading-relaxed">{item.description}</p>
+                          </div>
+                        )}
 
-                      <button
-                        onClick={() => removeItem(item.name)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
-                  </div>
+                        {/* Details Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                          <div className="bg-blue-50 rounded-lg p-3">
+                            <div className="text-sm font-bold text-gray-700 mb-1">Price</div>
+                            <div className="text-lg font-bold text-blue-600">${item.price}</div>
+                          </div>
+                          <div className="bg-green-50 rounded-lg p-3">
+                            <div className="text-sm font-bold text-gray-700 mb-1">Prep Time</div>
+                            <div className="text-lg font-bold text-green-600">{item.preparationTime || 15} min</div>
+                          </div>
+                          <div className="bg-orange-50 rounded-lg p-3">
+                            <div className="text-sm font-bold text-gray-700 mb-1">Spicy Level</div>
+                            <div className="text-lg font-bold text-orange-600 capitalize">{item.spicyLevel || 'mild'}</div>
+                          </div>
+                          <div className="bg-purple-50 rounded-lg p-3">
+                            <div className="text-sm font-bold text-gray-700 mb-1">Category</div>
+                            <div className="text-lg font-bold text-purple-600">{getCategoryName(item.category)}</div>
+                          </div>
+                        </div>
 
-                  {/* Item Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Price (USD) *
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.price}
-                        onChange={(e) => updateItemPrice(item.name, e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        placeholder="0.00"
-                      />
-                    </div>
+                        {/* Dietary Info */}
+                        <div className="flex flex-wrap gap-3 mb-4">
+                          {item.isVegetarian && (
+                            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                              🌱 Vegetarian
+                            </span>
+                          )}
+                          {item.isVegan && (
+                            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                              🥬 Vegan
+                            </span>
+                          )}
+                          {item.spicyLevel && item.spicyLevel !== 'mild' && (
+                            <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
+                              🌶️ {item.spicyLevel.charAt(0).toUpperCase() + item.spicyLevel.slice(1)}
+                            </span>
+                          )}
+                        </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Preparation Time (minutes)
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={item.preparationTime}
-                        onChange={(e) => updateItemDetails(item.name, 'preparationTime', parseInt(e.target.value) || 15)}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        placeholder="15"
-                      />
-                    </div>
+                        {/* Allergens */}
+                        {item.allergens && item.allergens.length > 0 && (
+                          <div className="mb-4">
+                            <h5 className="text-sm font-bold text-gray-700 mb-2">Allergens</h5>
+                            <div className="flex flex-wrap gap-2">
+                              {item.allergens.map((allergen, idx) => (
+                                <span key={idx} className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                                  ⚠️ {allergen}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description
-                      </label>
-                      <textarea
-                        value={item.description}
-                        onChange={(e) => updateItemDetails(item.name, 'description', e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        rows="2"
-                        placeholder="Describe the dish, ingredients, cooking method..."
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Spicy Level
-                      </label>
-                      <select
-                        value={item.spicyLevel}
-                        onChange={(e) => updateItemDetails(item.name, 'spicyLevel', e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="mild">Mild</option>
-                        <option value="medium">Medium</option>
-                        <option value="hot">Hot</option>
-                        <option value="very_hot">Very Hot</option>
-                      </select>
-                    </div>
-
-                    <div className="flex items-center gap-4 pt-4">
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={item.isVegetarian}
-                          onChange={(e) => updateItemDetails(item.name, 'isVegetarian', e.target.checked)}
-                          className="mr-2"
-                        />
-                        <span className="text-sm">Vegetarian</span>
-                      </label>
-
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={item.isVegan}
-                          onChange={(e) => updateItemDetails(item.name, 'isVegan', e.target.checked)}
-                          className="mr-2"
-                        />
-                        <span className="text-sm">Vegan</span>
-                      </label>
-                    </div>
-                  </div>
+                        {/* Additional Notes */}
+                        {item.notes && (
+                          <div>
+                            <h5 className="text-sm font-bold text-gray-700 mb-2">Additional Notes</h5>
+                            <p className="text-gray-600 text-sm italic">{item.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -506,14 +800,23 @@ const RestaurantServiceCreator = () => {
         )}
 
         {/* Submit Button */}
-        <div className="flex justify-center">
+        <div className="flex justify-center mt-8">
           <button
             onClick={submitService}
             disabled={loading || menuItems.length === 0}
-            className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
+            className={BTN.primary + " px-8 py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"}
           >
-            {loading ? <FaSpinner className="animate-spin mr-2" /> : <FaSave className="mr-2" />}
-            {loading ? 'Creating Service...' : 'Create Restaurant Service'}
+            {loading ? (
+              <>
+                <FaSpinner className="animate-spin mr-2" />
+                Creating Service...
+              </>
+            ) : (
+              <>
+                <FaSave className="mr-2" />
+                Create Restaurant Service
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -526,139 +829,363 @@ const RestaurantServiceCreator = () => {
   const renderManageItemsTab = () => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center p-8">
-          <FaSpinner className="text-4xl mr-2 animate-spin" />
-          <span>Loading services...</span>
+        <div className="flex items-center justify-center p-12">
+          <div className="text-center">
+            <FaSpinner className="text-6xl text-[#3B5787] animate-spin mb-4 mx-auto" />
+            <p className="text-lg text-gray-600">Loading services...</p>
+          </div>
         </div>
       );
     }
 
     if (existingServices.length === 0) {
       return (
-        <div className="text-center py-12">
-          <FaUtensils className="text-6xl text-gray-300 mb-4 mx-auto" />
-          <h3 className="text-xl font-semibold text-gray-600 mb-2">No Restaurant Services Found</h3>
-          <p className="text-gray-500 mb-6">You haven't created any restaurant services yet.</p>
-          <button
-            onClick={() => setActiveTab('add')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-          >
-            <FaPlus className="mr-2" />
-            Create Your First Service
-          </button>
+        <div className="text-center py-16">
+          <div className="max-w-md mx-auto">
+            <div className="p-8 rounded-3xl bg-gradient-to-br from-gray-50 to-blue-50 mb-6">
+              <FaUtensils className="text-8xl text-gray-300 mb-4 mx-auto" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-3">No Restaurant Services Found</h3>
+            <p className="text-gray-600 mb-8 leading-relaxed">You haven't created any restaurant services yet. Start by adding your first service to showcase your culinary offerings.</p>
+            <button
+              onClick={() => setActiveTab('add')}
+              className={BTN.primary + " px-8 py-4 text-lg"}
+            >
+              <FaPlus className="mr-2" />
+              Create Your First Service
+            </button>
+          </div>
         </div>
       );
     }
 
     return (
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-xl font-semibold mb-6">Manage Restaurant Services</h3>
+      <div className="space-y-8">
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-100">
+          <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+            <div className="p-2 rounded-lg bg-orange-500 mr-3">
+              <FaCog className="text-white text-sm" />
+            </div>
+            Manage Restaurant Services
+          </h3>
 
           <div className="space-y-6">
             {existingServices.map((service) => (
-              <div key={service._id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div key={service._id} className={CARD + " group hover:scale-[1.01] transition-all duration-300"}>
                 {editingService === service._id ? (
-                  // Edit Mode
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Service Name</label>
-                      <input
-                        type="text"
-                        value={editFormData.name}
-                        onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                      />
+                  // Enhanced Edit Mode - All Fields
+                  <div className="relative">
+                    {/* Edit Mode Header */}
+                    <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white p-6 rounded-t-2xl">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm mr-4">
+                            <FaEdit className="text-xl" />
+                          </div>
+                          <h3 className="text-xl font-bold">Edit Restaurant Service</h3>
+                        </div>
+                        <button
+                          onClick={cancelEditing}
+                          className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                        >
+                          <FaTimes className="text-lg" />
+                        </button>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                      <textarea
-                        value={editFormData.description}
-                        onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                        rows="3"
-                      />
-                    </div>
+                    {/* Edit Form Content */}
+                    <div className="p-8 space-y-8">
+                      {/* Basic Information Section */}
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+                        <h4 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                          <div className="p-2 rounded-lg bg-blue-500 mr-3">
+                            <FaUtensils className="text-white text-sm" />
+                          </div>
+                          Basic Information
+                        </h4>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => saveEditedService(service._id)}
-                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                      >
-                        <FaSave className="mr-1" />
-                        Save
-                      </button>
-                      <button
-                        onClick={cancelEditing}
-                        className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                      >
-                        <FaTimes className="mr-1" />
-                        Cancel
-                      </button>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="block text-sm font-bold text-gray-700">Service Name *</label>
+                            <input
+                              type="text"
+                              value={editFormData.name || ''}
+                              onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                              className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
+                              placeholder="Enter service name"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="block text-sm font-bold text-gray-700">Cuisine Type</label>
+                            <select
+                              value={editFormData.cuisineType || ''}
+                              onChange={(e) => setEditFormData(prev => ({ ...prev, cuisineType: e.target.value }))}
+                              className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
+                            >
+                              <option value="">Select Cuisine Type</option>
+                              <option value="local">Local Cuisine</option>
+                              <option value="italian">Italian</option>
+                              <option value="chinese">Chinese</option>
+                              <option value="indian">Indian</option>
+                              <option value="mexican">Mexican</option>
+                              <option value="japanese">Japanese</option>
+                              <option value="american">American</option>
+                              <option value="mediterranean">Mediterranean</option>
+                              <option value="international">International</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 mt-6">
+                          <label className="block text-sm font-bold text-gray-700">Service Description</label>
+                          <textarea
+                            value={editFormData.description || ''}
+                            onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
+                            className={INPUT + " resize-none transition-all duration-300 focus:scale-[1.02]"}
+                            rows="4"
+                            placeholder="Describe your restaurant service, specialties, dining experience..."
+                          />
+                        </div>
+                      </div>
+
+                      {/* Menu Items Management Section */}
+                      <div className="bg-purple-50 rounded-xl p-6 mt-6">
+                        <h4 className="font-bold text-gray-800 mb-4 flex items-center">
+                          <FaListUl className="mr-2 text-purple-600" />
+                          Menu Items Management
+                        </h4>
+
+                        {service.menuItems && service.menuItems.length > 0 ? (
+                          <div className="space-y-4">
+                            {service.menuItems.map((item, index) => (
+                              <div key={index} className="bg-white rounded-lg p-4 border border-purple-200">
+                                {editingServiceMenuItem &&
+                                 editingServiceMenuItem.serviceId === service._id &&
+                                 editingServiceMenuItem.itemIndex === index ? (
+                                  // Edit Mode for Service Menu Item
+                                  <ServiceMenuItemEditForm
+                                    item={item}
+                                    onSave={async (updatedItem) => await updateServiceMenuItem(service._id, index, updatedItem)}
+                                    onCancel={cancelEditingServiceMenuItem}
+                                  />
+                                ) : (
+                                  // View Mode
+                                  <>
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center">
+                                        <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mr-3">
+                                          {item.icon || '🍽️'}
+                                        </div>
+                                        <div>
+                                          <h5 className="font-semibold text-gray-800">{item.name}</h5>
+                                          <p className="text-sm text-gray-600">
+                                            ${item.price} • {item.preparationTime || 15} min
+                                            {item.category && ` • ${item.category}`}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          onClick={() => startEditingServiceMenuItem(service._id, index)}
+                                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                          title="Edit menu item"
+                                        >
+                                          <FaEdit />
+                                        </button>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                          item.isAvailable !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                        }`}>
+                                          {item.isAvailable !== false ? 'Available' : 'Unavailable'}
+                                        </span>
+                                        {item.isVegetarian && (
+                                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                                            🌱 Veg
+                                          </span>
+                                        )}
+                                        {item.spicyLevel && item.spicyLevel !== 'mild' && (
+                                          <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                                            🌶️ {item.spicyLevel}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    {item.description && (
+                                      <p className="text-sm text-gray-600 mt-2 ml-15">{item.description}</p>
+                                    )}
+                                    {item.allergens && item.allergens.length > 0 && (
+                                      <div className="mt-2 ml-15">
+                                        <span className="text-xs text-gray-500">Allergens: </span>
+                                        {item.allergens.map((allergen, idx) => (
+                                          <span key={idx} className="inline-block px-1 py-0.5 bg-red-50 text-red-700 rounded text-xs mr-1">
+                                            {allergen}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {item.notes && (
+                                      <div className="mt-2 ml-15">
+                                        <span className="text-xs text-gray-500">Notes: </span>
+                                        <span className="text-xs text-gray-600 italic">{item.notes}</span>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <FaUtensils className="mx-auto text-4xl mb-2 text-gray-300" />
+                            <p>No menu items found for this service</p>
+                            <p className="text-sm">Menu items are managed in the "Add Items" tab when creating services</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Enhanced Action Buttons */}
+                      <div className="flex gap-4 pt-4">
+                        <button
+                          onClick={() => saveEditedService(service._id)}
+                          className={BTN.primary + " flex-1"}
+                        >
+                          <FaSave className="mr-2" />
+                          Save Changes
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className={BTN.secondary + " flex-1"}
+                        >
+                          <FaTimes className="mr-2" />
+                          Cancel
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ) : (
-                  // View Mode
-                  <div>
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-800">{service.name}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{service.description}</p>
-                      </div>
+                  // Enhanced View Mode
+                  <div className="relative">
+                    {/* Service Header */}
+                    <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm mr-4">
+                            <FaUtensils className="text-2xl" />
+                          </div>
+                          <div>
+                            <h4 className="text-2xl font-bold">{service.name}</h4>
+                            <p className="text-blue-100 text-sm mt-1">
+                              {service.cuisineType ? `${service.cuisineType.charAt(0).toUpperCase() + service.cuisineType.slice(1)} Cuisine` : 'Restaurant Service'}
+                            </p>
+                          </div>
+                        </div>
 
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          service.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {service.isActive ? 'Active' : 'Inactive'}
-                        </span>
+                        <div className="flex items-center gap-4">
+                          <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                            service.isActive
+                              ? 'bg-green-500 text-white'
+                              : 'bg-red-500 text-white'
+                          }`}>
+                            {service.isActive ? 'Active' : 'Inactive'}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Service Statistics */}
-                    <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-blue-600">
-                          {service.menuItems ? service.menuItems.length : 0}
-                        </div>
-                        <div className="text-xs text-gray-600">Menu Items</div>
+                    {/* Service Content */}
+                    <div className="p-6">
+                      {/* Description */}
+                      <div className="mb-6">
+                        <h5 className="text-sm font-bold text-gray-700 mb-2">Description</h5>
+                        <p className="text-gray-600 leading-relaxed">{service.description || 'No description provided'}</p>
                       </div>
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-green-600">
-                          {service.performance?.totalBookings || 0}
-                        </div>
-                        <div className="text-xs text-gray-600">Orders</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-lg font-semibold text-purple-600">
-                          ${service.performance?.totalRevenue || 0}
-                        </div>
-                        <div className="text-xs text-gray-600">Revenue</div>
-                      </div>
-                    </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => startEditingService(service)}
-                        className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                      >
-                        <FaEdit className="mr-1" />
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => toggleServiceAvailability(service._id, service.isActive)}
-                        className={`px-3 py-2 rounded text-sm ${
-                          service.isActive
-                            ? 'bg-red-600 text-white hover:bg-red-700'
-                            : 'bg-green-600 text-white hover:bg-green-700'
-                        }`}
-                      >
-                        {service.isActive ? <FaEyeSlash className="mr-1" /> : <FaEye className="mr-1" />}
-                        {service.isActive ? 'Deactivate' : 'Activate'}
-                      </button>
+                      {/* Service Details Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div className="bg-blue-50 rounded-xl p-4">
+                          <div className="flex items-center mb-2">
+                            <div className="p-2 rounded-lg bg-blue-500 mr-3">
+                              <FaListUl className="text-white text-sm" />
+                            </div>
+                            <h6 className="font-bold text-gray-800">Menu Items</h6>
+                          </div>
+                          <p className="text-2xl font-bold text-blue-600">
+                            {service.menuItems ? service.menuItems.length : 0}
+                          </p>
+                          <p className="text-sm text-gray-600">Available items</p>
+                        </div>
+
+                        <div className="bg-green-50 rounded-xl p-4">
+                          <div className="flex items-center mb-2">
+                            <div className="p-2 rounded-lg bg-green-500 mr-3">
+                              <FaUtensils className="text-white text-sm" />
+                            </div>
+                            <h6 className="font-bold text-gray-800">Orders</h6>
+                          </div>
+                          <p className="text-2xl font-bold text-green-600">0</p>
+                          <p className="text-sm text-gray-600">Total orders</p>
+                        </div>
+
+                        <div className="bg-purple-50 rounded-xl p-4">
+                          <div className="flex items-center mb-2">
+                            <div className="p-2 rounded-lg bg-purple-500 mr-3">
+                              <span className="text-white text-sm">$</span>
+                            </div>
+                            <h6 className="font-bold text-gray-800">Revenue</h6>
+                          </div>
+                          <p className="text-2xl font-bold text-purple-600">$0</p>
+                          <p className="text-sm text-gray-600">Total earned</p>
+                        </div>
+                      </div>
+
+                      {/* Service Info */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                          <h6 className="text-sm font-bold text-gray-700 mb-2">Category</h6>
+                          <span className="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700">
+                            {service.category || 'Dining'}
+                          </span>
+                        </div>
+                        <div>
+                          <h6 className="text-sm font-bold text-gray-700 mb-2">Created</h6>
+                          <p className="text-sm text-gray-600">
+                            {service.createdAt ? new Date(service.createdAt).toLocaleDateString() : 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-3 pt-4 border-t border-gray-200">
+                        <button
+                          onClick={() => startEditingService(service)}
+                          className={BTN.secondary + " flex-1"}
+                        >
+                          <FaEdit className="mr-2" />
+                          Edit Service
+                        </button>
+                        <button
+                          onClick={() => toggleServiceAvailability(service._id, service.isActive)}
+                          className={`flex-1 ${service.isActive ? BTN.danger : BTN.primary}`}
+                        >
+                          {service.isActive ? (
+                            <>
+                              <FaEyeSlash className="mr-2" />
+                              Deactivate
+                            </>
+                          ) : (
+                            <>
+                              <FaEye className="mr-2" />
+                              Activate
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteService(service._id)}
+                          className="px-4 py-3 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl text-sm font-semibold transition-all duration-300 hover:shadow-md"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -671,50 +1198,75 @@ const RestaurantServiceCreator = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          <FaUtensils className="inline mr-3 text-orange-600" />
-          Restaurant Service Management
-        </h1>
-        <p className="text-gray-600">
-          Create and manage your restaurant services and menu items
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        {/* Modern Header */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#3B5787] via-[#4A6B95] to-[#67BAE0] p-8 sm:p-12 text-white shadow-2xl mb-8">
+          {/* Decorative Elements */}
+          <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-white/10 blur-xl"></div>
+          <div className="absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/15"></div>
+          <div className="absolute top-8 right-1/4 h-6 w-6 rounded-full bg-white/20"></div>
+          <div className="absolute bottom-12 right-12 h-4 w-4 rounded-full bg-white/25"></div>
 
-      {/* Tab Navigation */}
-      <div className="bg-white rounded-lg shadow-sm mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex">
-            <button
-              onClick={() => setActiveTab('add')}
-              className={`py-2 px-4 border-b-2 font-medium text-sm ${
-                activeTab === 'add'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <FaPlus className="inline mr-2" />
-              Add Restaurant Service
-            </button>
-            <button
-              onClick={() => setActiveTab('manage')}
-              className={`py-2 px-4 border-b-2 font-medium text-sm ${
-                activeTab === 'manage'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <FaCog className="inline mr-2" />
-              Manage Services
-            </button>
-          </nav>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                {onBack && (
+                  <button
+                    onClick={onBack}
+                    className="mr-6 p-3 rounded-2xl bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300"
+                  >
+                    <FaArrowLeft className="text-xl" />
+                  </button>
+                )}
+                <div className="flex items-center">
+                  <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm mr-6">
+                    <FaUtensils className="text-4xl" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-2">
+                      Restaurant Services
+                    </h1>
+                    <div className="h-1 w-20 bg-gradient-to-r from-white/60 to-transparent rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p className="text-lg text-blue-100 max-w-2xl">
+              Create and manage your restaurant services and menu items for hotel guests
+            </p>
+          </div>
         </div>
 
-        <div className="p-6">
-          {activeTab === 'add' && renderAddItemsTab()}
-          {activeTab === 'manage' && renderManageItemsTab()}
+        {/* Modern Tab Navigation */}
+        <div className={CARD + " mb-8"}>
+          <div className="p-2">
+            <nav className="flex gap-2">
+              <button
+                onClick={() => setActiveTab('add')}
+                className={`${BTN.tab} ${
+                  activeTab === 'add' ? BTN.tabActive : BTN.tabInactive
+                }`}
+              >
+                <FaPlus className="mr-2" />
+                Add Restaurant Service
+              </button>
+              <button
+                onClick={() => setActiveTab('manage')}
+                className={`${BTN.tab} ${
+                  activeTab === 'manage' ? BTN.tabActive : BTN.tabInactive
+                }`}
+              >
+                <FaCog className="mr-2" />
+                Manage Services
+              </button>
+            </nav>
+          </div>
+
+          <div className="p-8">
+            {activeTab === 'add' && renderAddItemsTab()}
+            {activeTab === 'manage' && renderManageItemsTab()}
+          </div>
         </div>
       </div>
     </div>
@@ -1052,6 +1604,39 @@ const CustomMenuItemForm = ({ onAddItem }) => {
             ))}
           </select>
         </div>
+
+        {/* Preparation Time */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Preparation Time (minutes)
+          </label>
+          <input
+            type="number"
+            min="1"
+            value={formData.preparationTime}
+            onChange={(e) => handleInputChange('preparationTime', e.target.value)}
+            placeholder="15"
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Spicy Level */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Spicy Level
+          </label>
+          <select
+            value={formData.spicyLevel}
+            onChange={(e) => handleInputChange('spicyLevel', e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+          >
+            {spicyLevelOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Image Upload Section */}
@@ -1104,38 +1689,6 @@ const CustomMenuItemForm = ({ onAddItem }) => {
             </p>
           </div>
         )}
-
-        {/* Preparation Time */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Preparation Time (minutes)
-          </label>
-          <input
-            type="number"
-            min="1"
-            value={formData.preparationTime}
-            onChange={(e) => handleInputChange('preparationTime', e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Spicy Level */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Spicy Level
-          </label>
-          <select
-            value={formData.spicyLevel}
-            onChange={(e) => handleInputChange('spicyLevel', e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          >
-            {spicyLevelOptions.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
 
       {/* Description */}
@@ -1251,6 +1804,675 @@ const CustomMenuItemForm = ({ onAddItem }) => {
         </button>
       </div>
     </form>
+  );
+};
+
+/**
+ * Edit Menu Item Form Component
+ * Allows editing all menu item fields in a comprehensive form
+ */
+const EditMenuItemForm = ({ item, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    name: item.name || '',
+    category: item.category || 'mains',
+    description: item.description || '',
+    price: item.price || '',
+    icon: item.icon || '🍽️',
+    imageUrl: item.imageUrl || '',
+    preparationTime: item.preparationTime || 15,
+    isVegetarian: item.isVegetarian || false,
+    isVegan: item.isVegan || false,
+    spicyLevel: item.spicyLevel || 'mild',
+    allergens: item.allergens || [],
+    notes: item.notes || '',
+    isAvailable: item.isAvailable !== undefined ? item.isAvailable : true
+  });
+
+  const [allergenInput, setAllergenInput] = useState('');
+
+  const categoryOptions = [
+    { value: 'appetizers', label: 'Appetizers' },
+    { value: 'mains', label: 'Main Courses' },
+    { value: 'desserts', label: 'Desserts' },
+    { value: 'beverages', label: 'Beverages' },
+    { value: 'breakfast', label: 'Breakfast' },
+    { value: 'lunch', label: 'Lunch' },
+    { value: 'dinner', label: 'Dinner' },
+    { value: 'snacks', label: 'Snacks' }
+  ];
+
+  const iconOptions = [
+    '🍽️', '🍕', '🍔', '🍗', '🥩', '🐟', '🍝', '🥗', '🍜', '🍲', '🥙', '🌮', '🍣', '🍤', '🍰', '🧁', '🍪', '☕', '🥤', '🍷', '🥘', '🍛', '🍱'
+  ];
+
+  const spicyLevelOptions = [
+    { value: 'mild', label: 'Mild' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'hot', label: 'Hot' },
+    { value: 'very_hot', label: 'Very Hot' }
+  ];
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addAllergen = () => {
+    if (allergenInput.trim() && !formData.allergens.includes(allergenInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        allergens: [...prev.allergens, allergenInput.trim()]
+      }));
+      setAllergenInput('');
+    }
+  };
+
+  const removeAllergen = (allergen) => {
+    setFormData(prev => ({
+      ...prev,
+      allergens: prev.allergens.filter(a => a !== allergen)
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validation
+    if (!formData.name.trim()) {
+      toast.error('Item name is required');
+      return;
+    }
+
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      toast.error('Valid price is required');
+      return;
+    }
+
+    const updatedItem = {
+      ...formData,
+      price: parseFloat(formData.price),
+      preparationTime: parseInt(formData.preparationTime),
+    };
+
+    onSave(updatedItem);
+    toast.success('Menu item updated successfully');
+  };
+
+  return (
+    <div className="relative z-10">
+      {/* Edit Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-6">
+        <h4 className="text-xl font-bold flex items-center">
+          <FaEdit className="mr-3" />
+          Edit Menu Item
+        </h4>
+      </div>
+
+      {/* Edit Form */}
+      <div className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Information */}
+          <div className="bg-blue-50 rounded-xl p-6">
+            <h5 className="font-bold text-gray-800 mb-4">Basic Information</h5>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Item Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Item Name *
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="e.g., Grilled Chicken Breast"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category *
+                </label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => handleInputChange('category', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  {categoryOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Price */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Price (USD) *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price}
+                  onChange={(e) => handleInputChange('price', e.target.value)}
+                  placeholder="0.00"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              {/* Icon */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Icon (if no image)
+                </label>
+                <select
+                  value={formData.icon}
+                  onChange={(e) => handleInputChange('icon', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                >
+                  {iconOptions.map(icon => (
+                    <option key={icon} value={icon}>
+                      {icon} {icon}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Preparation Time */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Preparation Time (minutes)
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.preparationTime}
+                  onChange={(e) => handleInputChange('preparationTime', e.target.value)}
+                  placeholder="15"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Spicy Level */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Spicy Level
+                </label>
+                <select
+                  value={formData.spicyLevel}
+                  onChange={(e) => handleInputChange('spicyLevel', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                >
+                  {spicyLevelOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="Describe the dish, ingredients, cooking method..."
+              rows="3"
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Dietary Options */}
+          <div className="bg-green-50 rounded-xl p-6">
+            <h5 className="font-bold text-gray-800 mb-4">Dietary Options</h5>
+            <div className="flex gap-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.isVegetarian}
+                  onChange={(e) => handleInputChange('isVegetarian', e.target.checked)}
+                  className="mr-2"
+                />
+                <span className="text-sm text-gray-700">Vegetarian</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.isVegan}
+                  onChange={(e) => handleInputChange('isVegan', e.target.checked)}
+                  className="mr-2"
+                />
+                <span className="text-sm text-gray-700">Vegan</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Allergens */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Allergens
+            </label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={allergenInput}
+                onChange={(e) => setAllergenInput(e.target.value)}
+                placeholder="e.g., nuts, dairy, gluten"
+                className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={addAllergen}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+              >
+                Add
+              </button>
+            </div>
+            {formData.allergens.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {formData.allergens.map((allergen, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm flex items-center"
+                  >
+                    {allergen}
+                    <button
+                      type="button"
+                      onClick={() => removeAllergen(allergen)}
+                      className="ml-2 text-red-600 hover:text-red-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Additional Notes
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => handleInputChange('notes', e.target.value)}
+              placeholder="Special preparation instructions, serving suggestions..."
+              rows="2"
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Service Menu Item Edit Form Component
+ * Specialized form for editing menu items within the service management context
+ */
+const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    name: item.name || '',
+    category: item.category || 'mains',
+    description: item.description || '',
+    price: item.price || '',
+    icon: item.icon || '🍽️',
+    imageUrl: item.imageUrl || '',
+    preparationTime: item.preparationTime || 15,
+    isVegetarian: item.isVegetarian || false,
+    isVegan: item.isVegan || false,
+    spicyLevel: item.spicyLevel || 'mild',
+    allergens: item.allergens || [],
+    notes: item.notes || '',
+    isAvailable: item.isAvailable !== undefined ? item.isAvailable : true
+  });
+
+  const [allergenInput, setAllergenInput] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const categoryOptions = [
+    { value: 'appetizers', label: 'Appetizers' },
+    { value: 'mains', label: 'Main Courses' },
+    { value: 'desserts', label: 'Desserts' },
+    { value: 'beverages', label: 'Beverages' },
+    { value: 'breakfast', label: 'Breakfast' },
+    { value: 'lunch', label: 'Lunch' },
+    { value: 'dinner', label: 'Dinner' },
+    { value: 'snacks', label: 'Snacks' }
+  ];
+
+  const iconOptions = [
+    '🍽️', '🍕', '🍔', '🍗', '🥩', '🐟', '🍝', '🥗', '🍜', '🍲', '🥙', '🌮', '🍣', '🍤', '🍰', '🧁', '🍪', '☕', '🥤', '🍷'
+  ];
+
+  const spicyLevelOptions = [
+    { value: 'mild', label: 'Mild' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'hot', label: 'Hot' },
+    { value: 'very_hot', label: 'Very Hot' }
+  ];
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addAllergen = () => {
+    if (allergenInput.trim() && !formData.allergens.includes(allergenInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        allergens: [...prev.allergens, allergenInput.trim()]
+      }));
+      setAllergenInput('');
+    }
+  };
+
+  const removeAllergen = (allergen) => {
+    setFormData(prev => ({
+      ...prev,
+      allergens: prev.allergens.filter(a => a !== allergen)
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    console.log('🔄 Form submitted with data:', formData);
+    setIsSaving(true);
+
+    // Validation
+    if (!formData.name.trim()) {
+      toast.error('Item name is required');
+      setIsSaving(false);
+      return;
+    }
+
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      toast.error('Valid price is required');
+      setIsSaving(false);
+      return;
+    }
+
+    const updatedItem = {
+      ...formData,
+      price: parseFloat(formData.price),
+      preparationTime: parseInt(formData.preparationTime) || 15,
+    };
+
+    console.log('✅ Validation passed, calling onSave with:', updatedItem);
+
+    try {
+      console.log('🔄 About to call onSave...');
+      await onSave(updatedItem);
+      console.log('✅ onSave completed successfully');
+      toast.success('Menu item saved!');
+    } catch (error) {
+      console.error('❌ Error in onSave:', error);
+      toast.error('Error saving changes');
+    } finally {
+      console.log('🔄 Setting isSaving to false');
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-blue-50 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-4">
+        <h6 className="font-bold text-blue-800 flex items-center">
+          <FaEdit className="mr-2" />
+          Edit Menu Item
+        </h6>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Basic Info Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Item Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Item Name *
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+              required
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category *
+            </label>
+            <select
+              value={formData.category}
+              onChange={(e) => handleInputChange('category', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+              required
+            >
+              {categoryOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Price */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Price (USD) *
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.price}
+              onChange={(e) => handleInputChange('price', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+              required
+            />
+          </div>
+
+          {/* Preparation Time */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Prep Time (min)
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={formData.preparationTime}
+              onChange={(e) => handleInputChange('preparationTime', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+          </div>
+
+          {/* Icon */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Icon
+            </label>
+            <select
+              value={formData.icon}
+              onChange={(e) => handleInputChange('icon', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+            >
+              {iconOptions.map(icon => (
+                <option key={icon} value={icon}>
+                  {icon} {icon}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Spicy Level */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Spicy Level
+            </label>
+            <select
+              value={formData.spicyLevel}
+              onChange={(e) => handleInputChange('spicyLevel', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+            >
+              {spicyLevelOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description
+          </label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => handleInputChange('description', e.target.value)}
+            rows="2"
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+        </div>
+
+        {/* Dietary Options */}
+        <div className="flex gap-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={formData.isVegetarian}
+              onChange={(e) => handleInputChange('isVegetarian', e.target.checked)}
+              className="mr-2"
+            />
+            <span className="text-sm text-gray-700">Vegetarian</span>
+          </label>
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={formData.isVegan}
+              onChange={(e) => handleInputChange('isVegan', e.target.checked)}
+              className="mr-2"
+            />
+            <span className="text-sm text-gray-700">Vegan</span>
+          </label>
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={formData.isAvailable}
+              onChange={(e) => handleInputChange('isAvailable', e.target.checked)}
+              className="mr-2"
+            />
+            <span className="text-sm text-gray-700">Available</span>
+          </label>
+        </div>
+
+        {/* Allergens */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Allergens
+          </label>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={allergenInput}
+              onChange={(e) => setAllergenInput(e.target.value)}
+              placeholder="Add allergen"
+              className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+            <button
+              type="button"
+              onClick={addAllergen}
+              className="px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm"
+            >
+              Add
+            </button>
+          </div>
+          {formData.allergens.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {formData.allergens.map((allergen, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs flex items-center"
+                >
+                  {allergen}
+                  <button
+                    type="button"
+                    onClick={() => removeAllergen(allergen)}
+                    className="ml-1 text-red-600 hover:text-red-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Notes */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Additional Notes
+          </label>
+          <textarea
+            value={formData.notes}
+            onChange={(e) => handleInputChange('notes', e.target.value)}
+            rows="2"
+            placeholder="Special instructions..."
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 pt-2">
+          <button
+            type="submit"
+            disabled={isSaving}
+            className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              isSaving
+                ? 'bg-blue-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
+            } text-white`}
+          >
+            {isSaving ? (
+              <>
+                <FaSpinner className="inline mr-1 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <FaSave className="inline mr-1" />
+                Save Changes
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSaving}
+            className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            <FaTimes className="inline mr-1" />
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 
