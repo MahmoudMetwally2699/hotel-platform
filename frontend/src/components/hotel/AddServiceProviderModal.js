@@ -47,12 +47,23 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
     maxOrdersPerDay: '',
     totalEmployees: '',
 
+    // Service Categories
+    selectedCategories: [],
+
     // User Credentials (Required)
     userEmail: '',
     userPassword: '',
     firstName: '',
     lastName: ''
   });
+
+  // Available service categories (only the specified ones)
+  const serviceCategories = [
+    { id: 'laundry', name: 'Laundry Services', icon: '👕', description: 'Wash, iron, and dry cleaning services' },
+    { id: 'transportation', name: 'Transportation', icon: '🚗', description: 'Car rental and taxi services' },
+    { id: 'dining', name: 'Dining Services', icon: '🍽️', description: 'Hotel restaurant and dining facilities' },
+    { id: 'housekeeping', name: 'Housekeeping', icon: '🧹', description: 'Room cleaning and maintenance services' }
+  ];
 
   const [errors, setErrors] = useState({});
 
@@ -71,6 +82,24 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
         [name]: ''
       }));
     }
+  };
+
+  // Handle service category selection
+  const handleCategoryChange = (categoryId, isChecked) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedCategories: isChecked
+        ? [...(prev.selectedCategories || []), categoryId]
+        : (prev.selectedCategories || []).filter(id => id !== categoryId)
+    }));
+
+    // Clear category error
+    if (errors.selectedCategories) {
+      setErrors(prev => ({
+        ...prev,
+        selectedCategories: ''
+      }));
+    }
   };  // Validate form data
   const validateForm = () => {
     const newErrors = {};
@@ -84,6 +113,11 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
     }
     if (!formData.contactPhone.trim()) {
       newErrors.contactPhone = 'Contact phone is required';
+    }
+
+    // Service categories validation
+    if (!formData.selectedCategories || formData.selectedCategories.length === 0) {
+      newErrors.selectedCategories = 'Please select at least one service category';
     }
 
     // Address fields
@@ -182,6 +216,9 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
 
+        // Service categories selection
+        selectedCategories: formData.selectedCategories,
+
         // Address data
         address: {
           street: formData.street,
@@ -264,6 +301,7 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
         insuranceExpiryDate: '',
         maxOrdersPerDay: '',
         totalEmployees: '',
+        selectedCategories: [], // Add this missing field
         userEmail: '',
         userPassword: '',
         firstName: '',
@@ -979,6 +1017,73 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     </p>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Service Categories Section */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m0-10h6m-6 0V3a2 2 0 012-2h2a2 2 0 012 2v2m-6 0h6m0-2v8a2 2 0 01-2 2H9m6-10a2 2 0 012 2v6a2 2 0 01-2 2m-6-8h2m0 0V7m0 0h4m-4 0v8m0-8h4m-4 8v2m0-2h4" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-modern-darkGray">Service Categories</h3>
+                  <p className="text-sm text-modern-gray">Select which services this provider will offer</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {serviceCategories.map((category) => (
+                    <div
+                      key={category.id}
+                      className={`border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 ${
+                        (formData.selectedCategories || []).includes(category.id)
+                          ? 'border-modern-blue bg-blue-50'
+                          : 'border-gray-200 bg-white hover:border-modern-lightBlue'
+                      }`}
+                      onClick={() => handleCategoryChange(category.id, !(formData.selectedCategories || []).includes(category.id))}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                          <div className="text-2xl">{category.icon}</div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id={`category-${category.id}`}
+                              checked={(formData.selectedCategories || []).includes(category.id)}
+                              onChange={(e) => handleCategoryChange(category.id, e.target.checked)}
+                              className="h-4 w-4 text-modern-blue focus:ring-modern-blue border-gray-300 rounded"
+                              disabled={isLoading}
+                            />
+                            <label
+                              htmlFor={`category-${category.id}`}
+                              className="ml-2 text-sm font-semibold text-modern-darkGray cursor-pointer"
+                            >
+                              {category.name}
+                            </label>
+                          </div>
+                          <p className="text-xs text-modern-gray mt-1">{category.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {errors.selectedCategories && (
+                  <p className="text-red-500 text-sm font-medium flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {errors.selectedCategories}
+                  </p>
+                )}
               </div>
             </div>
 

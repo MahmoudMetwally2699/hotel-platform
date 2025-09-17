@@ -3,7 +3,7 @@
  * Allows service providers to choose between Outside Hotel Services and Inside Hotel Services
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   FaBuilding,
@@ -11,52 +11,78 @@ import {
   FaArrowRight,
   FaTshirt,
   FaCar,
-  FaMapMarkedAlt,
-  FaSpa,
-  FaUtensils,
-  FaMusic,
-  FaShoppingBag,
-  FaDumbbell,
-  FaConciergeBell,
-  FaCoffee
+  FaCoffee,
+  FaSpinner
 } from 'react-icons/fa';
+import useServiceProviderCategories from '../../hooks/useServiceProviderCategories';
+import apiClient from '../../services/api.service';
 
 const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
   const { t } = useTranslation();
   const [hoveredCard, setHoveredCard] = useState(null);
+  const { categories, loading, hasCategory } = useServiceProviderCategories();
+  const [insideServicesAvailable, setInsideServicesAvailable] = useState(false);
 
-  const categoryTypes = [
-    {
-      id: 'outside',
-      title: 'Outside Hotel Services',
-      description: 'Services provided by external service providers',
-      icon: FaBuilding,
-      color: 'blue',
-      services: [
-        { name: 'Laundry Services', icon: FaTshirt, description: 'Professional laundry and dry cleaning' },
-        { name: 'Transportation Services', icon: FaCar, description: 'Vehicle rental and transportation' },
-        { name: 'Tours & Activities', icon: FaMapMarkedAlt, description: 'Guided tours and recreational activities' },
-        { name: 'Spa & Wellness', icon: FaSpa, description: 'Relaxation and wellness services' },
-        { name: 'Dining Services', icon: FaUtensils, description: 'Food delivery and catering services' },
-        { name: 'Entertainment', icon: FaMusic, description: 'Live music, DJ services, and events' },
-        { name: 'Shopping Services', icon: FaShoppingBag, description: 'Personal shopping and delivery services' },
-        { name: 'Fitness Services', icon: FaDumbbell, description: 'Personal training and sports activities' }
-      ]
-    },
-    {
-      id: 'inside',
-      title: 'Inside Hotel Services',
-      description: 'Services provided within hotel premises',
-      icon: FaHotel,
-      color: 'green',
-      services: [
-        { name: 'Room Service', icon: FaConciergeBell, description: 'In-room dining and service requests' },
-        { name: 'Hotel Restaurant', icon: FaCoffee, description: 'Main dining facilities and reservations' },
-        { name: 'Concierge Services', icon: FaConciergeBell, description: 'Guest assistance and recommendations' },
-        { name: 'Housekeeping', icon: FaHotel, description: 'Room cleaning and maintenance requests' }
-      ]
+  // Check if inside services are available
+  useEffect(() => {
+    const checkInsideServices = async () => {
+      try {
+        const response = await apiClient.get('/service/inside-services');
+        const insideServices = response.data.data || [];
+        setInsideServicesAvailable(insideServices.length > 0);
+      } catch (error) {
+        console.error('Error checking inside services:', error);
+        setInsideServicesAvailable(false);
+      }
+    };
+
+    if (!loading) {
+      checkInsideServices();
     }
-  ];
+  }, [loading]);
+
+  // Filter category types based on available services
+  const getAvailableCategoryTypes = () => {
+    const categoryTypes = [];
+
+    // Outside Hotel Services - only laundry and transportation (no dining here)
+    const outsideCategories = ['laundry', 'transportation'];
+    const hasOutsideServices = outsideCategories.some(cat => hasCategory(cat));
+
+    if (hasOutsideServices) {
+      categoryTypes.push({
+        id: 'outside',
+        title: 'Outside Hotel Services',
+        description: 'Services provided by external service providers',
+        icon: FaBuilding,
+        color: 'blue',
+        services: [
+          { name: 'Laundry Services', icon: FaTshirt, description: 'Professional laundry and dry cleaning' },
+          { name: 'Transportation Services', icon: FaCar, description: 'Vehicle rental and transportation' }
+        ]
+      });
+    }
+
+    // Inside Hotel Services - check if dining or housekeeping are available (required for inside services)
+    // This is based on the backend inside-services endpoint which maps these to hotel restaurant and housekeeping
+    const hasInsideServiceCategories = hasCategory('dining') || hasCategory('housekeeping');
+
+    if (hasInsideServiceCategories && insideServicesAvailable) {
+      categoryTypes.push({
+        id: 'inside',
+        title: 'Inside Hotel Services',
+        description: 'Services provided within hotel premises',
+        icon: FaHotel,
+        color: 'green',
+        services: [
+          { name: 'Hotel Restaurant', icon: FaCoffee, description: 'Main dining facilities and reservations' },
+          { name: 'Housekeeping Services', icon: FaHotel, description: 'Room cleaning and maintenance requests' }
+        ]
+      });
+    }
+
+    return categoryTypes;
+  };
 
   const handleCategoryTypeClick = (categoryType) => {
     console.log('Category clicked:', categoryType.id);
@@ -65,6 +91,52 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
       onCategoryTypeSelect(categoryType);
     }
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <FaSpinner className="animate-spin text-4xl text-blue-500 mx-auto mb-4" />
+          <p className="text-gray-600">Loading service categories...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const availableCategoryTypes = getAvailableCategoryTypes();
+
+  // Show empty state if no categories are available
+  if (availableCategoryTypes.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-8">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-8 text-white">
+            <div className="max-w-4xl">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Service Categories</h1>
+              <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">
+                No service categories are currently available for your account.
+              </p>
+            </div>
+          </div>
+
+          {/* Empty state */}
+          <div className="text-center py-16">
+            <div className="max-w-md mx-auto">
+              <div className="mb-8">
+                <FaHotel className="text-6xl text-gray-400 mx-auto mb-4" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">No Service Categories Available</h3>
+              <p className="text-gray-600 mb-8 leading-relaxed">
+                No service categories are currently enabled for your account. Please contact your hotel administrator to enable service categories such as laundry, transportation, dining, or housekeeping.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
@@ -79,8 +151,12 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-          {categoryTypes.map((categoryType) => {
+        <div className={`grid gap-4 sm:gap-6 lg:gap-8 ${
+          availableCategoryTypes.length === 1
+            ? 'grid-cols-1 max-w-2xl mx-auto'
+            : 'grid-cols-1 lg:grid-cols-2'
+        }`}>
+          {availableCategoryTypes.map((categoryType) => {
             const IconComponent = categoryType.icon;
             const isHovered = hoveredCard === categoryType.id;
 

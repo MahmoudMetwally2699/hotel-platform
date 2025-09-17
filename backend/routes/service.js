@@ -1479,28 +1479,58 @@ router.get('/metrics', catchAsync(async (req, res) => {
 
 /**
  * @route   GET /api/service/categories
- * @desc    Get available service categories and templates
+ * @desc    Get available service categories and templates (only those enabled by hotel admin)
  * @access  Private/ServiceProvider
  */
 router.get('/categories', catchAsync(async (req, res) => {
   const providerId = req.user.serviceProviderId;
 
-  // Get current provider to check which categories they're already active in
+  // Get current provider to check which categories they're allowed to use
   const provider = await ServiceProvider.findById(providerId).select('categories serviceTemplates');
+
+  if (!provider) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Service provider not found'
+    });
+  }
+
+  // Filter available categories to only include those enabled by hotel admin
+  const allowedCategories = provider.categories || [];
+  const availableCategories = {};
+
+  allowedCategories.forEach(categoryKey => {
+    if (categoryTemplates[categoryKey]) {
+      availableCategories[categoryKey] = categoryTemplates[categoryKey];
+    }
+  });
+
+  // Get currently active categories (those that provider has activated)
+  const activeCategories = [];
+  if (provider.serviceTemplates) {
+    Object.keys(provider.serviceTemplates).forEach(categoryKey => {
+      if (provider.serviceTemplates[categoryKey] && provider.serviceTemplates[categoryKey].isActive) {
+        activeCategories.push(categoryKey);
+      }
+    });
+  }
 
   res.status(200).json({
     status: 'success',
     data: {
-      availableCategories: categoryTemplates,
-      activeCategories: provider?.categories || [],
-      serviceTemplates: provider?.serviceTemplates || {}
+      availableCategories: availableCategories,
+      activeCategories: activeCategories,
+      serviceTemplates: provider?.serviceTemplates || {},
+      message: allowedCategories.length === 0
+        ? 'No service categories are currently enabled for your account. Please contact your hotel admin.'
+        : undefined
     }
   });
 }));
 
 /**
  * @route   POST /api/service/categories/:category/activate
- * @desc    Activate a service category for the provider
+ * @desc    Activate a service category for the provider (only if allowed by hotel admin)
  * @access  Private/ServiceProvider
  */
 router.post('/categories/:category/activate', catchAsync(async (req, res) => {
@@ -1514,19 +1544,35 @@ router.post('/categories/:category/activate', catchAsync(async (req, res) => {
       message: 'Invalid service category'
     });
   }
-  const provider = await ServiceProvider.findById(providerId);
 
-  // Add category if not already present
-  if (!provider.categories.includes(category)) {
-    provider.categories.push(category);
+  const provider = await ServiceProvider.findById(providerId);
+  if (!provider) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Service provider not found'
+    });
+  }
+
+  // Check if hotel admin has enabled this category for the provider
+  const isAllowedCategory = provider.categories && provider.categories.includes(category);
+
+  if (!isAllowedCategory) {
+    return res.status(403).json({
+      status: 'fail',
+      message: `You are not authorized to activate ${categoryTemplates[category].name}. Please contact your hotel admin to enable this service category.`
+    });
+  }
+
+  // Check if service template exists and if it's active
+  if (!provider.serviceTemplates[category]) {
+    return res.status(403).json({
+      status: 'fail',
+      message: `${categoryTemplates[category].name} category is not available for your account. Please contact your hotel admin.`
+    });
   }
 
   // Activate service template for this category
-  if (!provider.serviceTemplates[category]) {
-    provider.serviceTemplates[category] = { isActive: true, services: [] };
-  } else {
-    provider.serviceTemplates[category].isActive = true;
-  }
+  provider.serviceTemplates[category].isActive = true;
 
   // Ensure expiry dates are in the future before saving (fix legacy data)
   const now = new Date();
@@ -2370,7 +2416,7 @@ router.delete('/categories/transportation/vehicles/:serviceId', catchAsync(async
 
 /**
  * @route   GET /api/service/inside-services
- * @desc    Get service provider's inside services (services provided within hotel premises)
+ * @desc    Get service provider's inside services (services provided within hotel premises, only those enabled by hotel admin)
  * @access  Private/ServiceProvider
  */
 router.get('/inside-services', catchAsync(async (req, res) => {
@@ -2378,70 +2424,84 @@ router.get('/inside-services', catchAsync(async (req, res) => {
 
   const provider = await ServiceProvider.findById(providerId);
 
-  // Default inside services categories
+  if (!provider) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Service provider not found'
+    });
+  }
+
+  // Check which categories hotel admin has enabled for this provider
+  const allowedCategories = provider.categories || [];
+
+  // Default inside services categories with mapping to main categories
   const defaultServices = [
-    {
-      id: 'room-service',
-      name: 'Room Service',
-      description: 'In-room dining and service requests',
-      category: 'dining',
-      isActive: false,
-      operatingHours: { start: '06:00', end: '23:00' },
-      features: ['24/7 availability option', 'Menu customization', 'Special dietary accommodations']
-    },
     {
       id: 'hotel-restaurant',
       name: 'Hotel Restaurant',
       description: 'Main dining facilities and reservations',
       category: 'dining',
+      requiredMainCategory: 'dining', // Maps to main dining category
       isActive: false,
       operatingHours: { start: '07:00', end: '22:00' },
       features: ['Table reservations', 'Private dining', 'Event catering']
-    },
-    {
-      id: 'concierge-services',
-      name: 'Concierge Services',
-      description: 'Guest assistance and recommendations',
-      category: 'assistance',
-      isActive: false,
-      operatingHours: { start: '24/7', end: '24/7' },
-      features: ['Local recommendations', 'Booking assistance', 'Special requests']
     },
     {
       id: 'housekeeping-requests',
       name: 'Housekeeping Services',
       description: 'Room cleaning and maintenance requests',
       category: 'maintenance',
+      requiredMainCategory: 'housekeeping', // Maps to main housekeeping category
       isActive: false,
       operatingHours: { start: '08:00', end: '18:00' },
       features: ['Extra cleaning', 'Amenity requests', 'Maintenance issues']
     }
   ];
 
-  // Initialize insideServices if it doesn't exist
+  // Filter services based on hotel admin's category restrictions
+  const filteredServices = defaultServices.filter(service => {
+    // If no specific main category required, allow if provider has any category enabled
+    if (!service.requiredMainCategory) {
+      return allowedCategories.length > 0;
+    }
+    // Check if hotel admin has enabled the required main category
+    return allowedCategories.includes(service.requiredMainCategory);
+  });
+
+  // Initialize insideServices if it doesn't exist or filter existing ones
   if (!provider.insideServices || provider.insideServices.length === 0) {
-    provider.insideServices = defaultServices;
+    provider.insideServices = filteredServices;
     await provider.save();
-  }
+  } else {
+    // Filter existing services based on admin permissions and update with filtered services
+    const allowedServiceIds = filteredServices.map(s => s.id);
+    const existingAllowedServices = provider.insideServices.filter(s => allowedServiceIds.includes(s.id));
 
-  // Merge with defaults to ensure all categories exist
-  const existingServiceIds = provider.insideServices.map(s => s.id);
-  const missingServices = defaultServices.filter(s => !existingServiceIds.includes(s.id));
+    // Merge with defaults to ensure all allowed categories exist
+    const existingServiceIds = existingAllowedServices.map(s => s.id);
+    const missingServices = filteredServices.filter(s => !existingServiceIds.includes(s.id));
 
-  if (missingServices.length > 0) {
-    provider.insideServices = [...provider.insideServices, ...missingServices];
-    await provider.save();
+    if (missingServices.length > 0) {
+      provider.insideServices = [...existingAllowedServices, ...missingServices];
+      await provider.save();
+    } else {
+      provider.insideServices = existingAllowedServices;
+      await provider.save();
+    }
   }
 
   res.status(200).json({
     status: 'success',
-    data: provider.insideServices
+    data: provider.insideServices,
+    message: filteredServices.length === 0
+      ? 'No inside hotel services are currently enabled for your account. Please contact your hotel admin to enable the required service categories.'
+      : undefined
   });
 }));
 
 /**
  * @route   POST /api/service/inside-services/:serviceId/activate
- * @desc    Activate an inside service for service provider
+ * @desc    Activate an inside service for service provider (only if allowed by hotel admin)
  * @access  Private/ServiceProvider
  */
 router.post('/inside-services/:serviceId/activate', catchAsync(async (req, res) => {
@@ -2451,6 +2511,23 @@ router.post('/inside-services/:serviceId/activate', catchAsync(async (req, res) 
   const provider = await ServiceProvider.findById(providerId);
   if (!provider) {
     throw new AppError('Service provider not found', 404);
+  }
+
+  // Check which categories hotel admin has enabled for this provider
+  const allowedCategories = provider.categories || [];
+
+  // Service to main category mapping
+  const serviceToMainCategory = {
+    'hotel-restaurant': 'dining',
+    'housekeeping-requests': 'housekeeping'
+  };  const requiredMainCategory = serviceToMainCategory[serviceId];
+
+  // Check authorization
+  if (requiredMainCategory && !allowedCategories.includes(requiredMainCategory)) {
+    return res.status(403).json({
+      status: 'fail',
+      message: `You are not authorized to activate this service. Please contact your hotel admin to enable the ${requiredMainCategory} service category.`
+    });
   }
 
   // Initialize insideServices if it doesn't exist

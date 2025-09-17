@@ -39,13 +39,34 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
   const fetchCategories = useCallback(async () => {
     try {
       const response = await apiClient.get('/service/categories');
-      setCategories(response.data.data.availableCategories);
-      setActiveCategories(response.data.data.activeCategories || []);
+      const availableCategories = response.data.data.availableCategories;
+
+      // Filter out dining and housekeeping categories - these are only for inside hotel services
+      const filteredCategories = {};
+      Object.keys(availableCategories).forEach(categoryKey => {
+        // Only show laundry and transportation as main outside categories
+        if (categoryKey === 'laundry' || categoryKey === 'transportation') {
+          filteredCategories[categoryKey] = availableCategories[categoryKey];
+        }
+      });
+
+      setCategories(filteredCategories);
+
+      // Filter active categories to only include the ones we're showing
+      const filteredActiveCategories = (response.data.data.activeCategories || [])
+        .filter(cat => cat === 'laundry' || cat === 'transportation');
+      setActiveCategories(filteredActiveCategories);
+
+      // Show message if provided by backend
+      if (response.data.data.message) {
+        toast.info(response.data.data.message);
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching categories:', error);
 
-      // Fallback to local category data if API fails
+      // Fallback to local category data if API fails - only show laundry and transportation
       const fallbackCategories = {
         laundry: {
           name: 'Laundry Services', // t('categorySelection.categories.laundry.name'),
@@ -64,60 +85,6 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
             { name: 'Economy Sedan', capacity: 4 },
             { name: 'Comfort Sedan', capacity: 4 },
             { name: 'Van', capacity: 12 }
-          ]
-        },
-        tours: {
-          name: 'Tours & Activities',
-          description: 'Guided tours and recreational activities',
-          comingSoon: true,
-          tourTypes: [
-            { name: 'City Sightseeing', duration: '4 hours' },
-            { name: 'Cultural Heritage', duration: '6 hours' }
-          ]
-        },
-        spa: {
-          name: 'Spa & Wellness',
-          description: 'Relaxation and wellness services',
-          comingSoon: true,
-          items: [
-            { name: 'Massage Therapy', duration: '60 min' },
-            { name: 'Facial Treatment', duration: '45 min' }
-          ]
-        },
-        dining: {
-          name: 'Dining Services',
-          description: 'Food delivery and catering services',
-          comingSoon: true,
-          items: [
-            { name: 'Food Delivery', category: 'delivery' },
-            { name: 'Event Catering', category: 'catering' }
-          ]
-        },
-        entertainment: {
-          name: 'Entertainment',
-          description: 'Live music, DJ services, and events',
-          comingSoon: true,
-          items: [
-            { name: 'Live Music', category: 'music' },
-            { name: 'DJ Services', category: 'events' }
-          ]
-        },
-        shopping: {
-          name: 'Shopping Services',
-          description: 'Personal shopping and delivery services',
-          comingSoon: true,
-          items: [
-            { name: 'Personal Shopping', category: 'shopping' },
-            { name: 'Delivery Service', category: 'delivery' }
-          ]
-        },
-        fitness: {
-          name: 'Fitness Services',
-          description: 'Personal training and sports activities',
-          comingSoon: true,
-          items: [
-            { name: 'Personal Training', category: 'fitness' },
-            { name: 'Sports Activities', category: 'sports' }
           ]
         }
       };
@@ -146,6 +113,12 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
       }
     } catch (error) {
       console.error('Error activating category:', error);
+
+      // Handle specific authorization error (403)
+      if (error.response?.status === 403) {
+        toast.error(error.response.data.message || 'You are not authorized to activate this service category. Please contact your hotel admin.');
+        return;
+      }
 
       // Fallback for offline mode - just activate locally
       if (error.response?.status === 404 || error.code === 'ERR_NETWORK') {
@@ -247,8 +220,33 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
           </div>
         )}
 
+        {/* No Categories Available Message */}
+        {Object.keys(categories).length === 0 && (
+          <div className="text-center py-12 px-6">
+            <div className="max-w-md mx-auto">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-8 shadow-lg">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FaTimes className="w-8 h-8 text-yellow-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-3">No Service Categories Available</h3>
+                <p className="text-gray-600 mb-4 leading-relaxed">
+                  No service categories are currently enabled for your account. Please contact your hotel admin to enable service categories for your provider account.
+                </p>
+                <div className="text-sm text-gray-500">
+                  <p>Contact your hotel administrator to:</p>
+                  <ul className="mt-2 space-y-1 text-left">
+                    <li>• Enable service categories</li>
+                    <li>• Configure your service permissions</li>
+                    <li>• Set up your provider account</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-        {Object.entries(categories).map(([categoryKey, category]) => {
+        {Object.keys(categories).length > 0 && Object.entries(categories).map(([categoryKey, category]) => {
           const IconComponent = categoryIcons[categoryKey];
           const isActive = isCategoryActive(categoryKey);
           const isActivating = activating === categoryKey;

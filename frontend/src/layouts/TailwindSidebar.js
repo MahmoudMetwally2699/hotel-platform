@@ -13,10 +13,12 @@ import {
   FaBroom
 } from 'react-icons/fa';
 import useAuth from '../hooks/useAuth';
+import useServiceProviderCategories from '../hooks/useServiceProviderCategories';
 
 const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
   const { t, i18n } = useTranslation();
   const { role } = useAuth();
+  const { categories, hasCategory } = useServiceProviderCategories();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
   const [showMobileCategories, setShowMobileCategories] = useState(false);
@@ -56,32 +58,82 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           { name: t('navigation.settings'), path: '/hotel/settings', icon: 'cog' }
         ];
       case 'service':
-        return [
-          { name: t('navigation.dashboard'), path: '/service/dashboard', icon: 'home' },
-          {
-            name: t('navigation.orders'),
-            icon: 'shopping-bag',
-            isExpandable: true,
-            key: 'orders-bookings',
-            children: [
-              { name: t('navigation.orders'), path: '/service/orders', icon: 'shopping-bag' },
-              { name: t('categorySelection.sidebar.transportationBookings'), path: '/service/transportation-bookings', icon: 'truck' }
-            ]
-          },
-          {
+        // Build dynamic navigation based on allowed categories
+        const serviceNavItems = [
+          { name: t('navigation.dashboard'), path: '/service/dashboard', icon: 'home' }
+        ];
+
+        // Orders section - include transportation bookings only if transportation is enabled
+        const ordersChildren = [
+          { name: t('navigation.orders'), path: '/service/orders', icon: 'shopping-bag' }
+        ];
+
+        if (hasCategory('transportation')) {
+          ordersChildren.push({
+            name: t('categorySelection.sidebar.transportationBookings'),
+            path: '/service/transportation-bookings',
+            icon: 'truck'
+          });
+        }
+
+        serviceNavItems.push({
+          name: t('navigation.orders'),
+          icon: 'shopping-bag',
+          isExpandable: true,
+          key: 'orders-bookings',
+          children: ordersChildren
+        });
+
+        // Manage Services section - only show enabled categories
+        const manageServicesChildren = [];
+
+        if (hasCategory('laundry')) {
+          manageServicesChildren.push({
+            name: t('categorySelection.sidebar.laundryManagement'),
+            path: '/service/services?category=laundry',
+            icon: 'laundry'
+          });
+        }
+
+        if (hasCategory('transportation')) {
+          manageServicesChildren.push({
+            name: t('categorySelection.sidebar.transportationManagement'),
+            path: '/service/services?category=transportation',
+            icon: 'truck'
+          });
+        }
+
+        if (hasCategory('housekeeping')) {
+          manageServicesChildren.push({
+            name: 'Housekeeping Services',
+            path: '/service/housekeeping',
+            icon: 'broom'
+          });
+        }
+
+        if (hasCategory('dining')) {
+          manageServicesChildren.push({
+            name: 'Restaurant Services',
+            path: '/service/restaurant',
+            icon: 'restaurant'
+          });
+        }
+
+        // Only add Manage Services section if there are any enabled categories
+        if (manageServicesChildren.length > 0) {
+          serviceNavItems.push({
             name: t('categorySelection.manageServices'),
             icon: 'cog-services',
             isExpandable: true,
             key: 'manage-services',
-            children: [
-              { name: t('categorySelection.sidebar.laundryManagement'), path: '/service/services?category=laundry', icon: 'laundry' },
-              { name: t('categorySelection.sidebar.transportationManagement'), path: '/service/services?category=transportation', icon: 'truck' },
-              { name: 'Housekeeping Services', path: '/service/housekeeping', icon: 'broom' },
-              { name: 'Restaurant Services', path: '/service/restaurant', icon: 'restaurant' }
-            ]
-          },
-          { name: t('navigation.earnings'), path: '/service/earnings', icon: 'cash' }
-        ];
+            children: manageServicesChildren
+          });
+        }
+
+        // Add earnings
+        serviceNavItems.push({ name: t('navigation.earnings'), path: '/service/earnings', icon: 'cash' });
+
+        return serviceNavItems;
       case 'guest':
         return [
           { name: t('navigation.hotelServices'), path: '/my-hotel-services', icon: 'server' },

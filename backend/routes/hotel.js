@@ -734,6 +734,7 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
     capacity,
     staff,
     services,
+    selectedCategories = [], // Array of service categories to activate
     userId,
     userCredentials,
     sendEmail = true // Optional: Whether to send credentials via email (default: true)
@@ -886,16 +887,90 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
             message: emailMessage
           });        } catch (err) {
           logger.error('Failed to send service provider welcome email', { error: err });
-        }      }    }    // Create service provider with pre-generated ID (no category assignment)
+        }      }    }    // Create service provider with pre-generated ID and selected categories
     let serviceProvider;
     try {
+      // Initialize service templates for selected categories
+      const initialServiceTemplates = {};
+
+      // Available categories with their default structure
+      const availableCategories = [
+        'laundry', 'transportation', 'tours', 'spa',
+        'dining', 'entertainment', 'shopping', 'fitness', 'housekeeping'
+      ];
+
+      // Only include selected categories, validate they exist
+      const validSelectedCategories = selectedCategories.filter(cat =>
+        availableCategories.includes(cat)
+      );
+
+      // Initialize service templates for selected categories
+      validSelectedCategories.forEach(category => {
+        switch(category) {
+          case 'laundry':
+            initialServiceTemplates.laundry = {
+              isActive: true,
+              services: []
+            };
+            break;
+          case 'transportation':
+            initialServiceTemplates.transportation = {
+              isActive: true,
+              services: []
+            };
+            break;
+          case 'tours':
+            initialServiceTemplates.tours = {
+              isActive: true,
+              services: []
+            };
+            break;
+          case 'spa':
+            initialServiceTemplates.spa = {
+              isActive: true,
+              services: []
+            };
+            break;
+          case 'dining':
+            initialServiceTemplates.dining = {
+              isActive: true,
+              services: []
+            };
+            break;
+          case 'entertainment':
+            initialServiceTemplates.entertainment = {
+              isActive: true,
+              services: []
+            };
+            break;
+          case 'shopping':
+            initialServiceTemplates.shopping = {
+              isActive: true,
+              services: []
+            };
+            break;
+          case 'fitness':
+            initialServiceTemplates.fitness = {
+              isActive: true,
+              services: []
+            };
+            break;
+          case 'housekeeping':
+            initialServiceTemplates.housekeeping = {
+              isActive: true,
+              services: []
+            };
+            break;
+        }
+      });
+
       serviceProvider = await ServiceProvider.create({
         _id: serviceProviderId,
         userId: userId,
         hotelId,
         businessName,
-        categories: [], // Start with no categories - provider will select them
-        serviceTemplates: {}, // Empty templates - will be populated when categories are selected
+        categories: validSelectedCategories, // Set selected categories
+        serviceTemplates: initialServiceTemplates, // Initialize templates for selected categories
         description: description || `${businessName} - Multi-service provider`,
         email: contactEmail || user.email,
         phone: contactPhone || user.phone,
@@ -1175,6 +1250,89 @@ router.put('/service-providers/:id/markup', catchAsync(async (req, res, next) =>
     data: {
       serviceProvider,
       markup: serviceProvider.markup
+    }
+  });
+}));
+
+/**
+ * @route   PUT /api/hotel/service-providers/:id/categories
+ * @desc    Update service categories for a service provider
+ * @access  Private/HotelAdmin
+ */
+router.put('/service-providers/:id/categories', restrictProviderToHotelAdmin, catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const providerId = req.params.id;
+  const { selectedCategories = [] } = req.body;
+
+  // Available categories with their default structure
+  const availableCategories = [
+    'laundry', 'transportation', 'tours', 'spa',
+    'dining', 'entertainment', 'shopping', 'fitness', 'housekeeping'
+  ];
+
+  // Validate selected categories
+  const validSelectedCategories = selectedCategories.filter(cat =>
+    availableCategories.includes(cat)
+  );
+
+  // Find service provider and make sure it belongs to this hotel
+  const serviceProvider = await ServiceProvider.findOne({
+    _id: providerId,
+    hotelId
+  });
+
+  if (!serviceProvider) {
+    return next(new AppError('No service provider found with that ID in your hotel', 404));
+  }
+
+  // Initialize service templates for selected categories
+  const updatedServiceTemplates = {};
+
+  // Keep existing templates for categories that are still selected
+  validSelectedCategories.forEach(category => {
+    if (serviceProvider.serviceTemplates && serviceProvider.serviceTemplates[category]) {
+      // Keep existing template but ensure it's active
+      updatedServiceTemplates[category] = {
+        ...serviceProvider.serviceTemplates[category],
+        isActive: true
+      };
+    } else {
+      // Create new template for newly selected category
+      updatedServiceTemplates[category] = {
+        isActive: true,
+        services: []
+      };
+    }
+  });
+
+  // Deactivate templates for categories that are no longer selected
+  if (serviceProvider.serviceTemplates) {
+    Object.keys(serviceProvider.serviceTemplates).forEach(category => {
+      if (!validSelectedCategories.includes(category)) {
+        updatedServiceTemplates[category] = {
+          ...serviceProvider.serviceTemplates[category],
+          isActive: false
+        };
+      }
+    });
+  }
+
+  // Update service provider
+  serviceProvider.categories = validSelectedCategories;
+  serviceProvider.serviceTemplates = updatedServiceTemplates;
+  await serviceProvider.save();
+
+  logger.info(`Service provider categories updated: ${serviceProvider.businessName}`, {
+    hotelId,
+    serviceProviderId: serviceProvider._id,
+    selectedCategories: validSelectedCategories
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      serviceProvider,
+      selectedCategories: validSelectedCategories
     }
   });
 }));

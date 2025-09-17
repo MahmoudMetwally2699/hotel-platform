@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchServiceProviders, selectServiceProviders, selectServiceProviderLoading, setServiceProviderMarkup } from '../../redux/slices/serviceSlice';
 import AddServiceProviderModal from '../../components/hotel/AddServiceProviderModal';
+import apiClient from '../../services/api.service';
+import { HOTEL_ADMIN_API } from '../../config/api.config';
 
 /**
  * Hotel Admin Service Providers Management Page
@@ -14,9 +16,20 @@ const ServiceProvidersPage = () => {
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [markupValue, setMarkupValue] = useState('');
   const [markupNotes, setMarkupNotes] = useState('');
   const [isSavingMarkup, setIsSavingMarkup] = useState(false);
+  const [isSavingCategories, setIsSavingCategories] = useState(false);
+
+  // Available service categories (only the specified ones)
+  const serviceCategories = [
+    { id: 'laundry', name: 'Laundry Services', icon: '👕', description: 'Wash, iron, and dry cleaning services' },
+    { id: 'transportation', name: 'Transportation', icon: '🚗', description: 'Car rental and taxi services' },
+    { id: 'dining', name: 'Dining Services', icon: '🍽️', description: 'Hotel restaurant and dining facilities' },
+    { id: 'housekeeping', name: 'Housekeeping', icon: '🧹', description: 'Room cleaning and maintenance services' }
+  ];
 
   useEffect(() => {
     dispatch(fetchServiceProviders({}));
@@ -34,6 +47,22 @@ const ServiceProvidersPage = () => {
     setMarkupValue(provider.markup?.percentage || '');
     setMarkupNotes(provider.markup?.notes || '');
     setIsModalOpen(true);
+  };
+
+  // Handle managing service categories for a service provider
+  const handleManageCategories = (provider) => {
+    setSelectedProvider(provider);
+    setSelectedCategories(provider.categories || []);
+    setIsCategoriesModalOpen(true);
+  };
+
+  // Handle category selection change
+  const handleCategoryChange = (categoryId, isChecked) => {
+    setSelectedCategories(prev =>
+      isChecked
+        ? [...(prev || []), categoryId]
+        : (prev || []).filter(id => id !== categoryId)
+    );
   };
 
   // Handle opening add provider modal
@@ -71,6 +100,27 @@ const ServiceProvidersPage = () => {
       alert('Failed to set markup. Please try again.');
     } finally {
       setIsSavingMarkup(false);
+    }
+  };
+
+  // Handle saving service categories
+  const handleSaveCategories = async () => {
+    if (!selectedProvider) return;
+
+    setIsSavingCategories(true);
+    try {
+      await apiClient.put(`${HOTEL_ADMIN_API.SERVICE_PROVIDERS}/${selectedProvider._id}/categories`, {
+        selectedCategories: selectedCategories
+      });
+
+      // Close modal and refresh data
+      setIsCategoriesModalOpen(false);
+      dispatch(fetchServiceProviders({}));
+    } catch (error) {
+      console.error('Error updating categories:', error);
+      alert('Failed to update service categories. Please try again.');
+    } finally {
+      setIsSavingCategories(false);
     }
   };
 
@@ -244,6 +294,12 @@ const ServiceProvidersPage = () => {
                               >
                                 Set Markup
                               </button>
+                              <button
+                                onClick={() => handleManageCategories(provider)}
+                                className="text-green-600 hover:text-green-800 font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-green-50 text-sm"
+                              >
+                                Manage Services
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -413,6 +469,133 @@ const ServiceProvidersPage = () => {
                     disabled={isSavingMarkup}
                   >
                     {isSavingMarkup ? 'Saving...' : 'Save Markup'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Manage Service Categories Modal */}
+        {isCategoriesModalOpen && selectedProvider && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Manage Service Categories</h3>
+                    <p className="text-green-100 text-sm mt-1">
+                      Configure services for {selectedProvider.businessName}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsCategoriesModalOpen(false)}
+                    className="text-white hover:text-gray-200 transition-colors duration-200"
+                    disabled={isSavingCategories}
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6">
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-2">Select Service Categories</h4>
+                  <p className="text-gray-600 text-sm">
+                    Choose which service categories this provider should offer. You can change these at any time.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {serviceCategories.map((category) => (
+                    <div
+                      key={category.id}
+                      className={`border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 ${
+                        (selectedCategories || []).includes(category.id)
+                          ? 'border-green-500 bg-green-50'
+                          : 'border-gray-200 bg-white hover:border-green-300'
+                      }`}
+                      onClick={() => handleCategoryChange(category.id, !(selectedCategories || []).includes(category.id))}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0">
+                          <div className="text-2xl">{category.icon}</div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id={`edit-category-${category.id}`}
+                              checked={(selectedCategories || []).includes(category.id)}
+                              onChange={(e) => handleCategoryChange(category.id, e.target.checked)}
+                              className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                              disabled={isSavingCategories}
+                            />
+                            <label
+                              htmlFor={`edit-category-${category.id}`}
+                              className="ml-2 text-sm font-semibold text-gray-800 cursor-pointer"
+                            >
+                              {category.name}
+                            </label>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">{category.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Current Categories Display */}
+                {selectedProvider.categories && selectedProvider.categories.length > 0 && (
+                  <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h5 className="text-sm font-semibold text-gray-700 mb-2">Current Active Categories:</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProvider.categories.map((categoryId) => {
+                        const category = serviceCategories.find(cat => cat.id === categoryId);
+                        return category ? (
+                          <span
+                            key={categoryId}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                          >
+                            {category.icon} {category.name}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-4 bg-gray-50 rounded-b-2xl">
+                <div className="flex space-x-3 justify-end">
+                  <button
+                    onClick={() => setIsCategoriesModalOpen(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+                    disabled={isSavingCategories}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveCategories}
+                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    disabled={isSavingCategories}
+                  >
+                    {isSavingCategories ? (
+                      <span className="flex items-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                        </svg>
+                        Saving...
+                      </span>
+                    ) : (
+                      'Save Changes'
+                    )}
                   </button>
                 </div>
               </div>

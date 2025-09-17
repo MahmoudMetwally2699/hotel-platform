@@ -9,7 +9,8 @@ const categoryTemplates = {
   laundry: {
     name: 'Laundry Services',
     icon: 'washing-machine',
-    description: 'Professional laundry and dry cleaning services',    items: [
+    description: 'Professional laundry and dry cleaning services',
+    items: [
       // Regular Clothing
       { name: 'T-Shirt', category: 'clothing' },
       { name: 'Dress Shirt', category: 'clothing' },
@@ -47,114 +48,37 @@ const categoryTemplates = {
       { name: 'Jumpsuit', category: 'workwear' },
 
       // Traditional and Religious Wear
-      { name: 'Thobe', category: 'traditional' },      { name: 'Embroidered Thobe', category: 'traditional' },
-      { name: 'Wool Thobe', category: 'traditional' },
-      { name: 'Kandura', category: 'traditional' },
-      { name: 'Dishdasha', category: 'traditional' },
-      { name: 'Jalabia', category: 'traditional' },
+      { name: 'Thobe', category: 'traditional' },
+      { name: 'Embroidered Thobe', category: 'traditional' },
+      { name: 'Kaftan', category: 'traditional' },
       { name: 'Abaya', category: 'traditional' },
-      { name: 'Embroidered Abaya', category: 'traditional' },
-      { name: 'Bisht', category: 'traditional' },
-      { name: 'Cloak', category: 'traditional' },
-      { name: 'Ihram', category: 'religious' },
+      { name: 'Hijab', category: 'traditional' },
+      { name: 'Prayer Clothes', category: 'religious' },
 
-      // Accessories and Headwear
-      { name: 'Shemagh', category: 'accessories' },
-      { name: 'Ghutra', category: 'accessories' },
-      { name: 'Igal', category: 'accessories' },
-      { name: 'Cap', category: 'accessories' },
-      { name: 'Kufi', category: 'accessories' },
-      { name: 'Skullcap', category: 'accessories' },
-      { name: 'Headscarf', category: 'accessories' },
+      // Undergarments and Delicates
+      { name: 'Underwear', category: 'undergarments' },
+      { name: 'Bra', category: 'undergarments' },
+      { name: 'Socks', category: 'undergarments' },
+      { name: 'Stockings', category: 'undergarments' },
+      { name: 'Ties', category: 'accessories' },
+      { name: 'Scarves', category: 'accessories' },
 
-      // Undergarments and Sleepwear
-      { name: 'Underwear (per piece)', category: 'undergarments' },
-      { name: 'Socks (per pair)', category: 'undergarments' },
-      { name: 'Pajamas', category: 'sleepwear' },
-
-      // Linens and Home Items
-      { name: 'Bedsheet (single)', category: 'linens' },
-      { name: 'Bedsheet (double)', category: 'linens' },
-      { name: 'Bed Sheets', category: 'linens' },
-      { name: 'Light Sheet', category: 'linens' },
-      { name: 'Pillowcase', category: 'linens' },
-      { name: 'Duvet', category: 'linens' },
-      { name: 'Blanket', category: 'linens' },
-      { name: 'Towel', category: 'linens' },
-      { name: 'Curtains', category: 'home' },
-      { name: 'Rug', category: 'home' },
-      { name: 'Sofa Cover', category: 'home' },
-      { name: 'Chair Cover', category: 'home' },      { name: 'Furnishings', category: 'home' }
+      // Bedding and Household Items
+      { name: 'Bed Sheets', category: 'bedding' },
+      { name: 'Pillowcases', category: 'bedding' },
+      { name: 'Blankets', category: 'bedding' },
+      { name: 'Comforters', category: 'bedding' },
+      { name: 'Curtains', category: 'household' },
+      { name: 'Table Cloths', category: 'household' },
+      { name: 'Towels', category: 'household' },
+      { name: 'Cloth Diapers', category: 'baby' }
     ],
-
-    // Simplified base service types (no fixed pricing multipliers)
-    serviceTypes: [
-      {
-        id: 'wash_only',
-        name: 'Wash Only',
-        description: 'Machine wash with appropriate detergent',
-        duration: { value: 24, unit: 'hours' }
-      },
-      {
-        id: 'iron_only',
-        name: 'Iron Only',
-        description: 'Professional ironing and pressing',
-        duration: { value: 12, unit: 'hours' }
-      },
-      {
-        id: 'wash_iron',
-        name: 'Wash + Iron',
-        description: 'Complete wash and iron service',
-        duration: { value: 24, unit: 'hours' },
-        isPopular: true
-      },
-      {
-        id: 'dry_cleaning',
-        name: 'Dry Cleaning',
-        description: 'Professional dry cleaning service',
-        duration: { value: 48, unit: 'hours' }
-      }    ],
-
-    // Express surcharge configuration (service providers set their own rate)
-    expressSurcharge: {
-      name: 'Express Service',
-      description: 'Rush 4-hour delivery service',
-      duration: { value: 4, unit: 'hours' },
-      isOptional: true // Service providers can choose to offer this
-    },    // Simplified service combinations for package services (no fixed pricing)
-    serviceCombinations: [
-      {
-        id: 'wash_only',
-        name: 'Wash Only',
-        description: 'Machine wash with appropriate detergent',
-        serviceTypes: ['wash_only'],
-        duration: { value: 24, unit: 'hours' },
-        isPopular: false
-      },
-      {
-        id: 'iron_only',
-        name: 'Iron Only',
-        description: 'Professional ironing and pressing',
-        serviceTypes: ['iron_only'],
-        duration: { value: 12, unit: 'hours' },
-        isPopular: false
-      },
-      {
-        id: 'wash_iron',
-        name: 'Wash & Iron',
-        description: 'Complete wash and iron service',
-        serviceTypes: ['wash_iron'],
-        duration: { value: 24, unit: 'hours' },
-        isPopular: true
-      },
-      {
-        id: 'dry_cleaning',
-        name: 'Dry Cleaning',
-        description: 'Professional dry cleaning service',
-        serviceTypes: ['dry_cleaning'],
-        duration: { value: 48, unit: 'hours' },
-        isPopular: false
-      }
+    services: [
+      { name: 'Wash & Fold', basePrice: 3, unit: 'per kg' },
+      { name: 'Dry Cleaning', basePrice: 15, unit: 'per piece' },
+      { name: 'Iron Only', basePrice: 2, unit: 'per piece' },
+      { name: 'Express Service', basePrice: 5, unit: 'surcharge', description: 'Same day delivery' },
+      { name: 'Stain Removal', basePrice: 8, unit: 'per piece', description: 'Special treatment for tough stains' }
     ]
   },
 
@@ -164,154 +88,72 @@ const categoryTemplates = {
     description: 'Vehicle rental and transportation services',
     vehicleTypes: [
       {
-        id: 'sedan',
-        name: 'Sedan',
+        id: 'economy',
+        name: 'Economy/Compact Car',
         capacity: 4,
-        features: ['AC', 'Music System'],
+        description: 'Small, fuel-efficient cars perfect for city driving',
+        features: ['Air Conditioning', 'Manual/Automatic', 'Fuel Efficient'],
         basePrice: 25,
-        pricePerKm: 2
+        image: '/car-image/EconomyCompact Car.png'
+      },
+      {
+        id: 'sedan',
+        name: 'Sedan/Midsize',
+        capacity: 4,
+        description: 'Comfortable sedans for business or leisure travel',
+        features: ['Air Conditioning', 'Comfortable Seating', 'Trunk Space'],
+        basePrice: 35,
+        image: '/car-image/SedanMidsize.png'
       },
       {
         id: 'suv',
-        name: 'SUV',
+        name: 'SUV/Crossover',
         capacity: 7,
-        features: ['AC', 'Music System', 'Extra Space'],
-        basePrice: 40,
-        pricePerKm: 3,
-        isPopular: true
+        description: 'Spacious SUVs perfect for families or groups',
+        features: ['Air Conditioning', '7 Seats', 'Large Cargo Space'],
+        basePrice: 55,
+        image: '/car-image/SUVCrossover.png'
       },
       {
         id: 'luxury',
-        name: 'Luxury Car',
+        name: 'Luxury/Premium',
         capacity: 4,
-        features: ['AC', 'Premium Interior', 'WiFi', 'Refreshments'],
-        basePrice: 80,
-        pricePerKm: 5
+        description: 'High-end vehicles for premium experience',
+        features: ['Leather Seats', 'Premium Sound', 'Advanced Safety'],
+        basePrice: 75,
+        image: '/car-image/LuxuryPremium.png'
       },
       {
         id: 'van',
-        name: 'Van/Minibus',
+        name: 'Van/MPV',
         capacity: 12,
-        features: ['AC', 'Large Space'],
-        basePrice: 60,
-        pricePerKm: 4
+        description: 'Large vans for group transportation',
+        features: ['12 Passenger Seats', 'Air Conditioning', 'Large Storage'],
+        basePrice: 85,
+        image: '/car-image/VanMPV.png'
+      },
+      {
+        id: 'large',
+        name: 'Large Vehicle',
+        capacity: 15,
+        description: 'Extra large vehicles for big groups',
+        features: ['15+ Passenger Seats', 'Air Conditioning', 'Professional Driver'],
+        basePrice: 120,
+        image: '/car-image/Large Vehicle.png'
       }
     ],
-    serviceTypes: [
-      {
-        id: 'hourly',
-        name: 'Hourly Rental',
-        description: 'Rent by the hour with driver',
-        pricingType: 'per-hour',
-        minimumHours: 2
-      },
-      {
-        id: 'daily',
-        name: 'Daily Rental',
-        description: 'Full day rental with driver',
-        pricingType: 'per-day',
-        isPopular: true
-      },
-      {
-        id: 'airport',
-        name: 'Airport Transfer',
-        description: 'One-way airport pickup/drop',
-        pricingType: 'fixed'
-      },
-      {
-        id: 'city_tour',
-        name: 'City Tour',
-        description: 'Guided city sightseeing',
-        pricingType: 'fixed'
-      }
-    ]
-  },
-
-  tours: {
-    name: 'Tours & Activities',
-    icon: 'map',
-    description: 'Guided tours and recreational activities',
-    comingSoon: true,
-    tourTypes: [
-      {
-        id: 'city_tour',
-        name: 'City Sightseeing',
-        duration: '4-6 hours',
-        groupSize: { min: 2, max: 15 },
-        basePrice: 50,
-        includes: ['Guide', 'Transportation', 'Entry Tickets']
-      },
-      {
-        id: 'cultural',
-        name: 'Cultural Heritage',
-        duration: '6-8 hours',
-        groupSize: { min: 4, max: 20 },
-        basePrice: 75,
-        includes: ['Expert Guide', 'Transportation', 'Lunch', 'Entry Tickets'],
-        isPopular: true
-      },
-      {
-        id: 'adventure',
-        name: 'Adventure Activities',
-        duration: 'Full Day',
-        groupSize: { min: 2, max: 8 },
-        basePrice: 120,
-        includes: ['Equipment', 'Guide', 'Safety Gear', 'Refreshments']
-      },
-      {
-        id: 'food',
-        name: 'Food & Culinary',
-        duration: '3-4 hours',
-        groupSize: { min: 2, max: 12 },
-        basePrice: 60,
-        includes: ['Food Tastings', 'Guide', 'Recipe Cards']
-      },
-      {
-        id: 'nature',
-        name: 'Nature & Wildlife',
-        duration: '6-8 hours',
-        groupSize: { min: 2, max: 10 },
-        basePrice: 90,
-        includes: ['Guide', 'Transportation', 'Binoculars', 'Lunch']
-      }
-    ]
-  },
-
-  spa: {
-    name: 'Spa & Wellness',
-    icon: 'spa',
-    description: 'Relaxation and wellness services',
-    comingSoon: true,
-    treatments: [
-      {
-        id: 'massage',
-        name: 'Therapeutic Massage',
-        duration: [30, 60, 90],
-        basePrice: 80,
-        types: ['Swedish', 'Deep Tissue', 'Hot Stone', 'Aromatherapy']
-      },
-      {
-        id: 'facial',
-        name: 'Facial Treatment',
-        duration: [45, 60, 75],
-        basePrice: 60,
-        types: ['Cleansing', 'Anti-Aging', 'Hydrating', 'Acne Treatment']
-      },
-      {
-        id: 'body_treatment',
-        name: 'Body Treatment',
-        duration: [60, 90],
-        basePrice: 100,
-        types: ['Body Scrub', 'Body Wrap', 'Detox Treatment']
-      }
+    services: [
+      { name: 'Hourly Rental', basePrice: 15, unit: 'per hour', description: 'Flexible hourly rental' },
+      { name: 'Daily Rental', basePrice: 50, unit: 'per day', description: 'Full day rental' },
+      { name: 'Airport Transfer', basePrice: 30, unit: 'per trip', description: 'One-way airport transfer' },
+      { name: 'City Tour', basePrice: 80, unit: 'per day', description: 'Guided city tour with driver' }
     ]
   },
 
   dining: {
     name: 'Dining Services',
     icon: 'restaurant',
-    description: 'Food delivery and catering services',
-    comingSoon: true,
+    description: 'Hotel restaurant and dining facilities',
     cuisineTypes: [
       { id: 'local', name: 'Local Cuisine', isPopular: true },
       { id: 'italian', name: 'Italian' },
@@ -336,8 +178,6 @@ const categoryTemplates = {
       { name: 'French Toast', category: 'breakfast', icon: '🍞' },
       { name: 'Omelette', category: 'breakfast', icon: '🥚' },
       { name: 'Croissant', category: 'breakfast', icon: '🥐' },
-      { name: 'Bagel with Cream Cheese', category: 'breakfast', icon: '🥯' },
-      { name: 'Avocado Toast', category: 'breakfast', icon: '🥑' },
 
       // Main Courses
       { name: 'Grilled Chicken', category: 'mains', icon: '🍗' },
@@ -346,272 +186,63 @@ const categoryTemplates = {
       { name: 'Pasta Carbonara', category: 'mains', icon: '🍝' },
       { name: 'Pizza Margherita', category: 'mains', icon: '🍕' },
       { name: 'Burger & Fries', category: 'mains', icon: '🍔' },
-      { name: 'Grilled Salmon', category: 'mains', icon: '🐠' },
-      { name: 'Lamb Chops', category: 'mains', icon: '🍖' },
-      { name: 'BBQ Ribs', category: 'mains', icon: '🍖' },
-      { name: 'Chicken Curry', category: 'mains', icon: '🍛' },
-      { name: 'Seafood Paella', category: 'mains', icon: '🥘' },
-      { name: 'Vegetable Stir Fry', category: 'mains', icon: '🥬' },
-
-      // Appetizers
-      { name: 'Caesar Salad', category: 'appetizers', icon: '🥗' },
-      { name: 'Soup of the Day', category: 'appetizers', icon: '🍲' },
-      { name: 'Garlic Bread', category: 'appetizers', icon: '🍞' },
-      { name: 'Bruschetta', category: 'appetizers', icon: '🍅' },
-      { name: 'Chicken Wings', category: 'appetizers', icon: '🍗' },
-      { name: 'Calamari Rings', category: 'appetizers', icon: '🦑' },
-      { name: 'Stuffed Mushrooms', category: 'appetizers', icon: '🍄' },
-      { name: 'Shrimp Cocktail', category: 'appetizers', icon: '🍤' },
-
-      // Desserts
-      { name: 'Chocolate Cake', category: 'desserts', icon: '🍰' },
-      { name: 'Ice Cream', category: 'desserts', icon: '🍦' },
-      { name: 'Tiramisu', category: 'desserts', icon: '🧁' },
-      { name: 'Fruit Salad', category: 'desserts', icon: '🍓' },
-      { name: 'Cheesecake', category: 'desserts', icon: '🍰' },
-      { name: 'Apple Pie', category: 'desserts', icon: '🥧' },
-      { name: 'Chocolate Mousse', category: 'desserts', icon: '🍫' },
-      { name: 'Crème Brûlée', category: 'desserts', icon: '🍮' },
 
       // Beverages
       { name: 'Fresh Orange Juice', category: 'beverages', icon: '🍊' },
       { name: 'Coffee', category: 'beverages', icon: '☕' },
       { name: 'Tea', category: 'beverages', icon: '🍵' },
-      { name: 'Soft Drinks', category: 'beverages', icon: '🥤' },
-      { name: 'Mineral Water', category: 'beverages', icon: '💧' },
-      { name: 'Fresh Smoothie', category: 'beverages', icon: '🥤' },
-      { name: 'Wine (Glass)', category: 'beverages', icon: '🍷' },
-      { name: 'Beer', category: 'beverages', icon: '🍺' },
-      { name: 'Cocktail', category: 'beverages', icon: '🍹' },
-      { name: 'Hot Chocolate', category: 'beverages', icon: '☕' }
+      { name: 'Soft Drinks', category: 'beverages', icon: '🥤' }
+    ],
+    services: [
+      { name: 'Room Service', basePrice: 20, unit: 'per order', description: 'In-room dining service' },
+      { name: 'Restaurant Dining', basePrice: 25, unit: 'per person', description: 'Main restaurant service' },
+      { name: 'Catering', basePrice: 15, unit: 'per person', description: 'Event catering service' }
     ]
   },
 
-  entertainment: {
-    name: 'Entertainment',
-    icon: 'music',
-    description: 'Entertainment and event services',
-    comingSoon: true,
-    eventTypes: [
-      {
-        id: 'live_music',
-        name: 'Live Music Performance',
-        duration: '2-4 hours',
-        capacity: { min: 10, max: 200 },
-        basePrice: 500
-      },
-      {
-        id: 'dj',
-        name: 'DJ Services',
-        duration: '3-6 hours',
-        capacity: { min: 20, max: 500 },
-        basePrice: 300,
-        isPopular: true
-      },
-      {
-        id: 'cultural_show',
-        name: 'Cultural Show',
-        duration: '1-2 hours',
-        capacity: { min: 15, max: 100 },
-        basePrice: 400
-      }
-    ]  },
-
-  transportation: {
-    name: 'Transportation Services',
-    icon: 'car',
-    description: 'Vehicle rental and ride services',
-
-    vehicleTypes: [
-      {
-        id: 'economy_sedan',
-        name: 'Economy Sedan',
-        description: 'Standard, affordable option for solo or small group rides',
-        capacity: { passengers: 4, luggage: 2 },
-        features: ['AC', 'Music System', 'Phone Charging'],
-        category: 'economy',
-        isPopular: true
-      },
-      {
-        id: 'comfort_sedan',
-        name: 'Comfort Sedan',
-        description: 'Newer cars with extra legroom and premium features',
-        capacity: { passengers: 4, luggage: 2 },
-        features: ['AC', 'Premium Interior', 'Extra Legroom', 'WiFi', 'Phone Charging'],
-        category: 'comfort'
-      },
-      {
-        id: 'premium_suv',
-        name: 'Premium SUV',
-        description: 'Spacious SUV for larger groups',
-        capacity: { passengers: 6, luggage: 4 },
-        features: ['AC', 'Premium Interior', 'Extra Space', 'WiFi', 'Refreshments'],
-        category: 'premium'
-      },
-      {
-        id: 'luxury_vehicle',
-        name: 'Luxury Vehicle',
-        description: 'High-end luxury cars with professional chauffeur',
-        capacity: { passengers: 4, luggage: 3 },
-        features: ['Premium Interior', 'Professional Chauffeur', 'Complimentary Drinks', 'WiFi', 'Climate Control'],
-        category: 'luxury'
-      },
-      {
-        id: 'eco_vehicle',
-        name: 'Eco-Friendly Vehicle',
-        description: 'Electric or hybrid vehicles for sustainable travel',
-        capacity: { passengers: 4, luggage: 2 },
-        features: ['Electric/Hybrid', 'AC', 'Phone Charging', 'Eco-Friendly'],
-        category: 'eco'
-      },
-      {
-        id: 'accessible_vehicle',
-        name: 'Accessible Vehicle',
-        description: 'Wheelchair-accessible vehicles with special equipment',
-        capacity: { passengers: 4, luggage: 2 },
-        features: ['Wheelchair Accessible', 'Special Equipment', 'AC', 'Trained Driver'],
-        category: 'accessible'
-      },
-      {
-        id: 'van_large',
-        name: 'Large Van',
-        description: 'For larger groups, accommodating up to 8 passengers',
-        capacity: { passengers: 8, luggage: 6 },
-        features: ['AC', 'Extra Space', 'Multiple Stops', 'Group Travel'],
-        category: 'large'
-      },
-      {
-        id: 'local_taxi',
-        name: 'Local Taxi',
-        description: 'Access to local taxi services',
-        capacity: { passengers: 4, luggage: 2 },
-        features: ['Local Driver', 'AC', 'City Knowledge'],
-        category: 'standard'
-      },
-      {
-        id: 'shared_ride',
-        name: 'Shared Ride',
-        description: 'Cost-sharing option with other passengers',
-        capacity: { passengers: 4, luggage: 1 },
-        features: ['Cost Sharing', 'AC', 'Eco-Friendly'],
-        category: 'shared'
-      }
-    ],
-
+  housekeeping: {
+    name: 'Housekeeping Services',
+    icon: 'broom',
+    description: 'Room cleaning and maintenance services',
     serviceTypes: [
       {
-        id: 'standard',
-        name: 'Standard Ride',
-        description: 'Basic transportation service',
-        pricingModel: 'per_km',
-        baseMultiplier: 1.0
+        id: 'cleaning',
+        name: 'Room Cleaning',
+        description: 'Standard room cleaning service',
+        features: ['Bed Making', 'Bathroom Cleaning', 'Floor Cleaning', 'Trash Removal'],
+        basePrice: 25,
+        duration: 60
       },
       {
-        id: 'comfort',
-        name: 'Comfort Ride',
-        description: 'Enhanced comfort with premium vehicles',
-        pricingModel: 'per_km',
-        baseMultiplier: 1.3,
-        isPopular: true
+        id: 'deep-cleaning',
+        name: 'Deep Cleaning',
+        description: 'Thorough deep cleaning service',
+        features: ['All Standard Features', 'Window Cleaning', 'Carpet Cleaning', 'Detailed Sanitization'],
+        basePrice: 45,
+        duration: 120
       },
       {
-        id: 'premium',
-        name: 'Premium Service',
-        description: 'High-end vehicles with professional service',
-        pricingModel: 'per_km',
-        baseMultiplier: 1.8
+        id: 'maintenance',
+        name: 'Maintenance Request',
+        description: 'Basic maintenance and repairs',
+        features: ['Light Bulb Replacement', 'Minor Repairs', 'Equipment Check'],
+        basePrice: 20,
+        duration: 30
       },
       {
-        id: 'eco',
-        name: 'Eco-Friendly',
-        description: 'Sustainable transportation option',
-        pricingModel: 'per_km',
-        baseMultiplier: 1.1
-      },
-      {
-        id: 'accessible',
-        name: 'Wheelchair Accessible',
-        description: 'Special accommodation for mobility needs',
-        pricingModel: 'per_km',
-        baseMultiplier: 1.2
-      },
-      {
-        id: 'advance_booking',
-        name: 'Advance Booking',
-        description: 'Reserve rides in advance',
-        pricingModel: 'fixed',
-        baseMultiplier: 1.0,
-        advanceRequired: true
-      },
-      {
-        id: 'hourly_rental',
-        name: 'Hourly Rental',
-        description: 'Rent vehicle by the hour',
-        pricingModel: 'per_hour',
-        baseMultiplier: 1.0,
-        minimumHours: 2
-      },
-      {
-        id: 'airport_transfer',
-        name: 'Airport Transfer',
-        description: 'Specialized airport pickup/dropoff service',
-        pricingModel: 'fixed',
-        baseMultiplier: 1.5,
-        isPopular: true
-      },
-      {
-        id: 'city_tour',
-        name: 'City Tour',
-        description: 'Guided sightseeing with driver',
-        pricingModel: 'per_hour',
-        baseMultiplier: 2.0,
-        minimumHours: 3
+        id: 'amenities',
+        name: 'Amenity Restocking',
+        description: 'Restocking room amenities',
+        features: ['Towel Replacement', 'Toiletries Refill', 'Mini Bar Restock'],
+        basePrice: 15,
+        duration: 20
       }
-    ]
-  },
-
-  shopping: {
-    name: 'Shopping Services',
-    icon: 'shopping-bag',
-    description: 'Personal shopping and delivery services',
-    comingSoon: true,
-    storeTypes: [
-      { id: 'grocery', name: 'Grocery & Essentials', deliveryFee: 5 },
-      { id: 'pharmacy', name: 'Pharmacy', deliveryFee: 3 },
-      { id: 'clothing', name: 'Clothing & Fashion', deliveryFee: 8 },
-      { id: 'electronics', name: 'Electronics', deliveryFee: 10 },
-      { id: 'souvenirs', name: 'Souvenirs & Gifts', deliveryFee: 6, isPopular: true }
-    ]
-  },
-
-  fitness: {
-    name: 'Fitness & Sports',
-    icon: 'dumbbell',
-    description: 'Fitness training and sports activities',
-    comingSoon: true,
-    activities: [
-      {
-        id: 'personal_training',
-        name: 'Personal Training',
-        duration: [30, 45, 60],
-        basePrice: 50,
-        equipment: true
-      },
-      {
-        id: 'yoga',
-        name: 'Yoga Session',
-        duration: [45, 60, 90],
-        basePrice: 30,
-        equipment: true,
-        isPopular: true
-      },
-      {
-        id: 'swimming',
-        name: 'Swimming Instruction',
-        duration: [30, 60],
-        basePrice: 40,
-        equipment: false
-      }
+    ],
+    services: [
+      { name: 'Daily Housekeeping', basePrice: 25, unit: 'per room', description: 'Daily room cleaning' },
+      { name: 'Express Cleaning', basePrice: 35, unit: 'per room', description: 'Quick 30-minute cleaning' },
+      { name: 'Deep Cleaning', basePrice: 50, unit: 'per room', description: 'Thorough deep cleaning' },
+      { name: 'Maintenance Request', basePrice: 20, unit: 'per request', description: 'Basic maintenance service' }
     ]
   }
 };

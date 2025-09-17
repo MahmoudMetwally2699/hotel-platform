@@ -20,7 +20,8 @@ import { showErrorToast } from '../../utils/errorHandler';
 
 const categoryIcons = {
   'hotel-restaurant': FaCoffee,
-  'housekeeping-requests': FaBroom
+  'housekeeping-requests': FaBroom,
+  'room-service': FaCoffee
 };
 
 const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories }) => {
@@ -35,35 +36,76 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
     try {
       const response = await apiClient.get('/service/inside-services');
 
-      // Transform the response into category format
-      const categoriesData = {
-        'hotel-restaurant': {
-          name: 'Hotel Restaurant',
-          description: 'Main dining facilities and reservations',
-          items: [
-            { name: 'Table reservations', category: 'booking' },
-            { name: 'Private dining', category: 'special' },
-            { name: 'Event catering', category: 'events' },
-            { name: 'Wine selection', category: 'beverage' }
-          ]
-        },
-        'housekeeping-requests': {
-          name: 'Housekeeping Services',
-          description: 'Room cleaning and maintenance requests',
-          items: [
-            { name: 'Extra cleaning', category: 'cleaning' },
-            { name: 'Amenity requests', category: 'amenities' },
-            { name: 'Maintenance issues', category: 'maintenance' },
-            { name: 'Linen change', category: 'cleaning' }
-          ]
-        }
-      };
-
-      // Get active categories from response
+      // Check if we have inside services data
       const serviceData = response.data.data || [];
-      const activeCats = serviceData
-        .filter(service => service.isActive)
-        .map(service => service.id);
+
+      // Show message if provided by backend
+      if (response.data.message) {
+        toast.info(response.data.message);
+      }
+
+      if (serviceData.length === 0) {
+        setCategories({});
+        setActiveCategories([]);
+        setLoading(false);
+        return;
+      }
+
+      // Transform the response into category format
+      const categoriesData = {};
+      const activeCats = [];
+
+      serviceData.forEach(service => {
+        // Map service to category structure
+        if (service.id === 'hotel-restaurant') {
+          categoriesData['hotel-restaurant'] = {
+            name: 'Hotel Restaurant',
+            description: 'Main dining facilities and reservations',
+            items: [
+              { name: 'Table reservations', category: 'booking' },
+              { name: 'Private dining', category: 'special' },
+              { name: 'Event catering', category: 'events' },
+              { name: 'Wine selection', category: 'beverage' }
+            ]
+          };
+        } else if (service.id === 'housekeeping-requests') {
+          categoriesData['housekeeping-requests'] = {
+            name: 'Housekeeping Services',
+            description: 'Room cleaning and maintenance requests',
+            items: [
+              { name: 'Extra cleaning', category: 'cleaning' },
+              { name: 'Amenity requests', category: 'amenities' },
+              { name: 'Maintenance issues', category: 'maintenance' },
+              { name: 'Linen change', category: 'cleaning' }
+            ]
+          };
+        } else if (service.id === 'room-service') {
+          categoriesData['room-service'] = {
+            name: 'Room Service',
+            description: 'In-room dining and service requests',
+            items: [
+              { name: 'Breakfast in bed', category: 'dining' },
+              { name: 'Late night snacks', category: 'dining' },
+              { name: 'Mini bar restocking', category: 'service' }
+            ]
+          };
+        } else if (service.id === 'concierge-services') {
+          categoriesData['concierge-services'] = {
+            name: 'Concierge Services',
+            description: 'Guest assistance and recommendations',
+            items: [
+              { name: 'Local recommendations', category: 'guidance' },
+              { name: 'Booking assistance', category: 'booking' },
+              { name: 'Special requests', category: 'service' }
+            ]
+          };
+        }
+
+        // Track active services
+        if (service.isActive) {
+          activeCats.push(service.id);
+        }
+      });
 
       setCategories(categoriesData);
       setActiveCategories(activeCats);
@@ -71,49 +113,18 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
     } catch (error) {
       console.error('Error fetching inside service categories:', error);
 
-      // Fallback to local category data if API fails
-      const fallbackCategories = {
-        'room-service': {
-          name: 'Room Service',
-          description: 'In-room dining and service requests',
-          items: [
-            { name: 'Breakfast in bed', category: 'dining' },
-            { name: 'Late night snacks', category: 'dining' },
-            { name: 'Mini bar restocking', category: 'service' }
-          ]
-        },
-        'hotel-restaurant': {
-          name: 'Hotel Restaurant',
-          description: 'Main dining facilities and reservations',
-          items: [
-            { name: 'Table reservations', category: 'booking' },
-            { name: 'Private dining', category: 'special' },
-            { name: 'Event catering', category: 'events' }
-          ]
-        },
-        'concierge-services': {
-          name: 'Concierge Services',
-          description: 'Guest assistance and recommendations',
-          items: [
-            { name: 'Local recommendations', category: 'guidance' },
-            { name: 'Booking assistance', category: 'booking' },
-            { name: 'Special requests', category: 'service' }
-          ]
-        },
-        'housekeeping-requests': {
-          name: 'Housekeeping Services',
-          description: 'Room cleaning and maintenance requests',
-          items: [
-            { name: 'Extra cleaning', category: 'cleaning' },
-            { name: 'Amenity requests', category: 'amenities' },
-            { name: 'Maintenance issues', category: 'maintenance' }
-          ]
-        }
-      };
+      // Enhanced error handling
+      if (error.response?.status === 403) {
+        toast.error(error.response.data.message || 'Access denied. Please contact your hotel admin.');
+        setCategories({});
+        setActiveCategories([]);
+      } else {
+        // Fallback to empty state on error
+        setCategories({});
+        setActiveCategories([]);
+        toast.error('Failed to load inside services. Please contact your hotel admin.');
+      }
 
-      setCategories(fallbackCategories);
-      setActiveCategories([]);
-      toast.warn('Using default inside service categories. API connection failed.');
       setLoading(false);
     }
   }, []);
@@ -221,6 +232,29 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* No categories available state */}
+        {Object.keys(categories).length === 0 && (
+          <div className="text-center py-16">
+            <div className="max-w-md mx-auto">
+              <div className="mb-8">
+                <FaTimes className="text-6xl text-gray-400 mx-auto mb-4" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">No Inside Hotel Services Available</h3>
+              <p className="text-gray-600 mb-8 leading-relaxed">
+                No inside hotel service categories are currently enabled for your account. Please contact your hotel administrator to enable the required service categories such as dining or housekeeping.
+              </p>
+              {onBackToCategories && (
+                <button
+                  onClick={onBackToCategories}
+                  className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                >
+                  Back to Categories
+                </button>
+              )}
             </div>
           </div>
         )}
