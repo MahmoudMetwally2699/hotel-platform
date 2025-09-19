@@ -5,15 +5,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
-import { selectUnreadCount } from '../../redux/slices/notificationSlice';
-import TailwindNotificationsMenu from '../notifications/TailwindNotificationsMenu';
 
 const TailwindHeader = ({ onOpenSidebar }) => {
   const { currentUser, role, logout } = useAuth();
-  const unreadCount = useSelector(selectUnreadCount);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -67,11 +63,8 @@ const TailwindHeader = ({ onOpenSidebar }) => {
           </Link>
         </div>
 
-        {/* Right side - Notifications and Profile */}
+        {/* Right side - Profile */}
         <div className="flex items-center space-x-4">
-          {/* Notifications */}
-          <TailwindNotificationsMenu />
-
           {/* User Profile Menu */}
           <div className="relative inline-block text-left" ref={menuRef}>
             <button

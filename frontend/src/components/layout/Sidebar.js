@@ -16,7 +16,6 @@ import {
   ListItemIcon,
   ListItemText,
   Toolbar,
-  Typography,
   Divider,
   IconButton,
 } from '@mui/material';
@@ -91,19 +90,17 @@ const Sidebar = ({ open, onClose }) => {
         px: { xs: 3, sm: 3 },
         borderBottom: { xs: '1px solid #e0e0e0', sm: 'none' }
       }}>
-        <Typography
-          variant="h6"
-          noWrap
-          component="div"
-          sx={{
-            fontSize: { xs: '1.3rem', sm: '1.25rem' },
-            fontWeight: 600,
-            color: 'primary.main',
-            flexGrow: 1
-          }}
-        >
-          Menu
-        </Typography>
+        <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+          <img
+            src="/qickroom.png"
+            alt="QuickRoom"
+            style={{
+              height: '40px',
+              width: 'auto',
+              objectFit: 'contain'
+            }}
+          />
+        </Box>
         {/* Close button for mobile */}
         <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
           <IconButton

@@ -21,6 +21,11 @@ const WHATSAPP_CONFIG = {
 
 if (!WHATSAPP_CONFIG.phoneNumberId || !WHATSAPP_CONFIG.accessToken) {
   console.error('[WhatsApp] Missing WHATSAPP_PHONE_NUMBER_ID or WHATSAPP_ACCESS_TOKEN');
+  console.log('[WhatsApp] Current config:', {
+    phoneNumberId: WHATSAPP_CONFIG.phoneNumberId ? 'SET' : 'MISSING',
+    accessToken: WHATSAPP_CONFIG.accessToken ? 'SET' : 'MISSING',
+    baseURL: WHATSAPP_CONFIG.baseURL
+  });
 }
 
 /** =========================

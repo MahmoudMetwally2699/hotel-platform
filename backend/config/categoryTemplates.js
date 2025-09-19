@@ -9,8 +9,7 @@ const categoryTemplates = {
   laundry: {
     name: 'Laundry Services',
     icon: 'washing-machine',
-    description: 'Professional laundry and dry cleaning services',
-    items: [
+    description: 'Professional laundry and dry cleaning services',    items: [
       // Regular Clothing
       { name: 'T-Shirt', category: 'clothing' },
       { name: 'Dress Shirt', category: 'clothing' },
@@ -48,39 +47,117 @@ const categoryTemplates = {
       { name: 'Jumpsuit', category: 'workwear' },
 
       // Traditional and Religious Wear
-      { name: 'Thobe', category: 'traditional' },
-      { name: 'Embroidered Thobe', category: 'traditional' },
-      { name: 'Kaftan', category: 'traditional' },
+      { name: 'Thobe', category: 'traditional' },      { name: 'Embroidered Thobe', category: 'traditional' },
+      { name: 'Wool Thobe', category: 'traditional' },
+      { name: 'Kandura', category: 'traditional' },
+      { name: 'Dishdasha', category: 'traditional' },
+      { name: 'Jalabia', category: 'traditional' },
       { name: 'Abaya', category: 'traditional' },
-      { name: 'Hijab', category: 'traditional' },
-      { name: 'Prayer Clothes', category: 'religious' },
+      { name: 'Embroidered Abaya', category: 'traditional' },
+      { name: 'Bisht', category: 'traditional' },
+      { name: 'Cloak', category: 'traditional' },
+      { name: 'Ihram', category: 'religious' },
 
-      // Undergarments and Delicates
-      { name: 'Underwear', category: 'undergarments' },
-      { name: 'Bra', category: 'undergarments' },
-      { name: 'Socks', category: 'undergarments' },
-      { name: 'Stockings', category: 'undergarments' },
-      { name: 'Ties', category: 'accessories' },
-      { name: 'Scarves', category: 'accessories' },
+      // Accessories and Headwear
+      { name: 'Shemagh', category: 'accessories' },
+      { name: 'Ghutra', category: 'accessories' },
+      { name: 'Igal', category: 'accessories' },
+      { name: 'Cap', category: 'accessories' },
+      { name: 'Kufi', category: 'accessories' },
+      { name: 'Skullcap', category: 'accessories' },
+      { name: 'Headscarf', category: 'accessories' },
 
-      // Bedding and Household Items
-      { name: 'Bed Sheets', category: 'bedding' },
-      { name: 'Pillowcases', category: 'bedding' },
-      { name: 'Blankets', category: 'bedding' },
-      { name: 'Comforters', category: 'bedding' },
-      { name: 'Curtains', category: 'household' },
-      { name: 'Table Cloths', category: 'household' },
-      { name: 'Towels', category: 'household' },
-      { name: 'Cloth Diapers', category: 'baby' }
+      // Undergarments and Sleepwear
+      { name: 'Underwear (per piece)', category: 'undergarments' },
+      { name: 'Socks (per pair)', category: 'undergarments' },
+      { name: 'Pajamas', category: 'sleepwear' },
+
+      // Linens and Home Items
+      { name: 'Bedsheet (single)', category: 'linens' },
+      { name: 'Bedsheet (double)', category: 'linens' },
+      { name: 'Bed Sheets', category: 'linens' },
+      { name: 'Light Sheet', category: 'linens' },
+      { name: 'Pillowcase', category: 'linens' },
+      { name: 'Duvet', category: 'linens' },
+      { name: 'Blanket', category: 'linens' },
+      { name: 'Towel', category: 'linens' },
+      { name: 'Curtains', category: 'home' },
+      { name: 'Rug', category: 'home' },
+      { name: 'Sofa Cover', category: 'home' },
+      { name: 'Chair Cover', category: 'home' },      { name: 'Furnishings', category: 'home' }
     ],
-    services: [
-      { name: 'Wash & Fold', basePrice: 3, unit: 'per kg' },
-      { name: 'Dry Cleaning', basePrice: 15, unit: 'per piece' },
-      { name: 'Iron Only', basePrice: 2, unit: 'per piece' },
-      { name: 'Express Service', basePrice: 5, unit: 'surcharge', description: 'Same day delivery' },
-      { name: 'Stain Removal', basePrice: 8, unit: 'per piece', description: 'Special treatment for tough stains' }
+
+    // Simplified base service types (no fixed pricing multipliers)
+    serviceTypes: [
+      {
+        id: 'wash_only',
+        name: 'Wash Only',
+        description: 'Machine wash with appropriate detergent',
+        duration: { value: 24, unit: 'hours' }
+      },
+      {
+        id: 'iron_only',
+        name: 'Iron Only',
+        description: 'Professional ironing and pressing',
+        duration: { value: 12, unit: 'hours' }
+      },
+      {
+        id: 'wash_iron',
+        name: 'Wash + Iron',
+        description: 'Complete wash and iron service',
+        duration: { value: 24, unit: 'hours' },
+        isPopular: true
+      },
+      {
+        id: 'dry_cleaning',
+        name: 'Dry Cleaning',
+        description: 'Professional dry cleaning service',
+        duration: { value: 48, unit: 'hours' }
+      }    ],
+
+    // Express surcharge configuration (service providers set their own rate)
+    expressSurcharge: {
+      name: 'Express Service',
+      description: 'Rush 4-hour delivery service',
+      duration: { value: 4, unit: 'hours' },
+      isOptional: true // Service providers can choose to offer this
+    },    // Simplified service combinations for package services (no fixed pricing)
+    serviceCombinations: [
+      {
+        id: 'wash_only',
+        name: 'Wash Only',
+        description: 'Machine wash with appropriate detergent',
+        serviceTypes: ['wash_only'],
+        duration: { value: 24, unit: 'hours' },
+        isPopular: false
+      },
+      {
+        id: 'iron_only',
+        name: 'Iron Only',
+        description: 'Professional ironing and pressing',
+        serviceTypes: ['iron_only'],
+        duration: { value: 12, unit: 'hours' },
+        isPopular: false
+      },
+      {
+        id: 'wash_iron',
+        name: 'Wash & Iron',
+        description: 'Complete wash and iron service',
+        serviceTypes: ['wash_iron'],
+        duration: { value: 24, unit: 'hours' },
+        isPopular: true
+      },
+      {
+        id: 'dry_cleaning',
+        name: 'Dry Cleaning',
+        description: 'Professional dry cleaning service',
+        serviceTypes: ['dry_cleaning'],
+        duration: { value: 48, unit: 'hours' },
+        isPopular: false
+      }
     ]
   },
+
 
   transportation: {
     name: 'Transportation Services',
@@ -88,9 +165,9 @@ const categoryTemplates = {
     description: 'Vehicle rental and transportation services',
     vehicleTypes: [
       {
-        id: 'economy',
+        id: 'economy_sedan',
         name: 'Economy/Compact Car',
-        capacity: 4,
+        capacity: { passengers: 4, luggage: 2 },
         description: 'Small, fuel-efficient cars perfect for city driving',
         features: ['Air Conditioning', 'Manual/Automatic', 'Fuel Efficient'],
         basePrice: 25,
@@ -99,7 +176,7 @@ const categoryTemplates = {
       {
         id: 'sedan',
         name: 'Sedan/Midsize',
-        capacity: 4,
+        capacity: { passengers: 4, luggage: 3 },
         description: 'Comfortable sedans for business or leisure travel',
         features: ['Air Conditioning', 'Comfortable Seating', 'Trunk Space'],
         basePrice: 35,
@@ -108,16 +185,16 @@ const categoryTemplates = {
       {
         id: 'suv',
         name: 'SUV/Crossover',
-        capacity: 7,
+        capacity: { passengers: 7, luggage: 4 },
         description: 'Spacious SUVs perfect for families or groups',
         features: ['Air Conditioning', '7 Seats', 'Large Cargo Space'],
         basePrice: 55,
         image: '/car-image/SUVCrossover.png'
       },
       {
-        id: 'luxury',
+        id: 'luxury_vehicle',
         name: 'Luxury/Premium',
-        capacity: 4,
+        capacity: { passengers: 4, luggage: 3 },
         description: 'High-end vehicles for premium experience',
         features: ['Leather Seats', 'Premium Sound', 'Advanced Safety'],
         basePrice: 75,
@@ -126,28 +203,48 @@ const categoryTemplates = {
       {
         id: 'van',
         name: 'Van/MPV',
-        capacity: 12,
+        capacity: { passengers: 12, luggage: 6 },
         description: 'Large vans for group transportation',
         features: ['12 Passenger Seats', 'Air Conditioning', 'Large Storage'],
         basePrice: 85,
         image: '/car-image/VanMPV.png'
       },
       {
-        id: 'large',
+        id: 'van_large',
         name: 'Large Vehicle',
-        capacity: 15,
+        capacity: { passengers: 15, luggage: 8 },
         description: 'Extra large vehicles for big groups',
         features: ['15+ Passenger Seats', 'Air Conditioning', 'Professional Driver'],
         basePrice: 120,
         image: '/car-image/Large Vehicle.png'
       }
     ],
-    services: [
-      { name: 'Hourly Rental', basePrice: 15, unit: 'per hour', description: 'Flexible hourly rental' },
-      { name: 'Daily Rental', basePrice: 50, unit: 'per day', description: 'Full day rental' },
-      { name: 'Airport Transfer', basePrice: 30, unit: 'per trip', description: 'One-way airport transfer' },
-      { name: 'City Tour', basePrice: 80, unit: 'per day', description: 'Guided city tour with driver' }
-    ]
+    serviceTypes: [
+      {
+        id: 'wash_only',
+        name: 'Wash Only',
+        description: 'Machine wash with appropriate detergent',
+        duration: { value: 24, unit: 'hours' }
+      },
+      {
+        id: 'iron_only',
+        name: 'Iron Only',
+        description: 'Professional ironing and pressing',
+        duration: { value: 12, unit: 'hours' }
+      },
+      {
+        id: 'wash_iron',
+        name: 'Wash + Iron',
+        description: 'Complete wash and iron service',
+        duration: { value: 24, unit: 'hours' },
+        isPopular: true
+      },
+      {
+        id: 'dry_cleaning',
+        name: 'Dry Cleaning',
+        description: 'Professional dry cleaning service',
+        duration: { value: 48, unit: 'hours' }
+      }    ],
   },
 
   dining: {
@@ -193,10 +290,10 @@ const categoryTemplates = {
       { name: 'Tea', category: 'beverages', icon: '🍵' },
       { name: 'Soft Drinks', category: 'beverages', icon: '🥤' }
     ],
-    services: [
-      { name: 'Room Service', basePrice: 20, unit: 'per order', description: 'In-room dining service' },
-      { name: 'Restaurant Dining', basePrice: 25, unit: 'per person', description: 'Main restaurant service' },
-      { name: 'Catering', basePrice: 15, unit: 'per person', description: 'Event catering service' }
+    serviceTypes: [
+      { id: 'room_service', name: 'Room Service', icon: '🍽️', basePrice: 20, unit: 'per order', description: 'In-room dining service' },
+      { id: 'restaurant_dining', name: 'Restaurant Dining', icon: '🍽️', basePrice: 25, unit: 'per person', description: 'Main restaurant service' },
+      { id: 'catering', name: 'Catering', icon: '🎉', basePrice: 15, unit: 'per person', description: 'Event catering service' }
     ]
   },
 
@@ -239,10 +336,10 @@ const categoryTemplates = {
       }
     ],
     services: [
-      { name: 'Daily Housekeeping', basePrice: 25, unit: 'per room', description: 'Daily room cleaning' },
-      { name: 'Express Cleaning', basePrice: 35, unit: 'per room', description: 'Quick 30-minute cleaning' },
-      { name: 'Deep Cleaning', basePrice: 50, unit: 'per room', description: 'Thorough deep cleaning' },
-      { name: 'Maintenance Request', basePrice: 20, unit: 'per request', description: 'Basic maintenance service' }
+      { id: 'daily_housekeeping', name: 'Daily Housekeeping', icon: '🧹', basePrice: 25, unit: 'per room', description: 'Daily room cleaning' },
+      { id: 'express_cleaning', name: 'Express Cleaning', icon: '⚡', basePrice: 35, unit: 'per room', description: 'Quick 30-minute cleaning' },
+      { id: 'deep_cleaning', name: 'Deep Cleaning', icon: '🧽', basePrice: 50, unit: 'per room', description: 'Thorough deep cleaning' },
+      { id: 'maintenance_request', name: 'Maintenance Request', icon: '🔧', basePrice: 20, unit: 'per request', description: 'Basic maintenance service' }
     ]
   }
 };

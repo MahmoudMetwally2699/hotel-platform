@@ -461,7 +461,7 @@ router.post('/webhook', async (req, res) => {
                           serviceType: service?.name || '',
                           pickupDate: new Date(newBooking.schedule?.preferredDate).toLocaleDateString('ar-EG'),
                           pickupTime: newBooking.schedule?.preferredTime || 'سيتم التأكيد',
-                          roomNumber: newBooking.guestDetails?.roomNumber || '',
+                          roomNumber: newBooking.location?.pickup?.address || newBooking.guestDetails?.roomNumber || 'سيتم التأكيد',
                           totalAmount: newBooking.pricing?.total || '',
                           paymentStatus: 'تم الدفع'
                         });
@@ -485,7 +485,7 @@ router.post('/webhook', async (req, res) => {
                           bookingNumber: newBooking.bookingNumber,
                           guestName: `${guest.firstName} ${guest.lastName || ''}`,
                           hotelName: hotel?.name || '',
-                          roomNumber: newBooking.guestDetails?.roomNumber || '',
+                          roomNumber: newBooking.location?.pickup?.address || newBooking.guestDetails?.roomNumber || 'سيتم التأكيد',
                           guestPhone: guest.phone,
                           pickupDate: new Date(newBooking.schedule?.preferredDate).toLocaleDateString('ar-EG'),
                           pickupTime: newBooking.schedule?.preferredTime || 'سيتم التأكيد',
@@ -874,6 +874,14 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
           console.log('🏗️ Creating laundry booking from temp data for:', bookingId);
           console.log('📋 Available temp data:', tempData);
 
+          // Debug location data from frontend
+          console.log('🔍 Location data debugging:', {
+            'tempData.bookingData.location': tempData.bookingData?.location,
+            'pickupLocation': tempData.bookingData?.location?.pickupLocation,
+            'deliveryLocation': tempData.bookingData?.location?.deliveryLocation,
+            'pickupInstructions': tempData.bookingData?.location?.pickupInstructions
+          });
+
           // Get the service to find the actual provider ID
           const service = await Service.findById(tempData.bookingData?.serviceId).populate('providerId');
           if (!service) {
@@ -904,12 +912,22 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
           // Create booking with all required fields, using defaults where necessary
           const bookingData = tempData.bookingData || {};
 
+          // Debug: Check location data before saving
+          console.log('🔍 Location data before saving:', {
+            original: bookingData.location,
+            pickupLocation: bookingData.location?.pickupLocation,
+            deliveryLocation: bookingData.location?.deliveryLocation,
+            pickupInstructions: bookingData.location?.pickupInstructions,
+            userRoomNumber: user.roomNumber
+          });
+
           booking = new Booking({
             bookingNumber,
             guestId: tempData.guestId,
             serviceId: bookingData.serviceId,
             serviceProviderId: service.providerId._id, // Use the actual service provider ID
             hotelId: bookingData.hotelId,
+            serviceType: 'laundry', // Set the correct service type for the booking
 
             // Guest details - use user data with fallbacks
             guestDetails: {
@@ -917,7 +935,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
               lastName: user.lastName || 'User', // Cannot be empty
               email: user.email,
               phone: user.phone || '',
-              roomNumber: bookingData.guestDetails?.roomNumber || user.roomNumber || '101' // Cannot be empty
+              roomNumber: bookingData.guestDetails?.roomNumber || user.roomNumber || '' // Don't default to 101
             },
 
             // Service details
@@ -932,20 +950,38 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
             bookingConfig: {
               quantity: bookingData.laundryItems?.length || 1,
               laundryItems: (bookingData.laundryItems || []).length > 0
-                ? bookingData.laundryItems.map(item => ({
-                    ...item,
-                    finalPrice: item.finalPrice || item.totalPrice || parseFloat(paymentData.amount) || 0,
-                    serviceType: {
-                      id: item.serviceType?.id || 'default-service-type',
-                      name: item.serviceType?.name || 'Standard Laundry Service',
-                      description: item.serviceType?.description || 'Professional laundry service',
-                      duration: item.serviceType?.duration || {
-                        value: 24,
-                        unit: 'hours'
-                      },
-                      icon: item.serviceType?.icon || 'wash'
+                ? bookingData.laundryItems.map(item => {
+                    // Parse duration string to object format
+                    let durationObj = { value: 24, unit: 'hours' }; // default
+
+                    if (item.serviceTypeDuration) {
+                      if (typeof item.serviceTypeDuration === 'object' && item.serviceTypeDuration.value) {
+                        // Already in correct format
+                        durationObj = item.serviceTypeDuration;
+                      } else if (typeof item.serviceTypeDuration === 'string') {
+                        // Parse string like "24 hours" or "12 hours"
+                        const match = item.serviceTypeDuration.match(/(\d+)\s*(hours?|minutes?|days?)/i);
+                        if (match) {
+                          durationObj = {
+                            value: parseInt(match[1]),
+                            unit: match[2].toLowerCase()
+                          };
+                        }
+                      }
                     }
-                  }))
+
+                    return {
+                      ...item,
+                      finalPrice: item.finalPrice || item.totalPrice || parseFloat(paymentData.amount) || 0,
+                      serviceType: {
+                        id: item.serviceTypeId || 'default-service-type',
+                        name: item.serviceTypeName || 'Standard Laundry Service',
+                        description: item.serviceTypeDescription || 'Professional laundry service',
+                        duration: durationObj,
+                        icon: item.serviceTypeIcon || 'wash'
+                      }
+                    };
+                  })
                 : [{
                     itemName: 'Default Laundry Item',
                     itemId: 'default-item',
@@ -965,7 +1001,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
                     basePrice: parseFloat(paymentData.amount) || 0,
                     finalPrice: parseFloat(paymentData.amount) || 0
                   }],
-              isExpressService: bookingData.isExpressService || false,
+              isExpressService: bookingData.expressSurcharge?.enabled || bookingData.isExpressService || false,
               specialRequests: bookingData.specialRequests || ''
             },
 
@@ -981,9 +1017,14 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
 
             // Location
             location: {
-              pickupLocation: bookingData.location?.pickupLocation || user.roomNumber || '',
-              deliveryLocation: bookingData.location?.deliveryLocation || user.roomNumber || '',
-              pickupInstructions: bookingData.location?.pickupInstructions || ''
+              pickup: {
+                address: bookingData.location?.pickupLocation || user.roomNumber || '',
+                instructions: bookingData.location?.pickupInstructions || ''
+              },
+              delivery: {
+                address: bookingData.location?.deliveryLocation || user.roomNumber || '',
+                instructions: bookingData.location?.deliveryInstructions || ''
+              }
             },
 
             // Pricing - calculate from payment amount
@@ -1030,10 +1071,18 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
           try {
             await booking.save();
 
-            console.log('🔍 Booking saved with kashier data:', {
+            console.log('🔍 Booking saved with location data:', {
+              bookingId: booking._id,
               sessionId: booking.payment?.kashier?.sessionId,
               transactionId: booking.payment?.kashier?.transactionId,
-              bookingNumber: booking.bookingNumber
+              bookingNumber: booking.bookingNumber,
+              locationData: {
+                full: booking.location,
+                pickup: booking.location?.pickup,
+                delivery: booking.location?.delivery,
+                pickupAddress: booking.location?.pickup?.address,
+                deliveryAddress: booking.location?.delivery?.address
+              }
             });
 
             logger.info('Laundry booking created from payment confirmation', {
@@ -1240,9 +1289,14 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
 
             // Location
             location: {
-              pickupLocation: bookingData.location?.pickupLocation || user.roomNumber || '',
-              deliveryLocation: bookingData.location?.deliveryLocation || user.roomNumber || '',
-              pickupInstructions: bookingData.location?.pickupInstructions || ''
+              pickup: {
+                address: bookingData.location?.pickupLocation || user.roomNumber || '',
+                instructions: bookingData.location?.pickupInstructions || ''
+              },
+              delivery: {
+                address: bookingData.location?.deliveryLocation || user.roomNumber || '',
+                instructions: bookingData.location?.deliveryInstructions || ''
+              }
             },
 
             // Pricing - calculate from payment amount
@@ -1463,7 +1517,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
           // Send confirmation to guest
           if (guest?.phone) {
             try {
-              await whatsapp.sendLaundryBookingConfirmation({
+              const whatsappParams = {
                 guestName: `${guest.firstName} ${guest.lastName || ''}`,
                 guestPhone: guest.phone,
                 bookingNumber: booking.bookingNumber,
@@ -1472,10 +1526,15 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
                 serviceType: service?.name || 'خدمة الغسيل',
                 pickupDate: new Date(booking.schedule?.preferredDate).toLocaleDateString('ar-EG'),
                 pickupTime: booking.schedule?.preferredTime || 'سيتم التأكيد',
-                roomNumber: booking.guestDetails?.roomNumber || '',
+                roomNumber: booking.location?.pickup?.address || booking.guestDetails?.roomNumber || 'سيتم التأكيد',
                 totalAmount: `${booking.pricing?.totalAmount || paymentData.amount} ${booking.pricing?.currency || 'EGP'}`,
                 paymentStatus: 'تم الدفع'
-              });
+              };
+
+              // Debug WhatsApp parameters
+              console.log('🔍 WhatsApp params:', whatsappParams);
+
+              await whatsapp.sendLaundryBookingConfirmation(whatsappParams);
               logger.info('WhatsApp booking confirmation sent to guest (public)', {
                 bookingNumber: booking.bookingNumber,
                 guestPhone: guest.phone
@@ -1496,7 +1555,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
                 bookingNumber: booking.bookingNumber,
                 guestName: `${guest.firstName} ${guest.lastName || ''}`,
                 hotelName: hotel?.name || '',
-                roomNumber: booking.guestDetails?.roomNumber || '',
+                roomNumber: booking.location?.pickup?.address || booking.guestDetails?.roomNumber || 'سيتم التأكيد',
                 guestPhone: guest.phone,
                 pickupDate: new Date(booking.schedule?.preferredDate).toLocaleDateString('ar-EG'),
                 pickupTime: booking.schedule?.preferredTime || 'سيتم التأكيد',
@@ -1815,5 +1874,33 @@ function verifyKashierHash(payload, receivedHash) {
     Buffer.from(expectedHash)
   );
 }
+
+// Test route to check location data structure
+router.get('/test-location/:bookingId', async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const booking = await Booking.findOne({ bookingNumber: bookingId });
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    res.json({
+      bookingNumber: booking.bookingNumber,
+      location: booking.location,
+      locationStructure: {
+        hasPickupAddress: !!booking.location?.pickup?.address,
+        hasDeliveryAddress: !!booking.location?.delivery?.address,
+        hasPickupLocation: !!booking.location?.pickupLocation,
+        hasDeliveryLocation: !!booking.location?.deliveryLocation,
+        pickupValue: booking.location?.pickup?.address || booking.location?.pickupLocation,
+        deliveryValue: booking.location?.delivery?.address || booking.location?.deliveryLocation
+      }
+    });
+  } catch (error) {
+    console.error('Test location error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;

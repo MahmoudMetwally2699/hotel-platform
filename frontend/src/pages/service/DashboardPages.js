@@ -99,10 +99,27 @@ const DashboardPage = () => {
 
   if (isLoading) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-3 text-gray-600">Loading dashboard data...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        {/* Header Section with Gradient Background */}
+        <div className="bg-gradient-to-r from-modern-blue via-primary-main to-modern-lightBlue text-white py-8 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
+              <div>
+                <h1 className="text-3xl font-bold">Service Provider Dashboard</h1>
+                <p className="text-blue-100 mt-2">Loading your dashboard data...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Beautiful Loading Animation */}
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex justify-center items-center h-96">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-modern-lightBlue border-t-transparent"></div>
+              <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-modern-blue border-t-transparent animate-ping opacity-20"></div>
+            </div>
+          </div>
         </div>
       </div>
     );

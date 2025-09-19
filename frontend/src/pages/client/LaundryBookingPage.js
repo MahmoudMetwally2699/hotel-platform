@@ -391,10 +391,23 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
   };
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <FaSpinner className="text-4xl text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">{t('laundryBooking.loadingService')}</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden mx-3 sm:mx-4 lg:mx-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
+          <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
+          <div className="relative flex flex-col items-center">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Laundry Service</h1>
+            <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">{t('laundryBooking.loadingService')}</p>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex justify-center items-center h-96">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
+              <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-[#3B5787] border-t-transparent animate-ping opacity-20"></div>
+            </div>
+          </div>
         </div>
       </div>
     );

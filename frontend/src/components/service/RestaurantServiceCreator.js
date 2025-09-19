@@ -18,6 +18,7 @@ import {
   FaEye,
   FaEyeSlash,
   FaSpinner,
+  FaCamera,
   FaListUl,
   FaCog,
   FaArrowLeft
@@ -829,10 +830,23 @@ const RestaurantServiceCreator = ({ onBack }) => {
   const renderManageItemsTab = () => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center p-12">
-          <div className="text-center">
-            <FaSpinner className="text-6xl text-[#3B5787] animate-spin mb-4 mx-auto" />
-            <p className="text-lg text-gray-600">Loading services...</p>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+          <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden mx-3 sm:mx-4 lg:mx-6">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
+            <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
+            <div className="relative flex flex-col items-center">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Restaurant Services</h1>
+              <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">Loading available restaurant services...</p>
+            </div>
+          </div>
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+            <div className="flex justify-center items-center h-96">
+              <div className="relative">
+                <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
+                <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-[#3B5787] border-t-transparent animate-ping opacity-20"></div>
+              </div>
+            </div>
           </div>
         </div>
       );
@@ -974,8 +988,24 @@ const RestaurantServiceCreator = ({ onBack }) => {
                                   <>
                                     <div className="flex items-center justify-between">
                                       <div className="flex items-center">
-                                        <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mr-3">
-                                          {item.icon || '🍽️'}
+                                        <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mr-3 overflow-hidden">
+                                          {item.imageUrl ? (
+                                            <img
+                                              src={item.imageUrl}
+                                              alt={item.name}
+                                              className="w-full h-full object-cover rounded-lg"
+                                              onError={(e) => {
+                                                e.target.style.display = 'none';
+                                                e.target.nextSibling.style.display = 'block';
+                                              }}
+                                            />
+                                          ) : null}
+                                          <span
+                                            className={item.imageUrl ? 'hidden' : 'text-lg'}
+                                            style={{ display: item.imageUrl ? 'none' : 'block' }}
+                                          >
+                                            {item.icon || '🍽️'}
+                                          </span>
                                         </div>
                                         <div>
                                           <h5 className="font-semibold text-gray-800">{item.name}</h5>
@@ -2141,6 +2171,9 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
 
   const [allergenInput, setAllergenInput] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const categoryOptions = [
     { value: 'appetizers', label: 'Appetizers' },
@@ -2166,6 +2199,57 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Image handling functions
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImageToCloudinary = async () => {
+    if (!imageFile) return null;
+
+    try {
+      setUploadingImage(true);
+      const formData = new FormData();
+      formData.append('file', imageFile);
+      formData.append('upload_preset', 'hotel-services');
+
+      const response = await fetch(
+        'https://api.cloudinary.com/v1_1/dwa8at7tv/image/upload',
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+      return data.secure_url;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, imageUrl: '' }));
   };
 
   const addAllergen = () => {
@@ -2204,10 +2288,26 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
       return;
     }
 
+    let imageUrl = formData.imageUrl;
+
+    // Upload image if selected
+    if (imageFile) {
+      console.log('🟡 Starting image upload...');
+      toast.info('Uploading image...');
+      imageUrl = await uploadImageToCloudinary();
+      console.log('🟡 Upload result:', imageUrl);
+      if (!imageUrl) {
+        toast.error('Failed to upload image. Please try again.');
+        setIsSaving(false);
+        return;
+      }
+    }
+
     const updatedItem = {
       ...formData,
       price: parseFloat(formData.price),
       preparationTime: parseInt(formData.preparationTime) || 15,
+      imageUrl: imageUrl || formData.imageUrl
     };
 
     console.log('✅ Validation passed, calling onSave with:', updatedItem);
@@ -2349,6 +2449,63 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
             rows="2"
             className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
           />
+        </div>
+
+        {/* Image Upload Section */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Menu Item Image
+          </label>
+
+          {/* Current Image or Preview */}
+          {(imagePreview || formData.imageUrl) && (
+            <div className="mb-3">
+              <div className="relative inline-block">
+                <img
+                  src={imagePreview || formData.imageUrl}
+                  alt="Menu item preview"
+                  className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                  title="Remove image"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Upload Button */}
+          <div className="flex items-center gap-3">
+            <label className="relative cursor-pointer bg-blue-50 hover:bg-blue-100 border-2 border-dashed border-blue-300 rounded-lg px-4 py-3 text-center transition-colors">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <div className="flex items-center gap-2 text-blue-600">
+                <FaCamera className="text-lg" />
+                <span className="text-sm font-medium">
+                  {(imagePreview || formData.imageUrl) ? 'Change Image' : 'Add Image'}
+                </span>
+              </div>
+            </label>
+
+            {uploadingImage && (
+              <div className="flex items-center gap-2 text-blue-600">
+                <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                <span className="text-sm">Uploading...</span>
+              </div>
+            )}
+          </div>
+
+          <p className="text-xs text-gray-500 mt-1">
+            Recommended: 400x400px, max 5MB (JPG, PNG, WebP)
+          </p>
         </div>
 
         {/* Dietary Options */}

@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   FaTshirt,
@@ -18,13 +18,42 @@ import useServiceProviderCategories from '../hooks/useServiceProviderCategories'
 const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
   const { t, i18n } = useTranslation();
   const { role } = useAuth();
-  const { categories, hasCategory } = useServiceProviderCategories();
+  const { hasCategory } = useServiceProviderCategories();
+  const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
   const [showMobileCategories, setShowMobileCategories] = useState(false);
 
   // Check if current language is RTL
   const isRTL = i18n.language === 'ar';
+
+  // Custom function to check if a path is active, including query parameters
+  const isPathActive = (itemPath) => {
+    if (!itemPath) return false;
+
+    // Split path and query parameters
+    const [pathname, search] = itemPath.split('?');
+    const currentPathname = location.pathname;
+    const currentSearch = location.search;
+
+    // Check if pathname matches
+    if (pathname !== currentPathname) return false;
+
+    // If there are query parameters in the item path, check them too
+    if (search) {
+      const itemParams = new URLSearchParams(search);
+      const currentParams = new URLSearchParams(currentSearch);
+
+      // Check if all item parameters exist in current parameters with same values
+      for (const [key, value] of itemParams) {
+        if (currentParams.get(key) !== value) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
 
   const toggleCollapse = () => {
     setCollapsed(!collapsed);
@@ -220,9 +249,19 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         );
       case 'qr-code':
         return (
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-6l3-3h9l3 3v6zM7 8h10v4H7V8z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h6v6H3V3zM15 3h6v6h-6V3zM3 15h6v6H3v-6z" />
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="5" height="5" rx="1"/>
+            <rect x="3" y="16" width="5" height="5" rx="1"/>
+            <rect x="16" y="3" width="5" height="5" rx="1"/>
+            <path d="M21 16h-3a2 2 0 0 0-2 2v3"/>
+            <path d="M21 21v.01"/>
+            <path d="M12 7v3a2 2 0 0 1-2 2H7"/>
+            <path d="M3 12h.01"/>
+            <path d="M12 3h.01"/>
+            <path d="M12 16v.01"/>
+            <path d="M16 12h1"/>
+            <path d="M21 12v.01"/>
+            <path d="M12 21v-1"/>
           </svg>
         );
       case 'credit-card':
@@ -323,14 +362,11 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         <div className="p-6 flex justify-between items-center border-b border-white/10">
           {!collapsed && (
             <div className="flex items-center space-x-3">
-              <div
-                style={{ backgroundColor: '#48ACDA' }}
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-              >
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
-                </svg>
-              </div>
+              <img
+                src="/qickroom.png"
+                alt="QuickRoom"
+                className="h-8 w-auto object-contain"
+              />
               <span className="text-lg font-bold">Hotel Platform</span>
             </div>
           )}
@@ -385,14 +421,20 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                           <li key={childIndex}>
                             <NavLink
                               to={child.path}
-                              className={({ isActive }) => `
-                                flex items-center px-4 py-3 rounded-lg transition-all duration-200 min-h-[40px] group
-                                ${isActive
-                                  ? 'text-white shadow-lg'
-                                  : 'text-white/70 hover:text-white hover:bg-white/10'
-                                }
-                              `}
-                              style={({ isActive }) => isActive ? { backgroundColor: '#48ACDA' } : {}}
+                              className={() => {
+                                const isActive = isPathActive(child.path);
+                                return `
+                                  flex items-center px-4 py-3 rounded-lg transition-all duration-200 min-h-[40px] group
+                                  ${isActive
+                                    ? 'text-white shadow-lg'
+                                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                                  }
+                                `;
+                              }}
+                              style={() => {
+                                const isActive = isPathActive(child.path);
+                                return isActive ? { backgroundColor: '#48ACDA' } : {};
+                              }}
                             >
                               <span className={`${isRTL ? 'ml-3' : 'mr-3'} transition-transform group-hover:scale-110`}>
                                 {getIcon(child.icon)}
@@ -408,14 +450,20 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                   // Regular menu item
                   <NavLink
                     to={item.path}
-                    className={({ isActive }) => `
-                      flex items-center px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px] group
-                      ${isActive
-                        ? 'text-white shadow-lg'
-                        : 'text-white/80 hover:text-white hover:bg-white/10'
-                      }
-                    `}
-                    style={({ isActive }) => isActive ? { backgroundColor: '#48ACDA' } : {}}
+                    className={() => {
+                      const isActive = isPathActive(item.path);
+                      return `
+                        flex items-center px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px] group
+                        ${isActive
+                          ? 'text-white shadow-lg'
+                          : 'text-white/80 hover:text-white hover:bg-white/10'
+                        }
+                      `;
+                    }}
+                    style={() => {
+                      const isActive = isPathActive(item.path);
+                      return isActive ? { backgroundColor: '#48ACDA' } : {};
+                    }}
                   >
                     <span className={`${isRTL ? 'ml-3' : 'mr-3'} transition-transform group-hover:scale-110`}>
                       {getIcon(item.icon)}
@@ -456,14 +504,20 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
               <NavLink
                 key={item.path}
                 to={item.path}
-                className={({ isActive }) => `
-                  flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[80px]
-                  ${isActive
-                    ? 'text-white shadow-lg'
-                    : 'text-white/80 hover:bg-white/10 hover:text-white'
-                  }
-                `}
-                style={({ isActive }) => isActive ? { backgroundColor: '#48ACDA' } : {}}
+                className={() => {
+                  const isActive = isPathActive(item.path);
+                  return `
+                    flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[80px]
+                    ${isActive
+                      ? 'text-white shadow-lg'
+                      : 'text-white/80 hover:bg-white/10 hover:text-white'
+                    }
+                  `;
+                }}
+                style={() => {
+                  const isActive = isPathActive(item.path);
+                  return isActive ? { backgroundColor: '#48ACDA' } : {};
+                }}
               >
                 <span className="mb-1">{getIcon(item.icon)}</span>
                 <span className="text-xs text-center leading-tight truncate w-full font-medium">
@@ -692,14 +746,20 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                     key={item.path}
                     to={item.path}
                     onClick={toggleSidebar}
-                    className={({ isActive }) => `
-                      flex items-center px-4 py-3 rounded-xl transition-all duration-200
-                      ${isActive
-                        ? 'text-white shadow-lg'
-                        : 'text-white/80 hover:bg-white/10 hover:text-white'
-                      }
-                    `}
-                    style={({ isActive }) => isActive ? { backgroundColor: '#48ACDA' } : {}}
+                    className={() => {
+                      const isActive = isPathActive(item.path);
+                      return `
+                        flex items-center px-4 py-3 rounded-xl transition-all duration-200
+                        ${isActive
+                          ? 'text-white shadow-lg'
+                          : 'text-white/80 hover:bg-white/10 hover:text-white'
+                        }
+                      `;
+                    }}
+                    style={() => {
+                      const isActive = isPathActive(item.path);
+                      return isActive ? { backgroundColor: '#48ACDA' } : {};
+                    }}
                   >
                     <span className={`${isRTL ? 'ml-3' : 'mr-3'}`}>{getIcon(item.icon)}</span>
                     <span className="font-medium">{item.name}</span>

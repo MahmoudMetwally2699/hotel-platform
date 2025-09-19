@@ -241,11 +241,11 @@ const GuestCategorySelection = () => {
                 <img
                   src={hotel.images.logo}
                   alt={`${hotel?.name || 'Hotel'} Logo`}
-                  className="h-12 w-auto object-contain rounded-md"
+                  className="h-20 w-auto sm:h-16 object-contain rounded-md"
                 />
               ) : (
-                <div className="h-12 w-12 rounded-md bg-gradient-to-br from-[#3B5787] to-[#61B6DE] grid place-items-center">
-                  <span className="text-white font-bold text-lg">{hotel?.name?.charAt(0) || 'H'}</span>
+                <div className="h-20 w-20 sm:h-16 sm:w-16 rounded-md bg-gradient-to-br from-[#3B5787] to-[#61B6DE] grid place-items-center">
+                  <span className="text-white font-bold text-xl sm:text-lg">{hotel?.name?.charAt(0) || 'H'}</span>
                 </div>
               )}
             </div>
@@ -280,25 +280,25 @@ const GuestCategorySelection = () => {
 
       {/* Modern User Greeting Section */}
       <section className="bg-gradient-to-r from-[#3B5787] to-[#61B6DE] text-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <div className="text-center">
             {/* User Greeting Card */}
             <div className="inline-block">
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-6 sm:px-8 py-4 sm:py-6">
-                <div className="flex items-center justify-center gap-3 mb-3">
-                  <div className="h-10 w-10 bg-white/20 rounded-full flex items-center justify-center">
-                    <FaUser className="text-white text-lg" />
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-4 sm:px-6 py-3 sm:py-4">
+                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <FaUser className="text-white text-sm sm:text-lg" />
                   </div>
                   <div className="text-left">
-                    <h2 className="text-xl sm:text-2xl font-bold">
+                    <h2 className="text-lg sm:text-xl font-bold">
                       Hello, {currentUser?.firstName || currentUser?.name || 'Guest'}!
                     </h2>
-                    <p className="text-white/80 text-sm">
+                    <p className="text-white/80 text-xs sm:text-sm">
                       Welcome to our premium services
                     </p>
                   </div>
                 </div>
-                <p className="text-white/90 text-sm max-w-md">
+                <p className="text-white/90 text-xs sm:text-sm max-w-md">
                   Discover and book exceptional services designed for your comfort and convenience
                 </p>
               </div>
@@ -409,33 +409,6 @@ const GuestCategorySelection = () => {
                   </button>
                 );
               })}
-            </div>
-
-            {/* Bottom CTA */}
-            <div className="mt-12 sm:mt-16">
-              <div className="rounded-3xl bg-gradient-to-br from-[#3B5787] to-[#61B6DE] text-white p-6 sm:p-10 relative overflow-hidden">
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 opacity-10"
-                  style={{
-                    backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-                    backgroundSize: '28px 28px'
-                  }}
-                />
-                <div className="relative flex flex-col items-center text-center">
-                  <h4 className="text-xl sm:text-2xl font-bold">{t('guestCategories.mostPopularServices')}</h4>
-                  <p className="mt-2 text-sm sm:text-base text-white/90 max-w-2xl">
-                    {t('guestCategories.popularServicesNote')}
-                  </p>
-                  <button
-                    type="button"
-                    className="mt-6 rounded-2xl bg-white text-[#3B5787] font-bold py-3 px-6 hover:bg-gray-50 transition shadow-md"
-                    onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
-                  >
-                    {t('guestCategories.browseServices') || 'Explore All Services'}
-                  </button>
-                </div>
-              </div>
             </div>
           </>
         )}

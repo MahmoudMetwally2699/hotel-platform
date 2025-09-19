@@ -14,7 +14,6 @@ import {
   selectServiceLoading,
   selectServiceError
 } from '../../redux/slices/serviceSlice';
-import apiClient from '../../services/api.service';
 
 const getNested = (obj, path) => {
   if (!obj) return undefined;
@@ -29,7 +28,51 @@ const OrdersPage = () => {
   const isLoading = useSelector(selectServiceLoading);
   const error = useSelector(selectServiceError);
 
-  const [housekeepingBookings, setHousekeepingBookings] = useState([]);
+  // Laundry service types mapping (from category templates)
+  const laundryServiceTypes = {
+    'wash_only': {
+      name: 'Wash Only',
+      description: 'Machine wash with appropriate detergent',
+      duration: { value: 24, unit: 'hours' },
+      icon: '🧼'
+    },
+    'iron_only': {
+      name: 'Iron Only',
+      description: 'Professional ironing and pressing',
+      duration: { value: 12, unit: 'hours' },
+      icon: '👔'
+    },
+    'wash_iron': {
+      name: 'Wash + Iron',
+      description: 'Complete wash and iron service',
+      duration: { value: 24, unit: 'hours' },
+      isPopular: true,
+      icon: '🧺'
+    },
+    'dry_cleaning': {
+      name: 'Dry Cleaning',
+      description: 'Professional dry cleaning service',
+      duration: { value: 48, unit: 'hours' },
+      icon: '🧥'
+    }
+  };
+
+  // Function to get enhanced service type info
+  const getServiceTypeInfo = (serviceType) => {
+    if (!serviceType) return null;
+
+    // If serviceType has an ID, try to map it to our templates
+    if (serviceType.id && laundryServiceTypes[serviceType.id]) {
+      return {
+        ...laundryServiceTypes[serviceType.id],
+        ...serviceType // Merge with any existing data
+      };
+    }
+
+    // Return as-is if no mapping found
+    return serviceType;
+  };
+
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [serviceTypeFilter, setServiceTypeFilter] = useState('all');
@@ -37,56 +80,32 @@ const OrdersPage = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
 
-  // NEW: Pagination
+  // NEW: Pagination - fetch all orders but display 10 per page
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(10); // Display 10 per page
 
   useEffect(() => {
-    dispatch(fetchProviderOrders());
-    fetchHousekeepingBookings();
+    dispatch(fetchProviderOrders()); // Fetch all orders without limit
   }, [dispatch]);
 
-  const fetchHousekeepingBookings = async () => {
-    try {
-      const response = await apiClient.get('/service/housekeeping-bookings');
-      setHousekeepingBookings(response.data?.data || []);
-    } catch (error) {
-      console.error('Housekeeping fetch failed:', error);
-      setHousekeepingBookings([]);
-    }
-  };
+  useEffect(() => {
+    dispatch(fetchProviderOrders()); // Fetch all orders without limit
+  }, [dispatch]);
 
   const handleStatusChange = (orderId, newStatus) => {
-    const isHousekeepingBooking = housekeepingBookings.some(b => b._id === orderId);
-
-    if (isHousekeepingBooking) {
-      apiClient
-        .put(`/service/housekeeping-bookings/${orderId}/status`, { status: newStatus })
-        .then(() => {
-          setHousekeepingBookings(prev =>
-            prev.map(b => (b._id === orderId ? { ...b, status: newStatus } : b))
-          );
+    dispatch(updateOrderStatus({ orderId, status: newStatus }))
+      .then(result => {
+        if (result.type === 'service/updateOrderStatus/fulfilled') {
           if (currentOrder?._id === orderId) setCurrentOrder(co => ({ ...co, status: newStatus }));
-        })
-        .catch(err => {
-          console.error('HK update failed:', err);
-          alert('Failed to update housekeeping booking status');
-        });
-    } else {
-      dispatch(updateOrderStatus({ orderId, status: newStatus }))
-        .then(result => {
-          if (result.type === 'service/updateOrderStatus/fulfilled') {
-            if (currentOrder?._id === orderId) setCurrentOrder(co => ({ ...co, status: newStatus }));
-            dispatch(fetchProviderOrders());
-          } else {
-            alert('Failed to update order status: ' + (result.payload ?? 'Unknown error'));
-          }
-        })
-        .catch(err => {
-          console.error('Status update error:', err);
-          alert('Failed to update order status');
-        });
-    }
+          dispatch(fetchProviderOrders()); // Fetch all orders
+        } else {
+          alert('Failed to update order status: ' + (result.payload ?? 'Unknown error'));
+        }
+      })
+      .catch(err => {
+        console.error('Status update error:', err);
+        alert('Failed to update order status');
+      });
   };
 
   const handleViewDetails = (order) => {
@@ -124,50 +143,44 @@ const OrdersPage = () => {
     }
   };
 
-  // Combine and normalize
+  // Normalize all orders (now including housekeeping bookings from the main orders endpoint)
   const allBookings = useMemo(() => {
-    const regular = (Array.isArray(orders) ? orders : []).map(order => ({
-      ...order,
-      orderId: order.bookingNumber || order._id?.slice?.(-8) || '—',
-      serviceType: order.serviceType || 'regular',
-      displayType: 'Regular Service',
-      createdAt: order.createdAt || order.schedule?.preferredDate || new Date().toISOString()
-    }));
+    return (Array.isArray(orders) ? orders : []).map(order => {
+      // Check if this is a housekeeping booking
+      const isHousekeeping = order.serviceType === 'housekeeping';
 
-    const hk = (Array.isArray(housekeepingBookings) ? housekeepingBookings : []).map(booking => ({
-      ...booking,
-      orderId: booking.bookingNumber || booking._id?.slice?.(-8) || '—',
-      serviceType: 'housekeeping',
-      displayType: 'Housekeeping Service',
-      serviceName: booking.serviceName || booking.serviceDetails?.name || 'Housekeeping Service',
-      guestName:
-        booking.guestDetails?.firstName && booking.guestDetails?.lastName
-          ? `${booking.guestDetails.firstName} ${booking.guestDetails.lastName}`
-          : booking.guestInfo?.name || 'Unknown Guest',
-      roomNumber: booking.guestDetails?.roomNumber || booking.guestInfo?.roomNumber || 'N/A',
-      totalAmount: booking.totalAmount || 0,
-      createdAt: booking.bookingDate || booking.createdAt || new Date().toISOString(),
-      hotel: booking.hotel || { name: 'Hotel Service' },
-      hotelName: booking.hotel?.name || 'Hotel Service',
-      serviceDetails: {
-        name: booking.serviceName || booking.serviceDetails?.name || 'Housekeeping Service',
-        category: 'housekeeping'
-      },
-      guestDetails: {
-        firstName: booking.guestDetails?.firstName || 'Guest',
-        lastName: booking.guestDetails?.lastName || '',
-        email: booking.guestDetails?.email || 'no-email@housekeeping.local',
-        phone: booking.guestDetails?.phone || '',
-        roomNumber: booking.guestDetails?.roomNumber || 'N/A'
-      },
-      schedule: {
-        preferredDate: booking.schedule?.preferredDate || booking.bookingDate,
-        preferredTime: booking.schedule?.preferredTime || '09:00'
-      }
-    }));
-
-    return [...regular, ...hk];
-  }, [orders, housekeepingBookings]);
+      return {
+        ...order,
+        orderId: order.bookingNumber || order._id?.slice?.(-8) || '—',
+        serviceType: order.serviceType || 'regular',
+        displayType: isHousekeeping ? 'Housekeeping Service' : 'Regular Service',
+        serviceName: order.serviceName || order.serviceDetails?.name || order.serviceId?.name || 'Service',
+        guestName: order.guestDetails?.firstName && order.guestDetails?.lastName
+          ? `${order.guestDetails.firstName} ${order.guestDetails.lastName}`
+          : order.guestInfo?.name || order.guestId?.firstName + ' ' + order.guestId?.lastName || 'Unknown Guest',
+        roomNumber: order.guestDetails?.roomNumber || order.guestInfo?.roomNumber || 'N/A',
+        totalAmount: order.totalAmount || 0,
+        createdAt: order.createdAt || order.schedule?.preferredDate || order.bookingDate || new Date().toISOString(),
+        hotel: order.hotel || order.hotelId || { name: 'Hotel Service' },
+        hotelName: order.hotel?.name || order.hotelId?.name || 'Hotel Service',
+        serviceDetails: order.serviceDetails || {
+          name: order.serviceName || order.serviceId?.name || 'Service',
+          category: order.category || order.serviceType || 'general'
+        },
+        guestDetails: order.guestDetails || {
+          firstName: order.guestId?.firstName || 'Guest',
+          lastName: order.guestId?.lastName || '',
+          email: order.guestId?.email || order.guestDetails?.email || 'no-email@service.local',
+          phone: order.guestDetails?.phone || order.guestId?.phone || '',
+          roomNumber: order.guestDetails?.roomNumber || 'N/A'
+        },
+        schedule: order.schedule || {
+          preferredDate: order.scheduledDateTime || order.bookingDate || order.createdAt,
+          preferredTime: order.preferredTime || '09:00'
+        }
+      };
+    });
+  }, [orders]);
 
   // Filters
   const filteredOrders = useMemo(() => {
@@ -367,9 +380,31 @@ const OrdersPage = () => {
         {/* CONTENT */}
         <div className="bg-white shadow-xl rounded-xl sm:rounded-2xl overflow-hidden border border-gray-100">
           {isLoading ? (
-            <div className="text-center py-10 sm:py-16">
-              <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-t-2 border-b-2 border-[#67BAE0] mx-auto" />
-              <p className="mt-3 text-gray-600 text-sm sm:text-base">Loading orders...</p>
+            <div className="flex flex-col items-center justify-center py-16 sm:py-24">
+              <div className="w-full flex flex-col items-center">
+                <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-6 sm:p-8 mb-6 text-white relative overflow-hidden w-full max-w-lg mx-auto">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+                  <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50" />
+                  <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50" />
+                  <div className="relative flex flex-col items-center">
+                    <div className="relative mb-4">
+                      {/* Outer gradient spinner */}
+                      <div className="animate-spin-slow absolute inset-0 rounded-full h-16 w-16 sm:h-20 sm:w-20 bg-gradient-to-r from-[#3B5787] via-[#67BAE0] to-[#3B5787] opacity-40" />
+                      {/* Inner white spinner */}
+                      <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-t-4 border-b-4 border-white mx-auto" />
+                      {/* Center icon */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="10" strokeWidth="2" stroke="currentColor" fill="none" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2" />
+                        </svg>
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">Loading Orders</h3>
+                    <p className="text-white/90 text-sm sm:text-base">Please wait while we fetch your latest orders and bookings.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           ) : totalResults > 0 ? (
             <>
@@ -689,9 +724,6 @@ const OrdersPage = () => {
                         <p className="mt-2 text-sm font-medium text-gray-900">
                           {currentOrder.hotel?.name || currentOrder.hotelId?.name || currentOrder.hotelName || 'Unknown Hotel'}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Room: {currentOrder.guestDetails?.roomNumber || 'N/A'}
-                        </p>
                       </div>
                     </div>
 
@@ -709,6 +741,390 @@ const OrdersPage = () => {
                         <p className="text-xs text-gray-500">{currentOrder.guestDetails?.phone || 'No phone provided'}</p>
                       </div>
                     </div>
+
+                    {/* Service-Specific Details */}
+                    {/* Laundry Items */}
+                    {((currentOrder.serviceType === 'laundry') ||
+                      (currentOrder.serviceDetails?.category === 'laundry') ||
+                      (currentOrder.category === 'laundry')) &&
+                     currentOrder.bookingConfig?.laundryItems &&
+                     currentOrder.bookingConfig.laundryItems.length > 0 && (
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Laundry Items</p>
+                        <div className="space-y-3">
+                          {currentOrder.bookingConfig.laundryItems.map((item, index) => {
+                            const enhancedServiceType = getServiceTypeInfo(item.serviceType);
+                            return (
+                            <div key={index} className="bg-white rounded-lg p-3 border border-blue-100">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-lg">{item.itemIcon || '👕'}</span>
+                                    <span className="font-medium text-gray-900">{item.itemName}</span>
+                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                      {item.itemCategory}
+                                    </span>
+                                  </div>
+
+                                  {/* Service Type - More Prominent Display */}
+                                  <div className="mb-2 p-2 bg-blue-50 rounded-md border border-blue-200">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-blue-600 font-medium text-sm">
+                                        {enhancedServiceType?.icon || '🧺'} {enhancedServiceType?.name || 'Service Type Not Specified'}
+                                      </span>
+                                      {enhancedServiceType?.isPopular && (
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                                          ⭐ Popular
+                                        </span>
+                                      )}
+                                    </div>
+                                    {enhancedServiceType?.description && (
+                                      <div className="mt-1 text-xs text-blue-600">
+                                        {enhancedServiceType.description}
+                                      </div>
+                                    )}
+                                    <div className="mt-1 flex items-center gap-4 text-xs text-gray-600">
+                                      <span>Qty: {item.quantity}</span>
+                                      {enhancedServiceType?.duration && (
+                                        <span>⏱️ {enhancedServiceType.duration.value} {enhancedServiceType.duration.unit}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    ${item.finalPrice?.toFixed(2) || '0.00'}
+                                  </div>
+                                  {item.basePrice !== item.finalPrice && (
+                                    <div className="text-xs text-gray-500 line-through">
+                                      ${item.basePrice?.toFixed(2) || '0.00'}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Location Details for Laundry Bookings */}
+                    {((currentOrder.serviceType === 'laundry') ||
+                      (currentOrder.serviceDetails?.category === 'laundry') ||
+                      (currentOrder.category === 'laundry')) &&
+                     (currentOrder.location?.pickup?.address || currentOrder.location?.delivery?.address ||
+                      currentOrder.location?.pickupLocation || currentOrder.location?.deliveryLocation) && (
+                      <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Pickup & Delivery</p>
+                        <div className="bg-white rounded-lg p-3 border border-green-100">
+                          {(currentOrder.location?.pickup?.address || currentOrder.location?.pickupLocation) && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-gray-700">📍 Pickup Location: </span>
+                              <span className="text-sm text-gray-900">
+                                {currentOrder.location.pickup?.address || currentOrder.location.pickupLocation}
+                              </span>
+                            </div>
+                          )}
+                          {(currentOrder.location?.delivery?.address || currentOrder.location?.deliveryLocation) &&
+                           (currentOrder.location.delivery?.address !== currentOrder.location.pickup?.address) &&
+                           (currentOrder.location.deliveryLocation !== currentOrder.location.pickupLocation) && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-gray-700">📍 Delivery Location: </span>
+                              <span className="text-sm text-gray-900">
+                                {currentOrder.location.delivery?.address || currentOrder.location.deliveryLocation}
+                              </span>
+                            </div>
+                          )}
+                          {(currentOrder.location?.pickup?.instructions || currentOrder.location?.pickupInstructions) && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-gray-700">📝 Instructions: </span>
+                              <span className="text-sm text-gray-900">
+                                {currentOrder.location.pickup?.instructions || currentOrder.location.pickupInstructions}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Laundry Service (Fallback for bookings without detailed items) */}
+                    {((currentOrder.serviceType === 'laundry') ||
+                      (currentOrder.serviceDetails?.category === 'laundry') ||
+                      (currentOrder.category === 'laundry')) &&
+                     (!currentOrder.bookingConfig?.laundryItems || currentOrder.bookingConfig.laundryItems.length === 0) && (
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Laundry Service</p>
+                        <div className="bg-white rounded-lg p-3 border border-blue-100">
+                          <div className="space-y-2">
+                            <div>
+                              <span className="text-sm font-medium text-gray-700">Service: </span>
+                              <span className="text-sm text-gray-900">
+                                {currentOrder.serviceDetails?.name || currentOrder.serviceName || 'Laundry Service'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-sm font-medium text-gray-700">Category: </span>
+                              <span className="text-sm text-gray-900 capitalize">
+                                {currentOrder.serviceDetails?.subcategory || 'General Laundry'}
+                              </span>
+                            </div>
+                            {currentOrder.bookingConfig?.quantity && (
+                              <div>
+                                <span className="text-sm font-medium text-gray-700">Quantity: </span>
+                                <span className="text-sm text-gray-900">{currentOrder.bookingConfig.quantity}</span>
+                              </div>
+                            )}
+                            {currentOrder.bookingConfig?.isExpressService && (
+                              <div className="mt-2 inline-flex items-center px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                                ⚡ Express Service
+                              </div>
+                            )}
+                            <div className="mt-2 text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                              ⚠️ Detailed item breakdown not available for this booking
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Restaurant Menu Items */}
+                    {(currentOrder.serviceType === 'restaurant' || currentOrder.serviceType === 'dining') && currentOrder.bookingConfig?.menuItems && currentOrder.bookingConfig.menuItems.length > 0 && (
+                      <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Menu Items</p>
+                        <div className="space-y-3">
+                          {currentOrder.bookingConfig.menuItems.map((item, index) => (
+                            <div key={index} className="bg-white rounded-lg p-3 border border-green-100">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium text-gray-900">{item.itemName}</span>
+                                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                                      {item.itemCategory}
+                                    </span>
+                                    {item.isVegetarian && (
+                                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">🌱 Veg</span>
+                                    )}
+                                    {item.isVegan && (
+                                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">🌿 Vegan</span>
+                                    )}
+                                    {item.spicyLevel && item.spicyLevel !== 'mild' && (
+                                      <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
+                                        🌶️ {item.spicyLevel}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="mt-1 text-xs text-gray-600">
+                                    Quantity: {item.quantity} | Prep Time: {item.preparationTime || 15} min
+                                  </div>
+                                  {item.description && (
+                                    <div className="mt-1 text-xs text-gray-500">{item.description}</div>
+                                  )}
+                                  {item.allergens && item.allergens.length > 0 && (
+                                    <div className="mt-1 text-xs text-orange-600">
+                                      ⚠️ Allergens: {item.allergens.join(', ')}
+                                    </div>
+                                  )}
+                                  {item.specialInstructions && (
+                                    <div className="mt-1 text-xs text-blue-600">
+                                      Special: {item.specialInstructions}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    ${item.totalPrice?.toFixed(2) || '0.00'}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    ${item.price?.toFixed(2) || '0.00'} each
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Restaurant Delivery Location */}
+                    {(currentOrder.serviceType === 'restaurant' || currentOrder.serviceType === 'dining') &&
+                     (currentOrder.location?.pickup?.address || currentOrder.location?.delivery?.address ||
+                      currentOrder.location?.pickupLocation || currentOrder.location?.deliveryLocation) && (
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Delivery Information</p>
+                        <div className="bg-white rounded-lg p-3 border border-blue-100">
+                          {(currentOrder.location?.delivery?.address || currentOrder.location?.deliveryLocation) && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-gray-700">📍 Delivery Location: </span>
+                              <span className="text-sm text-gray-900">
+                                {currentOrder.location.delivery?.address || currentOrder.location.deliveryLocation}
+                              </span>
+                            </div>
+                          )}
+                          {(currentOrder.location?.pickup?.address || currentOrder.location?.pickupLocation) &&
+                           (currentOrder.location.pickup?.address !== currentOrder.location.delivery?.address) &&
+                           (currentOrder.location.pickupLocation !== currentOrder.location.deliveryLocation) && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-gray-700">📍 Pickup Location: </span>
+                              <span className="text-sm text-gray-900">
+                                {currentOrder.location.pickup?.address || currentOrder.location.pickupLocation}
+                              </span>
+                            </div>
+                          )}
+                          {(currentOrder.location?.delivery?.instructions || currentOrder.location?.pickup?.instructions) && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-gray-700">📝 Instructions: </span>
+                              <span className="text-sm text-gray-900">
+                                {currentOrder.location.delivery?.instructions || currentOrder.location.pickup?.instructions}
+                              </span>
+                            </div>
+                          )}
+                          {currentOrder.bookingConfig?.specialRequests && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-gray-700">🍽️ Special Requests: </span>
+                              <span className="text-sm text-gray-900">
+                                {currentOrder.bookingConfig.specialRequests}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Transportation Details */}
+                    {currentOrder.serviceType === 'transportation' && (
+                      <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Transportation Details</p>
+                        <div className="bg-white rounded-lg p-3 border border-yellow-100">
+                          {currentOrder.resources?.vehicle && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-gray-700">Vehicle: </span>
+                              <span className="text-sm text-gray-900">{currentOrder.resources.vehicle}</span>
+                            </div>
+                          )}
+                          {(currentOrder.location?.pickup || currentOrder.location?.pickupLocation) && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-gray-700">Pickup: </span>
+                              <span className="text-sm text-gray-900">
+                                {currentOrder.location.pickup?.address || currentOrder.location.pickupLocation || 'Hotel Location'}
+                              </span>
+                              {(currentOrder.location.pickup?.instructions || currentOrder.location.pickupInstructions) && (
+                                <div className="text-xs text-gray-600 mt-1">
+                                  Instructions: {currentOrder.location.pickup?.instructions || currentOrder.location.pickupInstructions}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {(currentOrder.location?.delivery || currentOrder.location?.deliveryLocation) && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-gray-700">Delivery: </span>
+                              <span className="text-sm text-gray-900">
+                                {currentOrder.location.delivery?.address || currentOrder.location.deliveryLocation || 'Not specified'}
+                              </span>
+                              {(currentOrder.location.delivery?.instructions) && (
+                                <div className="text-xs text-gray-600 mt-1">
+                                  Instructions: {currentOrder.location.delivery.instructions}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {currentOrder.schedule?.estimatedDuration && (
+                            <div className="mb-2">
+                              <span className="text-sm font-medium text-gray-700">Estimated Duration: </span>
+                              <span className="text-sm text-gray-900">
+                                {currentOrder.schedule.estimatedDuration.value} {currentOrder.schedule.estimatedDuration.unit}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Housekeeping Details */}
+                    {currentOrder.serviceType === 'housekeeping' && (
+                      <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Housekeeping Service Details</p>
+                        <div className="bg-white rounded-lg p-3 border border-purple-100">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <span className="text-sm font-medium text-gray-700">Service Category: </span>
+                              <span className="text-sm text-gray-900 capitalize">
+                                {currentOrder.serviceDetails?.category || currentOrder.category || 'Housekeeping'}
+                              </span>
+                            </div>
+                            {currentOrder.serviceDetails?.subcategory && (
+                              <div>
+                                <span className="text-sm font-medium text-gray-700">Subcategory: </span>
+                                <span className="text-sm text-gray-900 capitalize">
+                                  {currentOrder.serviceDetails.subcategory}
+                                </span>
+                              </div>
+                            )}
+                            <div>
+                              <span className="text-sm font-medium text-gray-700">Room Number: </span>
+                              <span className="text-sm text-gray-900">
+                                {currentOrder.guestDetails?.roomNumber || 'Not specified'}
+                              </span>
+                            </div>
+                            {currentOrder.schedule?.estimatedDuration && (
+                              <div>
+                                <span className="text-sm font-medium text-gray-700">Estimated Duration: </span>
+                                <span className="text-sm text-gray-900">
+                                  {currentOrder.schedule.estimatedDuration.value} {currentOrder.schedule.estimatedDuration.unit}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          {currentOrder.bookingConfig?.isExpressService && (
+                            <div className="mt-3 inline-flex items-center px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                              ⚡ Express Service
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Service Options & Add-ons */}
+                    {((currentOrder.bookingConfig?.selectedOptions && currentOrder.bookingConfig.selectedOptions.length > 0) ||
+                      (currentOrder.bookingConfig?.additionalServices && currentOrder.bookingConfig.additionalServices.length > 0)) && (
+                      <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-200">
+                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Service Options & Add-ons</p>
+
+                        {/* Selected Options */}
+                        {currentOrder.bookingConfig?.selectedOptions && currentOrder.bookingConfig.selectedOptions.length > 0 && (
+                          <div className="mb-3">
+                            <p className="text-xs font-medium text-gray-700 mb-2">Selected Options:</p>
+                            <div className="space-y-1">
+                              {currentOrder.bookingConfig.selectedOptions.map((option, index) => (
+                                <div key={index} className="flex justify-between text-sm bg-white p-2 rounded border border-indigo-100">
+                                  <span>{option.name}: {option.value}</span>
+                                  {option.priceModifier !== 0 && (
+                                    <span className={option.priceModifier > 0 ? 'text-green-600' : 'text-red-600'}>
+                                      {option.priceModifier > 0 ? '+' : ''}${option.priceModifier?.toFixed(2)}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Additional Services */}
+                        {currentOrder.bookingConfig?.additionalServices && currentOrder.bookingConfig.additionalServices.length > 0 && (
+                          <div>
+                            <p className="text-xs font-medium text-gray-700 mb-2">Additional Services:</p>
+                            <div className="space-y-1">
+                              {currentOrder.bookingConfig.additionalServices.map((service, index) => (
+                                <div key={index} className="flex justify-between text-sm bg-white p-2 rounded border border-indigo-100">
+                                  <span>{service.name}</span>
+                                  <span className="text-green-600">+${service.price?.toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Notes */}
                     <div className="bg-gray-50 rounded-lg p-4">
@@ -746,6 +1162,17 @@ const OrdersPage = () => {
                           <span className="text-gray-600">Quantity:</span>
                           <span className="font-medium">{currentOrder.bookingConfig?.quantity || currentOrder.quantity || 1}</span>
                         </div>
+                        {currentOrder.bookingConfig?.isExpressService && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">⚡ Express Service:</span>
+                            <span className="font-medium text-red-600">
+                              {currentOrder.pricing?.expressSurcharge > 0
+                                ? `$${currentOrder.pricing.expressSurcharge.toFixed(2)}`
+                                : 'Yes'
+                              }
+                            </span>
+                          </div>
+                        )}
                         <div className="border-t pt-2 flex justify-between font-semibold text-[#3B5787]">
                           <span>Total Amount:</span>
                           <span>${(currentOrder.pricing?.totalAmount || currentOrder.totalAmount || 0).toFixed(2)}</span>

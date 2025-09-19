@@ -10,6 +10,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import apiClient from "../../services/api.service";
+import VehicleIcon from "../common/VehicleIcon";
 
 // ---------------- Icons (emoji: no extra deps) ----------------
 const Icon = ({ type, className = "" }) => {
@@ -497,18 +498,8 @@ const TransportationServiceCreator = () => {
 
   // ---------------- UI helpers ----------------
   const getVehicleIcon = (vehicleType) => {
-    const iconMap = {
-      economy_sedan: "car",
-      comfort_sedan: "car",
-      premium_suv: "suv",
-      luxury_vehicle: "luxury",
-      eco_vehicle: "eco",
-      accessible_vehicle: "wheelchair",
-      van_large: "van",
-      local_taxi: "taxi",
-      shared_ride: "car",
-    };
-    return iconMap[vehicleType] || "car";
+    // Return VehicleIcon component with larger size that fills container better
+    return <VehicleIcon vehicleType={vehicleType} className="w-10 h-10" />;
   };
 
   // ---------------- Render ----------------
@@ -525,8 +516,8 @@ const TransportationServiceCreator = () => {
 
           <div className="relative z-10">
             <div className="flex items-center mb-4">
-              <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm mr-4">
-                <Icon type="car" className="text-3xl" />
+              <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm mr-4 flex items-center justify-center">
+                <VehicleIcon vehicleType="car" size="large" className="w-8 h-8" inverse={true} />
               </div>
               <div>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
@@ -542,7 +533,7 @@ const TransportationServiceCreator = () => {
             {/* Stats Quick View */}
             <div className="flex flex-wrap gap-6 mt-8">
               <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-2">
-                <Icon type="car" className="text-xl mr-2" />
+                <VehicleIcon vehicleType="car" size="small" className="w-5 h-5 mr-2" inverse={true} />
                 <span className="text-sm font-medium">
                   {existingServices.length} Services
                 </span>
@@ -733,15 +724,24 @@ const ManageTab = ({
 
   if (loading && pageData.length === 0) {
     return (
-      <div className={CARD + ' flex flex-col items-center justify-center py-16 text-[#3B5787]'}>
-        <div className="relative">
-          <div className="animate-spin h-12 w-12 border-4 border-[#67BAE0]/30 border-t-[#67BAE0] rounded-full" />
-          <div className="absolute inset-0 animate-pulse">
-            <div className="h-12 w-12 border-4 border-transparent border-t-[#3B5787]/20 rounded-full" />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden mx-3 sm:mx-4 lg:mx-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
+          <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
+          <div className="relative flex flex-col items-center">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Transportation Services</h1>
+            <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">Loading available transportation services...</p>
           </div>
         </div>
-        <p className="mt-6 text-lg font-medium">Loading services...</p>
-        <p className="text-sm text-gray-500 mt-2">Please wait while we fetch your transportation services</p>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex justify-center items-center h-96">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
+              <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-[#3B5787] border-t-transparent animate-ping opacity-20"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -751,7 +751,9 @@ const ManageTab = ({
       <div className={CARD + ' text-center py-20'}>
         <div className="relative inline-block mb-8">
           <div className="absolute inset-0 bg-gradient-to-br from-[#3B5787]/20 to-[#67BAE0]/20 rounded-full blur-2xl"></div>
-          <Icon type="car" className="relative text-8xl text-gray-300" />
+          <div className="relative flex items-center justify-center">
+            <VehicleIcon vehicleType="car" size="xl" className="w-20 h-20 opacity-30" />
+          </div>
         </div>
         <h3 className="text-2xl font-bold text-gray-900 mb-4">
           No Transportation Services Found
@@ -858,8 +860,8 @@ const ManageTab = ({
                             <div key={idx} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex items-start gap-4 flex-1">
-                                  <div className="p-3 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-xl">
-                                    <Icon type={getVehicleIcon(vehicle.vehicleType)} className="text-white text-lg" />
+                                  <div className="flex items-center justify-center">
+                                    <VehicleIcon vehicleType={vehicle.vehicleType} className="w-14 h-14" />
                                   </div>
                                   <div className="flex-1">
                                     <h6 className="font-semibold text-gray-800 text-base mb-1">{vehicle.name}</h6>
@@ -946,7 +948,7 @@ const ManageTab = ({
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <Icon type={getVehicleIcon(service.transportationItems?.[0]?.vehicleType)} className="text-2xl" />
+                      <VehicleIcon vehicleType={service.transportationItems?.[0]?.vehicleType} className="w-12 h-12" />
                       <h4 className="text-xl font-bold text-gray-900">{service.name}</h4>
                     </div>
                     <p className="text-gray-600 leading-relaxed">{service.description}</p>
@@ -998,7 +1000,7 @@ const ManageTab = ({
                         key={idx}
                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-100"
                       >
-                        <Icon type={getVehicleIcon(v.vehicleType)} />
+                        <VehicleIcon vehicleType={v.vehicleType} className="w-5 h-5" />
                         {v.name}
                         {v?.capacity?.passengers != null && (
                           <span className="text-blue-600">({v.capacity.passengers}p)</span>
@@ -1164,8 +1166,8 @@ const AddTab = ({
         <div className="border-b border-[#67BAE0]/20 p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center">
-              <div className="p-3 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-2xl mr-4">
-                <Icon type="car" className="text-white text-xl" />
+              <div className="mr-4 flex items-center justify-center">
+                <VehicleIcon vehicleType="car" className="w-16 h-16" />
               </div>
               <div>
                 <h4 className="text-lg font-bold text-[#3B5787]">
@@ -1213,8 +1215,8 @@ const AddTab = ({
                 <div className="p-6">
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div className="flex items-start gap-4">
-                      <div className="p-3 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-2xl">
-                        <Icon type={getVehicleIcon(vehicle.vehicleType)} className="text-white text-xl" />
+                      <div className="flex items-center justify-center">
+                        <VehicleIcon vehicleType={vehicle.vehicleType} className="w-14 h-14" />
                       </div>
                       <div>
                         <h5 className="text-lg font-bold text-[#3B5787] mb-1">{vehicle.name}</h5>

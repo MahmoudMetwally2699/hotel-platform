@@ -435,12 +435,16 @@ const PaymentSuccess = () => {
                               t('paymentSuccess.notAvailable')
                             }</p>
                             <p>{t('paymentSuccess.pickupLocation')}: {
-                              booking.guestDetails?.roomNumber ||
-                              booking.guestDetails?.pickupLocation ||
-                              booking.pickupLocation ||
+                              booking.location?.pickup?.address ||
                               booking.location?.pickupLocation ||
+                              booking.pickupLocation ||
+                              booking.guestDetails?.pickupLocation ||
+                              booking.guestDetails?.roomNumber ||
                               t('paymentSuccess.notAvailable')
                             }</p>
+                            {booking.location?.delivery?.address && booking.location.delivery.address !== booking.location.pickup?.address && (
+                              <p>{t('paymentSuccess.deliveryLocation', 'Delivery Location')}: {booking.location.delivery.address}</p>
+                            )}
                           </div>
                         </div>
                       )}

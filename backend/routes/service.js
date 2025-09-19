@@ -497,9 +497,9 @@ router.get('/orders', catchAsync(async (req, res) => {
     };
   }
 
-  // Get bookings with pagination
+  // Get bookings without pagination limit - fetch all orders
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit) || 999999; // Fetch all orders by default
   const skip = (page - 1) * limit;
 
   const [orders, total] = await Promise.all([

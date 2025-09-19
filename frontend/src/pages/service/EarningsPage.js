@@ -100,8 +100,8 @@ const EarningsPage = () => {
         {
           label: 'Monthly Earnings',
           data: earningsData,
-          borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.5)',
+          borderColor: '#3B5787',
+          backgroundColor: 'rgba(59, 87, 135, 0.5)',
           tension: 0.3
         }
       ]
@@ -113,16 +113,16 @@ const EarningsPage = () => {
       // Create sample data structure for demonstration
       const categories = ['Transportation', 'Laundry', 'Housekeeping', 'Restaurant'];
       const categoryColors = [
-        'rgba(59, 130, 246, 0.8)', // Blue for Transportation
-        'rgba(147, 51, 234, 0.8)', // Purple for Laundry
-        'rgba(34, 197, 94, 0.8)', // Green for Housekeeping
-        'rgba(249, 115, 22, 0.8)' // Orange for Restaurant
+        'rgba(59, 87, 135, 0.8)', // Primary blue for Transportation
+        'rgba(103, 186, 224, 0.8)', // Light blue for Laundry
+        'rgba(59, 87, 135, 0.6)', // Primary blue variant for Housekeeping
+        'rgba(103, 186, 224, 0.6)' // Light blue variant for Restaurant
       ];
       const categoryBorderColors = [
-        'rgba(59, 130, 246, 1)',
-        'rgba(147, 51, 234, 1)',
-        'rgba(34, 197, 94, 1)',
-        'rgba(249, 115, 22, 1)'
+        'rgba(59, 87, 135, 1)',
+        'rgba(103, 186, 224, 1)',
+        'rgba(59, 87, 135, 1)',
+        'rgba(103, 186, 224, 1)'
       ];
 
       return {
@@ -144,16 +144,16 @@ const EarningsPage = () => {
     const categories = ['transportation', 'laundry', 'housekeeping', 'restaurant'];
     const categoryLabels = ['Transportation', 'Laundry', 'Housekeeping', 'Restaurant'];
     const categoryColors = [
-      'rgba(59, 130, 246, 0.8)', // Blue for Transportation
-      'rgba(147, 51, 234, 0.8)', // Purple for Laundry
-      'rgba(34, 197, 94, 0.8)', // Green for Housekeeping
-      'rgba(249, 115, 22, 0.8)' // Orange for Restaurant
+      'rgba(59, 87, 135, 0.8)', // Primary blue for Transportation
+      'rgba(103, 186, 224, 0.8)', // Light blue for Laundry
+      'rgba(59, 87, 135, 0.6)', // Primary blue variant for Housekeeping
+      'rgba(103, 186, 224, 0.6)' // Light blue variant for Restaurant
     ];
     const categoryBorderColors = [
-      'rgba(59, 130, 246, 1)',
-      'rgba(147, 51, 234, 1)',
-      'rgba(34, 197, 94, 1)',
-      'rgba(249, 115, 22, 1)'
+      'rgba(59, 87, 135, 1)',
+      'rgba(103, 186, 224, 1)',
+      'rgba(59, 87, 135, 1)',
+      'rgba(103, 186, 224, 1)'
     ];
 
     const earningsData = categories.map(category => {
@@ -227,11 +227,11 @@ const EarningsPage = () => {
     }
 
     const categoryColors = {
-      laundry: 'rgba(139, 69, 19, 0.8)',
-      transportation: 'rgba(59, 130, 246, 0.8)',
-      housekeeping: 'rgba(34, 197, 94, 0.8)',
-      restaurant: 'rgba(249, 115, 22, 0.8)',
-      other: 'rgba(107, 114, 128, 0.8)'
+      laundry: 'rgba(103, 186, 224, 0.8)',
+      transportation: 'rgba(59, 87, 135, 0.8)',
+      housekeeping: 'rgba(59, 87, 135, 0.6)',
+      restaurant: 'rgba(103, 186, 224, 0.6)',
+      other: 'rgba(0, 0, 0, 0.8)'
     };
 
     return {
@@ -256,7 +256,7 @@ const EarningsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Header Section */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -283,15 +283,15 @@ const EarningsPage = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
+          <div className="mb-6 bg-gray-50 border-l-4 border-[#3B5787] p-4 rounded-lg">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-5 w-5 text-[#3B5787]" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
+                <p className="text-sm text-gray-700">{error}</p>
               </div>
             </div>
           </div>
@@ -300,7 +300,7 @@ const EarningsPage = () => {
         {/* Enhanced Earnings Summary Cards */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
           {/* Available Balance Card */}
-          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 overflow-hidden shadow-xl rounded-2xl transform hover:scale-105 transition-all duration-200">
+          <div className="bg-gradient-to-br from-[#3B5787] to-[#2A4065] overflow-hidden shadow-xl rounded-2xl transform hover:scale-105 transition-all duration-200">
             <div className="px-6 py-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -308,7 +308,7 @@ const EarningsPage = () => {
                 </div>
                 <div className="ml-4 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-emerald-100 truncate">
+                    <dt className="text-sm font-medium text-white/80 truncate">
                       Available Balance
                     </dt>
                     <dd className="text-2xl font-bold text-white">
@@ -321,7 +321,7 @@ const EarningsPage = () => {
           </div>
 
           {/* Monthly Earnings Card */}
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 overflow-hidden shadow-xl rounded-2xl transform hover:scale-105 transition-all duration-200">
+          <div className="bg-gradient-to-br from-[#67BAE0] to-[#3B5787] overflow-hidden shadow-xl rounded-2xl transform hover:scale-105 transition-all duration-200">
             <div className="px-6 py-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -329,7 +329,7 @@ const EarningsPage = () => {
                 </div>
                 <div className="ml-4 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-blue-100 truncate">
+                    <dt className="text-sm font-medium text-white/80 truncate">
                       Monthly Earnings
                     </dt>
                     <dd className="text-2xl font-bold text-white">
@@ -342,7 +342,7 @@ const EarningsPage = () => {
           </div>
 
           {/* Total Earnings YTD Card */}
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 overflow-hidden shadow-xl rounded-2xl transform hover:scale-105 transition-all duration-200">
+          <div className="bg-gradient-to-br from-[#3B5787] to-[#67BAE0] overflow-hidden shadow-xl rounded-2xl transform hover:scale-105 transition-all duration-200">
             <div className="px-6 py-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -350,7 +350,7 @@ const EarningsPage = () => {
                 </div>
                 <div className="ml-4 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-purple-100 truncate">
+                    <dt className="text-sm font-medium text-white/80 truncate">
                       Total Earnings YTD
                     </dt>
                     <dd className="text-2xl font-bold text-white">
@@ -363,7 +363,7 @@ const EarningsPage = () => {
           </div>
 
           {/* Total Orders Card */}
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 overflow-hidden shadow-xl rounded-2xl transform hover:scale-105 transition-all duration-200">
+          <div className="bg-gradient-to-br from-[#67BAE0] to-[#2A4065] overflow-hidden shadow-xl rounded-2xl transform hover:scale-105 transition-all duration-200">
             <div className="px-6 py-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
@@ -371,7 +371,7 @@ const EarningsPage = () => {
                 </div>
                 <div className="ml-4 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-orange-100 truncate">
+                    <dt className="text-sm font-medium text-white/80 truncate">
                       Total Orders
                     </dt>
                     <dd className="text-2xl font-bold text-white">
@@ -391,7 +391,7 @@ const EarningsPage = () => {
             <div className="px-6 py-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <ClockIcon className="h-6 w-6 text-yellow-500" />
+                  <ClockIcon className="h-6 w-6 text-[#3B5787]" />
                 </div>
                 <div className="ml-4">
                   <div className="text-sm font-medium text-gray-500">Pending Earnings</div>
@@ -411,7 +411,7 @@ const EarningsPage = () => {
             <div className="px-6 py-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <CurrencyDollarIcon className="h-6 w-6 text-green-500" />
+                  <CurrencyDollarIcon className="h-6 w-6 text-[#67BAE0]" />
                 </div>
                 <div className="ml-4">
                   <div className="text-sm font-medium text-gray-500">Avg per Order</div>
@@ -429,7 +429,7 @@ const EarningsPage = () => {
             <button
               onClick={() => setShowPayoutModal(true)}
               disabled={!earnings || earnings.data?.availableBalance <= 0}
-              className="w-full mx-6 px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full mx-6 px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#2A4065] hover:to-[#3B5787] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               💳 Request Payout
             </button>
@@ -445,7 +445,7 @@ const EarningsPage = () => {
                 onClick={() => setTimeRange('7d')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   timeRange === '7d'
-                    ? 'bg-blue-500 text-white'
+                    ? 'bg-[#3B5787] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -455,7 +455,7 @@ const EarningsPage = () => {
                 onClick={() => setTimeRange('30d')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   timeRange === '30d'
-                    ? 'bg-blue-500 text-white'
+                    ? 'bg-[#3B5787] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -465,7 +465,7 @@ const EarningsPage = () => {
                 onClick={() => setTimeRange('90d')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   timeRange === '90d'
-                    ? 'bg-blue-500 text-white'
+                    ? 'bg-[#3B5787] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -475,7 +475,7 @@ const EarningsPage = () => {
                 onClick={() => setTimeRange('1y')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   timeRange === '1y'
-                    ? 'bg-blue-500 text-white'
+                    ? 'bg-[#3B5787] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -495,10 +495,10 @@ const EarningsPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Transportation Analytics */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+              <div className="bg-gradient-to-br from-[#3B5787]/10 to-[#3B5787]/20 rounded-xl p-6 border border-[#3B5787]/30">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-blue-500 rounded-lg">
+                    <div className="p-2 bg-[#3B5787] rounded-lg">
                       <TruckIcon className="h-6 w-6 text-white" />
                     </div>
                     <h4 className="text-lg font-semibold text-gray-900">Transportation</h4>
@@ -525,7 +525,7 @@ const EarningsPage = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">This Month</span>
-                    <span className="font-semibold text-blue-600">
+                    <span className="font-semibold text-[#3B5787]">
                       ${getCategoryData('transportation').currentPeriod?.totalEarnings?.toFixed(2) || '0.00'}
                     </span>
                   </div>
@@ -533,10 +533,10 @@ const EarningsPage = () => {
               </div>
 
               {/* Laundry Analytics */}
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+              <div className="bg-gradient-to-br from-[#67BAE0]/10 to-[#67BAE0]/20 rounded-xl p-6 border border-[#67BAE0]/30">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-purple-500 rounded-lg">
+                    <div className="p-2 bg-[#67BAE0] rounded-lg">
                       <SparklesIcon className="h-6 w-6 text-white" />
                     </div>
                     <h4 className="text-lg font-semibold text-gray-900">Laundry</h4>
@@ -563,7 +563,7 @@ const EarningsPage = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">This Month</span>
-                    <span className="font-semibold text-purple-600">
+                    <span className="font-semibold text-[#67BAE0]">
                       ${getCategoryData('laundry').currentPeriod?.totalEarnings?.toFixed(2) || '0.00'}
                     </span>
                   </div>
@@ -571,10 +571,10 @@ const EarningsPage = () => {
               </div>
 
               {/* Housekeeping Analytics */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+              <div className="bg-gradient-to-br from-[#3B5787]/10 to-[#3B5787]/20 rounded-xl p-6 border border-[#3B5787]/30">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-green-500 rounded-lg">
+                    <div className="p-2 bg-[#3B5787] rounded-lg">
                       <HomeIcon className="h-6 w-6 text-white" />
                     </div>
                     <h4 className="text-lg font-semibold text-gray-900">Housekeeping</h4>
@@ -591,10 +591,10 @@ const EarningsPage = () => {
               </div>
 
               {/* Restaurant Analytics */}
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
+              <div className="bg-gradient-to-br from-[#67BAE0]/10 to-[#67BAE0]/20 rounded-xl p-6 border border-[#67BAE0]/30">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-orange-500 rounded-lg">
+                    <div className="p-2 bg-[#67BAE0] rounded-lg">
                       <BuildingStorefrontIcon className="h-6 w-6 text-white" />
                     </div>
                     <h4 className="text-lg font-semibold text-gray-900">Restaurant</h4>
@@ -621,7 +621,7 @@ const EarningsPage = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">This Month</span>
-                    <span className="font-semibold text-orange-600">
+                    <span className="font-semibold text-[#67BAE0]">
                       ${getCategoryData('restaurant').currentPeriod?.totalEarnings?.toFixed(2) || '0.00'}
                     </span>
                   </div>
@@ -769,7 +769,7 @@ const EarningsPage = () => {
                   onClick={() => handleTimeRangeChange(option.key)}
                   className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                     timeRange === option.key
-                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg transform scale-105'
+                      ? 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white shadow-lg transform scale-105'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -924,10 +924,10 @@ const EarningsPage = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                               payout.status === 'completed'
-                                ? 'bg-green-100 text-green-800'
+                                ? 'bg-[#67BAE0]/20 text-[#3B5787]'
                                 : payout.status === 'pending'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
+                                ? 'bg-[#3B5787]/20 text-[#3B5787]'
+                                : 'bg-black/20 text-black'
                             }`}>
                               {payout.status || 'Pending'}
                             </span>
@@ -1005,7 +1005,7 @@ const EarningsPage = () => {
               </button>
               <button
                 onClick={handleRequestPayout}
-                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-emerald-600 border border-transparent rounded-lg hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3B5787] to-[#67BAE0] border border-transparent rounded-lg hover:from-[#2A4065] hover:to-[#3B5787] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787]"
               >
                 Request
               </button>

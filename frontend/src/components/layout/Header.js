@@ -5,11 +5,9 @@
 
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { useSelector } from 'react-redux';
 import { Link as RouterLink } from 'react-router-dom';
 import {  AppBar,
   Avatar,
-  Badge,
   Box,
   Divider,
   IconButton,
@@ -20,23 +18,14 @@ import {  AppBar,
   Typography,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import useAuth from '../../hooks/useAuth';
-import { selectAllNotifications, selectUnreadCount } from '../../redux/slices/notificationSlice';
-import NotificationsMenu from '../notifications/NotificationsMenu';
 
 const Header = ({ onDrawerToggle }) => {
   const { currentUser, role, logout } = useAuth();
-  const unreadCount = useSelector(selectUnreadCount);
-  const notifications = useSelector(selectAllNotifications);
 
   // Profile menu state
   const [anchorElUser, setAnchorElUser] = useState(null);
-
-  // Notifications menu state
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notificationsAnchor, setNotificationsAnchor] = useState(null);
 
   // Handle profile menu open
   const handleOpenUserMenu = (event) => {
@@ -46,18 +35,6 @@ const Header = ({ onDrawerToggle }) => {
   // Handle profile menu close
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
-  };
-
-  // Handle notifications menu open
-  const handleOpenNotificationsMenu = (event) => {
-    setNotificationsAnchor(event.currentTarget);
-    setNotificationsOpen(true);
-  };
-
-  // Handle notifications menu close
-  const handleCloseNotificationsMenu = () => {
-    setNotificationsOpen(false);
-    setNotificationsAnchor(null);
   };
 
   // Get dashboard route based on user role
@@ -106,18 +83,6 @@ const Header = ({ onDrawerToggle }) => {
         <Box sx={{ flexGrow: 1 }} />
 
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {/* Notifications icon */}
-          <Tooltip title="Notifications">
-            <IconButton
-              color="inherit"
-              onClick={handleOpenNotificationsMenu}
-            >
-              <Badge badgeContent={unreadCount} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-          </Tooltip>
-
           <Divider orientation="vertical" flexItem sx={{ mx: 1, bgcolor: 'background.paper', opacity: 0.5 }} />
 
           {/* User menu */}
@@ -212,14 +177,6 @@ const Header = ({ onDrawerToggle }) => {
           </Box>
         </Box>
       </Toolbar>
-
-      {/* Notifications menu component */}
-      <NotificationsMenu
-        open={notificationsOpen}
-        anchorEl={notificationsAnchor}
-        onClose={handleCloseNotificationsMenu}
-        notifications={notifications}
-      />
     </AppBar>
   );
 };

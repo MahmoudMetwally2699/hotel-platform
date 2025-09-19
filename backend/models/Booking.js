@@ -69,7 +69,7 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     },
     roomNumber: {
       type: String,
-      required: [true, 'Room number is required']
+      required: false // Room number is optional - some bookings may not have room assignment
     }
   },
 

@@ -161,7 +161,11 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
-          <h2 className="text-lg font-semibold text-gray-700 truncate">Hotel Service Platform</h2>
+          <img
+            src="/qickroom.png"
+            alt="QuickRoom"
+            className="h-10 w-auto object-contain"
+          />
           <button
             className="rounded-md p-2 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 lg:hidden"
             onClick={toggleSidebar}

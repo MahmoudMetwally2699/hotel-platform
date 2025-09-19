@@ -390,6 +390,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       serviceId,
       serviceProviderId: service.providerId._id,
       hotelId: service.hotelId,
+      serviceType: service.category || 'regular', // Set serviceType based on service category
 
       // Guest details for easy access
       guestDetails: {
@@ -1430,6 +1431,7 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
       serviceId,
       serviceProviderId: service.providerId._id,
       hotelId,
+      serviceType: 'laundry', // Set the service type for the booking
 
       // Guest details
       guestDetails: {
@@ -1450,25 +1452,43 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
 
       // Booking configuration for laundry
       bookingConfig: {
-        quantity: laundryItems.length,        laundryItems: laundryItems.map(item => ({
-          itemName: item.itemName,
-          itemId: item.itemId,
-          itemCategory: item.itemCategory,
-          itemIcon: item.itemIcon,
-          quantity: item.quantity,
-          serviceType: {
-            id: item.serviceTypeId,
-            name: item.serviceTypeName,
-            description: item.serviceTypeDescription,
-            duration: {
-              value: 24, // Default 24 hours for laundry
-              unit: 'hours'
+        quantity: laundryItems.length,        laundryItems: laundryItems.map(item => {
+          // Parse duration if provided, otherwise use default
+          let durationObj = { value: 24, unit: 'hours' }; // default
+
+          if (item.serviceTypeDuration) {
+            if (typeof item.serviceTypeDuration === 'object' && item.serviceTypeDuration.value) {
+              // Already in correct format
+              durationObj = item.serviceTypeDuration;
+            } else if (typeof item.serviceTypeDuration === 'string') {
+              // Parse string like "24 hours" or "12 hours"
+              const match = item.serviceTypeDuration.match(/(\d+)\s*(hours?|minutes?|days?)/i);
+              if (match) {
+                durationObj = {
+                  value: parseInt(match[1]),
+                  unit: match[2].toLowerCase()
+                };
+              }
+            }
+          }
+
+          return {
+            itemName: item.itemName,
+            itemId: item.itemId,
+            itemCategory: item.itemCategory,
+            itemIcon: item.itemIcon,
+            quantity: item.quantity,
+            serviceType: {
+              id: item.serviceTypeId,
+              name: item.serviceTypeName,
+              description: item.serviceTypeDescription,
+              duration: durationObj,
+              icon: item.serviceTypeIcon
             },
-            icon: item.serviceTypeIcon
-          },
-          basePrice: item.basePrice || item.totalPrice || 0,
-          finalPrice: item.totalPrice
-        })),
+            basePrice: item.basePrice || item.totalPrice || 0,
+            finalPrice: item.totalPrice
+          };
+        }),
         isExpressService: expressSurcharge?.enabled || false,
         specialRequests: guestDetails?.specialRequests || ''
       },      // Scheduling
@@ -2115,30 +2135,11 @@ router.post('/bookings/housekeeping', async (req, res) => {
     let service = null;
     let serviceProvider = null;
 
-    if (serviceId.startsWith('custom-') || serviceId.startsWith('generic-')) {
-      // This is a custom/generic frontend service, find the hotel's housekeeping provider
-      console.log('🔧 Housekeeping booking - Custom/Generic service detected:', serviceId);
-
-      // Find the hotel's internal housekeeping service provider
-      serviceProvider = await ServiceProvider.findOne({
-        hotelId: hotelId,
-        categories: 'housekeeping'
-      });
-
-      if (!serviceProvider) {
-        console.log('🔧 Housekeeping booking - No housekeeping provider found for hotel');
-        return res.status(404).json({
-          success: false,
-          message: 'No housekeeping service provider available'
-        });
-      }
-
-      console.log('🔧 Housekeeping booking - Using hotel housekeeping provider:', serviceProvider.businessName);
-    } else {
-      // This is a real database service
+    if (serviceId) {
+      // Find service by ID
       service = await Service.findById(serviceId).populate('providerId');
       if (!service) {
-        console.log('🔧 Housekeeping booking - Service not found:', serviceId);
+        console.log('🔧 Housekeeping booking - Service not found by ID:', serviceId);
         return res.status(404).json({
           success: false,
           message: 'Service not found'
@@ -2146,7 +2147,72 @@ router.post('/bookings/housekeeping', async (req, res) => {
       }
 
       serviceProvider = service.providerId;
-      console.log('🔧 Housekeeping booking - Database service found:', service.name);
+      console.log('🔧 Housekeeping booking - Database service found by ID:', service.name);
+      console.log('🔧 Housekeeping booking - Service provider:', serviceProvider?.businessName);
+    } else {
+      // No serviceId provided, find service by name and category
+      console.log('🔧 Housekeeping booking - Finding service by name and category:', { serviceName, serviceCategory });
+
+      // Find service providers for this hotel that offer housekeeping services
+      const serviceProviders = await ServiceProvider.find({
+        hotelId: hotelId,
+        categories: { $in: ['housekeeping', 'cleaning'] }
+      });
+
+      if (serviceProviders.length === 0) {
+        console.log('🔧 Housekeeping booking - No housekeeping providers found for hotel');
+        return res.status(404).json({
+          success: false,
+          message: 'No housekeeping service providers available for this hotel'
+        });
+      }
+
+      // Find the specific service by category and subcategory from these providers
+      // Map frontend categories to database categories and subcategories
+      const categoryMapping = {
+        'cleaning': { category: 'housekeeping', subcategory: 'cleaning' },
+        'amenities': { category: 'housekeeping', subcategory: 'amenities' },
+        'maintenance': { category: 'housekeeping', subcategory: 'maintenance' },
+        'housekeeping': { category: 'housekeeping', subcategory: null },
+        'laundry': { category: 'laundry', subcategory: null },
+        'transportation': { category: 'transportation', subcategory: null }
+      };
+
+      const mapping = categoryMapping[serviceCategory] || { category: serviceCategory, subcategory: null };
+      console.log('🔧 Housekeeping booking - Mapped category:', serviceCategory, '->', mapping);
+
+      // Build search criteria
+      const searchCriteria = {
+        category: mapping.category,
+        providerId: { $in: serviceProviders.map(sp => sp._id) },
+        isActive: true,
+        isApproved: true
+      };
+
+      // Add subcategory if specified
+      if (mapping.subcategory) {
+        searchCriteria.subcategory = mapping.subcategory;
+      }
+
+      // For housekeeping services, also filter by serviceType
+      if (mapping.category === 'housekeeping') {
+        searchCriteria.serviceType = 'housekeeping';
+      }
+
+      service = await Service.findOne(searchCriteria).populate('providerId');
+
+      console.log('🔧 Housekeeping booking - Search criteria:', searchCriteria);
+
+      if (!service) {
+        console.log('🔧 Housekeeping booking - No matching service found:', { serviceName, serviceCategory });
+        return res.status(404).json({
+          success: false,
+          message: `No ${serviceName} service available for this hotel`
+        });
+      }
+
+      serviceProvider = service.providerId;
+      console.log('🔧 Housekeeping booking - Service found by name/category:', service.name);
       console.log('🔧 Housekeeping booking - Service provider:', serviceProvider?.businessName);
     }
 

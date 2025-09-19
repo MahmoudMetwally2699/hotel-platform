@@ -12,11 +12,11 @@ import { FaCar, FaMoneyBillWave, FaClock, FaUser, FaMapMarkerAlt, FaCalendarAlt,
 import { toast } from 'react-toastify';
 import apiClient from '../../services/api.service';
 import { formatPriceByLanguage } from '../../utils/currency';
+import VehicleIcon from '../../components/common/VehicleIcon';
 
 // ---------------- Icons (emoji: no extra deps) ----------------
 const Icon = ({ type, className = "" }) => {
   const icons = {
-    car: "🚗",
     quote: "💬",
     money: "💰",
     clock: "⏰",
@@ -30,6 +30,12 @@ const Icon = ({ type, className = "" }) => {
     filter: "🧭",
     sort: "↕️"
   };
+
+  // Use VehicleIcon for car type
+  if (type === 'car') {
+    return <VehicleIcon vehicleType="car" className="w-6 h-6" />;
+  }
+
   return <span className={className}>{icons[type] || "❓"}</span>;
 };
 
@@ -170,7 +176,9 @@ const TransportationBookingManagement = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div className="flex items-center text-sm text-gray-600">
-            <FaCar className="mr-2" />
+            <div className="mr-2">
+              <VehicleIcon vehicleType={booking.vehicleDetails.vehicleType} className="w-4 h-4" />
+            </div>
             <span>{t(`transportation.vehicleTypes.${booking.vehicleDetails.vehicleType}`)} - {t(`transportation.comfortLevels.${booking.vehicleDetails.comfortLevel}`)}</span>
           </div>
           <div className="flex items-center text-sm text-gray-600">
@@ -389,10 +397,13 @@ const TransportationBookingManagement = () => {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium">{t('transportation.labels.vehicle')}:</span>
-                    <p className="text-gray-600">
-                      {t(`transportation.vehicleTypes.${selectedBooking.vehicleDetails.vehicleType}`)} -
-                      {t(`transportation.comfortLevels.${selectedBooking.vehicleDetails.comfortLevel}`)}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <VehicleIcon vehicleType={selectedBooking.vehicleDetails.vehicleType} className="w-4 h-4" />
+                      <p className="text-gray-600">
+                        {t(`transportation.vehicleTypes.${selectedBooking.vehicleDetails.vehicleType}`)} -
+                        {t(`transportation.comfortLevels.${selectedBooking.vehicleDetails.comfortLevel}`)}
+                      </p>
+                    </div>
                   </div>
                   <div>
                     <span className="font-medium">{t('transportation.labels.passengers')}:</span>
@@ -545,10 +556,13 @@ const TransportationBookingManagement = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <span className="font-medium">{t('transportation.labels.vehicle')}:</span>
-                        <p className="text-gray-600">
-                          {t(`transportation.vehicleTypes.${selectedBooking.vehicleDetails.vehicleType}`)} -
-                          {t(`transportation.comfortLevels.${selectedBooking.vehicleDetails.comfortLevel}`)}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <VehicleIcon vehicleType={selectedBooking.vehicleDetails.vehicleType} className="w-4 h-4" />
+                          <p className="text-gray-600">
+                            {t(`transportation.vehicleTypes.${selectedBooking.vehicleDetails.vehicleType}`)} -
+                            {t(`transportation.comfortLevels.${selectedBooking.vehicleDetails.comfortLevel}`)}
+                          </p>
+                        </div>
                       </div>
                       <div>
                         <span className="font-medium">{t('transportation.labels.passengers')}:</span>

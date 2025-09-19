@@ -400,8 +400,24 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <FaSpinner className="animate-spin text-4xl text-blue-500" />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden mx-3 sm:mx-4 lg:mx-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
+          <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
+          <div className="relative flex flex-col items-center">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Housekeeping Service</h1>
+            <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">Loading housekeeping services...</p>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex justify-center items-center h-96">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
+              <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-[#3B5787] border-t-transparent animate-ping opacity-20"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -488,16 +504,12 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
               {/* Top Row - Two Items */}
               <div className="grid grid-cols-2 gap-4">
                 {serviceCategories.slice(0, 2).map(category => {
-                  const categoryServices = services.filter(s => s.category === category.value || s.subcategory === category.value);
-                  // Only show category if there are actual services for it
-                  if (categoryServices.length === 0) return null;
-
                   return (
                     <button
                       key={category.value}
                       onClick={() => {
-                        const firstService = categoryServices[0];
-                        handleServiceSelect(firstService);
+                        const service = { category: category.value, name: category.label };
+                        handleServiceSelect(service);
                       }}
                       className="group bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-all w-full"
                     >
@@ -516,16 +528,12 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
               {/* Bottom Row - Centered Single Item */}
               {serviceCategories.slice(2).map(category => {
-                const categoryServices = services.filter(s => s.category === category.value || s.subcategory === category.value);
-                // Only show category if there are actual services for it
-                if (categoryServices.length === 0) return null;
-
                 return (
                   <div key={category.value} className="flex justify-center">
                     <button
                       onClick={() => {
-                        const firstService = categoryServices[0];
-                        handleServiceSelect(firstService);
+                        const service = { category: category.value, name: category.label };
+                        handleServiceSelect(service);
                       }}
                       className="group bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-all w-40"
                     >
@@ -867,8 +875,6 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       </div>
     );
   }
-
-  return null;
 };
 
 export default GuestHousekeepingBooking;

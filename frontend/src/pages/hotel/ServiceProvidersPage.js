@@ -296,7 +296,7 @@ const ServiceProvidersPage = () => {
                               </button>
                               <button
                                 onClick={() => handleManageCategories(provider)}
-                                className="text-green-600 hover:text-green-800 font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-green-50 text-sm"
+                                className="text-[#3B5787] hover:text-[#2A4065] font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-[#67BAE0]/10 text-sm"
                               >
                                 Manage Services
                               </button>
@@ -481,11 +481,11 @@ const ServiceProvidersPage = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               {/* Modal Header */}
-              <div className="px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 rounded-t-2xl">
+              <div className="px-6 py-4 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-t-2xl">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-white">Manage Service Categories</h3>
-                    <p className="text-green-100 text-sm mt-1">
+                    <p className="text-white/90 text-sm mt-1">
                       Configure services for {selectedProvider.businessName}
                     </p>
                   </div>
@@ -516,8 +516,8 @@ const ServiceProvidersPage = () => {
                       key={category.id}
                       className={`border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 ${
                         (selectedCategories || []).includes(category.id)
-                          ? 'border-green-500 bg-green-50'
-                          : 'border-gray-200 bg-white hover:border-green-300'
+                          ? 'border-[#3B5787] bg-[#67BAE0]/10'
+                          : 'border-gray-200 bg-white hover:border-[#67BAE0]'
                       }`}
                       onClick={() => handleCategoryChange(category.id, !(selectedCategories || []).includes(category.id))}
                     >
@@ -532,7 +532,7 @@ const ServiceProvidersPage = () => {
                               id={`edit-category-${category.id}`}
                               checked={(selectedCategories || []).includes(category.id)}
                               onChange={(e) => handleCategoryChange(category.id, e.target.checked)}
-                              className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                              className="h-4 w-4 text-[#3B5787] focus:ring-[#67BAE0] border-gray-300 rounded"
                               disabled={isSavingCategories}
                             />
                             <label
@@ -559,7 +559,7 @@ const ServiceProvidersPage = () => {
                         return category ? (
                           <span
                             key={categoryId}
-                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#67BAE0]/10 text-[#3B5787]"
                           >
                             {category.icon} {category.name}
                           </span>
@@ -575,14 +575,14 @@ const ServiceProvidersPage = () => {
                 <div className="flex space-x-3 justify-end">
                   <button
                     onClick={() => setIsCategoriesModalOpen(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#67BAE0] transition-colors duration-200"
                     disabled={isSavingCategories}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveCategories}
-                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3B5787] to-[#67BAE0] border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#67BAE0] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     disabled={isSavingCategories}
                   >
                     {isSavingCategories ? (
