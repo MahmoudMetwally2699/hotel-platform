@@ -472,6 +472,35 @@ class HotelService {
       throw error;
     }
   }
+
+  /**
+   * Get hotel guests with pagination and filtering
+   * @param {Object} params - Query parameters (page, limit, search, status)
+   * @returns {Promise} - Response from API
+   */
+  async getHotelGuests(params = {}) {
+    try {
+      const response = await apiClient.get(HOTEL_ADMIN_API.GUESTS, { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Update guest active status
+   * @param {string} guestId - Guest ID
+   * @param {boolean} isActive - New active status
+   * @returns {Promise} - Response from API
+   */
+  async updateGuestStatus(guestId, isActive) {
+    try {
+      const response = await apiClient.patch(`${HOTEL_ADMIN_API.GUESTS}/${guestId}/status`, { isActive });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 const hotelService = new HotelService();

@@ -159,8 +159,8 @@ const userSchema = new mongoose.Schema({
   // Account Status
   isActive: {
     type: Boolean,
-    default: true,
-    select: false
+    default: true
+    // Removed select: false so hotel admins can manage guest status
   },
 
   // Booking status

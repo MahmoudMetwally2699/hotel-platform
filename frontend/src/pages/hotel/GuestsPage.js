@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUsers, selectAllUsers, selectUserLoading } from '../../redux/slices/userSlice';
+import { HiSearch, HiFilter, HiUserAdd, HiCheckCircle, HiXCircle } from 'react-icons/hi';
+import { useAuth } from '../../hooks/useAuth';
+import hotelService from '../../services/hotel.service';
 
 /**
  * Hotel Admin Guests Management Page
@@ -10,121 +13,279 @@ const GuestsPage = () => {
   const dispatch = useDispatch();
   const users = useSelector(selectAllUsers);
   const isLoading = useSelector(selectUserLoading);
+  const { currentUser } = useAuth();
+
+  // State management
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  });
+  const [guests, setGuests] = useState([]);
+  const [filteredGuests, setFilteredGuests] = useState([]);
+  const [updating, setUpdating] = useState(new Set());
+
+  // Fetch guests with pagination
+  const fetchGuests = useCallback(async () => {
+    try {
+      const response = await hotelService.getHotelGuests({
+        page: pagination.page,
+        limit: pagination.limit,
+        search: searchTerm,
+        status: statusFilter
+      });
+
+      setGuests(response.data.guests || []);
+      setPagination(prev => ({
+        ...prev,
+        total: response.data.total || 0,
+        totalPages: response.data.totalPages || 0
+      }));
+    } catch (error) {
+      console.error('Error fetching guests:', error);
+      // Fallback to redux for now
+      dispatch(fetchUsers({ role: 'GUEST' }));
+      setGuests(users);
+    }
+  }, [pagination.page, pagination.limit, searchTerm, statusFilter, dispatch, users]);
 
   useEffect(() => {
-    dispatch(fetchUsers({ role: 'GUEST' }));
-  }, [dispatch]);
+    fetchGuests();
+  }, [fetchGuests]);
 
-  // Filter guests by search term and status
-  const filteredGuests = users.filter(guest => {
-    const matchesSearch = searchTerm === '' ||
-      guest.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      guest.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      guest.email?.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    // Apply filters locally until backend is updated
+    const filtered = guests.filter(guest => {
+      const matchesSearch = searchTerm === '' ||
+        guest.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        guest.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        guest.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        guest.fullGuestName?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = statusFilter === '' || guest.status === statusFilter;
+      const matchesStatus = statusFilter === '' || guest.isActive === (statusFilter === 'ACTIVE');
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    });
+
+    setFilteredGuests(filtered);
+  }, [guests, searchTerm, statusFilter]);
+
+  // Handle search with debounce
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  // Handle status filter change
+  const handleStatusFilter = (e) => {
+    setStatusFilter(e.target.value);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  // Toggle guest active status
+  const toggleGuestStatus = async (guestId, currentStatus) => {
+    setUpdating(prev => new Set(prev).add(guestId));
+
+    try {
+      await hotelService.updateGuestStatus(guestId, !currentStatus);
+
+      // Update local state
+      setGuests(prev => prev.map(guest =>
+        guest._id === guestId
+          ? { ...guest, isActive: !currentStatus }
+          : guest
+      ));
+
+      // Show success message (you can implement toast notifications)
+      console.log(`Guest status updated successfully`);
+    } catch (error) {
+      console.error('Error updating guest status:', error);
+      // Show error message
+    } finally {
+      setUpdating(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(guestId);
+        return newSet;
+      });
+    }
+  };
 
   // Format date
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  // Get guest display name
+  const getGuestName = (guest) => {
+    if (guest.fullGuestName) return guest.fullGuestName;
+    if (guest.firstName && guest.lastName) {
+      return `${guest.firstName} ${guest.lastName}`.replace(' undefined', '').trim();
+    }
+    return guest.firstName || guest.lastName || guest.name || 'Unknown Guest';
+  };
+
+  // Get guest initials
+  const getGuestInitials = (guest) => {
+    const name = getGuestName(guest);
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-gradient-to-r from-modern-blue to-modern-lightBlue rounded-full animate-spin border-t-transparent"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-modern-lightBlue/20 rounded-full animate-ping"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">Guests Management</h1>
+      {/* Header with gradient */}
+      <div className="bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg p-6 mb-6 text-white">
+        <h1 className="text-2xl font-bold mb-2">Guest Management</h1>
+        <p className="text-blue-100">Manage your hotel guests and their access permissions</p>
+      </div>
 
-      {/* Search and Filter */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="w-full md:w-1/3">
-          <input
-            type="text"
-            placeholder="Search guests..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+      {/* Search and Filter Controls */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search Input */}
+          <div className="flex-1">
+            <div className="relative">
+              <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Search guests by name, email..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-modern-blue focus:border-modern-blue"
+                value={searchTerm}
+                onChange={handleSearch}
+              />
+            </div>
+          </div>
 
-        <div className="w-full md:w-1/3">
-          <select
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">All Statuses</option>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-          </select>
+          {/* Status Filter */}
+          <div className="lg:w-48">
+            <select
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-modern-blue focus:border-modern-blue"
+              value={statusFilter}
+              onChange={handleStatusFilter}
+            >
+              <option value="">All Statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
+
+          {/* Results Count */}
+          <div className="flex items-center text-sm text-gray-500">
+            <HiFilter className="h-4 w-4 mr-1" />
+            {filteredGuests.length} guest{filteredGuests.length !== 1 ? 's' : ''} found
+          </div>
         </div>
       </div>
 
-      {/* Guests List */}
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <thead className="bg-gray-100">
+      {/* Guests Table */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="py-3 px-4 text-left">Guest Name</th>
-                <th className="py-3 px-4 text-left">Email</th>
-                <th className="py-3 px-4 text-left">Phone</th>
-                <th className="py-3 px-4 text-left">Joined</th>
-                <th className="py-3 px-4 text-left">Last Booking</th>
-                <th className="py-3 px-4 text-left">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Guest
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Contact
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Joined
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="bg-white divide-y divide-gray-200">
               {filteredGuests.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="py-4 px-4 text-center text-gray-500">
-                    No guests found
+                  <td colSpan="5" className="px-6 py-12 text-center">
+                    <div className="text-gray-500">
+                      <HiUserAdd className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <h3 className="text-lg font-medium">No guests found</h3>
+                      <p className="text-sm">Try adjusting your search criteria or filters.</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 filteredGuests.map((guest) => (
-                  <tr key={guest._id} className="border-t border-gray-200 hover:bg-gray-50">
-                    <td className="py-3 px-4">
+                  <tr key={guest._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white mr-3">
-                          {guest.firstName?.[0]}{guest.lastName?.[0]}
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-modern-blue to-modern-lightBlue flex items-center justify-center text-white font-bold text-sm">
+                          {getGuestInitials(guest)}
                         </div>
-                        <div>
-                          <div className="font-medium">{guest.firstName} {guest.lastName}</div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {getGuestName(guest)}
+                          </div>
                           {guest.roomNumber && (
                             <div className="text-sm text-gray-500">Room #{guest.roomNumber}</div>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4">
-                      {guest.email}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{guest.email}</div>
+                      <div className="text-sm text-gray-500">{guest.phone || 'No phone'}</div>
                     </td>
-                    <td className="py-3 px-4">
-                      {guest.phone || 'N/A'}
-                    </td>
-                    <td className="py-3 px-4">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(guest.createdAt)}
                     </td>
-                    <td className="py-3 px-4">
-                      {guest.lastBookingDate ? formatDate(guest.lastBookingDate) : 'No bookings'}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        guest.status === 'ACTIVE'
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        guest.isActive !== false
                           ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {guest.status}
+                        {guest.isActive !== false ? 'Active' : 'Inactive'}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <button
+                        onClick={() => toggleGuestStatus(guest._id, guest.isActive !== false)}
+                        disabled={updating.has(guest._id)}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                          guest.isActive !== false
+                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        {updating.has(guest._id) ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
+                        ) : guest.isActive !== false ? (
+                          <HiXCircle className="w-4 h-4 mr-1" />
+                        ) : (
+                          <HiCheckCircle className="w-4 h-4 mr-1" />
+                        )}
+                        {guest.isActive !== false ? 'Deactivate' : 'Activate'}
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -132,7 +293,171 @@ const GuestsPage = () => {
             </tbody>
           </table>
         </div>
-      )}
+
+        {/* Mobile Card View */}
+        <div className="lg:hidden space-y-4 p-4">
+          {filteredGuests.length === 0 ? (
+            <div className="text-center py-12">
+              <HiUserAdd className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">No guests found</h3>
+              <p className="text-sm text-gray-500">Try adjusting your search criteria or filters.</p>
+            </div>
+          ) : (
+            filteredGuests.map((guest) => (
+              <div key={guest._id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-modern-blue to-modern-lightBlue flex items-center justify-center text-white font-bold text-sm">
+                      {getGuestInitials(guest)}
+                    </div>
+                    <div className="ml-3">
+                      <div className="font-medium text-gray-900">{getGuestName(guest)}</div>
+                      <div className="text-sm text-gray-500">{guest.email}</div>
+                    </div>
+                  </div>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    guest.isActive !== false
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {guest.isActive !== false ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                  <div>
+                    <span className="text-gray-500">Phone:</span>
+                    <div className="font-medium">{guest.phone || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Joined:</span>
+                    <div className="font-medium">{formatDate(guest.createdAt)}</div>
+                  </div>
+                  {guest.roomNumber && (
+                    <div>
+                      <span className="text-gray-500">Room:</span>
+                      <div className="font-medium">#{guest.roomNumber}</div>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => toggleGuestStatus(guest._id, guest.isActive !== false)}
+                  disabled={updating.has(guest._id)}
+                  className={`w-full inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    guest.isActive !== false
+                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {updating.has(guest._id) ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                  ) : guest.isActive !== false ? (
+                    <HiXCircle className="w-5 h-5 mr-2" />
+                  ) : (
+                    <HiCheckCircle className="w-5 h-5 mr-2" />
+                  )}
+                  {guest.isActive !== false ? 'Deactivate Guest' : 'Activate Guest'}
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Pagination */}
+        {filteredGuests.length > 0 && (
+          <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+            {/* Mobile Pagination */}
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button
+                onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                disabled={pagination.page <= 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-700 flex items-center">
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+              <button
+                onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
+                disabled={pagination.page >= pagination.totalPages}
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+
+            {/* Desktop Pagination */}
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing{' '}
+                  <span className="font-medium">{Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}</span>
+                  {' '}to{' '}
+                  <span className="font-medium">{Math.min(pagination.page * pagination.limit, pagination.total)}</span>
+                  {' '}of{' '}
+                  <span className="font-medium">{pagination.total}</span>
+                  {' '}results
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <button
+                    onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                    disabled={pagination.page <= 1}
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="sr-only">Previous</span>
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+
+                  {/* Page Numbers */}
+                  {[...Array(Math.min(5, pagination.totalPages))].map((_, index) => {
+                    let pageNumber;
+                    if (pagination.totalPages <= 5) {
+                      pageNumber = index + 1;
+                    } else if (pagination.page <= 3) {
+                      pageNumber = index + 1;
+                    } else if (pagination.page >= pagination.totalPages - 2) {
+                      pageNumber = pagination.totalPages - 4 + index;
+                    } else {
+                      pageNumber = pagination.page - 2 + index;
+                    }
+
+                    return (
+                      <button
+                        key={pageNumber}
+                        onClick={() => setPagination(prev => ({ ...prev, page: pageNumber }))}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          pagination.page === pageNumber
+                            ? 'z-10 bg-modern-blue border-modern-blue text-white'
+                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
+                    disabled={pagination.page >= pagination.totalPages}
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="sr-only">Next</span>
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

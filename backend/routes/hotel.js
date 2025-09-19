@@ -1480,6 +1480,178 @@ router.get('/users/:id', catchAsync(async (req, res, next) => {
 }));
 
 /**
+ * @route   GET /api/hotel/guests
+ * @desc    Get all guests associated with this hotel (dedicated guest management endpoint)
+ * @access  Private/HotelAdmin
+ */
+router.get('/guests', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+
+  // Build query filter for guests
+  const filter = {
+    role: 'guest',
+    $or: [
+      { selectedHotelId: hotelId },
+      { 'bookingHistory.hotelId': hotelId }
+    ]
+  };
+
+  // Status filter
+  if (req.query.status === 'ACTIVE') {
+    filter.isActive = { $ne: false }; // true or undefined (default active)
+  } else if (req.query.status === 'INACTIVE') {
+    filter.isActive = false;
+  }
+
+  // Search functionality
+  if (req.query.search) {
+    const searchRegex = new RegExp(req.query.search, 'i');
+    filter.$and = [
+      filter.$or ? { $or: filter.$or } : {},
+      {
+        $or: [
+          { firstName: searchRegex },
+          { lastName: searchRegex },
+          { fullGuestName: searchRegex },
+          { email: searchRegex }
+        ]
+      }
+    ];
+    delete filter.$or; // Remove the original $or to avoid conflicts
+  }
+
+  // Pagination
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  try {
+    const [guests, total] = await Promise.all([
+      User.find(filter)
+        .select('-password -passwordChangedAt -passwordResetToken -passwordResetExpires')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(filter)
+    ]);
+
+    // Add last booking date for each guest
+    const guestsWithBookings = await Promise.all(
+      guests.map(async (guest) => {
+        // Check both regular bookings and transportation bookings
+        const [lastBooking, lastTransportationBooking] = await Promise.all([
+          Booking.findOne({
+            userId: guest._id,
+            hotelId: hotelId
+          })
+            .sort({ createdAt: -1 })
+            .select('createdAt')
+            .lean(),
+
+          TransportationBooking.findOne({
+            userId: guest._id,
+            hotelId: hotelId
+          })
+            .sort({ createdAt: -1 })
+            .select('createdAt')
+            .lean()
+        ]);
+
+        // Find the most recent booking from all types
+        let lastBookingDate = null;
+
+        if (lastBooking && lastTransportationBooking) {
+          lastBookingDate = lastBooking.createdAt > lastTransportationBooking.createdAt
+            ? lastBooking.createdAt
+            : lastTransportationBooking.createdAt;
+        } else if (lastBooking) {
+          lastBookingDate = lastBooking.createdAt;
+        } else if (lastTransportationBooking) {
+          lastBookingDate = lastTransportationBooking.createdAt;
+        }
+
+        return {
+          ...guest,
+          lastBookingDate
+        };
+      })
+    );
+
+    res.status(200).json({
+      status: 'success',
+      results: guests.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      data: {
+        guests: guestsWithBookings
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching guests:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Error fetching guests'
+    });
+  }
+}));
+
+/**
+ * @route   PATCH /api/hotel/guests/:guestId/status
+ * @desc    Update guest active status (enable/disable login)
+ * @access  Private/HotelAdmin
+ */
+router.patch('/guests/:guestId/status', catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const { guestId } = req.params;
+  const { isActive } = req.body;
+
+  // Validate input
+  if (typeof isActive !== 'boolean') {
+    return next(new AppError('isActive must be a boolean value', 400));
+  }
+
+  // Find the guest
+  const guest = await User.findById(guestId);
+  if (!guest) {
+    return next(new AppError('Guest not found', 404));
+  }
+
+  if (guest.role !== 'guest') {
+    return next(new AppError('User is not a guest', 400));
+  }
+
+  // Check if this guest has any association with this hotel
+  const hasHotelAssociation = await Booking.findOne({
+    userId: guestId,
+    hotelId: hotelId
+  });
+
+  if (!hasHotelAssociation && guest.selectedHotelId?.toString() !== hotelId.toString()) {
+    return next(new AppError('Guest not associated with this hotel', 403));
+  }
+
+  // Update guest status
+  const updatedGuest = await User.findByIdAndUpdate(
+    guestId,
+    { isActive },
+    { new: true, select: '-password -passwordChangedAt -passwordResetToken -passwordResetExpires' }
+  );
+
+  // Log the action
+  logger.info(`Hotel admin ${req.user.email} ${isActive ? 'activated' : 'deactivated'} guest ${guest.email}`);
+
+  res.status(200).json({
+    status: 'success',
+    message: `Guest has been ${isActive ? 'activated' : 'deactivated'} successfully`,
+    data: {
+      guest: updatedGuest
+    }
+  });
+}));
+
+/**
  * @route   GET /api/hotel/markup-settings
  * @desc    Get hotel markup settings
  * @access  Private/HotelAdmin

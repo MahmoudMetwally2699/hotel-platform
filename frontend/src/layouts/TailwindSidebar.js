@@ -81,6 +81,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         return [
           { name: t('navigation.dashboard'), path: '/hotel/dashboard', icon: 'home' },
           { name: t('navigation.orders'), path: '/hotel/orders', icon: 'shopping-bag' },
+          { name: t('navigation.guests'), path: '/hotel/guests', icon: 'users' },
           { name: t('navigation.serviceProviders'), path: '/hotel/service-providers', icon: 'briefcase' },
           { name: t('navigation.revenue'), path: '/hotel/revenue', icon: 'cash' },
           { name: t('navigation.qrCodes'), path: '/hotel/qr-codes', icon: 'qr-code' },
