@@ -464,7 +464,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                   <div className="flex items-center space-x-2">
                     <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-[#3B5787] to-[#4a6694] rounded-full"></div>
                     <span className="text-xs font-medium text-[#3B5787] uppercase tracking-wider">
-                      Professional Service
+                      {t('guestCategories.professionalService')}
                     </span>
                   </div>
 
@@ -476,15 +476,15 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                   <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 sm:pt-4">
                     <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-[#3B5787]/10 to-[#4a6694]/10 rounded-lg sm:rounded-xl">
                       <FaBroom className="text-[#3B5787] text-xs sm:text-sm" />
-                      <span className="text-xs sm:text-sm font-medium text-gray-700">Expert Cleaning</span>
+                      <span className="text-xs sm:text-sm font-medium text-gray-700">{t('housekeeping.expertCleaning')}</span>
                     </div>
                     <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg sm:rounded-xl">
                       <FaCheck className="text-green-600 text-xs sm:text-sm" />
-                      <span className="text-xs sm:text-sm font-medium text-gray-700">Quality Assured</span>
+                      <span className="text-xs sm:text-sm font-medium text-gray-700">{t('housekeeping.qualityAssured')}</span>
                     </div>
                     <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg sm:rounded-xl">
                       <FaClock className="text-blue-600 text-xs sm:text-sm" />
-                      <span className="text-xs sm:text-sm font-medium text-gray-700">On Schedule</span>
+                      <span className="text-xs sm:text-sm font-medium text-gray-700">{t('housekeeping.onSchedule')}</span>
                     </div>
                   </div>
                 </div>
@@ -607,7 +607,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
             <form onSubmit={handleBookingSubmit} className="space-y-3 sm:space-y-4">
               {/* Date Field */}
               <div>
-                <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">Schedule Date</label>
+                <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">{t('housekeeping.scheduleDate')}</label>
                 <div className="relative">
                   <FaCalendarAlt className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-[#3B5787] text-xs sm:text-sm" />
                   <input
@@ -622,7 +622,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
               {/* Time Selection */}
               <div>
-                <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">Preferred Time</label>
+                <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">{t('housekeeping.preferredTime')}</label>
                 <div className="relative">
                   <FaClock className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-[#3B5787] text-xs sm:text-sm" />
                   <select
@@ -662,7 +662,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
               {/* Room Number */}
               <div>
-                <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">Room Number</label>
+                <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">{t('housekeeping.roomNumber')}</label>
                 <div className="relative">
                   <FaMapMarkerAlt className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-[#3B5787] text-xs sm:text-sm" />
                   <input
@@ -692,8 +692,8 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                             <FaLightbulb className="text-white text-xs sm:text-sm" />
                           </div>
                           <div>
-                            <span className="font-semibold text-[#3B5787] text-xs sm:text-sm">Quick Issue Categories</span>
-                            <p className="text-xs text-[#3B5787]/70 hidden sm:block">Tap to view common issues</p>
+                            <span className="font-semibold text-[#3B5787] text-xs sm:text-sm">{t('housekeeping.quickIssueCategories')}</span>
+                            <p className="text-xs text-[#3B5787]/70 hidden sm:block">{t('housekeeping.tapToViewCommonIssues')}</p>
                           </div>
                         </div>
                         <div className={`transform transition-all duration-300 ${showQuickHints ? 'rotate-180' : ''}`}>

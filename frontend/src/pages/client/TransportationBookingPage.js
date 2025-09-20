@@ -444,7 +444,7 @@ const TransportationBookingPage = () => {
                 <div className="flex items-center space-x-2">
                   <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-[#3B5787] to-[#4a6694] rounded-full"></div>
                   <span className="text-xs font-medium text-[#3B5787] uppercase tracking-wider">
-                    Travel Service
+                    {t('guestCategories.travelService')}
                   </span>
                 </div>
 
@@ -456,15 +456,15 @@ const TransportationBookingPage = () => {
                 <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 sm:pt-4">
                   <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-[#3B5787]/10 to-[#4a6694]/10 rounded-lg sm:rounded-xl">
                     <FaCar className="text-[#3B5787] text-xs sm:text-sm" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Multiple Vehicles</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">{t('guestCategories.multipleVehicles')}</span>
                   </div>
                   <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg sm:rounded-xl">
                     <FaCheck className="text-green-600 text-xs sm:text-sm" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Reliable Service</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">{t('guestCategories.reliableService')}</span>
                   </div>
                   <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg sm:rounded-xl">
                     <FaClock className="text-blue-600 text-xs sm:text-sm" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">24/7 Available</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">{t('guestCategories.available247')}</span>
                   </div>
                 </div>
               </div>
@@ -800,7 +800,7 @@ const TransportationBookingPage = () => {
                       <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
                         {t('transportationBooking.chooseServiceTypes')}
                       </h2>
-                      <p className="text-gray-600 text-sm mt-1">Select your preferred service type</p>
+                      <p className="text-gray-600 text-sm mt-1">{t('guest.transportation.selectPreferredServiceType')}</p>
                     </div>
                   </div>
                 </div>
@@ -886,10 +886,10 @@ const TransportationBookingPage = () => {
                   <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
                     <div className="flex items-center gap-3 mb-2">
                       <FaCheck className="w-5 h-5 text-green-600" />
-                      <h3 className="font-semibold text-gray-800">Service Types Selected</h3>
+                      <h3 className="font-semibold text-gray-800">{t('guest.transportation.serviceTypesSelected')}</h3>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {Object.keys(serviceTypes).length} vehicle(s) configured. Ready to proceed to scheduling.
+                      {t('guest.transportation.vehiclesConfigured', { count: Object.keys(serviceTypes).length })}
                     </p>
                   </div>
                 )}
@@ -908,7 +908,7 @@ const TransportationBookingPage = () => {
                       <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
                         {t('transportationBooking.scheduleService')}
                       </h2>
-                      <p className="text-gray-600 text-sm mt-1">Set your pickup time and location details</p>
+                      <p className="text-gray-600 text-sm mt-1">{t('guest.transportation.setPickupDetails')}</p>
                     </div>
                   </div>
                 </div>
@@ -918,7 +918,7 @@ const TransportationBookingPage = () => {
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
                     <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       <FaCalendarAlt className="text-[#3B5787]" />
-                      Pickup Schedule
+                      {t('guest.transportation.pickupSchedule')}
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
@@ -972,7 +972,7 @@ const TransportationBookingPage = () => {
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
                     <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       <FaMapMarkerAlt className="text-green-600" />
-                      Location Details
+                      {t('guest.transportation.locationDetails')}
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
@@ -1063,7 +1063,7 @@ const TransportationBookingPage = () => {
                   <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-4 border border-orange-200">
                     <h3 className="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
                       <FaCar className="text-orange-600" />
-                      Passenger Details
+                      {t('guest.transportation.passengerDetails')}
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -1150,7 +1150,7 @@ const TransportationBookingPage = () => {
                               </div>
                             </div>
                           </div>
-                          <span className="text-sm text-gray-600">Quote pending</span>
+                          <span className="text-sm text-gray-600">{t('guest.transportation.quotePending')}</span>
                         </div>
                       ))}
                     </div>

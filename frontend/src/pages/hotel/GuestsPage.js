@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUsers, selectAllUsers, selectUserLoading } from '../../redux/slices/userSlice';
 import { HiSearch, HiFilter, HiUserAdd, HiCheckCircle, HiXCircle } from 'react-icons/hi';
@@ -10,6 +11,7 @@ import hotelService from '../../services/hotel.service';
  * @returns {JSX.Element} Guests management page
  */
 const GuestsPage = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const users = useSelector(selectAllUsers);
   const isLoading = useSelector(selectUserLoading);
@@ -126,7 +128,7 @@ const GuestsPage = () => {
     if (guest.firstName && guest.lastName) {
       return `${guest.firstName} ${guest.lastName}`.replace(' undefined', '').trim();
     }
-    return guest.firstName || guest.lastName || guest.name || 'Unknown Guest';
+    return guest.firstName || guest.lastName || guest.name || t('hotelAdmin.guests.unknownGuest');
   };
 
   // Get guest initials
@@ -156,8 +158,8 @@ const GuestsPage = () => {
     <div className="p-6">
       {/* Header with gradient */}
       <div className="bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg p-6 mb-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Guest Management</h1>
-        <p className="text-blue-100">Manage your hotel guests and their access permissions</p>
+        <h1 className="text-2xl font-bold mb-2">{t('hotelAdmin.guests.title')}</h1>
+        <p className="text-blue-100">{t('hotelAdmin.guests.subtitle')}</p>
       </div>
 
       {/* Search and Filter Controls */}
@@ -169,7 +171,7 @@ const GuestsPage = () => {
               <HiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
                 type="text"
-                placeholder="Search guests by name, email..."
+                placeholder={t('hotelAdmin.guests.searchPlaceholder')}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-modern-blue focus:border-modern-blue"
                 value={searchTerm}
                 onChange={handleSearch}
@@ -184,16 +186,16 @@ const GuestsPage = () => {
               value={statusFilter}
               onChange={handleStatusFilter}
             >
-              <option value="">All Statuses</option>
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
+              <option value="">{t('hotelAdmin.guests.filters.allStatuses')}</option>
+              <option value="ACTIVE">{t('hotelAdmin.guests.filters.active')}</option>
+              <option value="INACTIVE">{t('hotelAdmin.guests.filters.inactive')}</option>
             </select>
           </div>
 
           {/* Results Count */}
           <div className="flex items-center text-sm text-gray-500">
             <HiFilter className="h-4 w-4 mr-1" />
-            {filteredGuests.length} guest{filteredGuests.length !== 1 ? 's' : ''} found
+            {t('hotelAdmin.guests.resultsCount', { count: filteredGuests.length })}
           </div>
         </div>
       </div>
@@ -206,19 +208,19 @@ const GuestsPage = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Guest
+                  {t('hotelAdmin.guests.table.guest')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact
+                  {t('hotelAdmin.guests.table.contact')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Joined
+                  {t('hotelAdmin.guests.table.joined')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t('hotelAdmin.guests.table.status')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  {t('hotelAdmin.guests.table.actions')}
                 </th>
               </tr>
             </thead>
@@ -228,8 +230,8 @@ const GuestsPage = () => {
                   <td colSpan="5" className="px-6 py-12 text-center">
                     <div className="text-gray-500">
                       <HiUserAdd className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                      <h3 className="text-lg font-medium">No guests found</h3>
-                      <p className="text-sm">Try adjusting your search criteria or filters.</p>
+                      <h3 className="text-lg font-medium">{t('hotelAdmin.guests.noGuests')}</h3>
+                      <p className="text-sm">{t('hotelAdmin.guests.noGuestsDescription')}</p>
                     </div>
                   </td>
                 </tr>
@@ -253,7 +255,7 @@ const GuestsPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{guest.email}</div>
-                      <div className="text-sm text-gray-500">{guest.phone || 'No phone'}</div>
+                      <div className="text-sm text-gray-500">{guest.phone || t('hotelAdmin.guests.noPhone')}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(guest.createdAt)}
@@ -264,7 +266,7 @@ const GuestsPage = () => {
                           ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {guest.isActive !== false ? 'Active' : 'Inactive'}
+                        {guest.isActive !== false ? t('hotelAdmin.guests.filters.active') : t('hotelAdmin.guests.filters.inactive')}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -284,7 +286,7 @@ const GuestsPage = () => {
                         ) : (
                           <HiCheckCircle className="w-4 h-4 mr-1" />
                         )}
-                        {guest.isActive !== false ? 'Deactivate' : 'Activate'}
+                        {guest.isActive !== false ? t('hotelAdmin.guests.actions.deactivate') : t('hotelAdmin.guests.actions.activate')}
                       </button>
                     </td>
                   </tr>
@@ -299,8 +301,8 @@ const GuestsPage = () => {
           {filteredGuests.length === 0 ? (
             <div className="text-center py-12">
               <HiUserAdd className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">No guests found</h3>
-              <p className="text-sm text-gray-500">Try adjusting your search criteria or filters.</p>
+              <h3 className="text-lg font-medium text-gray-900">{t('hotelAdmin.guests.noGuests')}</h3>
+              <p className="text-sm text-gray-500">{t('hotelAdmin.guests.noGuestsDescription')}</p>
             </div>
           ) : (
             filteredGuests.map((guest) => (
@@ -320,22 +322,22 @@ const GuestsPage = () => {
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    {guest.isActive !== false ? 'Active' : 'Inactive'}
+                    {guest.isActive !== false ? t('hotelAdmin.guests.filters.active') : t('hotelAdmin.guests.filters.inactive')}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-sm mb-4">
                   <div>
-                    <span className="text-gray-500">Phone:</span>
+                    <span className="text-gray-500">{t('hotelAdmin.guests.table.phone')}:</span>
                     <div className="font-medium">{guest.phone || 'N/A'}</div>
                   </div>
                   <div>
-                    <span className="text-gray-500">Joined:</span>
+                    <span className="text-gray-500">{t('hotelAdmin.guests.table.joined')}:</span>
                     <div className="font-medium">{formatDate(guest.createdAt)}</div>
                   </div>
                   {guest.roomNumber && (
                     <div>
-                      <span className="text-gray-500">Room:</span>
+                      <span className="text-gray-500">{t('hotelAdmin.guests.table.room')}:</span>
                       <div className="font-medium">#{guest.roomNumber}</div>
                     </div>
                   )}
@@ -357,7 +359,7 @@ const GuestsPage = () => {
                   ) : (
                     <HiCheckCircle className="w-5 h-5 mr-2" />
                   )}
-                  {guest.isActive !== false ? 'Deactivate Guest' : 'Activate Guest'}
+                  {guest.isActive !== false ? t('hotelAdmin.guests.actions.deactivateGuest') : t('hotelAdmin.guests.actions.activateGuest')}
                 </button>
               </div>
             ))
@@ -374,17 +376,17 @@ const GuestsPage = () => {
                 disabled={pagination.page <= 1}
                 className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Previous
+                {t('hotelAdmin.guests.pagination.previous')}
               </button>
               <span className="text-sm text-gray-700 flex items-center">
-                Page {pagination.page} of {pagination.totalPages}
+                {t('hotelAdmin.guests.pagination.pageOf', { page: pagination.page, totalPages: pagination.totalPages })}
               </span>
               <button
                 onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
                 disabled={pagination.page >= pagination.totalPages}
                 className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Next
+                {t('hotelAdmin.guests.pagination.next')}
               </button>
             </div>
 
@@ -392,13 +394,19 @@ const GuestsPage = () => {
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Showing{' '}
-                  <span className="font-medium">{Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}</span>
-                  {' '}to{' '}
-                  <span className="font-medium">{Math.min(pagination.page * pagination.limit, pagination.total)}</span>
-                  {' '}of{' '}
-                  <span className="font-medium">{pagination.total}</span>
-                  {' '}results
+                  <Trans
+                    i18nKey="hotelAdmin.guests.pagination.showing"
+                    values={{
+                      from: Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total),
+                      to: Math.min(pagination.page * pagination.limit, pagination.total),
+                      total: pagination.total
+                    }}
+                    components={{
+                      1: <span className="font-medium" />,
+                      2: <span className="font-medium" />,
+                      3: <span className="font-medium" />
+                    }}
+                  />
                 </p>
               </div>
               <div>
@@ -408,7 +416,7 @@ const GuestsPage = () => {
                     disabled={pagination.page <= 1}
                     className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <span className="sr-only">Previous</span>
+                    <span className="sr-only">{t('hotelAdmin.guests.pagination.previous')}</span>
                     <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
@@ -447,7 +455,7 @@ const GuestsPage = () => {
                     disabled={pagination.page >= pagination.totalPages}
                     className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <span className="sr-only">Next</span>
+                    <span className="sr-only">{t('hotelAdmin.guests.pagination.next')}</span>
                     <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>

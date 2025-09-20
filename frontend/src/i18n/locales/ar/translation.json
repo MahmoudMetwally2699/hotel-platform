@@ -32,16 +32,29 @@
     "select": "اختر",
     "selectLanguage": "اختر اللغة",
     "english": "English",    "arabic": "العربية",
-    "openUserMenu": "فتح قائمة المستخدم",    "userAvatar": "صورة المستخدم",    "clearFilters": "مسح التصفية",
+    "cart": "السلة",
+    "address": "العنوان",
+    "openUserMenu": "فتح قائمة المستخدم",    "userAvatar": "صورة المستخدم",    "of": "من",
+    "step": "خطوة",
+    "quantity": "الكمية",
+    "clearFilters": "مسح التصفية",
     "viewResults": "عرض النتائج",
     "filters": "التصفية",
     "moreOptions": "خيارات أكثر",    "pending": "معلق",
     "confirmed": "مؤكد",
     "completed": "مكتمل",
     "cancelled": "ملغي",
+    "allCategories": "جميع الفئات",
     "inProgress": "قيد التنفيذ",
-    "checkin": "تسجيل الوصول"
-  },"navigation": {
+    "checkin": "تسجيل الوصول",
+    "expand": "توسيع",
+    "collapse": "طي"
+  },
+  "platform": {
+    "hotelPlatform": "منصة الفندق",
+    "servicePlatform": "منصة الخدمات"
+  },
+  "navigation": {
     "home": "الرئيسية",
     "dashboard": "لوحة التحكم",
     "services": "الخدمات",
@@ -175,7 +188,546 @@
     "totalRevenue": "إجمالي الإيرادات",
     "totalBookings": "إجمالي الحجوزات",
     "activeServices": "الخدمات النشطة"
-  },  "services": {
+  },
+  "hotelAdmin": {
+    "dashboard": {
+      "title": "لوحة تحكم الفندق",
+      "subtitle": "مرحباً بعودتك! إليك ما يحدث في فندقك اليوم.",
+      "refreshData": "تحديث البيانات",
+      "refreshing": "جاري التحديث...",
+      "stats": {
+        "totalRevenue": "إجمالي الإيرادات",
+        "totalBookings": "إجمالي الحجوزات",
+        "activeServices": "الخدمات النشطة",
+        "serviceProviders": "مقدمو الخدمات",
+        "vsLastMonth": "مقارنة بالشهر الماضي",
+        "acrossAllCategories": "عبر جميع الفئات",
+        "totalRegistered": "إجمالي المسجلين",
+        "active": "نشط",
+        "categories": "فئات"
+      },
+      "recentOrders": {
+        "title": "الطلبات الحديثة",
+        "subtitle": "أحدث الحجوزات والمعاملات",
+        "orderId": "رقم الطلب",
+        "guest": "النزيل",
+        "service": "الخدمة",
+        "provider": "مقدم الخدمة",
+        "date": "التاريخ",
+        "amount": "المبلغ",
+        "status": "الحالة",
+        "noOrders": "لا توجد طلبات حديثة",
+        "unknownGuest": "نزيل غير معروف",
+        "unknownService": "خدمة غير معروفة",
+        "unknownProvider": "مقدم خدمة غير معروف",
+        "noEmail": "لا يوجد بريد إلكتروني",
+        "hotelManaged": "مُدار من الفندق"
+      },
+      "quickActions": {
+        "title": "الإجراءات السريعة",
+        "viewOrders": "عرض جميع الطلبات",
+        "manageServices": "إدارة الخدمات",
+        "addProvider": "إضافة مقدم خدمة",
+        "viewRevenue": "عرض الإيرادات"
+      }
+    },
+    "orders": {
+      "title": "إدارة الطلبات",
+      "subtitle": "إدارة وتتبع جميع طلبات الخدمات لفندقك",
+      "categories": {
+        "all": "جميع الفئات",
+        "laundry": "الغسيل",
+        "transportation": "النقل",
+        "housekeeping": "التنظيف",
+        "dining": "المطعم"
+      },
+      "filters": {
+        "searchPlaceholder": "البحث في الطلبات...",
+        "allStatuses": "جميع الحالات",
+        "pending": "معلق",
+        "confirmed": "مؤكد",
+        "inProgress": "قيد التنفيذ",
+        "completed": "مكتمل",
+        "cancelled": "ملغي",
+        "filterByCategory": "تصفية حسب الفئة",
+        "categoryDescription": "اختر فئة خدمة لتصفية الطلبات"
+      },
+      "table": {
+        "orderId": "رقم الطلب",
+        "guest": "النزيل",
+        "service": "الخدمة",
+        "provider": "مقدم الخدمة",
+        "date": "التاريخ",
+        "amount": "المبلغ",
+        "status": "الحالة",
+        "actions": "الإجراءات"
+      },
+      "details": {
+        "title": "تفاصيل الطلب",
+        "orderInformation": "معلومات الطلب",
+        "guestInformation": "معلومات النزيل",
+        "serviceDetails": "تفاصيل الخدمة",
+        "paymentDetails": "تفاصيل الدفع",
+        "specialRequests": "الطلبات الخاصة",
+        "scheduleInformation": "معلومات الجدولة",
+        "category": "الفئة",
+        "provider": "مقدم الخدمة",
+        "unknownProvider": "مقدم خدمة غير معروف",
+        "phone": "الهاتف",
+        "preferredDate": "التاريخ المفضل",
+        "preferredTime": "الوقت المفضل",
+        "urgency": "الأولوية",
+        "noDescription": "لا يوجد وصف",
+        "markup": "هامش الربح",
+        "close": "إغلاق",
+        "updateStatus": "تحديث الحالة"
+      },
+      "pagination": {
+        "summary": "الصفحة {{page}} من {{totalPages}} • عرض {{count}} طلب",
+        "showing": "عرض <1>{{from}}</1> إلى <2>{{to}}</2> من <3>{{total}}</3> نتيجة"
+      },
+      "noOrders": "لا توجد طلبات",
+      "loadingOrders": "جاري تحميل الطلبات..."
+    },
+    "services": {
+      "title": "إدارة الخدمات",
+      "subtitle": "إدارة وتكوين الخدمات المتاحة في فندقك",
+      "searchPlaceholder": "البحث في الخدمات...",
+      "filters": {
+        "allCategories": "جميع الفئات",
+        "laundry": "الغسيل",
+        "transportation": "النقل",
+        "tourism": "السياحة",
+        "food": "الطعام والمشروبات",
+        "wellness": "العافية والمنتجع الصحي"
+      },
+      "serviceCard": {
+        "setMarkup": "تحديد الربح",
+        "viewDetails": "عرض التفاصيل",
+        "unavailable": "غير متاح",
+        "activeProvider": "مقدم خدمة نشط"
+      },
+      "noServices": "لا توجد خدمات",
+      "loadingServices": "جاري تحميل فئات خدمات الفندق المتاحة..."
+    },
+    "bookings": {
+      "title": "إدارة الحجوزات",
+      "subtitle": "إدارة وتتبع جميع حجوزات النزلاء",
+      "searchPlaceholder": "البحث في الحجوزات...",
+      "filters": {
+        "allStatuses": "جميع الحالات",
+        "pending": "معلق",
+        "confirmed": "مؤكد",
+        "inProgress": "قيد التنفيذ",
+        "completed": "مكتمل",
+        "cancelled": "ملغي"
+      },
+      "table": {
+        "bookingId": "رقم الحجز",
+        "guest": "النزيل",
+        "service": "الخدمة",
+        "dateTime": "التاريخ والوقت",
+        "amount": "المبلغ",
+        "status": "الحالة",
+        "actions": "الإجراءات"
+      },
+      "details": {
+        "title": "تفاصيل الحجز",
+        "viewDetails": "عرض التفاصيل"
+      },
+      "status": {
+        "paid": "مدفوع",
+        "unpaid": "غير مدفوع"
+      },
+      "noBookings": "لا توجد حجوزات",
+      "guestInfoNotAvailable": "معلومات النزيل غير متاحة",
+      "serviceInfoNotAvailable": "معلومات الخدمة غير متاحة"
+    },
+    "serviceProviders": {
+      "title": "إدارة مقدمي الخدمات",
+      "subtitle": "إدارة مقدمي الخدمات وإعدادات هامش الربح",
+      "addProvider": "إضافة مقدم خدمة",
+      "searchTitle": "البحث في مقدمي الخدمات",
+      "searchSubtitle": "ابحث وأدير مقدمي الخدمات الخاصين بك",
+      "searchPlaceholder": "البحث باسم النشاط التجاري أو البريد الإلكتروني...",
+      "refresh": "تحديث",
+      "tableTitle": "مقدمو الخدمات ({{count}})",
+      "tableSubtitle": "إدارة شبكة مقدمي الخدمات الخاصة بك",
+      "categories": {
+        "laundry": "خدمات الغسيل",
+        "laundryDesc": "خدمات الغسيل والكي والتنظيف الجاف",
+        "transportation": "النقل",
+        "transportationDesc": "خدمات تأجير السيارات والتاكسي",
+        "dining": "خدمات الطعام",
+        "diningDesc": "مطعم الفندق ومرافق الطعام",
+        "housekeeping": "التدبير المنزلي",
+        "housekeepingDesc": "خدمات تنظيف الغرف والصيانة"
+      },
+      "filters": {
+        "allCategories": "جميع الفئات",
+        "allStatuses": "جميع الحالات",
+        "active": "نشط",
+        "inactive": "غير نشط",
+        "pending": "قيد الانتظار"
+      },
+      "table": {
+        "businessName": "اسم النشاط التجاري",
+        "provider": "مقدم الخدمة",
+        "contact": "جهة الاتصال",
+        "category": "الفئة",
+        "services": "الخدمات",
+        "rating": "التقييم",
+        "status": "الحالة",
+        "markup": "هامش الربح",
+        "actions": "الإجراءات"
+      },
+      "status": {
+        "active": "نشط",
+        "pending": "قيد الانتظار",
+        "rejected": "مرفوض",
+        "inactive": "غير نشط",
+        "unknown": "غير معروف"
+      },
+      "actions": {
+        "view": "عرض",
+        "edit": "تعديل",
+        "suspend": "تعليق",
+        "activate": "تفعيل",
+        "delete": "حذف",
+        "setMarkup": "تحديد هامش الربح",
+        "manageServices": "إدارة الخدمات"
+      },
+      "noProviders": "لم يتم العثور على مقدمي خدمات",
+      "noProvidersSearch": "لا يتطابق أي مقدم خدمة مع معايير البحث الخاصة بك.",
+      "noProvidersYet": "لم يتم إضافة مقدمي خدمات بعد.",
+      "noDescription": "لا يوجد وصف",
+      "noPhone": "لا يوجد هاتف",
+      "markupNotSet": "غير محدد",
+      "notAvailable": "غير متاح",
+      "mobile": {
+        "contact": "جهة الاتصال:",
+        "phone": "الهاتف:",
+        "markup": "هامش الربح:"
+      },
+      "markupModal": {
+        "title": "تحديد هامش الربح",
+        "currentMarkup": "هامش الربح الحالي:",
+        "markupPercentageLabel": "نسبة هامش الربح (%)",
+        "markupPercentagePlaceholder": "أدخل نسبة هامش الربح",
+        "notesLabel": "ملاحظات (اختياري)",
+        "notesPlaceholder": "أضف ملاحظات حول هذا هامش الربح...",
+        "cancel": "إلغاء",
+        "saveMarkup": "حفظ هامش الربح",
+        "saving": "جاري الحفظ..."
+      },
+      "categoriesModal": {
+        "title": "إدارة فئات الخدمات",
+        "subtitle": "تكوين الخدمات لـ {{businessName}}",
+        "selectCategoriesTitle": "اختيار فئات الخدمات",
+        "selectCategoriesDesc": "اختر فئات الخدمات التي يجب أن يقدمها مقدم الخدمة هذا. يمكنك تغيير هذه في أي وقت.",
+        "currentCategoriesTitle": "الفئات النشطة الحالية:",
+        "cancel": "إلغاء",
+        "saveChanges": "حفظ التغييرات",
+        "saving": "جاري الحفظ..."
+      },
+      "errors": {
+        "markupSetFailed": "فشل في تحديد هامش الربح. يرجى المحاولة مرة أخرى.",
+        "categoriesUpdateFailed": "فشل في تحديث فئات الخدمات. يرجى المحاولة مرة أخرى."
+      }
+    },
+    "revenue": {
+      "title": "تحليلات الإيرادات",
+      "subtitle": "تتبع الأداء المالي للفندق ومصادر الإيرادات",
+      "totalRevenue": "إجمالي الإيرادات",
+      "header": {
+        "title": "تحليلات الإيرادات",
+        "subtitle": "تتبع الأداء المالي للفندق ومصادر الإيرادات",
+        "totalRevenue": "إجمالي الإيرادات"
+      },
+      "timePeriod": {
+        "title": "الفترة الزمنية",
+        "thisWeek": "هذا الأسبوع",
+        "thisMonth": "هذا الشهر",
+        "thisQuarter": "هذا الربع",
+        "thisYear": "هذا العام"
+      },
+      "metrics": {
+        "totalRevenue": "إجمالي الإيرادات",
+        "totalBookings": "إجمالي الحجوزات",
+        "avgBookingValue": "متوسط قيمة الحجز",
+        "completionRate": "معدل الإنجاز",
+        "basedOnCompleted": "بناءً على الطلبات المكتملة",
+        "allTimeBookings": "جميع الحجوزات على الإطلاق",
+        "averageOrderValue": "متوسط قيمة الطلب",
+        "ordersCompleted": "الطلبات المكتملة"
+      },
+      "chart": {
+        "title": "اتجاهات الإيرادات",
+        "subtitle": "نظرة عامة على الأداء الشهري",
+        "totalMonths": "إجمالي الأشهر",
+        "peakMonthRevenue": "إيرادات أعلى شهر",
+        "avgMonthlyRevenue": "متوسط الإيرادات الشهرية",
+        "monthlyRevenueData": "بيانات الإيرادات الشهرية",
+        "orders": "طلبات",
+        "noDataTitle": "لا توجد بيانات إيرادات متاحة بعد",
+        "noDataSubtitle": "ستظهر اتجاهات الإيرادات هنا بمجرد اكتمال الطلبات"
+      },
+      "categoryRevenue": {
+        "title": "الإيرادات حسب الفئة",
+        "subtitle": "تفصيل الأداء",
+        "ofTotal": "من الإجمالي",
+        "bookings": "حجوزات",
+        "unknown": "غير معروف",
+        "noData": "لا توجد بيانات فئات متاحة"
+      },
+      "recentOrders": {
+        "title": "الطلبات الأخيرة عالية القيمة",
+        "subtitle": "أفضل الحجوزات أداءً",
+        "serviceName": "اسم الخدمة",
+        "category": "الفئة",
+        "status": "الحالة",
+        "guest": "النزيل",
+        "unknown": "غير معروف",
+        "noData": "لا توجد طلبات حديثة متاحة"
+      }
+    },
+    "qrCode": {
+      "title": "إدارة رمز الاستجابة السريعة",
+      "subtitle": "إنشاء رموز الاستجابة السريعة لتسجيل النزلاء",
+      "info": "معلومات",
+      "infoPanel": {
+        "title": "كيفية عمل تسجيل رمز الاستجابة السريعة",
+        "forHotelStaff": "لموظفي الفندق:",
+        "hotelStaffInstructions": [
+          "عرض رمز الاستجابة السريعة في مكتب الاستقبال",
+          "طباعة نسخ متعددة لمواقع مختلفة",
+          "إعادة الإنشاء بشكل دوري للأمان",
+          "مراقبة تسجيلات النزلاء"
+        ],
+        "forGuests": "للنزلاء:",
+        "guestInstructions": [
+          "مسح رمز الاستجابة السريعة بالجهاز المحمول",
+          "فتح نموذج التسجيل تلقائياً",
+          "معلومات الفندق معبأة مسبقاً",
+          "إكمال التسجيل بالتفاصيل الشخصية"
+        ]
+      },
+      "currentQRCode": "رمز الاستجابة السريعة الحالي",
+      "loading": "جاري الإنشاء...",
+      "noQRGenerated": "لم يتم إنشاء رمز استجابة سريعة بعد",
+      "secureToken": "رمز JWT آمن",
+      "expires": "تنتهي الصلاحية:",
+      "hotelRegistrationQR": "رمز الاستجابة السريعة لتسجيل الفندق",
+      "actions": {
+        "title": "الإجراءات",
+        "generateNew": "إنشاء رمز استجابة سريعة جديد",
+        "generating": "جاري الإنشاء...",
+        "regenerate": "إعادة إنشاء رمز الاستجابة السريعة",
+        "regenerating": "جاري إعادة الإنشاء..."
+      },
+      "downloadPrint": {
+        "title": "تنزيل وطباعة",
+        "download": "تنزيل",
+        "print": "طباعة",
+        "downloadSizes": "أحجام التنزيل:",
+        "small": "صغير (300 بكسل)",
+        "medium": "متوسط (600 بكسل)",
+        "large": "كبير (1200 بكسل)"
+      },
+      "share": {
+        "title": "مشاركة",
+        "copyUrl": "نسخ رابط التسجيل"
+      },
+      "security": {
+        "title": "ميزات الأمان",
+        "featuresLabel": "ميزات الأمان",
+        "usageLabel": "تعليمات الاستخدام",
+        "uniqueLink": "كل رمز استجابة سريعة يحتوي على رمز مميز فريد للفندق",
+        "expiration": "تنتهي صلاحية الرموز تلقائياً للأمان",
+        "regenerate": "إنشاء رموز جديدة في أي وقت"
+      },
+      "printTemplate": {
+        "title": "رمز الاستجابة السريعة لتسجيل النزلاء",
+        "subtitle": "رمز الاستجابة السريعة لتسجيل النزلاء",
+        "howToUse": "كيفية الاستخدام",
+        "step1": "1. يقوم النزلاء بمسح رمز الاستجابة السريعة بجهازهم المحمول",
+        "step2": "2. يفتح نموذج التسجيل مع تحديد الفندق مسبقاً",
+        "step3": "3. يكمل النزيل التسجيل بتفاصيله",
+        "step4": "4. يمكن للنزيل الوصول فوراً إلى خدمات الفندق",
+        "generated": "تم الإنشاء",
+        "expires": "تنتهي الصلاحية"
+      },
+      "toastMessages": {
+        "generateSuccess": "تم إنشاء رمز الاستجابة السريعة بنجاح!",
+        "generateError": "فشل في إنشاء رمز الاستجابة السريعة",
+        "regenerateError": "فشل في إعادة إنشاء رمز الاستجابة السريعة",
+        "downloadError": "فشل في تنزيل رمز الاستجابة السريعة",
+        "noPrint": "لا يوجد رمز استجابة سريعة للطباعة",
+        "noUrl": "لا يوجد رابط رمز استجابة سريعة للنسخ",
+        "copySuccess": "تم نسخ رابط رمز الاستجابة السريعة إلى الحافظة!",
+        "copyError": "فشل في نسخ الرابط إلى الحافظة"
+      }
+    },
+    "settings": {
+      "title": "إعدادات الفندق",
+      "subtitle": "إدارة ملف الفندق الشخصي والتكوين",
+      "loading": "جاري تحميل ملف الفندق الشخصي...",
+      "updateSuccess": "تم تحديث إعدادات الفندق بنجاح!",
+      "updateError": "فشل في تحديث إعدادات الفندق",
+      "saving": "جاري الحفظ...",
+      "saveChanges": "حفظ التغييرات",
+      "tabs": {
+        "profile": "ملف الفندق الشخصي"
+      },
+      "sections": {
+        "basicInfo": "المعلومات الأساسية",
+        "contactInfo": "معلومات الاتصال",
+        "addressInfo": "معلومات العنوان"
+      },
+      "fields": {
+        "hotelName": "اسم الفندق",
+        "website": "الموقع الإلكتروني",
+        "description": "الوصف",
+        "contactEmail": "البريد الإلكتروني للاتصال",
+        "contactPhone": "هاتف الاتصال",
+        "streetAddress": "عنوان الشارع",
+        "city": "المدينة",
+        "state": "الولاية/المحافظة",
+        "zipCode": "الرمز البريدي",
+        "country": "البلد"
+      },
+      "placeholders": {
+        "description": "صف الميزات الفريدة والمرافق في فندقك..."
+      }
+    },
+    "guests": {
+      "title": "إدارة النزلاء",
+      "subtitle": "إدارة نزلاء الفندق وأذونات الوصول الخاصة بهم",
+      "searchPlaceholder": "البحث في النزلاء بالاسم أو البريد الإلكتروني...",
+      "table": {
+        "guest": "النزيل",
+        "contact": "جهة الاتصال",
+        "joined": "تاريخ الانضمام",
+        "status": "الحالة",
+        "actions": "الإجراءات",
+        "phone": "الهاتف",
+        "room": "الغرفة",
+        "checkIn": "تسجيل الوصول",
+        "checkOut": "تسجيل المغادرة",
+        "totalBookings": "إجمالي الحجوزات",
+        "totalSpent": "إجمالي المبلغ المنفق"
+      },
+      "filters": {
+        "allStatuses": "جميع الحالات",
+        "active": "نشط",
+        "inactive": "غير نشط",
+        "activeGuests": "النزلاء النشطون",
+        "allGuests": "جميع النزلاء",
+        "checkedOut": "غادروا الفندق"
+      },
+      "actions": {
+        "activate": "تفعيل",
+        "deactivate": "إلغاء التفعيل",
+        "activateGuest": "تفعيل النزيل",
+        "deactivateGuest": "إلغاء تفعيل النزيل"
+      },
+      "pagination": {
+        "previous": "السابق",
+        "next": "التالي",
+        "pageOf": "الصفحة {{page}} من {{totalPages}}",
+        "showing": "عرض <1>{{from}}</1> إلى <2>{{to}}</2> من <3>{{total}}</3> نتيجة"
+      },
+      "resultsCount": "تم العثور على {{count}} نزيل",
+      "resultsCount_other": "تم العثور على {{count}} نزيل",
+      "noGuests": "لا يوجد نزلاء",
+      "noGuestsDescription": "جرب تعديل معايير البحث أو المرشحات.",
+      "noPhone": "لا يوجد هاتف",
+      "unknownGuest": "نزيل غير معروف"
+    },
+    "markup": {
+      "title": "إعدادات الأرباح",
+      "subtitle": "تكوين نسب الأرباح لفئات الخدمات المختلفة",
+      "categoryMarkup": "ربح الفئة",
+      "percentage": "النسبة المئوية",
+      "save": "حفظ التغييرات",
+      "reset": "إعادة تعيين إلى الافتراضي",
+      "updated": "تم تحديث إعدادات الأرباح بنجاح",
+      "error": "فشل في تحديث إعدادات الأرباح"
+    },
+    "qrCodes": {
+      "title": "إدارة رموز الاستجابة السريعة",
+      "subtitle": "إنشاء وإدارة رموز الاستجابة السريعة لتسجيل النزلاء",
+      "generate": "إنشاء رمز استجابة سريعة",
+      "download": "تنزيل",
+      "print": "طباعة",
+      "regenerate": "إعادة إنشاء"
+    },
+    "common": {
+      "loading": "جاري التحميل...",
+      "noData": "لا توجد بيانات متاحة",
+      "error": "حدث خطأ",
+      "retry": "إعادة المحاولة",
+      "save": "حفظ",
+      "cancel": "إلغاء",
+      "delete": "حذف",
+      "edit": "تعديل",
+      "view": "عرض",
+      "add": "إضافة",
+      "search": "بحث",
+      "filter": "تصفية",
+      "export": "تصدير",
+      "refresh": "تحديث",
+      "success": "نجح",
+      "failed": "فشل",
+      "confirm": "تأكيد",
+      "close": "إغلاق"
+    }
+  },
+  "profile": {
+    "myProfile": "ملفي الشخصي",
+    "fullName": "الاسم الكامل",
+    "firstName": "الاسم الأول",
+    "lastName": "اسم العائلة",
+    "emailAddress": "عنوان البريد الإلكتروني",
+    "phoneNumber": "رقم الهاتف",
+    "role": "الدور",
+    "editProfile": "تعديل الملف الشخصي",
+    "saving": "جاري الحفظ...",
+    "updateSuccess": "تم تحديث الملف الشخصي بنجاح",
+    "updateFailed": "فشل تحديث الملف الشخصي",
+    "notProvided": "غير مقدم",
+    "notSet": "غير محدد",
+    "roles": {
+      "guest": "نزيل",
+      "hotelAdmin": "مدير الفندق",
+      "serviceProvider": "مقدم الخدمة",
+      "superAdmin": "المدير الرئيسي"
+    },
+    "hotelInformation": "معلومات الفندق",
+    "hotelDetails": "تفاصيل عن فندقك",
+    "hotelName": "اسم الفندق",
+    "hotelAddress": "عنوان الفندق",
+    "contactNumber": "رقم الاتصال",
+    "businessInformation": "معلومات العمل",
+    "businessDetails": "تفاصيل عن عملك",
+    "businessName": "اسم العمل",
+    "serviceType": "نوع الخدمة",
+    "businessAddress": "عنوان العمل",
+    "adminInformation": "معلومات المدير",
+    "adminDetails": "صلاحيات وإذن المدير",
+    "accessLevel": "مستوى الوصول",
+    "superAdministrator": "المدير الرئيسي",
+    "permissions": "الصلاحيات",
+    "fullSystemAccess": "وصول كامل للنظام",
+    "validation": {
+      "firstNameRequired": "الاسم الأول مطلوب",
+      "lastNameRequired": "اسم العائلة مطلوب",
+      "emailRequired": "البريد الإلكتروني مطلوب",
+      "invalidEmail": "عنوان بريد إلكتروني غير صحيح",
+      "invalidPhone": "رقم هاتف غير صحيح"
+    }
+  },
+  "services": {
     "serviceManagement": "إدارة الخدمات",
     "serviceName": "اسم الخدمة",
     "serviceDescription": "وصف الخدمة",
@@ -225,6 +777,8 @@
     "newBooking": "حجز جديد",
     "cancelBooking": "إلغاء الحجز",
     "confirmBooking": "تأكيد الحجز",
+    "step": "خطوة",
+    "schedule": "الجدولة",
     "pending": "معلق",
     "confirmed": "مؤكد",
     "inProgress": "قيد التنفيذ",
@@ -289,7 +843,9 @@
       "pending": "معلق",
       "confirmed": "مؤكد",
       "cancelled": "ملغي"
-    }},  "serviceProvider": {
+    }
+  },
+  "serviceProvider": {
     "navigation": {
       "serviceCategories": "فئات الخدمات",
       "manageServices": "إدارة الخدمات",
@@ -439,7 +995,48 @@
       "updateProfile": "تحديث الملف الشخصي",
       "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
       "businessLogo": "شعار العمل",
-      "uploadLogo": "رفع الشعار",      "currentLogo": "الشعار الحالي"
+      "uploadLogo": "رفع الشعار",
+      "currentLogo": "الشعار الحالي",
+      "myProfile": "ملفي الشخصي",
+      "validation": {
+        "firstNameRequired": "الاسم الأول مطلوب",
+        "lastNameRequired": "الاسم الأخير مطلوب",
+        "emailRequired": "البريد الإلكتروني مطلوب",
+        "invalidEmail": "عنوان بريد إلكتروني غير صحيح",
+        "invalidPhone": "رقم هاتف غير صحيح"
+      },
+      "hotelInformation": "معلومات الفندق",
+      "hotelDetails": "تفاصيل حول فندقك.",
+      "hotelName": "اسم الفندق",
+      "hotelAddress": "عنوان الفندق",
+      "contactNumber": "رقم الاتصال",
+      "notSet": "غير محدد",
+      "businessInformation": "معلومات العمل",
+      "businessDetails": "تفاصيل حول نشاطك التجاري.",
+      "serviceType": "نوع الخدمة",
+      "adminInformation": "معلومات الإدارة",
+      "adminDetails": "تفاصيل مدير النظام.",
+      "accessLevel": "مستوى الوصول",
+      "superAdministrator": "مدير عام",
+      "permissions": "الصلاحيات",
+      "fullSystemAccess": "وصول كامل للنظام",
+      "roles": {
+        "superAdmin": "مدير عام",
+        "hotelAdmin": "مدير فندق",
+        "serviceProvider": "مقدم خدمة",
+        "guest": "ضيف"
+      },
+      "firstName": "الاسم الأول",
+      "lastName": "الاسم الأخير",
+      "emailAddress": "عنوان البريد الإلكتروني",
+      "phoneNumber": "رقم الهاتف",
+      "saving": "جاري الحفظ...",
+      "fullName": "الاسم الكامل",
+      "notProvided": "غير مقدم",
+      "role": "الدور",
+      "editProfile": "تعديل الملف الشخصي",
+      "updateSuccess": "تم تحديث الملف الشخصي بنجاح",
+      "updateFailed": "فشل في تحديث الملف الشخصي"
     },    "laundryManagement": {
       "title": "إدارة خدمات الغسيل",
       "description": "إدارة خدمات الغسيل الخاصة بك وإضافة عناصر جديدة بأسعار فردية",
@@ -961,6 +1558,9 @@
     "freshIngredients": "مكونات طازجة",
     "quickDelivery": "توصيل سريع",
     "diningTime": "30-60 دقيقة",
+    "freshMenu": "قائمة طازجة",
+    "qualityFood": "طعام عالي الجودة",
+    "roomService": "خدمة الغرف",
     "entertainmentDescription": "موسيقى حية وخدمات دي جي وفعاليات",
     "professionalArtists": "فنانين محترفين",
     "customPlaylists": "قوائم تشغيل مخصصة",
@@ -979,7 +1579,17 @@
     "extraCleaning": "تنظيف إضافي",
     "freshLinens": "بياضات نظيفة",
     "amenityRestocking": "إعادة تعبئة مستلزمات الراحة",
-    "available24_7": "متاح 24/7"
+    "available24_7": "متاح 24/7",
+    "professionalService": "خدمة مهنية",
+    "qualityGuaranteed": "جودة مضمونة",
+    "professionalServiceDescription": "خدمة مهنية متاحة لراحتك وسهولتك",
+    "quickService": "خدمة سريعة",
+    "qualityAssured": "جودة مؤكدة",
+    "pickupAndDelivery": "الاستلام والتوصيل",
+    "travelService": "خدمة السفر",
+    "multipleVehicles": "مركبات متعددة",
+    "reliableService": "خدمة موثوقة",
+    "available247": "متوفرة 24/7"
   },
   "laundryBooking": {
     "title": "حجز خدمة الغسيل",
@@ -1026,6 +1636,8 @@
     "bookingError": "فشل في إنشاء الحجز",    "unavailable": "غير متاح",
     "noServiceTypes": "لا توجد أنواع خدمة",
     "priceNotSet": "السعر غير محدد",
+    "selectServiceTypeInstruction": "اختر نوع الخدمة لكل عنصر",
+    "applyToAll": "تطبيق \"{{typeName}}\" على الكل",
     "serviceTypeNames": {
   "wash_only": "غسيل فقط",
   "iron_only": "كي فقط",
@@ -1274,8 +1886,6 @@
       "comfort": "مريح",
       "premium": "ممتاز"
     },
-    "noBookings": "لا توجد حجوزات",
-    "noBookingsDescription": "لا توجد لديك حجوزات مواصلات في هذه الفئة بعد.",
     "bookTransportation": "احجز المواصلات",
     "info": {
       "title": "كيف تعمل حجوزات المواصلات",
@@ -1285,60 +1895,30 @@
         "step3": "أكمل الدفع لتأكيد حجزك فورًا",
         "step4": "استلم التأكيد وتتبع خدمتك"
       }
-    },
-    "createQuote": "إنشاء عرض سعر",
-    "createQuoteFor": "إنشاء عرض سعر لـ",
-    "tripDetails": "تفاصيل الرحلة",
-    "route": "المسار",
-    "basePrice": "السعر الأساسي",
-    "enterBasePrice": "أدخل السعر الأساسي",
-    "basePriceNote": "هذا هو المبلغ الذي ستتلقاه بعد عمولة الفندق",
-    "quoteNotes": "ملاحظات عرض السعر",
-    "quoteNotesPlaceholder": "أي تعليمات خاصة أو تفاصيل حول الخدمة...",
-    "quoteExpiration": "انتهاء صلاحية عرض السعر",
-    "hours": "ساعات",
-    "priceBreakdown": "تفصيل السعر",
-    "hotelMarkup": "هامش ربح الفندق",
-    "finalPrice": "السعر النهائي",
-    "sendQuote": "أرسل عرض السعر",
-    "bookingDetails": "تفاصيل الحجز",
-    "guestInformation": "معلومات الضيف",
-    "name": "الاسم",
-    "email": "البريد الإلكتروني",
-    "quoteInformation": "معلومات عرض السعر",
-    "quotedAt": "عرض السعر في",
-    "expiresAt": "ينتهي في",
-    "paymentInformation": "معلومات الدفع",
-    "paymentStatus": "حالة الدفع",
-    "paymentCompleted": "تم الدفع",
-    "paidAmount": "المبلغ المدفوع",
-    "paymentDate": "تاريخ الدفع",
-    "transactionId": "رقم المعاملة",
-    "specialRequirements": "المتطلبات الخاصة"
+    }
   },
   "transportationBooking": {
     "serviceTypeNames": {
-
-  "standard_ride": "رحلة عادية",
-  "comfort_ride": "رحلة مريحة",
-  "premium_service": "خدمة فاخرة",
-  "eco_friendly": "خدمة صديقة للبيئة",
-  "wheelchair_accessible": "مركبة مجهزة لذوي الاحتياجات الخاصة",
-  "advance_booking": "حجز مسبق للرحلات",
-  "hourly_rental": "تأجير بالساعة",
-  "airport_transfer": "نقل من وإلى المطار",
-  "city_tour": "جولة سياحية"
+      "standard_ride": "رحلة عادية",
+      "comfort_ride": "رحلة مريحة",
+      "premium_service": "خدمة فاخرة",
+      "eco_friendly": "خدمة صديقة للبيئة",
+      "wheelchair_accessible": "مركبة مجهزة لذوي الاحتياجات الخاصة",
+      "advance_booking": "حجز مسبق للرحلات",
+      "hourly_rental": "تأجير بالساعة",
+      "airport_transfer": "نقل من وإلى المطار",
+      "city_tour": "جولة سياحية"
     },
     "serviceTypeDescriptions": {
-  "standard_ride": "خدمة نقل أساسية",
-  "comfort_ride": "راحة إضافية مع مركبات مميزة",
-  "premium_service": "مركبات فاخرة وخدمة احترافية",
-  "eco_friendly": "خيار نقل مستدام وصديق للبيئة",
-  "wheelchair_accessible": "تسهيلات خاصة لذوي الاحتياجات الخاصة",
-  "advance_booking": "احجز رحلتك مسبقاً",
-  "hourly_rental": "استأجر المركبة بالساعة حسب الحاجة",
-  "airport_transfer": "خدمة نقل متخصصة من وإلى المطار",
-  "city_tour": "جولة سياحية مع سائق محترف"
+      "standard_ride": "خدمة نقل أساسية",
+      "comfort_ride": "راحة إضافية مع مركبات مميزة",
+      "premium_service": "مركبات فاخرة وخدمة احترافية",
+      "eco_friendly": "خيار نقل مستدام وصديق للبيئة",
+      "wheelchair_accessible": "تسهيلات خاصة لذوي الاحتياجات الخاصة",
+      "advance_booking": "احجز رحلتك مسبقاً",
+      "hourly_rental": "استأجر المركبة بالساعة حسب الحاجة",
+      "airport_transfer": "خدمة نقل متخصصة من وإلى المطار",
+      "city_tour": "جولة سياحية مع سائق محترف"
     },
     "title": "حجز خدمة المواصلات",
     "selectVehicles": "اختر المركبات",
@@ -1493,7 +2073,6 @@
     "stillReserved": "لا تقلق - لا يزال حجزك محجوزًا. يمكنك محاولة الدفع مرة أخرى أو الاتصال بالدعم إذا كنت بحاجة إلى مساعدة.",
     "processing": "جارٍ المعالجة...",
     "tryAgain": "حاول الدفع مرة أخرى",
-    "viewBookings": "عرض حجوزاتي",
     "backToHome": "العودة إلى الرئيسية",
     "needHelp": "هل تواجه مشكلة في الدفع؟ تواصل مع فريق الدعم عبر <1>{{email}}</1>",
     "errorMessages": {
@@ -1667,6 +2246,134 @@
             "extraLighting": "أحتاج إضاءة إضافية"
           }
         }
+      }
+    },
+    "expertCleaning": "تنظيف متخصص",
+    "qualityAssured": "جودة مضمونة",
+    "onSchedule": "في الموعد",
+    "scheduleDate": "تاريخ الجدولة",
+    "preferredTime": "الوقت المفضل",
+    "quickIssueCategories": "فئات المشاكل السريعة",
+    "tapToViewCommonIssues": "اضغط لعرض المشاكل الشائعة"
+  },
+  "guest": {
+    "common": {
+      "hotelServices": "خدمات الفندق",
+      "star": "نجمة",
+      "stars": "نجوم",
+      "welcomeToPremiumServices": "مرحباً بك في خدماتنا الفاخرة",
+      "discoverAndBook": "اكتشف واحجز الخدمات الاستثنائية المصممة لراحتك وسهولتك",
+      "hello": "مرحباً",
+      "guest": "ضيف",
+      "quickAccess": "وصول سريع"
+    },
+    "transportation": {
+      "noTransportationServices": "لا توجد خدمات نقل متاحة",
+      "noTransportationDescription": "هذا الفندق لا يقدم خدمات النقل في الوقت الحالي.",
+      "vehiclesNotAvailable": "مركبات النقل غير متاحة",
+      "serviceProviderNoVehicles": "هذا الفندق لديه {{count}} مقدم خدمة نقل، لكن لم يقوموا بتكوين مركباتهم بعد.",
+      "availableServices": "الخدمات المتاحة: {{services}}",
+      "browseOtherServices": "تصفح خدمات أخرى",
+      "selectVehicles": "اختر المركبات",
+      "schedule": "الجدولة",
+      "confirm": "تأكيد",
+      "failedToLoad": "فشل في تحميل خدمات النقل",
+      "addToCart": "يرجى إضافة مركبة واحدة على الأقل إلى سلة التسوق",
+      "selectDateAndTime": "يرجى اختيار تاريخ ووقت الاستلام",
+      "providePickupLocation": "يرجى تقديم موقع الاستلام",
+      "failedToCreate": "فشل في إنشاء الحجز",
+      "chooseServiceTypes": "اختر أنواع الخدمة",
+      "selectPreferredServiceType": "اختر نوع الخدمة المفضل لديك",
+      "dailyRental": "إيجار يومي",
+      "fullDayRental": "إيجار يوم كامل",
+      "serviceTypesSelected": "أنواع الخدمة المحددة",
+      "vehiclesConfigured": "تم تكوين {{count}} مركبة. جاهز للمتابعة إلى الجدولة.",
+      "scheduleTransportation": "جدولة النقل",
+      "setPickupDetails": "حدد وقت الاستلام وتفاصيل الموقع",
+      "pickupSchedule": "جدول الاستلام",
+      "locationDetails": "تفاصيل الموقع",
+      "passengerDetails": "تفاصيل الركاب",
+      "confirmYourBooking": "أكد حجزك",
+      "orderSummary": "ملخص الطلب",
+      "quotePending": "عرض الأسعار معلق",
+      "scheduleAndLocation": "الجدولة والموقع",
+      "pickupDate": "تاريخ الاستلام",
+      "pickupTime": "وقت الاستلام",
+      "pickup": "الاستلام",
+      "dropOff": "الإنزال",
+      "passengers": "الركاب",
+      "luggage": "الأمتعة",
+      "specialRequests": "طلبات خاصة",
+      "enterPickupLocation": "أدخل عنوان أو موقع الاستلام",
+      "enterDestinationAddress": "أدخل عنوان الوجهة",
+      "vehicle": "مركبة",
+      "vehicles": "مركبات",
+      "specialInstructions": "أي تعليمات خاصة لخدمة النقل...",
+      "pickupLocation": "موقع الاستلام",
+      "selectTime": "اختر الوقت...",
+      "totalAmount": "المبلغ الإجمالي",
+      "vehiclesTotal": "إجمالي المركبات",
+      "expressService": "خدمة سريعة",
+      "total": "الإجمالي"
+    },
+    "restaurant": {
+      "noRestaurantServices": "لا توجد خدمات مطعم متاحة",
+      "noRestaurantDescription": "هذا الفندق لا يقدم خدمات المطعم في الوقت الحالي.",
+      "menuItemsNotAvailable": "عناصر القائمة غير متاحة",
+      "selectMenuItems": "اختر عناصر القائمة",
+      "mainCourses": "الأطباق الرئيسية",
+      "appetizers": "المقبلات",
+      "desserts": "الحلويات",
+      "beverages": "المشروبات",
+      "other": "أخرى",
+      "selectTime": "اختر الوقت",
+      "breakfast": "الإفطار (7:00 - 10:00)",
+      "lunch": "الغداء (12:00 - 15:00)",
+      "dinner": "العشاء (18:00 - 22:00)",
+      "anytime": "أي وقت (11:00 - 23:00)",
+      "deliveryLocation": "موقع التسليم",
+      "roomNumberOrAddress": "رقم الغرفة أو عنوان التسليم",
+      "orderConfirmation": "تأكيد الطلب",
+      "orderItems": "عناصر الطلب",
+      "total": "المجموع",
+      "preferredDate": "التاريخ المفضل",
+      "preferredTime": "الوقت المفضل",
+      "restaurant": "المطعم",
+      "specialRequests": "طلبات خاصة",
+      "noItemsInCart": "لا توجد عناصر في السلة بعد",
+      "itemRemovedFromCart": "تم إزالة العنصر من السلة",
+      "addItemsToCart": "يرجى إضافة عنصر واحد على الأقل إلى سلة التسوق",
+      "selectDateAndTime": "يرجى اختيار التاريخ والوقت المفضل",
+      "failedToLoadServices": "فشل في تحميل خدمات المطعم",
+      "failedToCreateBooking": "فشل في إنشاء الحجز",
+      "scheduleDeliveryDetails": "جدولة وتفاصيل التسليم",
+      "items": "العناصر",
+      "schedule": "الجدولة",
+      "confirm": "تأكيد",
+      "yourOrder": "طلبك",
+      "continueToSchedule": "متابعة إلى الجدولة",
+      "reviewOrder": "مراجعة الطلب",
+      "backToMenu": "العودة إلى القائمة",
+      "confirmAndPay": "تأكيد ودفع",
+      "creatingOrder": "جاري إنشاء الطلب...",
+      "backToSchedule": "العودة إلى الجدولة",
+      "specialRequestsPlaceholder": "أي متطلبات غذائية أو تفضيلات طبخ أو تعليمات تسليم..."
+    },
+    "laundry": {
+      "failedToLoadServices": "فشل في تحميل خدمات الغسيل"
+    },
+    "payment": {
+      "noBookingId": "لم يتم تقديم معرف الحجز",
+      "failedFetch": "فشل في جلب تفاصيل الحجز",
+      "failedLoad": "فشل في تحميل تفاصيل الحجز",
+      "failedCreateSession": "فشل في إنشاء جلسة دفع جديدة",
+      "failedRetry": "فشل في إعادة محاولة الدفع",
+      "errorMessages": {
+        "cancelled": "تم إلغاء الدفع",
+        "timeout": "انتهت مهلة الدفع",
+        "insufficientFunds": "أموال غير كافية",
+        "cardDeclined": "تم رفض البطاقة",
+        "networkError": "حدث خطأ في الشبكة"
       }
     }
   }

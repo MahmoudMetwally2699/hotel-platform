@@ -6,9 +6,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import useAuth from '../../hooks/useAuth';
 
 const TailwindHeader = ({ onOpenSidebar }) => {
+  const { t } = useTranslation();
   const { currentUser, role, logout } = useAuth();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -59,7 +61,7 @@ const TailwindHeader = ({ onOpenSidebar }) => {
           </button>
 
           <Link to={getDashboardRoute()} className="flex items-center ml-2 md:ml-0">
-            <span className="text-xl font-bold text-primary-dark">Hotel Service Platform</span>
+            <span className="text-xl font-bold text-primary-dark">{t('platform.hotelPlatform')}</span>
           </Link>
         </div>
 

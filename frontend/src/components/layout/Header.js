@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link as RouterLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {  AppBar,
   Avatar,
   Box,
@@ -22,6 +23,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import useAuth from '../../hooks/useAuth';
 
 const Header = ({ onDrawerToggle }) => {
+  const { t } = useTranslation();
   const { currentUser, role, logout } = useAuth();
 
   // Profile menu state
@@ -77,7 +79,7 @@ const Header = ({ onDrawerToggle }) => {
             textDecoration: 'none',
           }}
         >
-          Hotel Service Platform
+          {t('platform.hotelPlatform')}
         </Typography>
 
         <Box sx={{ flexGrow: 1 }} />

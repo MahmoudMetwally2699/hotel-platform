@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { fetchHotelProfile, updateHotelProfile, selectCurrentHotel, selectHotelLoading } from '../../redux/slices/hotelSlice';
 import useAuth from '../../hooks/useAuth';
 
@@ -9,6 +10,7 @@ import useAuth from '../../hooks/useAuth';
  */
 const SettingsPage = () => {
   // IMMEDIATE ALERT TO CATCH REDIRECT ISSUES
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const hotel = useSelector(selectCurrentHotel);
   const isLoading = useSelector(selectHotelLoading);
@@ -111,7 +113,7 @@ const SettingsPage = () => {
           hotelData: formData
         })).unwrap();
 
-        setSuccessMessage('Hotel settings updated successfully!');
+        setSuccessMessage(t('hotelAdmin.settings.updateSuccess'));
 
         // Clear success message after 3 seconds
         setTimeout(() => {
@@ -119,7 +121,7 @@ const SettingsPage = () => {
         }, 3000);
       }
     } catch (error) {
-      setErrorMessage(error.message || 'Failed to update hotel settings');
+      setErrorMessage(error.message || t('hotelAdmin.settings.updateError'));
 
       // Clear error message after 3 seconds
       setTimeout(() => {
@@ -135,8 +137,8 @@ const SettingsPage = () => {
         <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-2xl shadow-xl p-8 mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Hotel Settings</h1>
-              <p className="text-white/80 text-lg">Manage your hotel profile and configuration</p>
+              <h1 className="text-3xl font-bold text-white mb-2">{t('hotelAdmin.settings.title')}</h1>
+              <p className="text-white/80 text-lg">{t('hotelAdmin.settings.subtitle')}</p>
             </div>
             <div className="hidden md:block">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
@@ -164,7 +166,7 @@ const SettingsPage = () => {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
-                  <span>Hotel Profile</span>
+                  <span>{t('hotelAdmin.settings.tabs.profile')}</span>
                 </div>
               </button>
             </nav>
@@ -202,7 +204,7 @@ const SettingsPage = () => {
           <div className="flex justify-center items-center h-64 bg-white rounded-xl shadow-lg">
             <div className="text-center">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0]/30 border-t-[#3B5787] mx-auto mb-4"></div>
-              <p className="text-gray-600 font-medium">Loading hotel profile...</p>
+              <p className="text-gray-600 font-medium">{t('hotelAdmin.settings.loading')}</p>
             </div>
           </div>
         ) : (
@@ -217,13 +219,13 @@ const SettingsPage = () => {
                       <svg className="w-6 h-6 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span>Basic Information</span>
+                      <span>{t('hotelAdmin.settings.sections.basicInfo')}</span>
                     </h2>
                   </div>
                   <div className="p-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">Hotel Name</label>
+                        <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">{t('hotelAdmin.settings.fields.hotelName')}</label>
                         <input
                           type="text"
                           id="name"
@@ -236,7 +238,7 @@ const SettingsPage = () => {
                       </div>
 
                       <div>
-                        <label htmlFor="website" className="block text-sm font-semibold text-gray-700 mb-2">Website</label>
+                        <label htmlFor="website" className="block text-sm font-semibold text-gray-700 mb-2">{t('hotelAdmin.settings.fields.website')}</label>
                         <input
                           type="url"
                           id="website"
@@ -248,7 +250,7 @@ const SettingsPage = () => {
                       </div>
 
                       <div className="md:col-span-2">
-                        <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                        <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">{t('hotelAdmin.settings.fields.description')}</label>
                         <textarea
                           id="description"
                           name="description"
@@ -256,7 +258,7 @@ const SettingsPage = () => {
                           onChange={handleInputChange}
                           rows="4"
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#3B5787] focus:ring-4 focus:ring-[#67BAE0]/30 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
-                          placeholder="Describe your hotel's unique features and amenities..."
+                          placeholder={t('hotelAdmin.settings.placeholders.description')}
                         />
                       </div>
                     </div>
@@ -270,13 +272,13 @@ const SettingsPage = () => {
                       <svg className="w-6 h-6 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
-                      <span>Contact Information</span>
+                      <span>{t('hotelAdmin.settings.sections.contactInfo')}</span>
                     </h2>
                   </div>
                   <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="contactEmail" className="block text-sm font-semibold text-gray-700 mb-2">Contact Email</label>
+                        <label htmlFor="contactEmail" className="block text-sm font-semibold text-gray-700 mb-2">{t('hotelAdmin.settings.fields.contactEmail')}</label>
                         <input
                           type="email"
                           id="contactEmail"
@@ -289,7 +291,7 @@ const SettingsPage = () => {
                       </div>
 
                       <div>
-                        <label htmlFor="contactPhone" className="block text-sm font-semibold text-gray-700 mb-2">Contact Phone</label>
+                        <label htmlFor="contactPhone" className="block text-sm font-semibold text-gray-700 mb-2">{t('hotelAdmin.settings.fields.contactPhone')}</label>
                         <input
                           type="tel"
                           id="contactPhone"
@@ -312,13 +314,13 @@ const SettingsPage = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      <span>Address Information</span>
+                      <span>{t('hotelAdmin.settings.sections.addressInfo')}</span>
                     </h2>
                   </div>
                   <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="md:col-span-2">
-                        <label htmlFor="address.street" className="block text-sm font-semibold text-gray-700 mb-2">Street Address</label>
+                        <label htmlFor="address.street" className="block text-sm font-semibold text-gray-700 mb-2">{t('hotelAdmin.settings.fields.streetAddress')}</label>
                         <input
                           type="text"
                           id="address.street"
@@ -331,7 +333,7 @@ const SettingsPage = () => {
                       </div>
 
                       <div>
-                        <label htmlFor="address.city" className="block text-sm font-semibold text-gray-700 mb-2">City</label>
+                        <label htmlFor="address.city" className="block text-sm font-semibold text-gray-700 mb-2">{t('hotelAdmin.settings.fields.city')}</label>
                         <input
                           type="text"
                           id="address.city"
@@ -344,7 +346,7 @@ const SettingsPage = () => {
                       </div>
 
                       <div>
-                        <label htmlFor="address.state" className="block text-sm font-semibold text-gray-700 mb-2">State/Province</label>
+                        <label htmlFor="address.state" className="block text-sm font-semibold text-gray-700 mb-2">{t('hotelAdmin.settings.fields.state')}</label>
                         <input
                           type="text"
                           id="address.state"
@@ -357,7 +359,7 @@ const SettingsPage = () => {
                       </div>
 
                       <div>
-                        <label htmlFor="address.zipCode" className="block text-sm font-semibold text-gray-700 mb-2">ZIP/Postal Code</label>
+                        <label htmlFor="address.zipCode" className="block text-sm font-semibold text-gray-700 mb-2">{t('hotelAdmin.settings.fields.zipCode')}</label>
                         <input
                           type="text"
                           id="address.zipCode"
@@ -370,7 +372,7 @@ const SettingsPage = () => {
                       </div>
 
                       <div>
-                        <label htmlFor="address.country" className="block text-sm font-semibold text-gray-700 mb-2">Country</label>
+                        <label htmlFor="address.country" className="block text-sm font-semibold text-gray-700 mb-2">{t('hotelAdmin.settings.fields.country')}</label>
                         <input
                           type="text"
                           id="address.country"
@@ -395,10 +397,10 @@ const SettingsPage = () => {
                     {isLoading ? (
                       <div className="flex items-center">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Saving...
+                        {t('hotelAdmin.settings.saving')}
                       </div>
                     ) : (
-                      'Save Changes'
+                      t('hotelAdmin.settings.saveChanges')
                     )}
                   </button>
                 </div>

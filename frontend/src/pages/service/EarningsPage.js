@@ -9,9 +9,7 @@ import {
   fetchProviderEarnings,
   fetchProviderPayouts,
   fetchCategoryAnalytics,
-  requestPayout,
   selectProviderEarnings,
-  selectProviderPayouts,
   selectCategoryAnalytics,
   selectServiceLoading,
   selectServiceError
@@ -43,13 +41,10 @@ const EarningsPage = () => {
   const dispatch = useDispatch();
   const earnings = useSelector(selectProviderEarnings);
   const categoryAnalytics = useSelector(selectCategoryAnalytics);
-  const payouts = useSelector(selectProviderPayouts);
   const isLoading = useSelector(selectServiceLoading);
   const error = useSelector(selectServiceError);
 
   const [timeRange, setTimeRange] = useState('month'); // 'week', 'month', 'year'
-  const [showPayoutModal, setShowPayoutModal] = useState(false);
-  const [payoutAmount, setPayoutAmount] = useState('');  const [payoutMethod, setPayoutMethod] = useState('bank_transfer');
 
   useEffect(() => {
     dispatch(fetchProviderEarnings(timeRange));
@@ -67,21 +62,6 @@ const EarningsPage = () => {
     setTimeRange(range);
   };
 
-  const handleRequestPayout = () => {
-    if (!payoutAmount || isNaN(parseFloat(payoutAmount)) || parseFloat(payoutAmount) <= 0) {
-      return;
-    }
-
-    dispatch(requestPayout({
-      amount: parseFloat(payoutAmount),
-      method: payoutMethod
-    })).then((result) => {
-      if (!result.error) {
-        setShowPayoutModal(false);
-        setPayoutAmount('');
-      }
-    });
-  };
   // Format chart data
   const getChartData = () => {
     if (!earnings?.data?.breakdown?.monthly || earnings.data.breakdown.monthly.length === 0) {
@@ -422,17 +402,6 @@ const EarningsPage = () => {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Request Payout Button */}
-          <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200 flex items-center justify-center">
-            <button
-              onClick={() => setShowPayoutModal(true)}
-              disabled={!earnings || earnings.data?.availableBalance <= 0}
-              className="w-full mx-6 px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#2A4065] hover:to-[#3B5787] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              💳 Request Payout
-            </button>
           </div>
         </div>
 
@@ -877,142 +846,9 @@ const EarningsPage = () => {
               )}
             </div>
           </div>
-
-          {/* Payout History */}
-          <div className="bg-white rounded-xl shadow-lg">
-            <div className="px-6 py-5 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">💳 Payout History</h3>
-            </div>
-            <div className="overflow-hidden">
-              {payouts && payouts.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Payout ID
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Amount
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Method
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Requested
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Processed
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {payouts.map((payout) => (
-                        <tr key={payout.id || payout._id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {payout.id || payout._id}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${payout.amount?.toFixed(2) || '0.00'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
-                            {payout.method || 'Bank Transfer'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              payout.status === 'completed'
-                                ? 'bg-[#67BAE0]/20 text-[#3B5787]'
-                                : payout.status === 'pending'
-                                ? 'bg-[#3B5787]/20 text-[#3B5787]'
-                                : 'bg-black/20 text-black'
-                            }`}>
-                              {payout.status || 'Pending'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {payout.requestedAt ? new Date(payout.requestedAt).toLocaleDateString() : '-'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {payout.processedAt ? new Date(payout.processedAt).toLocaleDateString() : '-'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <BanknotesIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">No payout history available</p>
-                  <p className="text-sm text-gray-400">
-                    Request your first payout when you have available earnings
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
         </>
       )}
       </div>
-
-      {/* Payout Modal */}
-      {showPayoutModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">💳 Request Payout</h3>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Amount
-              </label>
-              <input
-                type="number"
-                value={payoutAmount}
-                onChange={(e) => setPayoutAmount(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter amount"
-                max={earnings?.data?.availableBalance || 0}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Available: ${earnings?.data?.availableBalance?.toFixed(2) || '0.00'}
-              </p>
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Payment Method
-              </label>
-              <select
-                value={payoutMethod}
-                onChange={(e) => setPayoutMethod(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="paypal">PayPal</option>
-                <option value="stripe">Stripe</option>
-              </select>
-            </div>
-
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setShowPayoutModal(false)}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRequestPayout}
-                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3B5787] to-[#67BAE0] border border-transparent rounded-lg hover:from-[#2A4065] hover:to-[#3B5787] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787]"
-              >
-                Request
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

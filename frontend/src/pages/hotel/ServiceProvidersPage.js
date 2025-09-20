@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchServiceProviders, selectServiceProviders, selectServiceProviderLoading, setServiceProviderMarkup } from '../../redux/slices/serviceSlice';
 import AddServiceProviderModal from '../../components/hotel/AddServiceProviderModal';
@@ -10,6 +11,7 @@ import { HOTEL_ADMIN_API } from '../../config/api.config';
  * @returns {JSX.Element} Service providers management page
  */
 const ServiceProvidersPage = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const serviceProviders = useSelector(selectServiceProviders) || [];
   const isLoading = useSelector(selectServiceProviderLoading);  const [searchTerm, setSearchTerm] = useState('');
@@ -25,10 +27,10 @@ const ServiceProvidersPage = () => {
 
   // Available service categories (only the specified ones)
   const serviceCategories = [
-    { id: 'laundry', name: 'Laundry Services', icon: '👕', description: 'Wash, iron, and dry cleaning services' },
-    { id: 'transportation', name: 'Transportation', icon: '🚗', description: 'Car rental and taxi services' },
-    { id: 'dining', name: 'Dining Services', icon: '🍽️', description: 'Hotel restaurant and dining facilities' },
-    { id: 'housekeeping', name: 'Housekeeping', icon: '🧹', description: 'Room cleaning and maintenance services' }
+    { id: 'laundry', name: t('hotelAdmin.serviceProviders.categories.laundry'), icon: '👕', description: t('hotelAdmin.serviceProviders.categories.laundryDesc') },
+    { id: 'transportation', name: t('hotelAdmin.serviceProviders.categories.transportation'), icon: '🚗', description: t('hotelAdmin.serviceProviders.categories.transportationDesc') },
+    { id: 'dining', name: t('hotelAdmin.serviceProviders.categories.dining'), icon: '🍽️', description: t('hotelAdmin.serviceProviders.categories.diningDesc') },
+    { id: 'housekeeping', name: t('hotelAdmin.serviceProviders.categories.housekeeping'), icon: '🧹', description: t('hotelAdmin.serviceProviders.categories.housekeepingDesc') }
   ];
 
   useEffect(() => {
@@ -97,7 +99,7 @@ const ServiceProvidersPage = () => {
       setMarkupNotes('');
     } catch (error) {
       console.error('Error setting markup:', error);
-      alert('Failed to set markup. Please try again.');
+      alert(t('hotelAdmin.serviceProviders.errors.markupSetFailed'));
     } finally {
       setIsSavingMarkup(false);
     }
@@ -118,7 +120,7 @@ const ServiceProvidersPage = () => {
       dispatch(fetchServiceProviders({}));
     } catch (error) {
       console.error('Error updating categories:', error);
-      alert('Failed to update service categories. Please try again.');
+      alert(t('hotelAdmin.serviceProviders.errors.categoriesUpdateFailed'));
     } finally {
       setIsSavingCategories(false);
     }
@@ -131,8 +133,8 @@ const ServiceProvidersPage = () => {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-modern-blue">Service Providers Management</h1>
-              <p className="text-modern-darkGray mt-1">Manage service providers and their markup settings</p>
+              <h1 className="text-3xl font-bold text-modern-blue">{t('hotelAdmin.serviceProviders.title')}</h1>
+              <p className="text-modern-darkGray mt-1">{t('hotelAdmin.serviceProviders.subtitle')}</p>
             </div>
             <button
               onClick={handleAddProvider}
@@ -141,7 +143,7 @@ const ServiceProvidersPage = () => {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              <span>Add Provider</span>
+              <span>{t('hotelAdmin.serviceProviders.addProvider')}</span>
             </button>
           </div>
         </div>
@@ -154,9 +156,9 @@ const ServiceProvidersPage = () => {
               <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Search Providers
+              {t('hotelAdmin.serviceProviders.searchTitle')}
             </h2>
-            <p className="text-blue-100 mt-1">Find and manage your service providers</p>
+            <p className="text-blue-100 mt-1">{t('hotelAdmin.serviceProviders.searchSubtitle')}</p>
           </div>
           <div className="p-6">
             <div className="flex items-center space-x-4">
@@ -167,7 +169,7 @@ const ServiceProvidersPage = () => {
                   </svg>
                   <input
                     type="text"
-                    placeholder="Search by business name or email..."
+                    placeholder={t('hotelAdmin.serviceProviders.searchPlaceholder')}
                     className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-modern-blue focus:ring-2 focus:ring-modern-blue focus:ring-opacity-20 transition-all duration-300"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -181,7 +183,7 @@ const ServiceProvidersPage = () => {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>Refresh</span>
+                <span>{t('hotelAdmin.serviceProviders.refresh')}</span>
               </button>
             </div>
           </div>
@@ -194,9 +196,9 @@ const ServiceProvidersPage = () => {
               <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
-              Service Providers ({filteredProviders.length})
+              {t('hotelAdmin.serviceProviders.tableTitle', { count: filteredProviders.length })}
             </h2>
-            <p className="text-blue-100 mt-1">Manage your network of service providers</p>
+            <p className="text-blue-100 mt-1">{t('hotelAdmin.serviceProviders.tableSubtitle')}</p>
           </div>
 
           {isLoading ? (
@@ -212,9 +214,9 @@ const ServiceProvidersPage = () => {
                 <svg className="mx-auto h-16 w-16 text-gray-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No providers found</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{t('hotelAdmin.serviceProviders.noProviders')}</h3>
                 <p className="text-sm text-gray-500">
-                  {searchTerm ? 'No providers match your search criteria.' : 'No service providers have been added yet.'}
+                  {searchTerm ? t('hotelAdmin.serviceProviders.noProvidersSearch') : t('hotelAdmin.serviceProviders.noProvidersYet')}
                 </p>
               </div>
             </div>
@@ -225,11 +227,11 @@ const ServiceProvidersPage = () => {
                 <div className="min-w-full inline-block align-middle">
                   <table className="min-w-full divide-y divide-gray-200">                    <thead className="bg-modern-gray">
                       <tr>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[200px]">Business Name</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[180px]">Contact</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">Status</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">Markup</th>
-                        <th className="px-4 py-4 text-center text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">Actions</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[200px]">{t('hotelAdmin.serviceProviders.table.businessName')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[180px]">{t('hotelAdmin.serviceProviders.table.contact')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.serviceProviders.table.status')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">{t('hotelAdmin.serviceProviders.table.markup')}</th>
+                        <th className="px-4 py-4 text-center text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">{t('hotelAdmin.serviceProviders.table.actions')}</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
@@ -242,20 +244,20 @@ const ServiceProvidersPage = () => {
                               </div>
                               <div className="ml-4">
                                 <div className="text-sm font-semibold text-gray-900 truncate max-w-[150px]">
-                                  {provider.businessName || 'N/A'}
+                                  {provider.businessName || t('hotelAdmin.serviceProviders.notAvailable')}
                                 </div>
                                 <div className="text-xs text-modern-darkGray truncate max-w-[150px]">
-                                  {provider.description?.substring(0, 40) || 'No description'}...
+                                  {provider.description?.substring(0, 40) || t('hotelAdmin.serviceProviders.noDescription')}...
                                 </div>
                               </div>
                             </div>
                           </td>
                           <td className="px-4 py-4">
                             <div className="text-sm font-medium text-gray-900 truncate max-w-[150px]">
-                              {provider.email || 'N/A'}
+                              {provider.email || t('hotelAdmin.serviceProviders.notAvailable')}
                             </div>
                             <div className="text-xs text-modern-darkGray">
-                              {provider.phone || 'No phone'}
+                              {provider.phone || t('hotelAdmin.serviceProviders.noPhone')}
                             </div>
                           </td>
                           <td className="px-4 py-4">
@@ -271,19 +273,19 @@ const ServiceProvidersPage = () => {
                                 : 'bg-blue-100 text-blue-800'
                             }`}>
                               {provider.isActive && provider.isVerified && provider.verificationStatus === 'approved'
-                                ? 'Active'
+                                ? t('hotelAdmin.serviceProviders.status.active')
                                 : provider.verificationStatus === 'pending'
-                                ? 'Pending'
+                                ? t('hotelAdmin.serviceProviders.status.pending')
                                 : provider.verificationStatus === 'rejected'
-                                ? 'Rejected'
+                                ? t('hotelAdmin.serviceProviders.status.rejected')
                                 : !provider.isActive
-                                ? 'Inactive'
-                                : provider.verificationStatus?.toUpperCase() || 'Unknown'}
+                                ? t('hotelAdmin.serviceProviders.status.inactive')
+                                : provider.verificationStatus?.toUpperCase() || t('hotelAdmin.serviceProviders.status.unknown')}
                             </span>
                           </td>
                           <td className="px-4 py-4">
                             <span className="text-sm font-medium text-gray-900">
-                              {provider.markup?.percentage ? `${provider.markup.percentage}%` : 'Not set'}
+                              {provider.markup?.percentage ? `${provider.markup.percentage}%` : t('hotelAdmin.serviceProviders.markupNotSet')}
                             </span>
                           </td>
                           <td className="px-4 py-4 text-center">
@@ -292,13 +294,13 @@ const ServiceProvidersPage = () => {
                                 onClick={() => handleSetMarkup(provider)}
                                 className="text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-blue-50 text-sm"
                               >
-                                Set Markup
+                                {t('hotelAdmin.serviceProviders.actions.setMarkup')}
                               </button>
                               <button
                                 onClick={() => handleManageCategories(provider)}
                                 className="text-[#3B5787] hover:text-[#2A4065] font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-[#67BAE0]/10 text-sm"
                               >
-                                Manage Services
+                                {t('hotelAdmin.serviceProviders.actions.manageServices')}
                               </button>
                             </div>
                           </td>
@@ -319,9 +321,9 @@ const ServiceProvidersPage = () => {
                           {provider.businessName?.charAt(0) || 'P'}
                         </div>
                         <div className="ml-3">
-                          <h3 className="font-semibold text-gray-900">{provider.businessName || 'N/A'}</h3>
+                          <h3 className="font-semibold text-gray-900">{provider.businessName || t('hotelAdmin.serviceProviders.notAvailable')}</h3>
                           <p className="text-sm text-modern-darkGray truncate max-w-[200px]">
-                            {provider.description?.substring(0, 40) || 'No description'}...
+                            {provider.description?.substring(0, 40) || t('hotelAdmin.serviceProviders.noDescription')}...
                           </p>
                         </div>
                       </div>
@@ -337,30 +339,30 @@ const ServiceProvidersPage = () => {
                           : 'bg-blue-100 text-blue-800'
                       }`}>
                         {provider.isActive && provider.isVerified && provider.verificationStatus === 'approved'
-                          ? 'Active'
+                          ? t('hotelAdmin.serviceProviders.status.active')
                           : provider.verificationStatus === 'pending'
-                          ? 'Pending'
+                          ? t('hotelAdmin.serviceProviders.status.pending')
                           : provider.verificationStatus === 'rejected'
-                          ? 'Rejected'
+                          ? t('hotelAdmin.serviceProviders.status.rejected')
                           : !provider.isActive
-                          ? 'Inactive'
-                          : provider.verificationStatus?.toUpperCase() || 'Unknown'}
+                          ? t('hotelAdmin.serviceProviders.status.inactive')
+                          : provider.verificationStatus?.toUpperCase() || t('hotelAdmin.serviceProviders.status.unknown')}
                       </span>
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Contact:</span>
-                        <span className="text-sm font-medium text-gray-900">{provider.email || 'N/A'}</span>
+                        <span className="text-sm text-gray-600">{t('hotelAdmin.serviceProviders.mobile.contact')}</span>
+                        <span className="text-sm font-medium text-gray-900">{provider.email || t('hotelAdmin.serviceProviders.notAvailable')}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Phone:</span>
-                        <span className="text-sm font-medium text-gray-900">{provider.phone || 'N/A'}</span>
+                        <span className="text-sm text-gray-600">{t('hotelAdmin.serviceProviders.mobile.phone')}</span>
+                        <span className="text-sm font-medium text-gray-900">{provider.phone || t('hotelAdmin.serviceProviders.notAvailable')}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Markup:</span>
+                        <span className="text-sm text-gray-600">{t('hotelAdmin.serviceProviders.mobile.markup')}</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {provider.markup?.percentage ? `${provider.markup.percentage}%` : 'Not set'}
+                          {provider.markup?.percentage ? `${provider.markup.percentage}%` : t('hotelAdmin.serviceProviders.markupNotSet')}
                         </span>
                       </div>
 
@@ -369,7 +371,7 @@ const ServiceProvidersPage = () => {
                           onClick={() => handleSetMarkup(provider)}
                           className="w-full text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 py-2 rounded hover:bg-blue-50 text-sm text-center border border-modern-blue"
                         >
-                          Set Markup
+                          {t('hotelAdmin.serviceProviders.actions.setMarkup')}
                         </button>
                       </div>
                     </div>
@@ -396,7 +398,7 @@ const ServiceProvidersPage = () => {
               {/* Modal Header */}
               <div className="px-6 py-4 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-t-2xl">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-white">Set Markup</h3>
+                  <h3 className="text-xl font-bold text-white">{t('hotelAdmin.serviceProviders.markupModal.title')}</h3>
                   <button
                     onClick={() => {
                       setIsModalOpen(false);
@@ -417,19 +419,19 @@ const ServiceProvidersPage = () => {
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-2">{selectedProvider.businessName}</h4>
                   <p className="text-sm text-gray-600">
-                    Current markup: <span className="font-medium text-modern-blue">{selectedProvider.markup?.percentage || 0}%</span>
+                    {t('hotelAdmin.serviceProviders.markupModal.currentMarkup')} <span className="font-medium text-modern-blue">{selectedProvider.markup?.percentage || 0}%</span>
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Markup Percentage (%)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('hotelAdmin.serviceProviders.markupModal.markupPercentageLabel')}</label>
                   <input
                     type="number"
                     min="0"
                     max="100"
                     step="0.1"
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-modern-blue focus:ring-2 focus:ring-modern-blue focus:ring-opacity-20 transition-all duration-300"
-                    placeholder="Enter markup percentage"
+                    placeholder={t('hotelAdmin.serviceProviders.markupModal.markupPercentagePlaceholder')}
                     value={markupValue}
                     onChange={(e) => setMarkupValue(e.target.value)}
                     disabled={isSavingMarkup}
@@ -437,10 +439,10 @@ const ServiceProvidersPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('hotelAdmin.serviceProviders.markupModal.notesLabel')}</label>
                   <textarea
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-modern-blue focus:ring-2 focus:ring-modern-blue focus:ring-opacity-20 transition-all duration-300"
-                    placeholder="Add notes about this markup..."
+                    placeholder={t('hotelAdmin.serviceProviders.markupModal.notesPlaceholder')}
                     value={markupNotes}
                     onChange={(e) => setMarkupNotes(e.target.value)}
                     rows={3}
@@ -461,14 +463,14 @@ const ServiceProvidersPage = () => {
                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue transition-colors duration-200"
                     disabled={isSavingMarkup}
                   >
-                    Cancel
+                    {t('hotelAdmin.serviceProviders.markupModal.cancel')}
                   </button>
                   <button
                     onClick={handleSaveMarkup}
                     className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-modern-blue to-modern-lightBlue border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     disabled={isSavingMarkup}
                   >
-                    {isSavingMarkup ? 'Saving...' : 'Save Markup'}
+                    {isSavingMarkup ? t('hotelAdmin.serviceProviders.markupModal.saving') : t('hotelAdmin.serviceProviders.markupModal.saveMarkup')}
                   </button>
                 </div>
               </div>
@@ -484,9 +486,9 @@ const ServiceProvidersPage = () => {
               <div className="px-6 py-4 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-t-2xl">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-white">Manage Service Categories</h3>
+                    <h3 className="text-xl font-bold text-white">{t('hotelAdmin.serviceProviders.categoriesModal.title')}</h3>
                     <p className="text-white/90 text-sm mt-1">
-                      Configure services for {selectedProvider.businessName}
+                      {t('hotelAdmin.serviceProviders.categoriesModal.subtitle', { businessName: selectedProvider.businessName })}
                     </p>
                   </div>
                   <button
@@ -504,9 +506,9 @@ const ServiceProvidersPage = () => {
               {/* Modal Body */}
               <div className="p-6">
                 <div className="mb-6">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-2">Select Service Categories</h4>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-2">{t('hotelAdmin.serviceProviders.categoriesModal.selectCategoriesTitle')}</h4>
                   <p className="text-gray-600 text-sm">
-                    Choose which service categories this provider should offer. You can change these at any time.
+                    {t('hotelAdmin.serviceProviders.categoriesModal.selectCategoriesDesc')}
                   </p>
                 </div>
 
@@ -552,7 +554,7 @@ const ServiceProvidersPage = () => {
                 {/* Current Categories Display */}
                 {selectedProvider.categories && selectedProvider.categories.length > 0 && (
                   <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                    <h5 className="text-sm font-semibold text-gray-700 mb-2">Current Active Categories:</h5>
+                    <h5 className="text-sm font-semibold text-gray-700 mb-2">{t('hotelAdmin.serviceProviders.categoriesModal.currentCategoriesTitle')}</h5>
                     <div className="flex flex-wrap gap-2">
                       {selectedProvider.categories.map((categoryId) => {
                         const category = serviceCategories.find(cat => cat.id === categoryId);
@@ -578,7 +580,7 @@ const ServiceProvidersPage = () => {
                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#67BAE0] transition-colors duration-200"
                     disabled={isSavingCategories}
                   >
-                    Cancel
+                    {t('hotelAdmin.serviceProviders.categoriesModal.cancel')}
                   </button>
                   <button
                     onClick={handleSaveCategories}
@@ -591,10 +593,10 @@ const ServiceProvidersPage = () => {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                         </svg>
-                        Saving...
+                        {t('hotelAdmin.serviceProviders.categoriesModal.saving')}
                       </span>
                     ) : (
-                      'Save Changes'
+                      t('hotelAdmin.serviceProviders.categoriesModal.saveChanges')
                     )}
                   </button>
                 </div>

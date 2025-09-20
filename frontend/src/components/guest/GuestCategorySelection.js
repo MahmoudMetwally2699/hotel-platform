@@ -252,7 +252,7 @@ const GuestCategorySelection = () => {
 
             {/* Hotel Name */}
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-              {hotel?.name || 'Hotel Services'}
+              {hotel?.name || t('guest.common.hotelServices')}
             </h1>
 
             {/* Rating - Only filled stars */}
@@ -261,7 +261,7 @@ const GuestCategorySelection = () => {
                 <FaStar key={index} className="text-[#61B6DE] text-sm" />
               ))}
               <span className="ml-2 text-sm text-gray-600 font-medium">
-                {hotel?.starRating || 4} {hotel?.starRating === 1 ? 'Star' : 'Stars'}
+                {hotel?.starRating || 4} {hotel?.starRating === 1 ? t('guest.common.star') : t('guest.common.stars')}
               </span>
             </div>
 
@@ -291,15 +291,15 @@ const GuestCategorySelection = () => {
                   </div>
                   <div className="text-left">
                     <h2 className="text-lg sm:text-xl font-bold">
-                      Hello, {currentUser?.firstName || currentUser?.name || 'Guest'}!
+                      {t('guest.common.hello')}, {currentUser?.firstName || currentUser?.name || t('guest.common.guest')}!
                     </h2>
                     <p className="text-white/80 text-xs sm:text-sm">
-                      Welcome to our premium services
+                      {t('guest.common.welcomeToPremiumServices')}
                     </p>
                   </div>
                 </div>
                 <p className="text-white/90 text-xs sm:text-sm max-w-md">
-                  Discover and book exceptional services designed for your comfort and convenience
+                  {t('guest.common.discoverAndBook')}
                 </p>
               </div>
             </div>
@@ -379,12 +379,12 @@ const GuestCategorySelection = () => {
 
                         {/* Description */}
                         <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                          {category.description || 'Professional service available for your comfort and convenience'}
+                          {category.description || t('guestCategories.professionalServiceDescription')}
                         </p>
 
                         {/* Features */}
                         <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4">
-                          {(category.features || ['Professional Service', 'Quality Guaranteed'])
+                          {(category.features || [t('guestCategories.professionalService'), t('guestCategories.qualityGuaranteed')])
                             .slice(0, 3)
                             .map((feature, idx) => (
                               <div key={idx} className="flex items-center gap-1 text-xs text-gray-600">
@@ -397,11 +397,11 @@ const GuestCategorySelection = () => {
                         {/* Browse button */}
                         <div className="flex items-center justify-between">
                           <div className="inline-flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 group-hover:bg-[#3B5787] group-hover:text-white transition-all">
-                            <span>Browse Services</span>
+                            <span>{t('guestCategories.browseServices')}</span>
                             <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
                           </div>
                           <div className="text-sm font-medium text-[#61B6DE]">
-                            {category.serviceCount} {category.serviceCount === 1 ? 'service' : 'services'}
+                            {category.serviceCount} {category.serviceCount === 1 ? t('services.singleService') : t('services.multipleServices')}
                           </div>
                         </div>
                       </div>
@@ -420,7 +420,7 @@ const GuestCategorySelection = () => {
         {showQuickAccess && (
           <div className="absolute bottom-16 right-0 mb-2">
             <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 min-w-[280px] animate-fade-in">
-              <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">Quick Access</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">{t('guest.common.quickAccess')}</h3>
               <div className="grid grid-cols-3 gap-3">
                 {categories.map((category) => {
                   const IconComponent = categoryIcons[category.key] || FaShoppingBag;

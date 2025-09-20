@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { fetchHotelStats, selectHotelStats, selectHotelStatsLoading } from '../../redux/slices/hotelSlice';
 
 /**
@@ -7,6 +8,7 @@ import { fetchHotelStats, selectHotelStats, selectHotelStatsLoading } from '../.
  * @returns {JSX.Element} Revenue management page
  */
 const RevenuePage = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const dashboardStats = useSelector(selectHotelStats);
   const isLoading = useSelector(selectHotelStatsLoading);
@@ -80,15 +82,15 @@ const RevenuePage = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
-                  <h1 className="text-2xl font-bold text-white">Revenue Analytics</h1>
+                  <h1 className="text-2xl font-bold text-white">{t('hotelAdmin.revenue.header.title')}</h1>
                 </div>
-                <p className="text-blue-100 text-sm">Track your hotel's financial performance and revenue streams</p>
+                <p className="text-blue-100 text-sm">{t('hotelAdmin.revenue.header.subtitle')}</p>
               </div>
               <div className="text-right">
                 <div className="text-3xl font-bold text-white">
                   ${totalRevenue.toLocaleString()}
                 </div>
-                <div className="text-blue-100 text-sm">Total Revenue</div>
+                <div className="text-blue-100 text-sm">{t('hotelAdmin.revenue.header.totalRevenue')}</div>
               </div>
             </div>
           </div>
@@ -97,7 +99,7 @@ const RevenuePage = () => {
         {/* Date Range Selection */}
         <div className="mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <h3 className="text-sm font-semibold text-modern-darkGray mb-3">Time Period</h3>
+            <h3 className="text-sm font-semibold text-modern-darkGray mb-3">{t('hotelAdmin.revenue.timePeriod.title')}</h3>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleDateRangeChange('week')}
@@ -107,7 +109,7 @@ const RevenuePage = () => {
                     : 'bg-gray-50 text-modern-darkGray hover:bg-gray-100 hover:shadow-sm'
                 }`}
               >
-                This Week
+                {t('hotelAdmin.revenue.timePeriod.thisWeek')}
               </button>
               <button
                 onClick={() => handleDateRangeChange('month')}
@@ -117,7 +119,7 @@ const RevenuePage = () => {
                     : 'bg-gray-50 text-modern-darkGray hover:bg-gray-100 hover:shadow-sm'
                 }`}
               >
-                This Month
+                {t('hotelAdmin.revenue.timePeriod.thisMonth')}
               </button>
               <button
                 onClick={() => handleDateRangeChange('quarter')}
@@ -127,7 +129,7 @@ const RevenuePage = () => {
                     : 'bg-gray-50 text-modern-darkGray hover:bg-gray-100 hover:shadow-sm'
                 }`}
               >
-                This Quarter
+                {t('hotelAdmin.revenue.timePeriod.thisQuarter')}
               </button>
               <button
                 onClick={() => handleDateRangeChange('year')}
@@ -137,7 +139,7 @@ const RevenuePage = () => {
                     : 'bg-gray-50 text-modern-darkGray hover:bg-gray-100 hover:shadow-sm'
                 }`}
               >
-                This Year
+                {t('hotelAdmin.revenue.timePeriod.thisYear')}
               </button>
             </div>
           </div>
@@ -154,7 +156,7 @@ const RevenuePage = () => {
             <div className="bg-gradient-to-r from-modern-blue to-modern-lightBlue p-6 rounded-xl shadow-lg text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm">Total Revenue</p>
+                  <p className="text-blue-100 text-sm">{t('hotelAdmin.revenue.metrics.totalRevenue')}</p>
                   <p className="text-2xl font-bold">${totalRevenue.toLocaleString()}</p>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
@@ -164,14 +166,14 @@ const RevenuePage = () => {
                 </div>
               </div>
               <div className="text-blue-100 text-sm mt-2">
-                <span className="font-medium">Based on completed orders</span>
+                <span className="font-medium">{t('hotelAdmin.revenue.metrics.basedOnCompleted')}</span>
               </div>
             </div>
 
             <div className="bg-gradient-to-r from-[#67BAE0] to-[#3B5787] p-6 rounded-xl shadow-lg text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white/80 text-sm">Total Bookings</p>
+                  <p className="text-white/80 text-sm">{t('hotelAdmin.revenue.metrics.totalBookings')}</p>
                   <p className="text-2xl font-bold">{totalBookings.toLocaleString()}</p>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
@@ -181,14 +183,14 @@ const RevenuePage = () => {
                 </div>
               </div>
               <div className="text-white/80 text-sm mt-2">
-                <span className="font-medium">All time bookings</span>
+                <span className="font-medium">{t('hotelAdmin.revenue.metrics.allTimeBookings')}</span>
               </div>
             </div>
 
             <div className="bg-gradient-to-r from-[#2A4065] to-[#3B5787] p-6 rounded-xl shadow-lg text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white/80 text-sm">Avg. Booking Value</p>
+                  <p className="text-white/80 text-sm">{t('hotelAdmin.revenue.metrics.avgBookingValue')}</p>
                   <p className="text-2xl font-bold">${avgBookingValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
@@ -198,14 +200,14 @@ const RevenuePage = () => {
                 </div>
               </div>
               <div className="text-white/80 text-sm mt-2">
-                <span className="font-medium">Average order value</span>
+                <span className="font-medium">{t('hotelAdmin.revenue.metrics.averageOrderValue')}</span>
               </div>
             </div>
 
             <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] p-6 rounded-xl shadow-lg text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white/80 text-sm">Completion Rate</p>
+                  <p className="text-white/80 text-sm">{t('hotelAdmin.revenue.metrics.completionRate')}</p>
                   <p className="text-2xl font-bold">{completionRate.toFixed(1)}%</p>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
@@ -215,7 +217,7 @@ const RevenuePage = () => {
                 </div>
               </div>
               <div className="text-white/80 text-sm mt-2">
-                <span className="font-medium">Orders completed</span>
+                <span className="font-medium">{t('hotelAdmin.revenue.metrics.ordersCompleted')}</span>
               </div>
             </div>
           </div>
@@ -223,32 +225,32 @@ const RevenuePage = () => {
           {/* Revenue Chart */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 mb-8 overflow-hidden">
             <div className="bg-gradient-to-r from-modern-blue to-modern-lightBlue p-6">
-              <h2 className="text-xl font-semibold text-white">Revenue Trends</h2>
-              <p className="text-blue-100 text-sm mt-1">Monthly performance overview</p>
+              <h2 className="text-xl font-semibold text-white">{t('hotelAdmin.revenue.chart.title')}</h2>
+              <p className="text-blue-100 text-sm mt-1">{t('hotelAdmin.revenue.chart.subtitle')}</p>
             </div>
             <div className="p-6">
               {monthlyTrends.length > 0 ? (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-                      <p className="text-sm text-modern-darkGray font-medium">Total Months</p>
+                      <p className="text-sm text-modern-darkGray font-medium">{t('hotelAdmin.revenue.chart.totalMonths')}</p>
                       <p className="text-3xl font-bold text-modern-blue mt-1">{monthlyTrends.length}</p>
                     </div>
                     <div className="text-center p-4 bg-gradient-to-br from-[#67BAE0]/20 to-[#67BAE0]/40 rounded-lg">
-                      <p className="text-sm text-modern-darkGray font-medium">Peak Month Revenue</p>
+                      <p className="text-sm text-modern-darkGray font-medium">{t('hotelAdmin.revenue.chart.peakMonthRevenue')}</p>
                       <p className="text-3xl font-bold text-[#3B5787] mt-1">
                         ${Math.max(...chartRevenue).toLocaleString()}
                       </p>
                     </div>
                     <div className="text-center p-4 bg-gradient-to-br from-[#3B5787]/20 to-[#3B5787]/40 rounded-lg">
-                      <p className="text-sm text-modern-darkGray font-medium">Avg Monthly Revenue</p>
+                      <p className="text-sm text-modern-darkGray font-medium">{t('hotelAdmin.revenue.chart.avgMonthlyRevenue')}</p>
                       <p className="text-3xl font-bold text-[#2A4065] mt-1">
                         ${(chartRevenue.reduce((a, b) => a + b, 0) / chartRevenue.length).toLocaleString()}
                       </p>
                     </div>
                   </div>
                   <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl">
-                    <p className="text-modern-darkGray font-semibold mb-4">Monthly Revenue Data</p>
+                    <p className="text-modern-darkGray font-semibold mb-4">{t('hotelAdmin.revenue.chart.monthlyRevenueData')}</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {monthlyTrends.slice(-8).map((trend, index) => (
                         <div key={index} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -256,7 +258,7 @@ const RevenuePage = () => {
                             {new Date(2024, trend._id.month - 1).toLocaleString('default', { month: 'short' })} {trend._id.year}
                           </p>
                           <p className="text-[#3B5787] font-bold text-lg">${trend.revenue.toLocaleString()}</p>
-                          <p className="text-modern-gray text-sm">{trend.count} orders</p>
+                          <p className="text-modern-gray text-sm">{trend.count} {t('hotelAdmin.revenue.chart.orders')}</p>
                         </div>
                       ))}
                     </div>
@@ -270,8 +272,8 @@ const RevenuePage = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
                     </div>
-                    <p className="text-modern-darkGray font-medium mb-2">No revenue data available yet</p>
-                    <p className="text-modern-gray">Revenue trends will appear here once orders are completed</p>
+                    <p className="text-modern-darkGray font-medium mb-2">{t('hotelAdmin.revenue.chart.noDataTitle')}</p>
+                    <p className="text-modern-gray">{t('hotelAdmin.revenue.chart.noDataSubtitle')}</p>
                   </div>
                 </div>
               )}
@@ -282,8 +284,8 @@ const RevenuePage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
               <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] p-6">
-                <h2 className="text-xl font-semibold text-white">Revenue by Category</h2>
-                <p className="text-white/80 text-sm mt-1">Performance breakdown</p>
+                <h2 className="text-xl font-semibold text-white">{t('hotelAdmin.revenue.categoryRevenue.title')}</h2>
+                <p className="text-white/80 text-sm mt-1">{t('hotelAdmin.revenue.categoryRevenue.subtitle')}</p>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
@@ -295,8 +297,8 @@ const RevenuePage = () => {
                       return (
                         <div key={index} className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg hover:shadow-md transition-shadow">
                           <div>
-                            <h3 className="font-semibold capitalize text-modern-darkGray">{category._id || 'Unknown'}</h3>
-                            <p className="text-sm text-modern-gray">{percentage}% of total • {category.bookings} bookings</p>
+                            <h3 className="font-semibold capitalize text-modern-darkGray">{category._id || t('hotelAdmin.revenue.categoryRevenue.unknown')}</h3>
+                            <p className="text-sm text-modern-gray">{percentage}% {t('hotelAdmin.revenue.categoryRevenue.ofTotal')} • {category.bookings} {t('hotelAdmin.revenue.categoryRevenue.bookings')}</p>
                           </div>
                           <span className="font-bold text-[#3B5787] text-lg">${category.revenue.toLocaleString()}</span>
                         </div>
@@ -309,7 +311,7 @@ const RevenuePage = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
                       </div>
-                      <p className="text-modern-gray">No category data available</p>
+                      <p className="text-modern-gray">{t('hotelAdmin.revenue.categoryRevenue.noData')}</p>
                     </div>
                   )}
                 </div>
@@ -318,8 +320,8 @@ const RevenuePage = () => {
 
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
               <div className="bg-gradient-to-r from-[#67BAE0] to-[#3B5787] p-6">
-                <h2 className="text-xl font-semibold text-white">Recent High-Value Orders</h2>
-                <p className="text-white/80 text-sm mt-1">Top performing bookings</p>
+                <h2 className="text-xl font-semibold text-white">{t('hotelAdmin.revenue.recentOrders.title')}</h2>
+                <p className="text-white/80 text-sm mt-1">{t('hotelAdmin.revenue.recentOrders.subtitle')}</p>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
@@ -330,12 +332,12 @@ const RevenuePage = () => {
                       .map((booking, index) => (
                         <div key={index} className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg hover:shadow-md transition-shadow">
                           <div>
-                            <h3 className="font-semibold text-modern-darkGray">{booking.serviceId?.name || 'Service Name'}</h3>
+                            <h3 className="font-semibold text-modern-darkGray">{booking.serviceId?.name || t('hotelAdmin.revenue.recentOrders.serviceName')}</h3>
                             <p className="text-sm text-modern-gray">
-                              {booking.serviceId?.category || 'Category'} • Status: <span className="font-medium">{booking.status}</span>
+                              {booking.serviceId?.category || t('hotelAdmin.revenue.recentOrders.category')} • {t('hotelAdmin.revenue.recentOrders.status')}: <span className="font-medium">{booking.status}</span>
                             </p>
                             <p className="text-xs text-modern-gray mt-1">
-                              Guest: {booking.guestId?.firstName || 'Unknown'} {booking.guestId?.lastName || ''}
+                              {t('hotelAdmin.revenue.recentOrders.guest')}: {booking.guestId?.firstName || t('hotelAdmin.revenue.recentOrders.unknown')} {booking.guestId?.lastName || ''}
                             </p>
                           </div>
                           <span className="font-bold text-[#3B5787] text-lg">${booking.pricing?.totalAmount?.toFixed(2) || '0.00'}</span>
@@ -348,22 +350,12 @@ const RevenuePage = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                         </svg>
                       </div>
-                      <p className="text-modern-gray">No recent orders available</p>
+                      <p className="text-modern-gray">{t('hotelAdmin.revenue.recentOrders.noData')}</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Download Report Button */}
-          <div className="flex justify-end">
-            <button className="px-6 py-3 bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white rounded-xl hover:from-modern-blue/90 hover:to-modern-lightBlue/90 transition-all duration-200 flex items-center shadow-lg hover:shadow-xl">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-              Download Report
-            </button>
           </div>
         </>
       )}

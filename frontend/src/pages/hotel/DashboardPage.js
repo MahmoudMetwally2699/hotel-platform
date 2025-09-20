@@ -5,9 +5,11 @@
 
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { fetchHotelStats, selectHotelStats, selectHotelStatsLoading } from '../../redux/slices/hotelSlice';
 
 const DashboardPage = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const dashboardStats = useSelector(selectHotelStats);
   const isLoading = useSelector(selectHotelStatsLoading);
@@ -56,8 +58,8 @@ const DashboardPage = () => {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-modern-blue">Hotel Dashboard</h1>
-              <p className="text-modern-darkGray mt-1">Welcome back! Here's what's happening with your hotel today.</p>
+              <h1 className="text-3xl font-bold text-modern-blue">{t('hotelAdmin.dashboard.title')}</h1>
+              <p className="text-modern-darkGray mt-1">{t('hotelAdmin.dashboard.subtitle')}</p>
             </div>
             <button
               className="bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white px-6 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium flex items-center space-x-2"
@@ -67,7 +69,7 @@ const DashboardPage = () => {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span>{isLoading ? 'Refreshing...' : 'Refresh Data'}</span>
+              <span>{isLoading ? t('hotelAdmin.dashboard.refreshing') : t('hotelAdmin.dashboard.refreshData')}</span>
             </button>
           </div>
         </div>
@@ -100,9 +102,9 @@ const DashboardPage = () => {
                     </span>
                   </div>
                   <div>
-                    <p className="text-modern-darkGray text-sm font-medium mb-1">Total Revenue</p>
+                    <p className="text-modern-darkGray text-sm font-medium mb-1">{t('hotelAdmin.dashboard.stats.totalRevenue')}</p>
                     <p className="text-3xl font-bold text-modern-blue">${stats.revenue.total.toFixed(2)}</p>
-                    <p className="text-xs text-modern-darkGray mt-2">vs last month</p>
+                    <p className="text-xs text-modern-darkGray mt-2">{t('hotelAdmin.dashboard.stats.vsLastMonth')}</p>
                   </div>
                 </div>
               </div>
@@ -122,9 +124,9 @@ const DashboardPage = () => {
                     </span>
                   </div>
                   <div>
-                    <p className="text-modern-darkGray text-sm font-medium mb-1">Total Bookings</p>
+                    <p className="text-modern-darkGray text-sm font-medium mb-1">{t('hotelAdmin.dashboard.stats.totalBookings')}</p>
                     <p className="text-3xl font-bold text-modern-blue">{stats.bookings.total}</p>
-                    <p className="text-xs text-modern-darkGray mt-2">vs last month</p>
+                    <p className="text-xs text-modern-darkGray mt-2">{t('hotelAdmin.dashboard.stats.vsLastMonth')}</p>
                   </div>
                 </div>
               </div>
@@ -140,13 +142,13 @@ const DashboardPage = () => {
                       </svg>
                     </div>
                     <span className="text-sm font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700">
-                      {stats.services.categories} categories
+                      {stats.services.categories} {t('hotelAdmin.dashboard.stats.categories')}
                     </span>
                   </div>
                   <div>
-                    <p className="text-modern-darkGray text-sm font-medium mb-1">Active Services</p>
+                    <p className="text-modern-darkGray text-sm font-medium mb-1">{t('hotelAdmin.dashboard.stats.activeServices')}</p>
                     <p className="text-3xl font-bold text-modern-blue">{stats.services.total}</p>
-                    <p className="text-xs text-modern-darkGray mt-2">across all categories</p>
+                    <p className="text-xs text-modern-darkGray mt-2">{t('hotelAdmin.dashboard.stats.acrossAllCategories')}</p>
                   </div>
                 </div>
               </div>
@@ -162,13 +164,13 @@ const DashboardPage = () => {
                       </svg>
                     </div>
                     <span className="text-sm font-semibold px-3 py-1 rounded-full bg-green-100 text-green-700">
-                      {stats.serviceProviders.active} active
+                      {stats.serviceProviders.active} {t('hotelAdmin.dashboard.stats.active')}
                     </span>
                   </div>
                   <div>
-                    <p className="text-modern-darkGray text-sm font-medium mb-1">Service Providers</p>
+                    <p className="text-modern-darkGray text-sm font-medium mb-1">{t('hotelAdmin.dashboard.stats.serviceProviders')}</p>
                     <p className="text-3xl font-bold text-modern-blue">{stats.serviceProviders.total}</p>
-                    <p className="text-xs text-modern-darkGray mt-2">total registered</p>
+                    <p className="text-xs text-modern-darkGray mt-2">{t('hotelAdmin.dashboard.stats.totalRegistered')}</p>
                   </div>
                 </div>
               </div>
@@ -181,22 +183,22 @@ const DashboardPage = () => {
                   <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  Recent Orders
+                  {t('hotelAdmin.dashboard.recentOrders.title')}
                 </h2>
-                <p className="text-blue-100 mt-1">Latest bookings and transactions</p>
+                <p className="text-blue-100 mt-1">{t('hotelAdmin.dashboard.recentOrders.subtitle')}</p>
               </div>
               {/* Desktop Table View */}
               <div className="hidden lg:block overflow-x-auto">
                 <table className="min-w-full">
                   <thead className="bg-modern-gray">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">Order ID</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">Guest</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">Service</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">Provider</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">Amount</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">{t('hotelAdmin.dashboard.recentOrders.orderId')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">{t('hotelAdmin.dashboard.recentOrders.guest')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">{t('hotelAdmin.dashboard.recentOrders.service')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">{t('hotelAdmin.dashboard.recentOrders.provider')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">{t('hotelAdmin.dashboard.recentOrders.date')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">{t('hotelAdmin.dashboard.recentOrders.amount')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider">{t('hotelAdmin.dashboard.recentOrders.status')}</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-100">
@@ -219,10 +221,10 @@ const DashboardPage = () => {
                                     ? `${order.guestId.firstName} ${order.guestId.lastName}`
                                     : order.guestDetails?.firstName && order.guestDetails?.lastName
                                     ? `${order.guestDetails.firstName} ${order.guestDetails.lastName}`
-                                    : 'Unknown Guest'}
+                                    : t('hotelAdmin.dashboard.recentOrders.unknownGuest')}
                                 </div>
                                 <div className="text-sm text-modern-darkGray">
-                                  {order.guestId?.email || order.guestDetails?.email || 'No email'}
+                                  {order.guestId?.email || order.guestDetails?.email || t('hotelAdmin.dashboard.recentOrders.noEmail')}
                                 </div>
                               </div>
                             </div>
@@ -230,7 +232,7 @@ const DashboardPage = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex flex-col">
                               <span className="text-sm font-medium text-gray-900">
-                                {order.serviceId?.name || order.serviceDetails?.name || order.serviceName || 'Unknown Service'}
+                                {order.serviceId?.name || order.serviceDetails?.name || order.serviceName || t('hotelAdmin.dashboard.recentOrders.unknownService')}
                               </span>
                               <div className="flex items-center space-x-2 mt-1">
                                 {(order.serviceId?.category || order.serviceDetails?.category || order.serviceType) && (
@@ -244,11 +246,11 @@ const DashboardPage = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex flex-col">
                               <span className="text-sm text-modern-darkGray">
-                                {order.serviceProviderId?.businessName || 'Unknown Provider'}
+                                {order.serviceProviderId?.businessName || t('hotelAdmin.dashboard.recentOrders.unknownProvider')}
                               </span>
                               {order.serviceProviderId?.businessName?.includes('Internal Services') && (
                                 <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded mt-1">
-                                  Hotel Managed
+                                  {t('hotelAdmin.dashboard.recentOrders.hotelManaged')}
                                 </span>
                               )}
                               {typeof order.serviceProviderId === 'string' && (
@@ -293,7 +295,7 @@ const DashboardPage = () => {
                             <svg className="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            <p className="text-sm">No recent orders found</p>
+                            <p className="text-sm">{t('hotelAdmin.dashboard.recentOrders.noOrders')}</p>
                           </div>
                         </td>
                       </tr>
@@ -334,20 +336,20 @@ const DashboardPage = () => {
                                 ? `${order.guestId.firstName} ${order.guestId.lastName}`
                                 : order.guestDetails?.firstName && order.guestDetails?.lastName
                                 ? `${order.guestDetails.firstName} ${order.guestDetails.lastName}`
-                                : 'Unknown Guest'}
+                                : t('hotelAdmin.dashboard.recentOrders.unknownGuest')}
                             </div>
                             <div className="text-xs text-modern-darkGray">
-                              {order.guestId?.email || order.guestDetails?.email || 'No email'}
+                              {order.guestId?.email || order.guestDetails?.email || t('hotelAdmin.dashboard.recentOrders.noEmail')}
                             </div>
                           </div>
                         </div>
 
                         <div className="space-y-2">
                           <div className="flex justify-between items-center">
-                            <span className="text-xs font-medium text-modern-darkGray">Service</span>
+                            <span className="text-xs font-medium text-modern-darkGray">{t('hotelAdmin.dashboard.recentOrders.service')}</span>
                             <div className="text-right">
                               <div className="text-sm font-medium text-gray-900">
-                                {order.serviceId?.name || order.serviceDetails?.name || order.serviceName || 'Unknown Service'}
+                                {order.serviceId?.name || order.serviceDetails?.name || order.serviceName || t('hotelAdmin.dashboard.recentOrders.unknownService')}
                               </div>
                               {(order.serviceId?.category || order.serviceDetails?.category || order.serviceType) && (
                                 <span className="text-xs text-modern-darkGray capitalize bg-blue-50 px-2 py-1 rounded">
@@ -358,28 +360,28 @@ const DashboardPage = () => {
                           </div>
 
                           <div className="flex justify-between items-center">
-                            <span className="text-xs font-medium text-modern-darkGray">Provider</span>
+                            <span className="text-xs font-medium text-modern-darkGray">{t('hotelAdmin.dashboard.recentOrders.provider')}</span>
                             <div className="text-right">
                               <div className="text-sm text-modern-darkGray">
-                                {order.serviceProviderId?.businessName || 'Unknown Provider'}
+                                {order.serviceProviderId?.businessName || t('hotelAdmin.dashboard.recentOrders.unknownProvider')}
                               </div>
                               {order.serviceProviderId?.businessName?.includes('Internal Services') && (
                                 <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                                  Hotel Managed
+                                  {t('hotelAdmin.dashboard.recentOrders.hotelManaged')}
                                 </span>
                               )}
                             </div>
                           </div>
 
                           <div className="flex justify-between items-center">
-                            <span className="text-xs font-medium text-modern-darkGray">Date</span>
+                            <span className="text-xs font-medium text-modern-darkGray">{t('hotelAdmin.dashboard.recentOrders.date')}</span>
                             <span className="text-sm text-modern-darkGray">
                               {new Date(order.createdAt || order.date).toLocaleDateString()}
                             </span>
                           </div>
 
                           <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                            <span className="text-sm font-medium text-modern-darkGray">Amount</span>
+                            <span className="text-sm font-medium text-modern-darkGray">{t('hotelAdmin.dashboard.recentOrders.amount')}</span>
                             <span className="text-lg font-bold text-gray-900">
                               ${(order.pricing?.totalAmount ||
                                  order.payment?.totalAmount ||
@@ -398,14 +400,14 @@ const DashboardPage = () => {
                       <svg className="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <p className="text-sm">No recent orders found</p>
+                      <p className="text-sm">{t('hotelAdmin.dashboard.recentOrders.noOrders')}</p>
                     </div>
                   </div>
                 )}
               </div>
               <div className="px-8 py-4 bg-modern-gray border-t border-gray-100">
                 <button className="text-modern-blue hover:text-modern-darkBlue font-semibold flex items-center transition-colors duration-200">
-                  <span>View all orders</span>
+                  <span>{t('hotelAdmin.dashboard.quickActions.viewOrders')}</span>
                   <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -420,9 +422,9 @@ const DashboardPage = () => {
                   <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                  Revenue Overview
+                  {t('hotelAdmin.revenue.title')}
                 </h2>
-                <p className="text-blue-100 mt-1">Detailed financial performance metrics</p>
+                <p className="text-blue-100 mt-1">{t('hotelAdmin.revenue.subtitle')}</p>
               </div>
 
               <div className="p-8">
@@ -436,11 +438,11 @@ const DashboardPage = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                         </svg>
                       </div>
-                      <h3 className="text-sm font-medium opacity-90 mb-2">Hotel Commission</h3>
+                      <h3 className="text-sm font-medium opacity-90 mb-2">{t('hotelAdmin.revenue.stats.hotelCommission')}</h3>
                       <p className="text-2xl font-bold">
                         ${(dashboardStats?.revenueStats?.[0]?.hotelEarnings || 0).toFixed(2)}
                       </p>
-                      <p className="text-sm opacity-75 mt-2">From service markup</p>
+                      <p className="text-sm opacity-75 mt-2">{t('hotelAdmin.revenue.stats.totalRevenue')}</p>
                     </div>
                   </div>
 
@@ -453,11 +455,11 @@ const DashboardPage = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
                       </div>
-                      <h3 className="text-sm font-medium opacity-90 mb-2">Total Revenue</h3>
+                      <h3 className="text-sm font-medium opacity-90 mb-2">{t('hotelAdmin.revenue.stats.totalRevenue')}</h3>
                       <p className="text-2xl font-bold">
                         ${(dashboardStats?.revenueStats?.[0]?.totalRevenue || 0).toFixed(2)}
                       </p>
-                      <p className="text-sm opacity-75 mt-2">All services combined</p>
+                      <p className="text-sm opacity-75 mt-2">{t('hotelAdmin.revenue.stats.totalBookings')}</p>
                     </div>
                   </div>
 
@@ -470,11 +472,11 @@ const DashboardPage = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 8h6m-5 0a3 3 0 110 6H9l3 3-3-3h1m1 4h6m-7-7h7m-7 0V8a3 3 0 013-3h3a3 3 0 013 3v8a3 3 0 01-3 3h-3a3 3 0 01-3-3z" />
                         </svg>
                       </div>
-                      <h3 className="text-sm font-medium opacity-90 mb-2">Average Order Value</h3>
+                      <h3 className="text-sm font-medium opacity-90 mb-2">{t('hotelAdmin.revenue.stats.averageOrder')}</h3>
                       <p className="text-2xl font-bold">
                         ${(dashboardStats?.revenueStats?.[0]?.averageOrderValue || 0).toFixed(2)}
                       </p>
-                      <p className="text-sm opacity-75 mt-2">Per booking</p>
+                      <p className="text-sm opacity-75 mt-2">{t('hotelAdmin.revenue.stats.totalBookings')}</p>
                     </div>
                   </div>
                 </div>
@@ -486,7 +488,7 @@ const DashboardPage = () => {
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                       </svg>
-                      Performance by Category
+                      {t('hotelAdmin.revenue.charts.revenueByCategory')}
                     </h3>
                     <div className="space-y-4">
                       {dashboardStats.categoryPerformance.map((category, index) => (
@@ -501,7 +503,7 @@ const DashboardPage = () => {
                                   <svg className="w-4 h-4 text-modern-darkGray mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                   </svg>
-                                  <span className="text-sm text-modern-darkGray">{category.bookings} orders</span>
+                                  <span className="text-sm text-modern-darkGray">{category.bookings} {t('hotelAdmin.dashboard.recentOrders.orderId')}</span>
                                 </div>
                               </div>
                             </div>
@@ -525,9 +527,9 @@ const DashboardPage = () => {
                                 <svg className="w-4 h-4 text-modern-darkGray mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                 </svg>
-                                <span className="text-sm text-modern-darkGray">{category.bookings} orders</span>
+                                <span className="text-sm text-modern-darkGray">{category.bookings} {t('hotelAdmin.dashboard.recentOrders.orderId')}</span>
                               </div>
-                              <span className="text-xs text-modern-darkGray">Total Revenue</span>
+                              <span className="text-xs text-modern-darkGray">{t('hotelAdmin.revenue.stats.totalRevenue')}</span>
                             </div>
                           </div>
                         </div>

@@ -360,28 +360,49 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           hidden lg:block
         `}
       >
-        <div className="p-6 flex justify-between items-center border-b border-white/10">
+        <div className={`px-6 py-6 border-b border-white/20 min-h-[5rem] ${collapsed ? 'flex justify-center items-center' : 'flex items-center justify-between'}`}>
           {!collapsed && (
-            <div className="flex items-center space-x-3">
+            <div className={`flex items-center flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="relative flex-shrink-0">
+                <div className="absolute inset-0 bg-white/10 rounded-full blur-sm"></div>
+                <img
+                  src="/qickroom.png"
+                  alt="QuickRoom"
+                  className="relative h-11 w-auto object-contain rounded-lg p-1 bg-white/5 backdrop-blur-sm"
+                />
+              </div>
+              <div className={`flex flex-col ${isRTL ? 'mr-5 items-end' : 'ml-5 items-start'}`}>
+                <span className={`text-lg font-bold text-white leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
+                  QuickRoom
+                </span>
+                <span className={`text-sm font-medium text-white/75 leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
+                  {role === 'service' ? t('platform.servicePlatform') : t('platform.hotelPlatform')}
+                </span>
+              </div>
+            </div>
+          )}
+          {collapsed && (
+            <div className="relative">
+              <div className="absolute inset-0 bg-white/10 rounded-full blur-sm"></div>
               <img
                 src="/qickroom.png"
                 alt="QuickRoom"
-                className="h-8 w-auto object-contain"
+                className="relative h-10 w-auto object-contain rounded-lg p-1 bg-white/5 backdrop-blur-sm"
               />
-              <span className="text-lg font-bold">Hotel Platform</span>
             </div>
           )}
           <button
             onClick={toggleCollapse}
-            className="p-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors"
+            className="p-2.5 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-200 flex-shrink-0"
+            title={collapsed ? t('common.expand') : t('common.collapse')}
           >
             {collapsed ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={isRTL ? "M11 19l-7-7 7-7m8 14l-7-7 7-7" : "M13 5l7 7-7 7M5 5l7 7-7 7"} />
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={isRTL ? "M13 5l7 7-7 7M5 5l7 7-7 7" : "M11 19l-7-7 7-7m8 14l-7-7 7-7"} />
               </svg>
             )}
           </button>
@@ -396,15 +417,15 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                   <>
                     <button
                       onClick={() => toggleMenu(item.key || item.name)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px] group ${
+                      className={`w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'} px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px] group ${
                         expandedMenus[item.key || item.name]
                           ? 'text-white shadow-lg'
                           : 'text-white/80 hover:text-white hover:bg-white/10'
                       }`}
                       style={expandedMenus[item.key || item.name] ? { backgroundColor: '#48ACDA' } : {}}
                     >
-                      <div className="flex items-center">
-                        <span className={`${isRTL ? 'ml-3' : 'mr-3'} transition-transform group-hover:scale-110`}>
+                      <div className={`flex items-center ${collapsed ? 'justify-center' : ''}`}>
+                        <span className={`${collapsed ? '' : (isRTL ? 'ml-3' : 'mr-3')} transition-transform group-hover:scale-110`}>
                           {getIcon(item.icon)}
                         </span>
                         <span className={`${collapsed ? 'hidden' : ''} font-medium`}>{item.name}</span>
@@ -454,7 +475,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                     className={() => {
                       const isActive = isPathActive(item.path);
                       return `
-                        flex items-center px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px] group
+                        flex items-center ${collapsed ? 'justify-center' : ''} px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px] group
                         ${isActive
                           ? 'text-white shadow-lg'
                           : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -466,7 +487,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                       return isActive ? { backgroundColor: '#48ACDA' } : {};
                     }}
                   >
-                    <span className={`${isRTL ? 'ml-3' : 'mr-3'} transition-transform group-hover:scale-110`}>
+                    <span className={`${collapsed ? '' : (isRTL ? 'ml-3' : 'mr-3')} transition-transform group-hover:scale-110`}>
                       {getIcon(item.icon)}
                     </span>
                     <span className={`${collapsed ? 'hidden' : ''} font-medium`}>{item.name}</span>

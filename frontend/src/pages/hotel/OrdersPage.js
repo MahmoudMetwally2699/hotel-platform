@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import useAuth from '../../hooks/useAuth';
 import { HOTEL_API } from '../../config/api.config';
 import apiClient from '../../services/api.service';
 
 /**
- * Modern Hotel Admin Orders Management Page with Category Filtering and Pagination
+ * Modern Hotel Admin Orders                                    : t('hotelAdmin.dashboard.recentOrders.unknownGuest')}Management Page with Category Filtering and Pagination
  * @returns {JSX.Element} Orders management page
  */
 const OrdersPage = () => {
+  const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,11 +27,11 @@ const OrdersPage = () => {
 
   // Service categories
   const categories = [
-    { id: 'all', name: 'All Categories', icon: '📋' },
-    { id: 'laundry', name: 'Laundry', icon: '👕' },
-    { id: 'transportation', name: 'Transportation', icon: '🚗' },
-    { id: 'housekeeping', name: 'Housekeeping', icon: '🧹' },
-    { id: 'dining', name: 'Restaurant', icon: '🍽️' },
+    { id: 'all', name: t('hotelAdmin.orders.categories.all'), icon: '📋' },
+    { id: 'laundry', name: t('hotelAdmin.orders.categories.laundry'), icon: '👕' },
+    { id: 'transportation', name: t('hotelAdmin.orders.categories.transportation'), icon: '🚗' },
+    { id: 'housekeeping', name: t('hotelAdmin.orders.categories.housekeeping'), icon: '🧹' },
+    { id: 'dining', name: t('hotelAdmin.orders.categories.dining'), icon: '🍽️' },
   ];
 
   // Fetch bookings from API
@@ -111,8 +113,8 @@ const OrdersPage = () => {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-modern-blue">Order Management</h1>
-              <p className="text-modern-darkGray mt-1">View and manage all bookings across service categories</p>
+              <h1 className="text-3xl font-bold text-modern-blue">{t('hotelAdmin.orders.title')}</h1>
+              <p className="text-modern-darkGray mt-1">{t('hotelAdmin.orders.subtitle')}</p>
             </div>
             <button
               className="bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white px-6 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium flex items-center space-x-2"
@@ -122,7 +124,7 @@ const OrdersPage = () => {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span>{isLoading ? 'Refreshing...' : 'Refresh'}</span>
+              <span>{isLoading ? t('hotelAdmin.dashboard.refreshing') : t('hotelAdmin.dashboard.refreshData')}</span>
             </button>
           </div>
         </div>
@@ -136,9 +138,9 @@ const OrdersPage = () => {
               <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
               </svg>
-              Filter by Category
+              {t('hotelAdmin.orders.filters.filterByCategory')}
             </h2>
-            <p className="text-blue-100 mt-1">Select a service category to filter orders</p>
+            <p className="text-blue-100 mt-1">{t('hotelAdmin.orders.filters.categoryDescription')}</p>
           </div>
           <div className="p-6">
             <div className="flex flex-wrap gap-4">
@@ -174,7 +176,7 @@ const OrdersPage = () => {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search by guest name, order ID, or service..."
+                  placeholder={t('hotelAdmin.orders.filters.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-modern-blue focus:border-transparent"
@@ -190,19 +192,19 @@ const OrdersPage = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-modern-blue focus:border-transparent"
               >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
+                <option value="all">{t('hotelAdmin.orders.filters.allStatuses')}</option>
+                <option value="pending">{t('hotelAdmin.orders.filters.pending')}</option>
                 <option value="processing">Processing</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="confirmed">{t('hotelAdmin.orders.filters.confirmed')}</option>
+                <option value="completed">{t('hotelAdmin.orders.filters.completed')}</option>
+                <option value="cancelled">{t('hotelAdmin.orders.filters.cancelled')}</option>
               </select>
             </div>
             <button
               onClick={fetchBookings}
               className="bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white px-8 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium"
             >
-              Search
+              {t('hotelAdmin.common.search')}
             </button>
           </div>
         </div>
@@ -214,10 +216,14 @@ const OrdersPage = () => {
               <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Orders ({pagination.total})
+              {t('navigation.orders')} ({pagination.total})
             </h2>
             <p className="text-blue-100 mt-1">
-              Page {pagination.page} of {pagination.totalPages} • Showing {bookings.length} orders
+              {t('hotelAdmin.orders.pagination.summary', {
+                page: pagination.page,
+                totalPages: pagination.totalPages,
+                count: bookings.length
+              })}
             </p>
           </div>
 
@@ -234,10 +240,10 @@ const OrdersPage = () => {
                 <svg className="mx-auto h-16 w-16 text-gray-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{t('hotelAdmin.orders.noOrders')}</h3>
                 <p className="text-sm text-gray-500">
                   {selectedCategory === 'all'
-                    ? 'No orders available for any category.'
+                    ? t('hotelAdmin.orders.loadingOrders')
                     : `No orders found for ${categories.find(c => c.id === selectedCategory)?.name}.`}
                 </p>
               </div>
@@ -250,14 +256,14 @@ const OrdersPage = () => {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-modern-gray">
                       <tr>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">Order ID</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[200px]">Guest</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[180px]">Service</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[150px]">Provider</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">Date</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">Amount</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">Status</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">Actions</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">{t('hotelAdmin.orders.table.orderId')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[200px]">{t('hotelAdmin.orders.table.guest')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[180px]">{t('hotelAdmin.orders.table.service')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[150px]">{t('hotelAdmin.orders.table.provider')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.orders.table.date')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.orders.table.amount')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.orders.table.status')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">{t('hotelAdmin.orders.table.actions')}</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
@@ -300,7 +306,7 @@ const OrdersPage = () => {
                                     : 'Unknown Guest'}
                                 </div>
                                 <div className="text-xs text-modern-darkGray truncate max-w-[150px]">
-                                  {order.guestId?.email || order.guestDetails?.email || order.guest?.email || 'No email'}
+                                  {order.guestId?.email || order.guestDetails?.email || order.guest?.email || t('hotelAdmin.dashboard.recentOrders.noEmail')}
                                 </div>
                               </div>
                             </div>
@@ -308,7 +314,7 @@ const OrdersPage = () => {
                           <td className="px-4 py-4">
                             <div className="flex flex-col">
                               <span className="text-sm font-medium text-gray-900 truncate max-w-[150px]">
-                                {order.serviceId?.name || order.service?.name || order.serviceName || 'Unknown Service'}
+                                {order.serviceId?.name || order.service?.name || order.serviceName || t('hotelAdmin.dashboard.recentOrders.unknownService')}
                               </span>
                               <div className="flex items-center space-x-2 mt-1">
                                 {(order.serviceId?.category || order.service?.category || order.serviceType) && (
@@ -322,11 +328,11 @@ const OrdersPage = () => {
                           <td className="px-4 py-4 whitespace-nowrap">
                         <div className="flex flex-col">
                           <span className="text-sm text-modern-darkGray">
-                            {order.serviceProviderId?.businessName || order.serviceProvider?.businessName || 'Unknown Provider'}
+                            {order.serviceProviderId?.businessName || order.serviceProvider?.businessName || t('hotelAdmin.dashboard.recentOrders.unknownProvider')}
                           </span>
                           {(order.serviceProviderId?.businessName || order.serviceProvider?.businessName)?.includes('Internal Services') && (
                             <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded mt-1">
-                              Hotel Managed
+                              {t('hotelAdmin.dashboard.recentOrders.hotelManaged')}
                             </span>
                           )}
                         </div>
@@ -366,7 +372,7 @@ const OrdersPage = () => {
                               }}
                               className="text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-blue-50"
                             >
-                              View Details
+                              {t('hotelAdmin.orders.details.title')}
                             </button>
                           </td>
                         </tr>
@@ -424,21 +430,21 @@ const OrdersPage = () => {
 
                               // Fallback to other name fields
                               return order.guest?.name || order.guestId?.name || order.guestDetails?.name ||
-                                     order.customerName || order.guestName || 'Unknown Guest';
+                                     order.customerName || order.guestName || t('hotelAdmin.dashboard.recentOrders.unknownGuest');
                             })()}
                           </div>
                           <div className="text-xs text-modern-darkGray">
-                            {order.guestId?.email || order.guestDetails?.email || order.guest?.email || 'No email'}
+                            {order.guestId?.email || order.guestDetails?.email || order.guest?.email || t('hotelAdmin.dashboard.recentOrders.noEmail')}
                           </div>
                         </div>
                       </div>
 
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {order.serviceId?.name || order.service?.name || order.serviceName || 'Unknown Service'}
+                          {order.serviceId?.name || order.service?.name || order.serviceName || t('hotelAdmin.dashboard.recentOrders.unknownService')}
                         </div>
                         <div className="text-xs text-modern-darkGray">
-                          {order.serviceProviderId?.businessName || order.serviceProvider?.businessName || 'Unknown Provider'}
+                          {order.serviceProviderId?.businessName || order.serviceProvider?.businessName || t('hotelAdmin.dashboard.recentOrders.unknownProvider')}
                         </div>
                       </div>
 
@@ -462,7 +468,7 @@ const OrdersPage = () => {
                         }}
                         className="w-full mt-3 text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 text-sm"
                       >
-                        View Details
+                        {t('hotelAdmin.orders.details.title')}
                       </button>
                     </div>
                   </div>
@@ -480,26 +486,32 @@ const OrdersPage = () => {
                   disabled={pagination.page <= 1}
                   className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Previous
+                  {t('common.previous')}
                 </button>
                 <button
                   onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
                   disabled={pagination.page >= pagination.totalPages}
                   className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next
+                  {t('common.next')}
                 </button>
               </div>
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm text-gray-700">
-                    Showing{' '}
-                    <span className="font-medium">{Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}</span>
-                    {' '}to{' '}
-                    <span className="font-medium">{Math.min(pagination.page * pagination.limit, pagination.total)}</span>
-                    {' '}of{' '}
-                    <span className="font-medium">{pagination.total}</span>
-                    {' '}results
+                    <Trans
+                      i18nKey="hotelAdmin.orders.pagination.showing"
+                      values={{
+                        from: Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total),
+                        to: Math.min(pagination.page * pagination.limit, pagination.total),
+                        total: pagination.total
+                      }}
+                      components={{
+                        1: <span className="font-medium" />,
+                        2: <span className="font-medium" />,
+                        3: <span className="font-medium" />
+                      }}
+                    />
                   </p>
                 </div>
                 <div>
@@ -575,7 +587,7 @@ const OrdersPage = () => {
             {/* Modal Header */}
             <div className="px-6 py-4 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-t-2xl">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white">Order Details</h3>
+                <h3 className="text-xl font-bold text-white">{t('hotelAdmin.orders.details.title')}</h3>
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="text-white hover:text-gray-200 transition-colors duration-200"
@@ -591,14 +603,14 @@ const OrdersPage = () => {
             <div className="p-6 space-y-6">
               {/* Order Summary */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-3">Order Summary</h4>
+                <h4 className="font-semibold text-gray-900 mb-3">{t('hotelAdmin.orders.details.orderInformation')}</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-600">Order ID:</span>
+                    <span className="text-gray-600">{t('hotelAdmin.orders.table.orderId')}:</span>
                     <p className="font-medium">#{selectedOrder.bookingId || selectedOrder._id?.slice(-6)}</p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Status:</span>
+                    <span className="text-gray-600">{t('hotelAdmin.orders.table.status')}:</span>
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ml-2 ${
                         selectedOrder.status === 'completed' ? 'bg-green-100 text-green-800' :
@@ -612,11 +624,11 @@ const OrdersPage = () => {
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-600">Date:</span>
+                    <span className="text-gray-600">{t('hotelAdmin.orders.table.date')}:</span>
                     <p className="font-medium">{new Date(selectedOrder.createdAt || selectedOrder.appointmentDate).toLocaleDateString()}</p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Amount:</span>
+                    <span className="text-gray-600">{t('hotelAdmin.orders.table.amount')}:</span>
                     <p className="font-medium text-green-600">
                       ${(selectedOrder.pricing?.totalAmount ||
                          selectedOrder.payment?.totalAmount ||
@@ -630,7 +642,7 @@ const OrdersPage = () => {
 
               {/* Customer Information */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Customer Information</h4>
+                <h4 className="font-semibold text-gray-900 mb-3">{t('hotelAdmin.orders.details.guestInformation')}</h4>
                 <div className="bg-white border rounded-lg p-4">
                   <div className="flex items-center mb-3">
                     <div className="h-12 w-12 rounded-full bg-gradient-to-br from-modern-blue to-modern-lightBlue flex items-center justify-center text-white font-bold">
@@ -671,15 +683,15 @@ const OrdersPage = () => {
 
                           // Fallback to other name fields
                           return selectedOrder.guest?.name || selectedOrder.guestId?.name || selectedOrder.guestDetails?.name ||
-                                 selectedOrder.customerName || selectedOrder.guestName || 'Unknown Guest';
+                                 selectedOrder.customerName || selectedOrder.guestName || t('hotelAdmin.dashboard.recentOrders.unknownGuest');
                         })()}
                       </h5>
-                      <p className="text-sm text-gray-600">{selectedOrder.guestId?.email || selectedOrder.guestDetails?.email || selectedOrder.guest?.email || 'No email'}</p>
+                      <p className="text-sm text-gray-600">{selectedOrder.guestId?.email || selectedOrder.guestDetails?.email || selectedOrder.guest?.email || t('hotelAdmin.dashboard.recentOrders.noEmail')}</p>
                     </div>
                   </div>
                   {selectedOrder.guestId?.phone && (
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium">Phone:</span> {selectedOrder.guestId.phone}
+                      <span className="font-medium">{t('hotelAdmin.orders.details.phone')}:</span> {selectedOrder.guestId.phone}
                     </p>
                   )}
                 </div>
@@ -687,27 +699,27 @@ const OrdersPage = () => {
 
               {/* Service Information */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Service Information</h4>
+                <h4 className="font-semibold text-gray-900 mb-3">{t('hotelAdmin.orders.details.serviceDetails')}</h4>
                 <div className="bg-white border rounded-lg p-4">
                   <h5 className="font-medium text-gray-900 mb-2">
-                    {selectedOrder.serviceId?.name || selectedOrder.service?.name || selectedOrder.serviceName || 'Unknown Service'}
+                    {selectedOrder.serviceId?.name || selectedOrder.service?.name || selectedOrder.serviceName || t('hotelAdmin.dashboard.recentOrders.unknownService')}
                   </h5>
                   <div className="space-y-2 text-sm">
                     <div>
-                      <span className="text-gray-600">Category:</span>
+                      <span className="text-gray-600">{t('hotelAdmin.orders.details.category')}:</span>
                       <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
                         {selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || 'N/A'}
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-600">Provider:</span>
+                      <span className="text-gray-600">{t('hotelAdmin.orders.details.provider')}:</span>
                       <span className="ml-2 font-medium">
-                        {selectedOrder.serviceProviderId?.businessName || selectedOrder.serviceProvider?.businessName || 'Unknown Provider'}
+                        {selectedOrder.serviceProviderId?.businessName || selectedOrder.serviceProvider?.businessName || t('hotelAdmin.orders.details.unknownProvider')}
                       </span>
                     </div>
                     {selectedOrder.serviceDetails?.specialRequests && (
                       <div>
-                        <span className="text-gray-600">Special Requests:</span>
+                        <span className="text-gray-600">{t('hotelAdmin.orders.details.specialRequests')}:</span>
                         <p className="ml-2 text-gray-900">{selectedOrder.serviceDetails.specialRequests}</p>
                       </div>
                     )}
@@ -718,24 +730,24 @@ const OrdersPage = () => {
               {/* Schedule Information */}
               {selectedOrder.schedule && (
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Schedule Information</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3">{t('hotelAdmin.orders.details.scheduleInformation')}</h4>
                   <div className="bg-white border rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       {selectedOrder.schedule.preferredDate && (
                         <div>
-                          <span className="text-gray-600">Preferred Date:</span>
+                          <span className="text-gray-600">{t('hotelAdmin.orders.details.preferredDate')}:</span>
                           <p className="font-medium">{new Date(selectedOrder.schedule.preferredDate).toLocaleDateString()}</p>
                         </div>
                       )}
                       {selectedOrder.schedule.preferredTime && (
                         <div>
-                          <span className="text-gray-600">Preferred Time:</span>
+                          <span className="text-gray-600">{t('hotelAdmin.orders.details.preferredTime')}:</span>
                           <p className="font-medium">{selectedOrder.schedule.preferredTime}</p>
                         </div>
                       )}
                       {selectedOrder.schedule.urgencyLevel && (
                         <div>
-                          <span className="text-gray-600">Urgency:</span>
+                          <span className="text-gray-600">{t('hotelAdmin.orders.details.urgency')}:</span>
                           <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
                             selectedOrder.schedule.urgencyLevel === 'urgent' ? 'bg-red-100 text-red-800' :
                             selectedOrder.schedule.urgencyLevel === 'high' ? 'bg-orange-100 text-orange-800' :
@@ -758,7 +770,7 @@ const OrdersPage = () => {
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
                 >
-                  Close
+                  {t('hotelAdmin.orders.details.close')}
                 </button>
                 <button
                   onClick={() => {
@@ -767,7 +779,7 @@ const OrdersPage = () => {
                   }}
                   className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-modern-blue to-modern-lightBlue border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
                 >
-                  Update Status
+                  {t('hotelAdmin.orders.details.updateStatus')}
                 </button>
               </div>
             </div>

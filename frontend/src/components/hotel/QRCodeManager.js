@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import {
   QrCodeIcon,
@@ -20,6 +21,7 @@ import {
 import hotelService from '../../services/hotel.service';
 
 const QRCodeManager = () => {
+  const { t } = useTranslation();
   const [qrData, setQrData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
@@ -34,10 +36,10 @@ const QRCodeManager = () => {
     try {
       const response = await hotelService.generateQRCode();
       setQrData(response.data);
-      toast.success('QR code generated successfully!');
+      toast.success(t('hotelAdmin.qrCode.toastMessages.generateSuccess'));
     } catch (error) {
       console.error('Error generating QR code:', error);
-      toast.error(error.response?.data?.message || 'Failed to generate QR code');
+      toast.error(error.response?.data?.message || t('hotelAdmin.qrCode.toastMessages.generateError'));
     } finally {
       setLoading(false);
     }
@@ -54,7 +56,7 @@ const QRCodeManager = () => {
       toast.success('QR code regenerated successfully!');
     } catch (error) {
       console.error('Error regenerating QR code:', error);
-      toast.error(error.response?.data?.message || 'Failed to regenerate QR code');
+      toast.error(error.response?.data?.message || t('hotelAdmin.qrCode.toastMessages.regenerateError'));
     } finally {
       setRegenerating(false);
     }
@@ -82,7 +84,7 @@ const QRCodeManager = () => {
       toast.success('QR code downloaded successfully!');
     } catch (error) {
       console.error('Error downloading QR code:', error);
-      toast.error(error.response?.data?.message || 'Failed to download QR code');
+      toast.error(error.response?.data?.message || t('hotelAdmin.qrCode.toastMessages.downloadError'));
     } finally {
       setDownloading(false);
     }
@@ -93,7 +95,7 @@ const QRCodeManager = () => {
    */
   const printQRCode = () => {
     if (!qrData?.qrCodeImage) {
-      toast.error('No QR code to print');
+      toast.error(t('hotelAdmin.qrCode.toastMessages.noPrint'));
       return;
     }
 
@@ -104,7 +106,7 @@ const QRCodeManager = () => {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>${hotelName} - Guest Registration QR Code</title>
+          <title>${hotelName} - ${t('hotelAdmin.qrCode.printTemplate.title')}</title>
           <style>
             body {
               font-family: Arial, sans-serif;
@@ -154,20 +156,20 @@ const QRCodeManager = () => {
         <body>
           <div class="qr-container">
             <div class="hotel-title">${hotelName}</div>
-            <div class="subtitle">Guest Registration QR Code</div>
+            <div class="subtitle">${t('hotelAdmin.qrCode.printTemplate.subtitle')}</div>
             <div class="qr-image">
               <img src="${qrData.qrCodeImage}" alt="QR Code" style="max-width: 300px; height: auto;" />
             </div>
             <div class="instructions">
-              <strong>How to use:</strong><br>
-              1. Guests scan this QR code with their mobile device<br>
-              2. Registration form opens with hotel pre-selected<br>
-              3. Guest completes registration with their details<br>
-              4. Guest can immediately access hotel services
+              <strong>${t('hotelAdmin.qrCode.printTemplate.howToUse')}:</strong><br>
+              ${t('hotelAdmin.qrCode.printTemplate.step1')}<br>
+              ${t('hotelAdmin.qrCode.printTemplate.step2')}<br>
+              ${t('hotelAdmin.qrCode.printTemplate.step3')}<br>
+              ${t('hotelAdmin.qrCode.printTemplate.step4')}
             </div>
             <div class="footer">
-              Generated: ${new Date().toLocaleDateString()}<br>
-              Expires: ${new Date(qrData.expiresAt).toLocaleDateString()}
+              ${t('hotelAdmin.qrCode.printTemplate.generated')}: ${new Date().toLocaleDateString()}<br>
+              ${t('hotelAdmin.qrCode.printTemplate.expires')}: ${new Date(qrData.expiresAt).toLocaleDateString()}
             </div>
           </div>
         </body>
@@ -184,16 +186,16 @@ const QRCodeManager = () => {
    */
   const copyQRUrl = async () => {
     if (!qrData?.qrUrl) {
-      toast.error('No QR URL to copy');
+      toast.error(t('hotelAdmin.qrCode.toastMessages.noUrl'));
       return;
     }
 
     try {
       await navigator.clipboard.writeText(qrData.qrUrl);
-      toast.success('QR URL copied to clipboard!');
+      toast.success(t('hotelAdmin.qrCode.toastMessages.copySuccess'));
     } catch (error) {
       console.error('Error copying to clipboard:', error);
-      toast.error('Failed to copy URL to clipboard');
+      toast.error(t('hotelAdmin.qrCode.toastMessages.copyError'));
     }
   };
 
@@ -218,47 +220,50 @@ const QRCodeManager = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <QrCodeIcon className="h-8 w-8 text-blue-600" />
+            <QrCodeIcon className="h-8 w-8" style={{ color: '#3B5787' }} />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">QR Code Management</h1>
-              <p className="text-gray-600">Generate QR codes for guest registration</p>
+              <h1 className="text-2xl font-bold text-black">{t('hotelAdmin.qrCode.title')}</h1>
+              <p className="text-black">{t('hotelAdmin.qrCode.subtitle')}</p>
             </div>
           </div>
 
           <button
             onClick={() => setShowInfo(!showInfo)}
-            className="flex items-center space-x-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors"
+            style={{ backgroundColor: '#67BAE0' }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#3B5787'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#67BAE0'}
           >
             <InformationCircleIcon className="h-5 w-5" />
-            <span>Info</span>
+            <span>{t('hotelAdmin.qrCode.info')}</span>
           </button>
         </div>
       </div>
 
       {/* Information Panel */}
       {showInfo && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-4">How QR Code Registration Works</h3>
+        <div className="bg-white border rounded-lg p-6" style={{ borderColor: '#67BAE0' }}>
+          <h3 className="text-lg font-semibold text-black mb-4">{t('hotelAdmin.qrCode.infoPanel.title')}</h3>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium text-blue-800 mb-2">For Hotel Staff:</h4>
-              <ul className="text-blue-700 space-y-1 text-sm">
-                <li>• Display QR code at reception desk</li>
-                <li>• Print multiple copies for different locations</li>
-                <li>• Regenerate periodically for security</li>
-                <li>• Monitor guest registrations</li>
+              <h4 className="font-medium text-black mb-2">{t('hotelAdmin.qrCode.infoPanel.forHotelStaff')}</h4>
+              <ul className="text-black space-y-1 text-sm">
+                <li>• {t('hotelAdmin.qrCode.infoPanel.hotelStaffInstructions.0')}</li>
+                <li>• {t('hotelAdmin.qrCode.infoPanel.hotelStaffInstructions.1')}</li>
+                <li>• {t('hotelAdmin.qrCode.infoPanel.hotelStaffInstructions.2')}</li>
+                <li>• {t('hotelAdmin.qrCode.infoPanel.hotelStaffInstructions.3')}</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium text-blue-800 mb-2">For Guests:</h4>
-              <ul className="text-blue-700 space-y-1 text-sm">
-                <li>• Scan QR code with mobile device</li>
-                <li>• Registration form opens automatically</li>
-                <li>• Hotel information is pre-filled</li>
-                <li>• Complete registration with personal details</li>
+              <h4 className="font-medium text-black mb-2">{t('hotelAdmin.qrCode.infoPanel.forGuests')}</h4>
+              <ul className="text-black space-y-1 text-sm">
+                <li>• {t('hotelAdmin.qrCode.infoPanel.guestInstructions.0')}</li>
+                <li>• {t('hotelAdmin.qrCode.infoPanel.guestInstructions.1')}</li>
+                <li>• {t('hotelAdmin.qrCode.infoPanel.guestInstructions.2')}</li>
+                <li>• {t('hotelAdmin.qrCode.infoPanel.guestInstructions.3')}</li>
               </ul>
             </div>
           </div>
@@ -267,28 +272,28 @@ const QRCodeManager = () => {
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* QR Code Display */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
           <div className="text-center">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Current QR Code</h2>
+            <h2 className="text-lg font-semibold text-black mb-4">{t('hotelAdmin.qrCode.currentQRCode')}</h2>
 
             {loading ? (
               <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#3B5787' }}></div>
               </div>
             ) : qrData ? (
               <div className="space-y-4">
                 {/* QR Code Image */}
-                <div className="bg-white p-4 rounded-lg border border-gray-200 inline-block">
+                <div className="bg-white p-4 rounded-lg border border-gray-300 inline-block">
                   <img
                     src={qrData.qrCodeImage}
-                    alt="Hotel Registration QR Code"
+                    alt={t('hotelAdmin.qrCode.hotelRegistrationQR')}
                     className="w-64 h-64 mx-auto"
                   />
                 </div>
 
                 {/* Hotel Information */}
-                <div className="text-sm text-gray-600">
-                  <p className="font-medium text-gray-900">{qrData.hotelInfo?.name}</p>
+                <div className="text-sm text-black">
+                  <p className="font-medium text-black">{qrData.hotelInfo?.name}</p>
                   {qrData.hotelInfo?.address && (
                     <p>{qrData.hotelInfo.address.street}, {qrData.hotelInfo.address.city}</p>
                   )}
@@ -296,20 +301,20 @@ const QRCodeManager = () => {
 
                 {/* QR Code Details */}
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-center space-x-2 text-green-600">
+                  <div className="flex items-center justify-center space-x-2" style={{ color: '#3B5787' }}>
                     <ShieldCheckIcon className="h-4 w-4" />
-                    <span>Secure JWT Token</span>
+                    <span>{t('hotelAdmin.qrCode.secureToken')}</span>
                   </div>
-                  <div className="flex items-center justify-center space-x-2 text-blue-600">
+                  <div className="flex items-center justify-center space-x-2" style={{ color: '#67BAE0' }}>
                     <ClockIcon className="h-4 w-4" />
-                    <span>Expires: {formatDate(qrData.expiresAt)}</span>
+                    <span>{t('hotelAdmin.qrCode.expires')} {formatDate(qrData.expiresAt)}</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-gray-500 py-8">
-                <QrCodeIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                <p>No QR code generated yet</p>
+              <div className="text-black py-8">
+                <QrCodeIcon className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <p>{t('hotelAdmin.qrCode.noQRGenerated')}</p>
               </div>
             )}
           </div>
@@ -318,76 +323,91 @@ const QRCodeManager = () => {
         {/* Actions Panel */}
         <div className="space-y-6">
           {/* Primary Actions */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
+            <h3 className="text-lg font-semibold text-black mb-4">{t('hotelAdmin.qrCode.actions.title')}</h3>
             <div className="space-y-3">
               <button
                 onClick={generateQRCode}
                 disabled={loading}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ backgroundColor: loading ? '#gray' : '#3B5787' }}
+                onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = '#67BAE0')}
+                onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = '#3B5787')}
               >
                 <QrCodeIcon className="h-5 w-5" />
-                <span>{loading ? 'Generating...' : 'Generate New QR Code'}</span>
+                <span>{loading ? t('hotelAdmin.qrCode.actions.generating') : t('hotelAdmin.qrCode.actions.generateNew')}</span>
               </button>
 
               <button
                 onClick={regenerateQRCode}
                 disabled={!qrData || regenerating}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ backgroundColor: (!qrData || regenerating) ? '#gray' : '#67BAE0' }}
+                onMouseEnter={(e) => (!qrData || regenerating) || (e.target.style.backgroundColor = '#3B5787')}
+                onMouseLeave={(e) => (!qrData || regenerating) || (e.target.style.backgroundColor = '#67BAE0')}
               >
                 <ArrowPathIcon className="h-5 w-5" />
-                <span>{regenerating ? 'Regenerating...' : 'Regenerate QR Code'}</span>
+                <span>{regenerating ? t('hotelAdmin.qrCode.actions.regenerating') : t('hotelAdmin.qrCode.actions.regenerate')}</span>
               </button>
             </div>
           </div>
 
           {/* Download & Print Actions */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Download & Print</h3>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
+            <h3 className="text-lg font-semibold text-black mb-4">{t('hotelAdmin.qrCode.downloadPrint.title')}</h3>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => downloadQRCode(600)}
                   disabled={!qrData || downloading}
-                  className="flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center justify-center space-x-2 px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ backgroundColor: (!qrData || downloading) ? '#gray' : '#3B5787' }}
+                  onMouseEnter={(e) => (!qrData || downloading) || (e.target.style.backgroundColor = '#67BAE0')}
+                  onMouseLeave={(e) => (!qrData || downloading) || (e.target.style.backgroundColor = '#3B5787')}
                 >
                   <ArrowDownTrayIcon className="h-4 w-4" />
-                  <span>Download</span>
+                  <span>{t('hotelAdmin.qrCode.downloadPrint.download')}</span>
                 </button>
 
                 <button
                   onClick={printQRCode}
                   disabled={!qrData}
-                  className="flex items-center justify-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center justify-center space-x-2 px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ backgroundColor: !qrData ? '#gray' : '#67BAE0' }}
+                  onMouseEnter={(e) => !qrData || (e.target.style.backgroundColor = '#3B5787')}
+                  onMouseLeave={(e) => !qrData || (e.target.style.backgroundColor = '#67BAE0')}
                 >
                   <PrinterIcon className="h-4 w-4" />
-                  <span>Print</span>
+                  <span>{t('hotelAdmin.qrCode.downloadPrint.print')}</span>
                 </button>
               </div>
 
-              <div className="text-sm text-gray-600">
-                <p className="mb-2">Download sizes:</p>
+              <div className="text-sm text-black">
+                <p className="mb-2">{t('hotelAdmin.qrCode.downloadPrint.downloadSizes')}</p>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => downloadQRCode(300)}
                     disabled={!qrData || downloading}
-                    className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-xs transition-colors"
+                    className="px-3 py-2 bg-white border border-gray-300 hover:border-gray-400 rounded text-xs transition-colors text-black"
+                    style={{ backgroundColor: (!qrData || downloading) ? '#f5f5f5' : 'white' }}
                   >
-                    Small (300px)
+                    {t('hotelAdmin.qrCode.downloadPrint.small')}
                   </button>
                   <button
                     onClick={() => downloadQRCode(600)}
                     disabled={!qrData || downloading}
-                    className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-xs transition-colors"
+                    className="px-3 py-2 bg-white border border-gray-300 hover:border-gray-400 rounded text-xs transition-colors text-black"
+                    style={{ backgroundColor: (!qrData || downloading) ? '#f5f5f5' : 'white' }}
                   >
-                    Medium (600px)
+                    {t('hotelAdmin.qrCode.downloadPrint.medium')}
                   </button>
                   <button
                     onClick={() => downloadQRCode(1200)}
                     disabled={!qrData || downloading}
-                    className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-xs transition-colors"
+                    className="px-3 py-2 bg-white border border-gray-300 hover:border-gray-400 rounded text-xs transition-colors text-black"
+                    style={{ backgroundColor: (!qrData || downloading) ? '#f5f5f5' : 'white' }}
                   >
-                    Large (1200px)
+                    {t('hotelAdmin.qrCode.downloadPrint.large')}
                   </button>
                 </div>
               </div>
@@ -395,18 +415,21 @@ const QRCodeManager = () => {
           </div>
 
           {/* Share & Copy */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Share</h3>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
+            <h3 className="text-lg font-semibold text-black mb-4">{t('hotelAdmin.qrCode.share.title')}</h3>
             <button
               onClick={copyQRUrl}
               disabled={!qrData}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              style={{ backgroundColor: !qrData ? '#gray' : 'black' }}
+              onMouseEnter={(e) => !qrData || (e.target.style.backgroundColor = '#3B5787')}
+              onMouseLeave={(e) => !qrData || (e.target.style.backgroundColor = 'black')}
             >
               <DocumentDuplicateIcon className="h-5 w-5" />
-              <span>Copy Registration URL</span>
+              <span>{t('hotelAdmin.qrCode.share.copyUrl')}</span>
             </button>
             {qrData?.qrUrl && (
-              <div className="mt-3 p-3 bg-gray-50 rounded text-xs text-gray-600 break-all">
+              <div className="mt-3 p-3 bg-white border border-gray-300 rounded text-xs text-black break-all">
                 {qrData.qrUrl}
               </div>
             )}
@@ -416,26 +439,26 @@ const QRCodeManager = () => {
 
       {/* Security Information */}
       {qrData?.metadata && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Security Features</h3>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
+          <h3 className="text-lg font-semibold text-black mb-4">{t('hotelAdmin.qrCode.security.title')}</h3>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium text-gray-800 mb-2">Security Features:</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <h4 className="font-medium text-black mb-2">{t('hotelAdmin.qrCode.security.featuresLabel')}:</h4>
+              <ul className="text-sm text-black space-y-1">
                 {qrData.metadata.securityFeatures?.map((feature, index) => (
                   <li key={index} className="flex items-start space-x-2">
-                    <ShieldCheckIcon className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <ShieldCheckIcon className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#3B5787' }} />
                     <span>{feature}</span>
                   </li>
                 ))}
               </ul>
             </div>
             <div>
-              <h4 className="font-medium text-gray-800 mb-2">Usage Instructions:</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <h4 className="font-medium text-black mb-2">{t('hotelAdmin.qrCode.security.usageLabel')}:</h4>
+              <ul className="text-sm text-black space-y-1">
                 {qrData.metadata.usageInstructions?.map((instruction, index) => (
                   <li key={index} className="flex items-start space-x-2">
-                    <span className="text-blue-500 font-bold mt-0.5">{index + 1}.</span>
+                    <span className="font-bold mt-0.5" style={{ color: '#67BAE0' }}>{index + 1}.</span>
                     <span>{instruction}</span>
                   </li>
                 ))}

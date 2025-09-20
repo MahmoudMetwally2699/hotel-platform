@@ -456,7 +456,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                 <div className="flex items-center space-x-2">
                   <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-[#3B5787] to-[#4a6694] rounded-full"></div>
                   <span className="text-xs font-medium text-[#3B5787] uppercase tracking-wider">
-                    Professional Service
+                    {t('guestCategories.professionalService')}
                   </span>
                 </div>
 
@@ -470,15 +470,15 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                 <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 sm:pt-4">
                   <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-[#3B5787]/10 to-[#4a6694]/10 rounded-lg sm:rounded-xl">
                     <FaClock className="text-[#3B5787] text-xs sm:text-sm" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Quick Service</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">{t('guestCategories.quickService')}</span>
                   </div>
                   <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg sm:rounded-xl">
                     <FaCheck className="text-green-600 text-xs sm:text-sm" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Quality Assured</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">{t('guestCategories.qualityAssured')}</span>
                   </div>
                   <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg sm:rounded-xl">
                     <FaMapMarkerAlt className="text-blue-600 text-xs sm:text-sm" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Pickup & Delivery</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">{t('guestCategories.pickupAndDelivery')}</span>
                   </div>
                 </div>
               </div>
@@ -794,7 +794,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                   <h2 className="text-lg sm:text-2xl font-bold text-gray-900 mb-1">
                     {t('laundryBooking.chooseServiceTypes')}
                   </h2>
-                  <p className="text-xs sm:text-sm text-gray-600">Select service type for each item</p>
+                  <p className="text-xs sm:text-sm text-gray-600">{t('laundryBooking.selectServiceTypeInstruction')}</p>
                 </div>
 
                 {/* Quick Service Type Actions */}
@@ -837,7 +837,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                               });
                             }}
                           >
-                            Apply "{typeName}" to All
+                            {t('laundryBooking.applyToAll', { typeName })}
                           </button>
                         );
                       });

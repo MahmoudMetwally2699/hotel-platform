@@ -99,11 +99,11 @@ const TransportationBookingInterface = () => {
 
     } catch (error) {
       console.error('Error fetching transportation services:', error);
-      toast.error('Failed to load transportation services');
+      toast.error(t('guest.transportation.failedToLoad'));
     } finally {
       setLoading(false);
     }
-  }, [hotelId]);
+  }, [hotelId, t]);
 
   useEffect(() => {
     if (hotelId) {
@@ -178,17 +178,17 @@ const TransportationBookingInterface = () => {
    */
   const submitBooking = async () => {
     if (cart.length === 0) {
-      toast.error('Please add at least one vehicle to your cart');
+      toast.error(t('guest.transportation.addToCart'));
       return;
     }
 
     if (!scheduling.pickupDate || !scheduling.pickupTime) {
-      toast.error('Please select pickup date and time');
+      toast.error(t('guest.transportation.selectDateAndTime'));
       return;
     }
 
     if (!scheduling.pickupLocation) {
-      toast.error('Please provide pickup location');
+      toast.error(t('guest.transportation.providePickupLocation'));
       return;
     }
 
@@ -227,7 +227,7 @@ const TransportationBookingInterface = () => {
 
     } catch (error) {
       console.error('Error creating booking:', error);
-      toast.error(error.response?.data?.message || 'Failed to create booking');
+      toast.error(error.response?.data?.message || t('guest.transportation.failedToCreate'));
     } finally {
       setSubmitting(false);
     }
@@ -246,13 +246,13 @@ const TransportationBookingInterface = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <FaCar className="text-6xl text-gray-300 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Transportation Services Available</h2>
-          <p className="text-gray-600 mb-4">This hotel doesn't offer transportation services at the moment.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('guest.transportation.noTransportationServices')}</h2>
+          <p className="text-gray-600 mb-4">{t('guest.transportation.noTransportationDescription')}</p>
           <button
             onClick={() => navigate(`/hotels/${hotelId}/services`)}
             className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
           >
-            Browse Other Services
+            {t('guest.transportation.browseOtherServices')}
           </button>
         </div>
       </div>
@@ -269,18 +269,18 @@ const TransportationBookingInterface = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <FaCar className="text-6xl text-gray-300 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Transportation Vehicles Not Available</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('guest.transportation.vehiclesNotAvailable')}</h2>
           <p className="text-gray-600 mb-2">
-            This hotel has {transportationServices.length} transportation service provider(s), but none have configured their vehicles yet.
+            {t('guest.transportation.serviceProviderNoVehicles', { count: transportationServices.length })}
           </p>
           <div className="text-sm text-gray-500 mb-4">
-            Available services: {transportationServices.map(s => s.name).join(', ')}
+            {t('guest.transportation.availableServices', { services: transportationServices.map(s => s.name).join(', ') })}
           </div>
           <button
             onClick={() => navigate(`/hotels/${hotelId}/services`)}
             className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
           >
-            Browse Other Services
+            {t('guest.transportation.browseOtherServices')}
           </button>
         </div>
       </div>
@@ -298,13 +298,13 @@ const TransportationBookingInterface = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 <FaCar className="inline mr-3" />
-                Transportation Service
+                {t('services.transportation')}
               </h1>
               <p className="text-gray-600 mt-2">{hotel?.name}</p>
             </div>
             <div className="bg-blue-50 px-4 py-2 rounded-lg">
               <p className="text-sm text-blue-600 font-medium">
-                Step {bookingStep} of 3
+                {t('booking.step')} {bookingStep} {t('common.of')} 3
               </p>
             </div>
           </div>
@@ -318,7 +318,7 @@ const TransportationBookingInterface = () => {
           <div className="lg:col-span-2">
             {bookingStep === 1 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold mb-6">Select Transportation Vehicles</h2>
+                <h2 className="text-2xl font-bold mb-6">{t('guest.transportation.selectVehicles')}</h2>
 
                 {/* Service Provider Selection */}
                 {servicesWithVehicles.length > 1 && (
@@ -532,13 +532,13 @@ const TransportationBookingInterface = () => {
 
             {bookingStep === 2 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold mb-6">Schedule & Location</h2>
+                <h2 className="text-2xl font-bold mb-6">{t('guest.transportation.scheduleAndLocation')}</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <FaCalendarAlt className="inline mr-2" />
-                      Pickup Date
+                      {t('guest.transportation.pickupDate')}
                     </label>
                     <input
                       type="date"
@@ -552,14 +552,14 @@ const TransportationBookingInterface = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <FaClock className="inline mr-2" />
-                      Pickup Time
+                      {t('guest.transportation.pickupTime')}
                     </label>
                     <select
                       value={scheduling.pickupTime}
                       onChange={(e) => setScheduling(prev => ({ ...prev, pickupTime: e.target.value }))}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">Select time...</option>
+                      <option value="">{t('guest.transportation.selectTime')}</option>
                       <option value="06:00">06:00 AM</option>
                       <option value="08:00">08:00 AM</option>
                       <option value="10:00">10:00 AM</option>
@@ -573,13 +573,13 @@ const TransportationBookingInterface = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <FaMapMarkerAlt className="inline mr-2" />
-                      Pickup Location
+                      {t('guest.transportation.pickup')} {t('common.address')}
                     </label>
                     <input
                       type="text"
                       value={scheduling.pickupLocation}
                       onChange={(e) => setScheduling(prev => ({ ...prev, pickupLocation: e.target.value }))}
-                      placeholder="Enter pickup address or location"
+                      placeholder={t('guest.transportation.enterPickupLocation')}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -587,13 +587,13 @@ const TransportationBookingInterface = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <FaMapMarkerAlt className="inline mr-2" />
-                      Drop-off Location
+                      {t('guest.transportation.dropOff')} {t('common.address')}
                     </label>
                     <input
                       type="text"
                       value={scheduling.dropoffLocation}
                       onChange={(e) => setScheduling(prev => ({ ...prev, dropoffLocation: e.target.value }))}
-                      placeholder="Enter destination address"
+                      placeholder={t('guest.transportation.enterDestinationAddress')}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -634,7 +634,7 @@ const TransportationBookingInterface = () => {
                   <textarea
                     value={scheduling.specialRequests}
                     onChange={(e) => setScheduling(prev => ({ ...prev, specialRequests: e.target.value }))}
-                    placeholder="Any special instructions for the transportation service..."
+                    placeholder={t('guest.transportation.specialInstructions')}
                     rows="3"
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   />
@@ -644,11 +644,11 @@ const TransportationBookingInterface = () => {
 
             {bookingStep === 3 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold mb-6">Booking Confirmation</h2>
+                <h2 className="text-2xl font-bold mb-6">{t('booking.confirmBooking')}</h2>
 
                 {/* Order Summary */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold border-b pb-2">Order Summary</h3>
+                  <h3 className="text-lg font-semibold border-b pb-2">{t('guest.transportation.orderSummary')}</h3>
 
                   {cart.map(vehicle => (
                     <div key={vehicle.id} className="flex justify-between items-center py-2">
@@ -666,7 +666,7 @@ const TransportationBookingInterface = () => {
                     <div className="flex justify-between items-center py-2 border-t">
                       <span className="font-medium">
                         <FaBolt className="text-yellow-500 mr-2" />
-                        Express Service
+                        {t('laundryBooking.expressService')}
                       </span>
                       <span className="font-medium">${pricing.expressTotal}</span>
                     </div>
@@ -674,7 +674,7 @@ const TransportationBookingInterface = () => {
 
                   <div className="border-t pt-2">
                     <div className="flex justify-between items-center text-lg font-bold">
-                      <span>Total Amount</span>
+                      <span>{t('guest.transportation.totalAmount')}</span>
                       <span className="text-blue-600">${pricing.total}</span>
                     </div>
                   </div>
@@ -685,31 +685,31 @@ const TransportationBookingInterface = () => {
                   <h3 className="text-lg font-semibold mb-4">Schedule & Location</h3>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-600">Pickup Date</p>
+                      <p className="text-gray-600">{t('guest.transportation.pickupDate')}</p>
                       <p className="font-medium">{scheduling.pickupDate}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Pickup Time</p>
+                      <p className="text-gray-600">{t('guest.transportation.pickupTime')}</p>
                       <p className="font-medium">{scheduling.pickupTime}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Pickup Location</p>
+                      <p className="text-gray-600">{t('guest.transportation.pickupLocation')}</p>
                       <p className="font-medium">{scheduling.pickupLocation}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Drop-off Location</p>
+                      <p className="text-gray-600">{t('guest.transportation.dropOff')} {t('common.address')}</p>
                       <p className="font-medium">{scheduling.dropoffLocation}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Passengers</p>
+                      <p className="text-gray-600">{t('guest.transportation.passengers')}</p>
                       <p className="font-medium">{scheduling.passengerCount}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Luggage</p>
+                      <p className="text-gray-600">{t('guest.transportation.luggage')}</p>
                       <p className="font-medium">{scheduling.luggageCount}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Service Provider</p>
+                      <p className="text-gray-600">{t('services.serviceProvider')}</p>
                       <p className="font-medium">{selectedService?.providerId?.businessName}</p>
                     </div>
                   </div>
@@ -723,7 +723,7 @@ const TransportationBookingInterface = () => {
             <div className="bg-white rounded-lg shadow p-6 sticky top-6">
               <h3 className="text-xl font-bold mb-4">
                 <FaShoppingCart className="inline mr-2" />
-                Cart ({cart.length} vehicles)
+                {t('common.cart')} ({cart.length} {cart.length === 1 ? t('guest.transportation.vehicle') : t('guest.transportation.vehicles')})
               </h3>
 
               {cart.length === 0 ? (
@@ -770,17 +770,17 @@ const TransportationBookingInterface = () => {
               {/* Pricing Summary */}
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between">
-                  <span>Vehicles Total</span>
+                  <span>{t('guest.transportation.vehiclesTotal')}</span>
                   <span>${pricing.vehiclesTotal}</span>
                 </div>
                 {expressSurcharge.enabled && (
                   <div className="flex justify-between">
-                    <span>Express Service</span>
+                    <span>{t('guest.transportation.expressService')}</span>
                     <span>${pricing.expressTotal}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                  <span>Total</span>
+                  <span>{t('guest.transportation.total')}</span>
                   <span className="text-blue-600">${pricing.total}</span>
                 </div>
               </div>

@@ -158,7 +158,7 @@ const RestaurantBookingPage = () => {
 
   const removeFromCart = (itemId) => {
     setSelectedItems(prev => prev.filter(item => item.id !== itemId));
-    toast.success('Item removed from cart');
+    toast.success(t('guest.restaurant.itemRemovedFromCart'));
   };
 
   const calculatePricing = () => {
@@ -215,11 +215,11 @@ const RestaurantBookingPage = () => {
         toast.success('Redirecting to payment...');
         window.location.href = paymentUrl;
       } else {
-        throw new Error(paymentResponse.data.message || 'Failed to create payment session');
+        throw new Error(paymentResponse.data.message || t('guest.payment.failedCreateSession'));
       }
     } catch (error) {
       console.error('❌ Booking submission error:', error);
-      toast.error(error.response?.data?.message || 'Failed to create booking');
+      toast.error(error.response?.data?.message || t('guest.restaurant.failedToCreateBooking'));
     } finally {
       setSubmitting(false);
     }
@@ -238,7 +238,7 @@ const RestaurantBookingPage = () => {
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
           <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
           <div className="relative flex flex-col items-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Restaurant Service</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">{t('services.dining')}</h1>
             <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">Loading restaurant menu and services...</p>
           </div>
         </div>
@@ -288,7 +288,7 @@ const RestaurantBookingPage = () => {
             className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#3B5787] bg-white/80 backdrop-blur-sm hover:bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 mb-6"
           >
             <FaArrowLeft className="mr-2 text-xs" />
-            <span>Back</span>
+            <span>{t('common.back')}</span>
           </button>
 
           {/* Modern Header Card - Mobile Optimized */}
@@ -297,7 +297,7 @@ const RestaurantBookingPage = () => {
             <div className="relative h-32 sm:h-48">
               <img
                 src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=400&fit=crop&crop=center"
-                alt="Restaurant Services"
+                alt={t('services.dining')}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -329,15 +329,15 @@ const RestaurantBookingPage = () => {
                 <div className="flex flex-wrap gap-2 sm:gap-3 pt-2 sm:pt-4">
                   <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-[#3B5787]/10 to-[#4a6694]/10 rounded-lg sm:rounded-xl">
                     <FaUtensils className="text-[#3B5787] text-xs sm:text-sm" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Fresh Menu</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">{t('guestCategories.freshMenu')}</span>
                   </div>
                   <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg sm:rounded-xl">
                     <FaCheck className="text-green-600 text-xs sm:text-sm" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Quality Food</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">{t('guestCategories.qualityFood')}</span>
                   </div>
                   <div className="flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg sm:rounded-xl">
                     <FaMapMarkerAlt className="text-blue-600 text-xs sm:text-sm" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Room Service</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700">{t('guestCategories.roomService')}</span>
                   </div>
                 </div>
               </div>
@@ -355,12 +355,6 @@ const RestaurantBookingPage = () => {
             </div>
             <div className="min-w-0 flex-1">
               <div className={`flex items-center justify-between gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <div className="truncate">
-                  <h1 className={`text-base sm:text-lg font-semibold text-gray-900 truncate ${textAlign}`}>
-                    {service.name}
-                  </h1>
-                  <p className={`text-[11px] sm:text-xs text-gray-500 truncate ${textAlign}`}>{hotel?.name}</p>
-                </div>
                 {/* step indicator */}
                 <div className="hidden sm:flex items-center gap-2 text-xs">
                   {[1,2,3].map(s => (
@@ -394,20 +388,17 @@ const RestaurantBookingPage = () => {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                    {step === 1 && 'Select Menu Items'}
-                    {step === 2 && 'Schedule & Delivery Details'}
-                    {step === 3 && 'Order Confirmation'}
+                    {step === 1 && t('guest.restaurant.selectMenuItems')}
+                    {step === 2 && t('guest.restaurant.scheduleDeliveryDetails')}
+                    {step === 3 && t('guest.restaurant.orderConfirmation')}
                   </h2>
-                  <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                    {service.description}
-                  </p>
                 </div>
                 <div className="hidden sm:block text-right">
-                  <div className="text-xs text-gray-500">Step {step} of 3</div>
+                  <div className="text-xs text-gray-500">{t('common.step')} {step} {t('common.of')} 3</div>
                   <div className="font-semibold text-sm">
-                    {step === 1 && 'Items'}
-                    {step === 2 && 'Schedule'}
-                    {step === 3 && 'Confirm'}
+                    {step === 1 && t('guest.restaurant.items')}
+                    {step === 2 && t('guest.restaurant.schedule')}
+                    {step === 3 && t('guest.restaurant.confirm')}
                   </div>
                 </div>
               </div>
@@ -439,12 +430,12 @@ const RestaurantBookingPage = () => {
                         className="w-full py-3 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#61B6DE] focus:border-[#61B6DE] text-sm"
                         aria-label="Filter by category"
                       >
-                        <option value="all">All Categories</option>
-                        <option value="appetizers">Appetizers</option>
-                        <option value="mains">Main Courses</option>
-                        <option value="desserts">Desserts</option>
-                        <option value="beverages">Beverages</option>
-                        <option value="breakfast">Breakfast</option>
+                        <option value="all">{t('common.allCategories')}</option>
+                        <option value="appetizers">{t('guest.restaurant.appetizers')}</option>
+                        <option value="mains">{t('guest.restaurant.mainCourses')}</option>
+                        <option value="desserts">{t('guest.restaurant.desserts')}</option>
+                        <option value="beverages">{t('guest.restaurant.beverages')}</option>
+                        <option value="breakfast">{t('common.breakfast')}</option>
                       </select>
                     </div>
                   </div>
@@ -503,7 +494,7 @@ const RestaurantBookingPage = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <FaCalendarAlt className="inline mr-2" />
-                      Preferred Date
+                      {t('guest.restaurant.preferredDate')}
                     </label>
                     <input
                       type="date"
@@ -517,14 +508,14 @@ const RestaurantBookingPage = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <FaClock className="inline mr-2" />
-                      Preferred Time
+                      {t('guest.restaurant.preferredTime')}
                     </label>
                     <select
                       value={bookingDetails.preferredTime}
                       onChange={(e) => setBookingDetails(prev => ({ ...prev, preferredTime: e.target.value }))}
                       className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#61B6DE] focus:border-[#61B6DE]"
                     >
-                      <option value="">Select time</option>
+                      <option value="">{t('guest.restaurant.selectTime')}</option>
                       <option value="breakfast">Breakfast (7:00 - 10:00)</option>
                       <option value="lunch">Lunch (12:00 - 15:00)</option>
                       <option value="dinner">Dinner (18:00 - 22:00)</option>
@@ -536,25 +527,25 @@ const RestaurantBookingPage = () => {
                 <div className="mt-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <FaMapMarkerAlt className="inline mr-2" />
-                    Delivery Location
+                    {t('guest.restaurant.deliveryLocation')}
                   </label>
                   <input
                     type="text"
                     value={bookingDetails.deliveryLocation}
                     onChange={(e) => setBookingDetails(prev => ({ ...prev, deliveryLocation: e.target.value }))}
-                    placeholder="Room number or delivery address"
+                    placeholder={t('guest.restaurant.roomNumberOrAddress')}
                     className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#61B6DE] focus:border-[#61B6DE]"
                   />
                 </div>
 
                 <div className="mt-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Special Requests
+                    {t('guest.restaurant.specialRequests')}
                   </label>
                   <textarea
                     value={bookingDetails.specialRequests}
                     onChange={(e) => setBookingDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
-                    placeholder="Any dietary requirements, cooking preferences, or delivery instructions…"
+                    placeholder={t('guest.restaurant.specialRequestsPlaceholder')}
                     rows={3}
                     className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#61B6DE] focus:border-[#61B6DE]"
                   />
@@ -565,7 +556,7 @@ const RestaurantBookingPage = () => {
             {/* Step 3: Confirmation */}
             {step === 3 && (
               <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-5 sm:p-6">
-                <h3 className="text-lg font-semibold mb-4">Order Items</h3>
+                <h3 className="text-lg font-semibold mb-4">{t('guest.restaurant.orderItems')}</h3>
                 <div className="space-y-3">
                   {selectedItems.map((item) => (
                     <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
@@ -580,33 +571,33 @@ const RestaurantBookingPage = () => {
 
                 <div className="mt-4 pt-4 border-t">
                   <div className="flex justify-between items-center font-bold text-lg">
-                    <span>Total</span>
+                    <span>{t('guest.restaurant.total')}</span>
                     <span className="text-[#3B5787]">${pricing.total.toFixed(2)}</span>
                   </div>
                 </div>
 
                 <div className="mt-8 grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-600">Preferred Date</p>
+                    <p className="text-gray-600">{t('guest.restaurant.preferredDate')}</p>
                     <p className="font-medium">{bookingDetails.preferredDate || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Preferred Time</p>
+                    <p className="text-gray-600">{t('guest.restaurant.preferredTime')}</p>
                     <p className="font-medium capitalize">{bookingDetails.preferredTime || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Delivery Location</p>
+                    <p className="text-gray-600">{t('guest.restaurant.deliveryLocation')}</p>
                     <p className="font-medium">{bookingDetails.deliveryLocation || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Restaurant</p>
+                    <p className="text-gray-600">{t('guest.restaurant.restaurant')}</p>
                     <p className="font-medium">{service.name}</p>
                   </div>
                 </div>
 
                 {bookingDetails.specialRequests && (
                   <div className="mt-4">
-                    <p className="text-gray-600">Special Requests</p>
+                    <p className="text-gray-600">{t('guest.restaurant.specialRequests')}</p>
                     <p className="font-medium">{bookingDetails.specialRequests}</p>
                   </div>
                 )}
@@ -619,7 +610,7 @@ const RestaurantBookingPage = () => {
             <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-5 sticky top-24">
               <h3 className={`text-base sm:text-lg font-semibold mb-4 flex items-center gap-2 ${textAlign}`}>
                 <FaShoppingCart />
-                Your Order ({selectedItems.length} items)
+                {t('guest.restaurant.yourOrder')} ({selectedItems.length} {t('guest.restaurant.items')})
               </h3>
 
               {selectedItems.length === 0 ? (
@@ -656,7 +647,7 @@ const RestaurantBookingPage = () => {
 
                   <div className="border-t pt-3 mb-4">
                     <div className="flex justify-between items-center font-bold">
-                      <span>Total</span>
+                      <span>{t('guest.restaurant.total')}</span>
                       <span className="text-lg text-[#3B5787]">${pricing.total.toFixed(2)}</span>
                     </div>
                   </div>
@@ -671,7 +662,7 @@ const RestaurantBookingPage = () => {
                     disabled={selectedItems.length === 0}
                     className="w-full rounded-xl bg-gradient-to-r from-[#3B5787] to-[#61B6DE] text-white py-3 font-semibold hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition"
                   >
-                    Continue to Schedule
+                    {t('guest.restaurant.continueToSchedule')}
                   </button>
                 )}
 
@@ -682,13 +673,13 @@ const RestaurantBookingPage = () => {
                       disabled={!bookingDetails.preferredDate || !bookingDetails.preferredTime || !bookingDetails.deliveryLocation}
                       className="w-full rounded-xl bg-gradient-to-r from-[#3B5787] to-[#61B6DE] text-white py-3 font-semibold hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
-                      Review Order
+                      {t('guest.restaurant.reviewOrder')}
                     </button>
                     <button
                       onClick={() => setStep(1)}
                       className="w-full rounded-xl bg-gray-100 text-gray-800 py-3 font-semibold hover:bg-gray-200 transition"
                     >
-                      Back to Menu
+                      {t('guest.restaurant.backToMenu')}
                     </button>
                   </>
                 )}
@@ -703,10 +694,10 @@ const RestaurantBookingPage = () => {
                       {submitting ? (
                         <>
                           <FaSpinner className="inline animate-spin mr-2" />
-                          Creating Order...
+                          {t('guest.restaurant.creatingOrder')}
                         </>
                       ) : (
-                        'Confirm & Pay'
+                        t('guest.restaurant.confirmAndPay')
                       )}
                     </button>
                     <button
@@ -714,7 +705,7 @@ const RestaurantBookingPage = () => {
                       disabled={submitting}
                       className="w-full rounded-xl bg-gray-100 text-gray-800 py-3 font-semibold hover:bg-gray-200 transition"
                     >
-                      Back to Schedule
+                      {t('guest.restaurant.backToSchedule')}
                     </button>
                   </>
                 )}

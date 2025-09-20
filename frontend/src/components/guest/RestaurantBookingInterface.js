@@ -80,11 +80,11 @@ const RestaurantBookingInterface = () => {
 
     } catch (error) {
       console.error('Error fetching restaurant services:', error);
-      toast.error('Failed to load restaurant services');
+      toast.error(t('guest.restaurant.failedToLoadServices'));
     } finally {
       setLoading(false);
     }
-  }, [hotelId]);
+  }, [hotelId, t]);
 
   useEffect(() => {
     if (hotelId) {
@@ -135,7 +135,7 @@ const RestaurantBookingInterface = () => {
    */
   const removeFromCart = (cartItemId) => {
     setCart(prev => prev.filter(item => item.id !== cartItemId));
-    toast.success('Item removed from cart');
+    toast.success(t('guest.restaurant.itemRemovedFromCart'));
   };
 
   /**
@@ -154,12 +154,12 @@ const RestaurantBookingInterface = () => {
    */
   const submitBooking = async () => {
     if (cart.length === 0) {
-      toast.error('Please add at least one item to your cart');
+      toast.error(t('guest.restaurant.addItemsToCart'));
       return;
     }
 
     if (!scheduling.preferredDate || !scheduling.preferredTime) {
-      toast.error('Please select preferred date and time');
+      toast.error(t('guest.restaurant.selectDateAndTime'));
       return;
     }
 
@@ -209,7 +209,7 @@ const RestaurantBookingInterface = () => {
 
     } catch (error) {
       console.error('❌ Booking submission error:', error);
-      toast.error(error.response?.data?.message || error.message || 'Failed to create booking');
+      toast.error(error.response?.data?.message || error.message || t('guest.restaurant.failedToCreateBooking'));
     } finally {
       setSubmitting(false);
     }
@@ -241,8 +241,8 @@ const RestaurantBookingInterface = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <FaUtensils className="text-6xl text-gray-300 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Restaurant Services Available</h2>
-          <p className="text-gray-600 mb-4">This hotel doesn't offer restaurant services at the moment.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('guest.restaurant.noRestaurantServices')}</h2>
+          <p className="text-gray-600 mb-4">{t('guest.restaurant.noRestaurantDescription')}</p>
           <button
             onClick={() => navigate(`/hotels/${hotelId}/services`)}
             className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
@@ -264,7 +264,7 @@ const RestaurantBookingInterface = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <FaUtensils className="text-6xl text-gray-300 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Menu Items Not Available</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('guest.restaurant.menuItemsNotAvailable')}</h2>
           <p className="text-gray-600 mb-2">
             This hotel has {restaurantServices.length} restaurant service provider(s), but none have configured their menu items yet.
           </p>
@@ -310,7 +310,7 @@ const RestaurantBookingInterface = () => {
           <div className="lg:col-span-2">
             {bookingStep === 1 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold mb-6">Select Menu Items</h2>
+                <h2 className="text-2xl font-bold mb-6">{t('guest.restaurant.selectMenuItems')}</h2>
 
                 {/* Service Provider Selection */}
                 {servicesWithItems.length > 1 && (
@@ -349,11 +349,11 @@ const RestaurantBookingInterface = () => {
                     ).map(([category, items]) => (
                       <div key={category} className="space-y-4">
                         <h3 className="text-lg font-semibold text-gray-900 capitalize border-b pb-2">
-                          {category === 'mains' ? 'Main Courses' :
-                           category === 'appetizers' ? 'Appetizers' :
-                           category === 'desserts' ? 'Desserts' :
-                           category === 'beverages' ? 'Beverages' :
-                           category}
+                          {category === 'mains' ? t('guest.restaurant.mainCourses') :
+                           category === 'appetizers' ? t('guest.restaurant.appetizers') :
+                           category === 'desserts' ? t('guest.restaurant.desserts') :
+                           category === 'beverages' ? t('guest.restaurant.beverages') :
+                           t('guest.restaurant.other')}
                         </h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -479,11 +479,11 @@ const RestaurantBookingInterface = () => {
                       onChange={(e) => setScheduling(prev => ({ ...prev, preferredTime: e.target.value }))}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">Select time</option>
-                      <option value="breakfast">Breakfast (7:00 - 10:00)</option>
-                      <option value="lunch">Lunch (12:00 - 15:00)</option>
-                      <option value="dinner">Dinner (18:00 - 22:00)</option>
-                      <option value="anytime">Anytime (11:00 - 23:00)</option>
+                      <option value="">{t('guest.restaurant.selectTime')}</option>
+                      <option value="breakfast">{t('guest.restaurant.breakfast')}</option>
+                      <option value="lunch">{t('guest.restaurant.lunch')}</option>
+                      <option value="dinner">{t('guest.restaurant.dinner')}</option>
+                      <option value="anytime">{t('guest.restaurant.anytime')}</option>
                     </select>
                   </div>
                 </div>
@@ -497,7 +497,7 @@ const RestaurantBookingInterface = () => {
                     type="text"
                     value={scheduling.deliveryLocation}
                     onChange={(e) => setScheduling(prev => ({ ...prev, deliveryLocation: e.target.value }))}
-                    placeholder="Room number or delivery address"
+                    placeholder={t('guest.restaurant.roomNumberOrAddress')}
                     className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -519,16 +519,16 @@ const RestaurantBookingInterface = () => {
 
             {bookingStep === 3 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold mb-6">Order Confirmation</h2>
+                <h2 className="text-2xl font-bold mb-6">{t('guest.restaurant.orderConfirmation')}</h2>
 
                 {/* Order Summary */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Order Items</h3>
+                  <h3 className="text-lg font-semibold">{t('guest.restaurant.orderItems')}</h3>
                   {cart.map((item, index) => (
                     <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium">{item.itemName}</p>
-                        <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                        <p className="text-sm text-gray-600">{t('common.quantity')}: {item.quantity}</p>
                       </div>
                       <span className="font-semibold">${item.totalPrice}</span>
                     </div>
@@ -536,7 +536,7 @@ const RestaurantBookingInterface = () => {
 
                   <div className="border-t pt-4">
                     <div className="flex justify-between items-center font-bold text-lg">
-                      <span>Total</span>
+                      <span>{t('guest.restaurant.total')}</span>
                       <span className="text-blue-600">${pricing.total}</span>
                     </div>
                   </div>
@@ -544,29 +544,29 @@ const RestaurantBookingInterface = () => {
 
                 {/* Schedule Summary */}
                 <div className="mt-6 pt-6 border-t">
-                  <h3 className="text-lg font-semibold mb-4">Schedule & Delivery</h3>
+                  <h3 className="text-lg font-semibold mb-4">{t('booking.schedule')} & {t('guest.restaurant.deliveryLocation')}</h3>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-gray-600">Preferred Date</p>
+                      <p className="text-gray-600">{t('guest.restaurant.preferredDate')}</p>
                       <p className="font-medium">{scheduling.preferredDate}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Preferred Time</p>
+                      <p className="text-gray-600">{t('guest.restaurant.preferredTime')}</p>
                       <p className="font-medium">{scheduling.preferredTime}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Delivery Location</p>
+                      <p className="text-gray-600">{t('guest.restaurant.deliveryLocation')}</p>
                       <p className="font-medium">{scheduling.deliveryLocation}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Restaurant</p>
+                      <p className="text-gray-600">{t('guest.restaurant.restaurant')}</p>
                       <p className="font-medium">{selectedService?.name}</p>
                     </div>
                   </div>
 
                   {scheduling.specialRequests && (
                     <div className="mt-4">
-                      <p className="text-gray-600">Special Requests</p>
+                      <p className="text-gray-600">{t('guest.restaurant.specialRequests')}</p>
                       <p className="font-medium">{scheduling.specialRequests}</p>
                     </div>
                   )}
@@ -584,7 +584,7 @@ const RestaurantBookingInterface = () => {
               </h3>
 
               {cart.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No items in cart yet</p>
+                <p className="text-gray-500 text-center py-8">{t('guest.restaurant.noItemsInCart')}</p>
               ) : (
                 <div className="space-y-3 mb-6">
                   {cart.map((item) => (

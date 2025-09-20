@@ -90,11 +90,11 @@ const LaundryBookingInterface = () => {
 
     } catch (error) {
       console.error('Error fetching laundry services:', error);
-      toast.error('Failed to load laundry services');
+      toast.error(t('guest.laundry.failedToLoadServices'));
     } finally {
       setLoading(false);
     }
-  }, [hotelId]);
+  }, [hotelId, t]);
 
   useEffect(() => {
     if (hotelId) {
@@ -295,7 +295,7 @@ const LaundryBookingInterface = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 <FaTshirt className="inline mr-3" />
-                Laundry Service
+                {t('services.laundry')}
               </h1>
               <p className="text-gray-600 mt-2">{hotel?.name}</p>
             </div>
@@ -315,7 +315,7 @@ const LaundryBookingInterface = () => {
           <div className="lg:col-span-2">
             {bookingStep === 1 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-2xl font-bold mb-6">Select Laundry Items</h2>                {/* Service Provider Selection */}
+                <h2 className="text-2xl font-bold mb-6">{t('laundryBooking.selectLaundryItems')}</h2>                {/* Service Provider Selection */}
                 {servicesWithItems.length > 1 && (
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 mb-2">

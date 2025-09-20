@@ -17,7 +17,7 @@ const QRCodePage = () => {
         <meta name="description" content="Generate and manage QR codes for guest registration" />
       </Helmet>
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white">
         <QRCodeManager />
       </div>
     </>

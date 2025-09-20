@@ -34,8 +34,12 @@
     "selectLanguage": "Select Language",
     "english": "English",
     "arabic": "Arabic",
+    "cart": "Cart",
     "openUserMenu": "Open user menu",
     "userAvatar": "User avatar",
+    "of": "of",
+    "step": "Step",
+    "quantity": "Quantity",
     "clearFilters": "Clear Filters",
     "viewResults": "View Results",
     "filters": "Filters",
@@ -44,8 +48,15 @@
     "confirmed": "Confirmed",
     "completed": "Completed",
     "cancelled": "Cancelled",
+    "allCategories": "All Categories",
     "inProgress": "In Progress",
-    "checkin": "Check-in"
+    "checkin": "Check-in",
+    "expand": "Expand",
+    "collapse": "Collapse"
+  },
+  "platform": {
+    "hotelPlatform": "Hotel Platform",
+    "servicePlatform": "Service Platform"
   },
   "navigation": {
     "home": "Home",
@@ -181,7 +192,546 @@
     "totalRevenue": "Total Revenue",
     "totalBookings": "Total Bookings",
     "activeServices": "Active Services"
-  },  "services": {
+  },
+  "hotelAdmin": {
+    "dashboard": {
+      "title": "Hotel Dashboard",
+      "subtitle": "Welcome back! Here's what's happening with your hotel today.",
+      "refreshData": "Refresh Data",
+      "refreshing": "Refreshing...",
+      "stats": {
+        "totalRevenue": "Total Revenue",
+        "totalBookings": "Total Bookings",
+        "activeServices": "Active Services",
+        "serviceProviders": "Service Providers",
+        "vsLastMonth": "vs last month",
+        "acrossAllCategories": "across all categories",
+        "totalRegistered": "total registered",
+        "active": "active",
+        "categories": "categories"
+      },
+      "recentOrders": {
+        "title": "Recent Orders",
+        "subtitle": "Latest bookings and transactions",
+        "orderId": "Order ID",
+        "guest": "Guest",
+        "service": "Service",
+        "provider": "Provider",
+        "date": "Date",
+        "amount": "Amount",
+        "status": "Status",
+        "noOrders": "No recent orders found",
+        "unknownGuest": "Unknown Guest",
+        "unknownService": "Unknown Service",
+        "unknownProvider": "Unknown Provider",
+        "noEmail": "No email",
+        "hotelManaged": "Hotel Managed"
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "viewOrders": "View All Orders",
+        "manageServices": "Manage Services",
+        "addProvider": "Add Service Provider",
+        "viewRevenue": "View Revenue"
+      }
+    },
+    "orders": {
+      "title": "Orders Management",
+      "subtitle": "Manage and track all service orders for your hotel",
+      "categories": {
+        "all": "All Categories",
+        "laundry": "Laundry",
+        "transportation": "Transportation",
+        "housekeeping": "Housekeeping",
+        "dining": "Restaurant"
+      },
+      "filters": {
+        "searchPlaceholder": "Search orders...",
+        "allStatuses": "All Statuses",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "inProgress": "In Progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "filterByCategory": "Filter by Category",
+        "categoryDescription": "Select a service category to filter orders"
+      },
+      "table": {
+        "orderId": "Order ID",
+        "guest": "Guest",
+        "service": "Service",
+        "provider": "Provider",
+        "date": "Date",
+        "amount": "Amount",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "details": {
+        "title": "Order Details",
+        "orderInformation": "Order Information",
+        "guestInformation": "Guest Information",
+        "serviceDetails": "Service Details",
+        "paymentDetails": "Payment Details",
+        "specialRequests": "Special Requests",
+        "scheduleInformation": "Schedule Information",
+        "category": "Category",
+        "provider": "Provider",
+        "unknownProvider": "Unknown Provider",
+        "phone": "Phone",
+        "preferredDate": "Preferred Date",
+        "preferredTime": "Preferred Time",
+        "urgency": "Urgency",
+        "noDescription": "No description",
+        "markup": "Markup",
+        "close": "Close",
+        "updateStatus": "Update Status"
+      },
+      "pagination": {
+        "summary": "Page {{page}} of {{totalPages}} • Showing {{count}} orders",
+        "showing": "Showing <1>{{from}}</1> to <2>{{to}}</2> of <3>{{total}}</3> results"
+      },
+      "noOrders": "No orders found",
+      "loadingOrders": "Loading orders..."
+    },
+    "services": {
+      "title": "Services Management",
+      "subtitle": "Manage and configure services available at your hotel",
+      "searchPlaceholder": "Search services...",
+      "filters": {
+        "allCategories": "All Categories",
+        "laundry": "Laundry",
+        "transportation": "Transportation",
+        "tourism": "Tourism",
+        "food": "Food & Beverage",
+        "wellness": "Wellness & Spa"
+      },
+      "serviceCard": {
+        "setMarkup": "Set Markup",
+        "viewDetails": "View Details",
+        "unavailable": "Unavailable",
+        "activeProvider": "Active Provider"
+      },
+      "noServices": "No services found",
+      "loadingServices": "Loading available hotel service categories..."
+    },
+    "bookings": {
+      "title": "Bookings Management",
+      "subtitle": "Manage and track all guest bookings",
+      "searchPlaceholder": "Search bookings...",
+      "filters": {
+        "allStatuses": "All Statuses",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "inProgress": "In Progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "table": {
+        "bookingId": "Booking ID",
+        "guest": "Guest",
+        "service": "Service",
+        "dateTime": "Date & Time",
+        "amount": "Amount",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "details": {
+        "title": "Booking Details",
+        "viewDetails": "View Details"
+      },
+      "status": {
+        "paid": "Paid",
+        "unpaid": "Unpaid"
+      },
+      "noBookings": "No bookings found",
+      "guestInfoNotAvailable": "Guest info not available",
+      "serviceInfoNotAvailable": "Service info not available"
+    },
+    "serviceProviders": {
+      "title": "Service Providers Management",
+      "subtitle": "Manage service providers and their markup settings",
+      "addProvider": "Add Provider",
+      "searchTitle": "Search Providers",
+      "searchSubtitle": "Find and manage your service providers",
+      "searchPlaceholder": "Search by business name or email...",
+      "refresh": "Refresh",
+      "tableTitle": "Service Providers ({{count}})",
+      "tableSubtitle": "Manage your network of service providers",
+      "categories": {
+        "laundry": "Laundry Services",
+        "laundryDesc": "Wash, iron, and dry cleaning services",
+        "transportation": "Transportation",
+        "transportationDesc": "Car rental and taxi services",
+        "dining": "Dining Services",
+        "diningDesc": "Hotel restaurant and dining facilities",
+        "housekeeping": "Housekeeping",
+        "housekeepingDesc": "Room cleaning and maintenance services"
+      },
+      "filters": {
+        "allCategories": "All Categories",
+        "allStatuses": "All Statuses",
+        "active": "Active",
+        "inactive": "Inactive",
+        "pending": "Pending"
+      },
+      "table": {
+        "businessName": "Business Name",
+        "provider": "Provider",
+        "contact": "Contact",
+        "category": "Category",
+        "services": "Services",
+        "rating": "Rating",
+        "status": "Status",
+        "markup": "Markup",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "pending": "Pending",
+        "rejected": "Rejected",
+        "inactive": "Inactive",
+        "unknown": "Unknown"
+      },
+      "actions": {
+        "view": "View",
+        "edit": "Edit",
+        "suspend": "Suspend",
+        "activate": "Activate",
+        "delete": "Delete",
+        "setMarkup": "Set Markup",
+        "manageServices": "Manage Services"
+      },
+      "noProviders": "No providers found",
+      "noProvidersSearch": "No providers match your search criteria.",
+      "noProvidersYet": "No service providers have been added yet.",
+      "noDescription": "No description",
+      "noPhone": "No phone",
+      "markupNotSet": "Not set",
+      "notAvailable": "N/A",
+      "mobile": {
+        "contact": "Contact:",
+        "phone": "Phone:",
+        "markup": "Markup:"
+      },
+      "markupModal": {
+        "title": "Set Markup",
+        "currentMarkup": "Current markup:",
+        "markupPercentageLabel": "Markup Percentage (%)",
+        "markupPercentagePlaceholder": "Enter markup percentage",
+        "notesLabel": "Notes (Optional)",
+        "notesPlaceholder": "Add notes about this markup...",
+        "cancel": "Cancel",
+        "saveMarkup": "Save Markup",
+        "saving": "Saving..."
+      },
+      "categoriesModal": {
+        "title": "Manage Service Categories",
+        "subtitle": "Configure services for {{businessName}}",
+        "selectCategoriesTitle": "Select Service Categories",
+        "selectCategoriesDesc": "Choose which service categories this provider should offer. You can change these at any time.",
+        "currentCategoriesTitle": "Current Active Categories:",
+        "cancel": "Cancel",
+        "saveChanges": "Save Changes",
+        "saving": "Saving..."
+      },
+      "errors": {
+        "markupSetFailed": "Failed to set markup. Please try again.",
+        "categoriesUpdateFailed": "Failed to update service categories. Please try again."
+      }
+    },
+    "revenue": {
+      "title": "Revenue Analytics",
+      "subtitle": "Track your hotel's financial performance and revenue streams",
+      "totalRevenue": "Total Revenue",
+      "header": {
+        "title": "Revenue Analytics",
+        "subtitle": "Track your hotel's financial performance and revenue streams",
+        "totalRevenue": "Total Revenue"
+      },
+      "timePeriod": {
+        "title": "Time Period",
+        "thisWeek": "This Week",
+        "thisMonth": "This Month",
+        "thisQuarter": "This Quarter",
+        "thisYear": "This Year"
+      },
+      "metrics": {
+        "totalRevenue": "Total Revenue",
+        "totalBookings": "Total Bookings",
+        "avgBookingValue": "Avg. Booking Value",
+        "completionRate": "Completion Rate",
+        "basedOnCompleted": "Based on completed orders",
+        "allTimeBookings": "All time bookings",
+        "averageOrderValue": "Average order value",
+        "ordersCompleted": "Orders completed"
+      },
+      "chart": {
+        "title": "Revenue Trends",
+        "subtitle": "Monthly performance overview",
+        "totalMonths": "Total Months",
+        "peakMonthRevenue": "Peak Month Revenue",
+        "avgMonthlyRevenue": "Avg Monthly Revenue",
+        "monthlyRevenueData": "Monthly Revenue Data",
+        "orders": "orders",
+        "noDataTitle": "No revenue data available yet",
+        "noDataSubtitle": "Revenue trends will appear here once orders are completed"
+      },
+      "categoryRevenue": {
+        "title": "Revenue by Category",
+        "subtitle": "Performance breakdown",
+        "ofTotal": "of total",
+        "bookings": "bookings",
+        "unknown": "Unknown",
+        "noData": "No category data available"
+      },
+      "recentOrders": {
+        "title": "Recent High-Value Orders",
+        "subtitle": "Top performing bookings",
+        "serviceName": "Service Name",
+        "category": "Category",
+        "status": "Status",
+        "guest": "Guest",
+        "unknown": "Unknown",
+        "noData": "No recent orders available"
+      }
+    },
+    "qrCode": {
+      "title": "QR Code Management",
+      "subtitle": "Generate QR codes for guest registration",
+      "info": "Info",
+      "infoPanel": {
+        "title": "How QR Code Registration Works",
+        "forHotelStaff": "For Hotel Staff:",
+        "hotelStaffInstructions": [
+          "Display QR code at reception desk",
+          "Print multiple copies for different locations",
+          "Regenerate periodically for security",
+          "Monitor guest registrations"
+        ],
+        "forGuests": "For Guests:",
+        "guestInstructions": [
+          "Scan QR code with mobile device",
+          "Registration form opens automatically",
+          "Hotel information is pre-filled",
+          "Complete registration with personal details"
+        ]
+      },
+      "currentQRCode": "Current QR Code",
+      "loading": "Generating...",
+      "noQRGenerated": "No QR code generated yet",
+      "secureToken": "Secure JWT Token",
+      "expires": "Expires:",
+      "hotelRegistrationQR": "Hotel Registration QR Code",
+      "actions": {
+        "title": "Actions",
+        "generateNew": "Generate New QR Code",
+        "generating": "Generating...",
+        "regenerate": "Regenerate QR Code",
+        "regenerating": "Regenerating..."
+      },
+      "downloadPrint": {
+        "title": "Download & Print",
+        "download": "Download",
+        "print": "Print",
+        "downloadSizes": "Download sizes:",
+        "small": "Small (300px)",
+        "medium": "Medium (600px)",
+        "large": "Large (1200px)"
+      },
+      "share": {
+        "title": "Share",
+        "copyUrl": "Copy Registration URL"
+      },
+      "security": {
+        "title": "Security Features",
+        "featuresLabel": "Security Features",
+        "usageLabel": "Usage Instructions",
+        "uniqueLink": "Each QR code has a unique token for your hotel",
+        "expiration": "Codes expire automatically for security",
+        "regenerate": "Generate new codes anytime"
+      },
+      "printTemplate": {
+        "title": "Guest Registration QR Code",
+        "subtitle": "Guest Registration QR Code",
+        "howToUse": "How to use",
+        "step1": "1. Guests scan this QR code with their mobile device",
+        "step2": "2. Registration form opens with hotel pre-selected",
+        "step3": "3. Guest completes registration with their details",
+        "step4": "4. Guest can immediately access hotel services",
+        "generated": "Generated",
+        "expires": "Expires"
+      },
+      "toastMessages": {
+        "generateSuccess": "QR code generated successfully!",
+        "generateError": "Failed to generate QR code",
+        "regenerateError": "Failed to regenerate QR code",
+        "downloadError": "Failed to download QR code",
+        "noPrint": "No QR code to print",
+        "noUrl": "No QR URL to copy",
+        "copySuccess": "QR URL copied to clipboard!",
+        "copyError": "Failed to copy URL to clipboard"
+      }
+    },
+    "settings": {
+      "title": "Hotel Settings",
+      "subtitle": "Manage your hotel profile and configuration",
+      "loading": "Loading hotel profile...",
+      "updateSuccess": "Hotel settings updated successfully!",
+      "updateError": "Failed to update hotel settings",
+      "saving": "Saving...",
+      "saveChanges": "Save Changes",
+      "tabs": {
+        "profile": "Hotel Profile"
+      },
+      "sections": {
+        "basicInfo": "Basic Information",
+        "contactInfo": "Contact Information",
+        "addressInfo": "Address Information"
+      },
+      "fields": {
+        "hotelName": "Hotel Name",
+        "website": "Website",
+        "description": "Description",
+        "contactEmail": "Contact Email",
+        "contactPhone": "Contact Phone",
+        "streetAddress": "Street Address",
+        "city": "City",
+        "state": "State/Province",
+        "zipCode": "ZIP/Postal Code",
+        "country": "Country"
+      },
+      "placeholders": {
+        "description": "Describe your hotel's unique features and amenities..."
+      }
+    },
+    "guests": {
+      "title": "Guest Management",
+      "subtitle": "Manage your hotel guests and their access permissions",
+      "searchPlaceholder": "Search guests by name, email...",
+      "table": {
+        "guest": "Guest",
+        "contact": "Contact",
+        "joined": "Joined",
+        "status": "Status",
+        "actions": "Actions",
+        "phone": "Phone",
+        "room": "Room",
+        "checkIn": "Check-in",
+        "checkOut": "Check-out",
+        "totalBookings": "Total Bookings",
+        "totalSpent": "Total Spent"
+      },
+      "filters": {
+        "allStatuses": "All Statuses",
+        "active": "Active",
+        "inactive": "Inactive",
+        "activeGuests": "Active Guests",
+        "allGuests": "All Guests",
+        "checkedOut": "Checked Out"
+      },
+      "actions": {
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "activateGuest": "Activate Guest",
+        "deactivateGuest": "Deactivate Guest"
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next",
+        "pageOf": "Page {{page}} of {{totalPages}}",
+        "showing": "Showing <1>{{from}}</1> to <2>{{to}}</2> of <3>{{total}}</3> results"
+      },
+      "resultsCount": "{{count}} guest found",
+      "resultsCount_other": "{{count}} guests found",
+      "noGuests": "No guests found",
+      "noGuestsDescription": "Try adjusting your search criteria or filters.",
+      "noPhone": "No phone",
+      "unknownGuest": "Unknown Guest"
+    },
+    "markup": {
+      "title": "Markup Settings",
+      "subtitle": "Configure markup percentages for different service categories",
+      "categoryMarkup": "Category Markup",
+      "percentage": "Percentage",
+      "save": "Save Changes",
+      "reset": "Reset to Default",
+      "updated": "Markup settings updated successfully",
+      "error": "Failed to update markup settings"
+    },
+    "qrCodes": {
+      "title": "QR Code Management",
+      "subtitle": "Generate and manage QR codes for guest registration",
+      "generate": "Generate QR Code",
+      "download": "Download",
+      "print": "Print",
+      "regenerate": "Regenerate"
+    },
+    "common": {
+      "loading": "Loading...",
+      "noData": "No data available",
+      "error": "An error occurred",
+      "retry": "Retry",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "view": "View",
+      "add": "Add",
+      "search": "Search",
+      "filter": "Filter",
+      "export": "Export",
+      "refresh": "Refresh",
+      "success": "Success",
+      "failed": "Failed",
+      "confirm": "Confirm",
+      "close": "Close"
+    }
+  },
+  "profile": {
+    "myProfile": "My Profile",
+    "fullName": "Full Name",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "emailAddress": "Email Address",
+    "phoneNumber": "Phone Number",
+    "role": "Role",
+    "editProfile": "Edit Profile",
+    "saving": "Saving...",
+    "updateSuccess": "Profile updated successfully",
+    "updateFailed": "Failed to update profile",
+    "notProvided": "Not provided",
+    "notSet": "Not set",
+    "roles": {
+      "guest": "Guest",
+      "hotelAdmin": "Hotel Administrator",
+      "serviceProvider": "Service Provider",
+      "superAdmin": "Super Administrator"
+    },
+    "hotelInformation": "Hotel Information",
+    "hotelDetails": "Details about your hotel",
+    "hotelName": "Hotel Name",
+    "hotelAddress": "Hotel Address",
+    "contactNumber": "Contact Number",
+    "businessInformation": "Business Information",
+    "businessDetails": "Details about your business",
+    "businessName": "Business Name",
+    "serviceType": "Service Type",
+    "businessAddress": "Business Address",
+    "adminInformation": "Administrator Information",
+    "adminDetails": "Administrator access and permissions",
+    "accessLevel": "Access Level",
+    "superAdministrator": "Super Administrator",
+    "permissions": "Permissions",
+    "fullSystemAccess": "Full System Access",
+    "validation": {
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "emailRequired": "Email is required",
+      "invalidEmail": "Invalid email address",
+      "invalidPhone": "Invalid phone number"
+    }
+  },
+  "services": {
     "serviceManagement": "Service Management",
     "serviceName": "Service Name",
     "serviceDescription": "Service Description",
@@ -231,6 +781,7 @@
     "newBooking": "New Booking",
     "cancelBooking": "Cancel Booking",
     "confirmBooking": "Confirm Booking",
+    "step": "Step",
     "pending": "Pending",
     "confirmed": "Confirmed",
     "inProgress": "In Progress",
@@ -445,7 +996,48 @@
       "updateProfile": "Update Profile",
       "profileUpdated": "Profile updated successfully",
       "businessLogo": "Business Logo",
-      "uploadLogo": "Upload Logo",      "currentLogo": "Current Logo"
+      "uploadLogo": "Upload Logo",
+      "currentLogo": "Current Logo",
+      "myProfile": "My Profile",
+      "validation": {
+        "firstNameRequired": "First name is required",
+        "lastNameRequired": "Last name is required",
+        "emailRequired": "Email is required",
+        "invalidEmail": "Invalid email address",
+        "invalidPhone": "Invalid phone number"
+      },
+      "hotelInformation": "Hotel Information",
+      "hotelDetails": "Details about your hotel.",
+      "hotelName": "Hotel name",
+      "hotelAddress": "Hotel address",
+      "contactNumber": "Contact number",
+      "notSet": "Not set",
+      "businessInformation": "Business Information",
+      "businessDetails": "Details about your service business.",
+      "serviceType": "Service type",
+      "adminInformation": "Admin Information",
+      "adminDetails": "System administrator details.",
+      "accessLevel": "Access Level",
+      "superAdministrator": "Super Administrator",
+      "permissions": "Permissions",
+      "fullSystemAccess": "Full system access",
+      "roles": {
+        "superAdmin": "Super Administrator",
+        "hotelAdmin": "Hotel Administrator",
+        "serviceProvider": "Service Provider",
+        "guest": "Guest User"
+      },
+      "firstName": "First name",
+      "lastName": "Last name",
+      "emailAddress": "Email address",
+      "phoneNumber": "Phone number",
+      "saving": "Saving...",
+      "fullName": "Full name",
+      "notProvided": "Not provided",
+      "role": "Role",
+      "editProfile": "Edit Profile",
+      "updateSuccess": "Profile updated successfully",
+      "updateFailed": "Failed to update profile"
     },    "laundryManagement": {
       "title": "Laundry Service Management",
       "description": "Manage your laundry services and add new items with individual pricing",
@@ -921,7 +1513,20 @@
     "extraCleaning": "Extra Cleaning",
     "freshLinens": "Fresh Linens",
     "amenityRestocking": "Amenity Restocking",
-    "available24_7": "Available 24/7"
+    "available24_7": "Available 24/7",
+    "professionalService": "Professional Service",
+    "qualityGuaranteed": "Quality Guaranteed",
+    "professionalServiceDescription": "Professional service available for your comfort and convenience",
+    "quickService": "Quick Service",
+    "qualityAssured": "Quality Assured",
+    "pickupAndDelivery": "Pickup & Delivery",
+    "travelService": "Travel Service",
+    "multipleVehicles": "Multiple Vehicles",
+    "reliableService": "Reliable Service",
+    "available247": "24/7 Available",
+    "freshMenu": "Fresh Menu",
+    "qualityFood": "Quality Food",
+    "roomService": "Room Service"
   },
   "laundryBooking": {
     "title": "Laundry Service Booking",
@@ -968,6 +1573,8 @@
     "unavailable": "Unavailable",
     "noServiceTypes": "No Service Types",
     "priceNotSet": "Price not set",
+    "selectServiceTypeInstruction": "Select service type for each item",
+    "applyToAll": "Apply \"{{typeName}}\" to All",
     "serviceTypeNames": {
       "wash_only": "Wash Only",
       "iron_only": "Iron Only",
@@ -1374,7 +1981,6 @@
     "stillReserved": "Don't worry - your booking is still reserved. You can try paying again or contact support if you need assistance.",
     "processing": "Processing...",
     "tryAgain": "Try Payment Again",
-    "viewBookings": "View My Bookings",
     "backToHome": "Back to Home",
     "needHelp": "Having trouble with payment? Contact our support team at <1>{{email}}</1>",
     "errorMessages": {
@@ -1586,6 +2192,134 @@
             "extraLighting": "Need extra lighting"
           }
         }
+      }
+    },
+    "expertCleaning": "Expert Cleaning",
+    "qualityAssured": "Quality Assured",
+    "onSchedule": "On Schedule",
+    "scheduleDate": "Schedule Date",
+    "preferredTime": "Preferred Time",
+    "quickIssueCategories": "Quick Issue Categories",
+    "tapToViewCommonIssues": "Tap to view common issues"
+  },
+  "guest": {
+    "common": {
+      "hotelServices": "Hotel Services",
+      "star": "Star",
+      "stars": "Stars",
+      "welcomeToPremiumServices": "Welcome to our premium services",
+      "discoverAndBook": "Discover and book exceptional services designed for your comfort and convenience",
+      "hello": "Hello",
+      "guest": "Guest",
+      "quickAccess": "Quick Access"
+    },
+    "transportation": {
+      "noTransportationServices": "No Transportation Services Available",
+      "noTransportationDescription": "This hotel doesn't offer transportation services at the moment.",
+      "vehiclesNotAvailable": "Transportation Vehicles Not Available",
+      "serviceProviderNoVehicles": "This hotel has {{count}} transportation service provider(s), but none have configured their vehicles yet.",
+      "availableServices": "Available services: {{services}}",
+      "browseOtherServices": "Browse Other Services",
+      "selectVehicles": "Select Vehicles",
+      "schedule": "Schedule",
+      "confirm": "Confirm",
+      "failedToLoad": "Failed to load transportation services",
+      "addToCart": "Please add at least one vehicle to your cart",
+      "selectDateAndTime": "Please select pickup date and time",
+      "providePickupLocation": "Please provide pickup location",
+      "failedToCreate": "Failed to create booking",
+      "chooseServiceTypes": "Choose Service Types",
+      "selectPreferredServiceType": "Select your preferred service type",
+      "dailyRental": "Daily Rental",
+      "fullDayRental": "Full day rental",
+      "serviceTypesSelected": "Service Types Selected",
+      "vehiclesConfigured": "{{count}} vehicle(s) configured. Ready to proceed to scheduling.",
+      "scheduleTransportation": "Schedule Transportation",
+      "setPickupDetails": "Set your pickup time and location details",
+      "pickupSchedule": "Pickup Schedule",
+      "locationDetails": "Location Details",
+      "passengerDetails": "Passenger Details",
+      "confirmYourBooking": "Confirm Your Booking",
+      "orderSummary": "Order Summary",
+      "quotePending": "Quote pending",
+      "scheduleAndLocation": "Schedule & Location",
+      "pickupDate": "Pickup Date",
+      "pickupTime": "Pickup Time",
+      "pickup": "Pickup",
+      "dropOff": "Drop-off",
+      "passengers": "Passengers",
+      "luggage": "Luggage",
+      "specialRequests": "Special Requests",
+      "enterPickupLocation": "Enter pickup address or location",
+      "enterDestinationAddress": "Enter destination address",
+      "vehicle": "vehicle",
+      "vehicles": "vehicles",
+      "specialInstructions": "Any special instructions for the transportation service...",
+      "pickupLocation": "Pickup Location",
+      "selectTime": "Select time...",
+      "totalAmount": "Total Amount",
+      "vehiclesTotal": "Vehicles Total",
+      "expressService": "Express Service",
+      "total": "Total"
+    },
+    "restaurant": {
+      "noRestaurantServices": "No Restaurant Services Available",
+      "noRestaurantDescription": "This hotel doesn't offer restaurant services at the moment.",
+      "menuItemsNotAvailable": "Menu Items Not Available",
+      "selectMenuItems": "Select Menu Items",
+      "mainCourses": "Main Courses",
+      "appetizers": "Appetizers",
+      "desserts": "Desserts",
+      "beverages": "Beverages",
+      "other": "Other",
+      "selectTime": "Select time",
+      "breakfast": "Breakfast (7:00 - 10:00)",
+      "lunch": "Lunch (12:00 - 15:00)",
+      "dinner": "Dinner (18:00 - 22:00)",
+      "anytime": "Anytime (11:00 - 23:00)",
+      "deliveryLocation": "Delivery Location",
+      "roomNumberOrAddress": "Room number or delivery address",
+      "orderConfirmation": "Order Confirmation",
+      "orderItems": "Order Items",
+      "total": "Total",
+      "preferredDate": "Preferred Date",
+      "preferredTime": "Preferred Time",
+      "restaurant": "Restaurant",
+      "specialRequests": "Special Requests",
+      "noItemsInCart": "No items in cart yet",
+      "itemRemovedFromCart": "Item removed from cart",
+      "addItemsToCart": "Please add at least one item to your cart",
+      "selectDateAndTime": "Please select preferred date and time",
+      "failedToLoadServices": "Failed to load restaurant services",
+      "failedToCreateBooking": "Failed to create booking",
+      "scheduleDeliveryDetails": "Schedule & Delivery Details",
+      "items": "Items",
+      "schedule": "Schedule",
+      "confirm": "Confirm",
+      "yourOrder": "Your Order",
+      "continueToSchedule": "Continue to Schedule",
+      "reviewOrder": "Review Order",
+      "backToMenu": "Back to Menu",
+      "confirmAndPay": "Confirm & Pay",
+      "creatingOrder": "Creating Order...",
+      "backToSchedule": "Back to Schedule",
+      "specialRequestsPlaceholder": "Any dietary requirements, cooking preferences, or delivery instructions…"
+    },
+    "laundry": {
+      "failedToLoadServices": "Failed to load laundry services"
+    },
+    "payment": {
+      "noBookingId": "No booking ID provided",
+      "failedFetch": "Failed to fetch booking details",
+      "failedLoad": "Failed to load booking details",
+      "failedCreateSession": "Failed to create new payment session",
+      "failedRetry": "Failed to retry payment",
+      "errorMessages": {
+        "cancelled": "Payment was cancelled",
+        "timeout": "Payment timed out",
+        "insufficientFunds": "Insufficient funds",
+        "cardDeclined": "Card was declined",
+        "networkError": "Network error occurred"
       }
     }
   }
