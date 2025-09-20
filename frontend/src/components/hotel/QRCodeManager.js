@@ -438,14 +438,14 @@ const QRCodeManager = () => {
       </div>
 
       {/* Security Information */}
-      {qrData?.metadata && (
+      {qrData && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
           <h3 className="text-lg font-semibold text-black mb-4">{t('hotelAdmin.qrCode.security.title')}</h3>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <h4 className="font-medium text-black mb-2">{t('hotelAdmin.qrCode.security.featuresLabel')}:</h4>
               <ul className="text-sm text-black space-y-1">
-                {qrData.metadata.securityFeatures?.map((feature, index) => (
+                {t('hotelAdmin.qrCode.security.features', { returnObjects: true }).map((feature, index) => (
                   <li key={index} className="flex items-start space-x-2">
                     <ShieldCheckIcon className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: '#3B5787' }} />
                     <span>{feature}</span>
@@ -456,7 +456,7 @@ const QRCodeManager = () => {
             <div>
               <h4 className="font-medium text-black mb-2">{t('hotelAdmin.qrCode.security.usageLabel')}:</h4>
               <ul className="text-sm text-black space-y-1">
-                {qrData.metadata.usageInstructions?.map((instruction, index) => (
+                {t('hotelAdmin.qrCode.security.instructions', { returnObjects: true }).map((instruction, index) => (
                   <li key={index} className="flex items-start space-x-2">
                     <span className="font-bold mt-0.5" style={{ color: '#67BAE0' }}>{index + 1}.</span>
                     <span>{instruction}</span>

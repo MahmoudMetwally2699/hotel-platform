@@ -465,6 +465,12 @@
         "averageOrderValue": "Average order value",
         "ordersCompleted": "Orders completed"
       },
+      "stats": {
+        "hotelCommission": "Hotel Commission",
+        "totalRevenue": "Total Revenue",
+        "totalBookings": "Total Bookings",
+        "averageOrder": "Average Order Value"
+      },
       "chart": {
         "title": "Revenue Trends",
         "subtitle": "Monthly performance overview",
@@ -475,6 +481,9 @@
         "orders": "orders",
         "noDataTitle": "No revenue data available yet",
         "noDataSubtitle": "Revenue trends will appear here once orders are completed"
+      },
+      "charts": {
+        "revenueByCategory": "Revenue by Category"
       },
       "categoryRevenue": {
         "title": "Revenue by Category",
@@ -546,6 +555,19 @@
         "title": "Security Features",
         "featuresLabel": "Security Features",
         "usageLabel": "Usage Instructions",
+        "features": [
+          "JWT-based token with hotel-specific secret",
+          "High error correction level",
+          "90-day expiration for security",
+          "Hotel validation on registration",
+          "Nonce-based replay protection"
+        ],
+        "instructions": [
+          "Display QR code at hotel reception desk",
+          "Guest scans QR code with their mobile device",
+          "Registration form auto-populates with hotel information",
+          "Guest completes registration with personal details only"
+        ],
         "uniqueLink": "Each QR code has a unique token for your hotel",
         "expiration": "Codes expire automatically for security",
         "regenerate": "Generate new codes anytime"
