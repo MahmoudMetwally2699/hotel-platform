@@ -163,6 +163,30 @@ const userSchema = new mongoose.Schema({
     // Removed select: false so hotel admins can manage guest status
   },
 
+  // Checkout-related fields
+  checkoutTime: {
+    type: Date,
+    default: function() {
+      if (this.checkOutDate && this.role === 'guest') {
+        const checkoutDateTime = new Date(this.checkOutDate);
+        checkoutDateTime.setHours(16, 0, 0, 0); // Set to 4:00 PM
+        return checkoutDateTime;
+      }
+      return null;
+    }
+  },
+
+  autoDeactivatedAt: {
+    type: Date,
+    default: null
+  },
+
+  deactivationReason: {
+    type: String,
+    enum: ['checkout_expired', 'manual', 'admin_action'],
+    default: null
+  },
+
   // Booking status
   hasActiveBooking: {
     type: Boolean,
@@ -356,6 +380,56 @@ userSchema.statics.findByHotel = function(hotelId) {
     ],
     isActive: true
   });
+};
+
+// Auto-deactivation methods
+userSchema.methods.deactivateAccount = function(reason = 'checkout_expired') {
+  this.isActive = false;
+  this.autoDeactivatedAt = new Date();
+  this.deactivationReason = reason;
+  return this.save();
+};
+
+userSchema.methods.isCheckoutExpired = function() {
+  if (!this.checkoutTime || this.role !== 'guest') {
+    return false;
+  }
+  return new Date() >= this.checkoutTime;
+};
+
+userSchema.statics.findExpiredCheckouts = function() {
+  const now = new Date();
+  return this.find({
+    role: 'guest',
+    isActive: true,
+    checkoutTime: { $lte: now }
+  });
+};
+
+userSchema.statics.deactivateExpiredCheckouts = async function() {
+  const expiredUsers = await this.findExpiredCheckouts();
+  const results = [];
+
+  for (const user of expiredUsers) {
+    try {
+      await user.deactivateAccount('checkout_expired');
+      results.push({
+        userId: user._id,
+        email: user.email,
+        status: 'deactivated',
+        checkoutTime: user.checkoutTime
+      });
+    } catch (error) {
+      results.push({
+        userId: user._id,
+        email: user.email,
+        status: 'error',
+        error: error.message
+      });
+    }
+  }
+
+  return results;
 };
 
 const User = mongoose.model('User', userSchema);

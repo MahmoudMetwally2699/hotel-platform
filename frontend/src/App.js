@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import 'react-toastify/dist/ReactToastify.minimal.css';
 import AppRouter from './routes/AppRouter';
 import { selectIsAuthenticated, selectAuthRole, checkAuth } from './redux/slices/authSlice';
+import sessionMonitor from './services/sessionMonitor.service';
 import './i18n'; // Initialize i18n
 import './App.css';
 
@@ -194,6 +195,22 @@ function App() {
       hasError: !!error
     });
   }, [user, isAuthenticated, isLoading, error]);
+
+  // Session monitoring for authenticated users
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('🔍 Starting session monitoring for authenticated user');
+      sessionMonitor.startMonitoring();
+    } else {
+      console.log('🔍 Stopping session monitoring - user not authenticated');
+      sessionMonitor.stopMonitoring();
+    }
+
+    // Cleanup function to stop monitoring when component unmounts
+    return () => {
+      sessionMonitor.stopMonitoring();
+    };
+  }, [isAuthenticated, user]);
 
   return (
     <div className="min-h-screen bg-background-default">

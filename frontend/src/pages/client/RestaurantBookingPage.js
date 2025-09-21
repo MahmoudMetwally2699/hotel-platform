@@ -7,6 +7,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../redux/slices/authSlice';
 import { toast } from 'react-toastify';
 import {
   FaUtensils,
@@ -31,6 +33,7 @@ const RestaurantBookingPage = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { isRTL, textAlign } = useRTL();
+  const currentUser = useSelector(selectCurrentUser);
 
   // Props from navigation state (UNCHANGED)
   const { service: passedService, hotel: passedHotel } = location.state || {};
@@ -46,7 +49,6 @@ const RestaurantBookingPage = () => {
   const [bookingDetails, setBookingDetails] = useState({
     preferredDate: '',
     preferredTime: '',
-    deliveryLocation: '',
     specialRequests: ''
   });
 
@@ -190,11 +192,11 @@ const RestaurantBookingPage = () => {
           preferredTime: bookingDetails.preferredTime
         },
         guestDetails: {
-          deliveryLocation: bookingDetails.deliveryLocation,
+          deliveryLocation: currentUser?.roomNumber || 'Room',
           specialRequests: bookingDetails.specialRequests
         },
         location: {
-          deliveryLocation: bookingDetails.deliveryLocation,
+          deliveryLocation: currentUser?.roomNumber || 'Room',
           deliveryInstructions: bookingDetails.specialRequests
         },
         pricing: {
@@ -529,13 +531,9 @@ const RestaurantBookingPage = () => {
                     <FaMapMarkerAlt className="inline mr-2" />
                     {t('guest.restaurant.deliveryLocation')}
                   </label>
-                  <input
-                    type="text"
-                    value={bookingDetails.deliveryLocation}
-                    onChange={(e) => setBookingDetails(prev => ({ ...prev, deliveryLocation: e.target.value }))}
-                    placeholder={t('guest.restaurant.roomNumberOrAddress')}
-                    className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#61B6DE] focus:border-[#61B6DE]"
-                  />
+                  <div className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 font-medium">
+                    Room {currentUser?.roomNumber || 'N/A'}
+                  </div>
                 </div>
 
                 <div className="mt-6">
@@ -587,7 +585,7 @@ const RestaurantBookingPage = () => {
                   </div>
                   <div>
                     <p className="text-gray-600">{t('guest.restaurant.deliveryLocation')}</p>
-                    <p className="font-medium">{bookingDetails.deliveryLocation || '—'}</p>
+                    <p className="font-medium">Room {currentUser?.roomNumber || '—'}</p>
                   </div>
                   <div>
                     <p className="text-gray-600">{t('guest.restaurant.restaurant')}</p>
@@ -670,7 +668,7 @@ const RestaurantBookingPage = () => {
                   <>
                     <button
                       onClick={() => setStep(3)}
-                      disabled={!bookingDetails.preferredDate || !bookingDetails.preferredTime || !bookingDetails.deliveryLocation}
+                      disabled={!bookingDetails.preferredDate || !bookingDetails.preferredTime || !currentUser?.roomNumber}
                       className="w-full rounded-xl bg-gradient-to-r from-[#3B5787] to-[#61B6DE] text-white py-3 font-semibold hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition"
                     >
                       {t('guest.restaurant.reviewOrder')}
@@ -739,7 +737,7 @@ const RestaurantBookingPage = () => {
             {step === 2 && (
               <button
                 onClick={() => setStep(3)}
-                disabled={!bookingDetails.preferredDate || !bookingDetails.preferredTime || !bookingDetails.deliveryLocation}
+                disabled={!bookingDetails.preferredDate || !bookingDetails.preferredTime || !currentUser?.roomNumber}
                 className="rounded-xl bg-gradient-to-r from-[#3B5787] to-[#61B6DE] text-white px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
               >
                 Review

@@ -50,6 +50,10 @@ const LoginPage = () => {
             console.log('Redirecting superadmin to dashboard');
             navigate('/superadmin/dashboard', { replace: true });
             break;
+          case 'superHotel':
+            console.log('Redirecting super hotel admin to dashboard');
+            navigate('/super-hotel-admin/dashboard', { replace: true });
+            break;
           case 'hotel':
             console.log('Redirecting hotel admin to dashboard');
             navigate('/hotel/dashboard', { replace: true });

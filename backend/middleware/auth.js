@@ -8,6 +8,7 @@
 const jwt = require('jsonwebtoken');
 const { AppError, catchAsync } = require('./error');
 const User = require('../models/User');
+const SuperHotel = require('../models/SuperHotel');
 const logger = require('../utils/logger');
 
 // Removed rate limiting for authentication attempts
@@ -47,8 +48,19 @@ const protect = catchAsync(async (req, res, next) => {
 
     // 4) Check if user account is active
     if (!currentUser.isActive) {
-      logger.logSecurity('ACCESS_DENIED_INACTIVE_USER', req, { userId: decoded.id });
-      return next(new AppError('Your account has been deactivated. Please contact support.', 401));
+      logger.logSecurity('ACCESS_DENIED_INACTIVE_USER', req, {
+        userId: decoded.id,
+        deactivationReason: currentUser.deactivationReason,
+        autoDeactivatedAt: currentUser.autoDeactivatedAt
+      });
+
+      let errorMessage = 'Your account has been deactivated. Please contact support.';
+
+      if (currentUser.deactivationReason === 'checkout_expired') {
+        errorMessage = 'Your account has been automatically deactivated because your checkout time has passed. Please contact hotel reception for assistance.';
+      }
+
+      return next(new AppError(errorMessage, 401));
     }
 
     // 5) Check if user changed password after the token was issued
@@ -245,10 +257,109 @@ const restrictToOwnBookings = catchAsync(async (req, res, next) => {
   next();
 });
 
+/**
+ * Protect super hotel routes - Verify JWT token for super hotel
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next function
+ */
+const protectSuperHotel = catchAsync(async (req, res, next) => {
+  // 1) Getting token and check if it's there
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies && req.cookies.superHotelJwt) {
+    token = req.cookies.superHotelJwt;
+  }
+
+  if (!token) {
+    logger.logSecurity('SUPER_HOTEL_ACCESS_DENIED_NO_TOKEN', req);
+    return next(new AppError('You are not logged in! Please log in to get access.', 401));
+  }
+
+  try {
+    // 2) Verification token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // 3) Check if super hotel still exists
+    const currentSuperHotel = await SuperHotel.findById(decoded.id)
+      .populate('assignedHotels', 'name address location contactInfo');
+
+    if (!currentSuperHotel) {
+      logger.logSecurity('SUPER_HOTEL_ACCESS_DENIED_NOT_FOUND', req, { superHotelId: decoded.id });
+      return next(new AppError('The super hotel belonging to this token no longer exists.', 401));
+    }
+
+    // 4) Check if super hotel account is active
+    if (!currentSuperHotel.isActive) {
+      logger.logSecurity('SUPER_HOTEL_ACCESS_DENIED_INACTIVE', req, { superHotelId: decoded.id });
+      return next(new AppError('Your super hotel account has been deactivated. Please contact support.', 401));
+    }
+
+    // 5) Check if password changed after the token was issued
+    if (currentSuperHotel.changedPasswordAfter && currentSuperHotel.changedPasswordAfter(decoded.iat)) {
+      logger.logSecurity('SUPER_HOTEL_ACCESS_DENIED_PASSWORD_CHANGED', req, { superHotelId: decoded.id });
+      return next(new AppError('Password recently changed! Please log in again.', 401));
+    }
+
+    // Grant access to protected route
+    req.superHotel = currentSuperHotel;
+    console.log('🔐 protectSuperHotel middleware - Set req.superHotel:', {
+      superHotelId: req.superHotel._id,
+      name: req.superHotel.name,
+      email: req.superHotel.email,
+      assignedHotelsCount: req.superHotel.assignedHotels.length
+    });
+    next();
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      logger.logSecurity('SUPER_HOTEL_ACCESS_DENIED_INVALID_TOKEN', req);
+      return next(new AppError('Invalid token. Please log in again!', 401));
+    } else if (error.name === 'TokenExpiredError') {
+      logger.logSecurity('SUPER_HOTEL_ACCESS_DENIED_EXPIRED_TOKEN', req);
+      return next(new AppError('Your token has expired! Please log in again.', 401));
+    }
+
+    logger.error('Super Hotel JWT Verification Error:', error);
+    return next(new AppError('Authentication failed. Please log in again.', 401));
+  }
+});
+
+/**
+ * Restrict super hotel access to their assigned hotels only
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next function
+ */
+const restrictToAssignedHotels = catchAsync(async (req, res, next) => {
+  if (!req.superHotel) {
+    return next(new AppError('Super hotel not authenticated', 401));
+  }
+
+  // For routes with hotelId parameter
+  if (req.params.hotelId) {
+    const assignedHotelIds = req.superHotel.assignedHotels.map(hotel => hotel._id.toString());
+
+    if (!assignedHotelIds.includes(req.params.hotelId)) {
+      logger.logSecurity('SUPER_HOTEL_ACCESS_DENIED_UNASSIGNED_HOTEL', req, {
+        superHotelId: req.superHotel._id,
+        requestedHotelId: req.params.hotelId,
+        assignedHotels: assignedHotelIds
+      });
+      return next(new AppError('You can only access data from your assigned hotels', 403));
+    }
+  }
+
+  next();
+});
+
 module.exports = {
   protect,
+  protectSuperHotel,
   restrictTo,
   restrictToOwnHotel,
+  restrictToAssignedHotels,
   restrictToOwnServiceProvider,
   restrictToOwnBookings,
   restrictProviderToHotelAdmin

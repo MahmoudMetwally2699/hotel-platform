@@ -47,6 +47,14 @@ const SuperAdminHotelAdminsPage = lazy(() => import('../pages/superadmin/HotelAd
 const SuperAdminAnalyticsPage = lazy(() => import('../pages/superadmin/AnalyticsPage'));
 const SuperAdminPlatformMetricsPage = lazy(() => import('../pages/superadmin/PlatformMetricsPage'));
 const SuperAdminSettingsPage = lazy(() => import('../pages/superadmin/SettingsPage'));
+const SuperHotelsPage = lazy(() => import('../pages/superadmin/SuperHotelsPage'));
+
+// Super Hotel Admin Pages
+const SuperHotelLogin = lazy(() => import('../pages/admin/SuperHotelLogin'));
+const SuperHotelDashboard = lazy(() => import('../pages/admin/SuperHotelDashboard'));
+const SuperHotelHotels = lazy(() => import('../pages/admin/SuperHotelHotels'));
+const AdminLayout = lazy(() => import('../layouts/AdminLayout'));
+const SuperHotelAuthWrapper = lazy(() => import('../components/common/SuperHotelAuthWrapper'));
 
 // Hotel Admin Pages
 const HotelAdminDashboard = lazy(() => import('../pages/hotel/DashboardPage'));
@@ -91,6 +99,7 @@ const AppRouter = () => {
   return (
     <Suspense fallback={<LoadingScreen />}>      <Routes>        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/super-hotel-admin/login" element={<SuperHotelLogin />} />
         <Route path="/admin" element={<AdminAccessPage />} />
         <Route path="/superadmin/login" element={<SuperAdminLoginPage />} />
         <Route path="/hotel/login" element={<HotelAdminLoginPage />} />
@@ -197,6 +206,16 @@ const AppRouter = () => {
             <ProtectedRoute allowedRoles="superadmin">
               <TailwindLayout>
                 <SuperAdminHotelsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/superadmin/super-hotels"
+          element={
+            <ProtectedRoute allowedRoles="superadmin">
+              <TailwindLayout>
+                <SuperHotelsPage />
               </TailwindLayout>
             </ProtectedRoute>
           }
@@ -545,6 +564,40 @@ const AppRouter = () => {
                 <ServiceProviderSettingsPage />
               </TailwindLayout>
             </ProtectedRoute>
+          }
+        />
+
+        {/* Super Hotel Admin Routes */}
+        <Route
+          path="/super-hotel-admin/dashboard"
+          element={
+            <Suspense fallback={<LoadingScreen />}>
+              <AdminLayout><SuperHotelDashboard /></AdminLayout>
+            </Suspense>
+          }
+        />
+        <Route
+          path="/super-hotel-admin/hotels"
+          element={
+            <Suspense fallback={<LoadingScreen />}>
+              <AdminLayout><SuperHotelHotels /></AdminLayout>
+            </Suspense>
+          }
+        />
+        <Route
+          path="/super-hotel-admin/clients"
+          element={
+            <Suspense fallback={<LoadingScreen />}>
+              <AdminLayout><div className="p-6 text-center text-gray-600">Clients page coming soon</div></AdminLayout>
+            </Suspense>
+          }
+        />
+        <Route
+          path="/super-hotel-admin/analytics"
+          element={
+            <Suspense fallback={<LoadingScreen />}>
+              <AdminLayout><div className="p-6 text-center text-gray-600">Analytics page coming soon</div></AdminLayout>
+            </Suspense>
           }
         />
 

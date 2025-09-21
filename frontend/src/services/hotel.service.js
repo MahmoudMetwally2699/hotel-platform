@@ -501,6 +501,21 @@ class HotelService {
       throw error;
     }
   }
+
+  /**
+   * Update guest information (room, check-in/out dates)
+   * @param {string} guestId - Guest ID
+   * @param {Object} updateData - Update data (roomNumber, checkInDate, checkOutDate)
+   * @returns {Promise} - Response from API
+   */
+  async updateGuestInfo(guestId, updateData) {
+    try {
+      const response = await apiClient.patch(`${HOTEL_ADMIN_API.GUESTS}/${guestId}`, updateData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 const hotelService = new HotelService();

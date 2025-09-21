@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUsers, selectAllUsers, selectUserLoading } from '../../redux/slices/userSlice';
-import { HiSearch, HiFilter, HiUserAdd, HiCheckCircle, HiXCircle } from 'react-icons/hi';
+import { HiSearch, HiFilter, HiUserAdd, HiCheckCircle, HiXCircle, HiPencil } from 'react-icons/hi';
 import { useAuth } from '../../hooks/useAuth';
 import hotelService from '../../services/hotel.service';
 
@@ -29,6 +29,15 @@ const GuestsPage = () => {
   const [guests, setGuests] = useState([]);
   const [filteredGuests, setFilteredGuests] = useState([]);
   const [updating, setUpdating] = useState(new Set());
+
+  // Edit modal state
+  const [editModal, setEditModal] = useState({
+    isOpen: false,
+    guest: null,
+    roomNumber: '',
+    checkInDate: '',
+    checkOutDate: ''
+  });
 
   // Fetch guests with pagination
   const fetchGuests = useCallback(async () => {
@@ -110,6 +119,63 @@ const GuestsPage = () => {
       setUpdating(prev => {
         const newSet = new Set(prev);
         newSet.delete(guestId);
+        return newSet;
+      });
+    }
+  };
+
+  // Open edit modal
+  const openEditModal = (guest) => {
+    setEditModal({
+      isOpen: true,
+      guest,
+      roomNumber: guest.roomNumber || '',
+      checkInDate: guest.checkInDate ? new Date(guest.checkInDate).toISOString().split('T')[0] : '',
+      checkOutDate: guest.checkOutDate ? new Date(guest.checkOutDate).toISOString().split('T')[0] : ''
+    });
+  };
+
+  // Close edit modal
+  const closeEditModal = () => {
+    setEditModal({
+      isOpen: false,
+      guest: null,
+      roomNumber: '',
+      checkInDate: '',
+      checkOutDate: ''
+    });
+  };
+
+  // Update guest room and dates
+  const updateGuestInfo = async () => {
+    if (!editModal.guest) return;
+
+    setUpdating(prev => new Set(prev).add(editModal.guest._id));
+
+    try {
+      const updateData = {
+        roomNumber: editModal.roomNumber,
+        checkInDate: editModal.checkInDate,
+        checkOutDate: editModal.checkOutDate
+      };
+
+      await hotelService.updateGuestInfo(editModal.guest._id, updateData);
+
+      // Update local state
+      setGuests(prev => prev.map(guest =>
+        guest._id === editModal.guest._id
+          ? { ...guest, ...updateData }
+          : guest
+      ));
+
+      closeEditModal();
+      console.log('Guest information updated successfully');
+    } catch (error) {
+      console.error('Error updating guest information:', error);
+    } finally {
+      setUpdating(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(editModal.guest._id);
         return newSet;
       });
     }
@@ -211,10 +277,10 @@ const GuestsPage = () => {
                   {t('hotelAdmin.guests.table.guest')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('hotelAdmin.guests.table.contact')}
+                  Room & Dates
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('hotelAdmin.guests.table.joined')}
+                  {t('hotelAdmin.guests.table.contact')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('hotelAdmin.guests.table.status')}
@@ -247,18 +313,26 @@ const GuestsPage = () => {
                           <div className="text-sm font-medium text-gray-900">
                             {getGuestName(guest)}
                           </div>
-                          {guest.roomNumber && (
-                            <div className="text-sm text-gray-500">Room #{guest.roomNumber}</div>
-                          )}
+                          <div className="text-sm text-gray-500">{guest.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{guest.email}</div>
-                      <div className="text-sm text-gray-500">{guest.phone || t('hotelAdmin.guests.noPhone')}</div>
+                      <div className="space-y-1">
+                        <div className="flex items-center">
+                          <span className="text-sm font-medium text-gray-900">
+                            {guest.roomNumber ? `Room ${guest.roomNumber}` : 'No room assigned'}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          <div>Check-in: {formatDate(guest.checkInDate)}</div>
+                          <div>Check-out: {formatDate(guest.checkOutDate)}</div>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(guest.createdAt)}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{guest.phone || t('hotelAdmin.guests.noPhone')}</div>
+                      <div className="text-sm text-gray-500">Joined: {formatDate(guest.createdAt)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -270,24 +344,34 @@ const GuestsPage = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <button
-                        onClick={() => toggleGuestStatus(guest._id, guest.isActive !== false)}
-                        disabled={updating.has(guest._id)}
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                          guest.isActive !== false
-                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                            : 'bg-green-100 text-green-700 hover:bg-green-200'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        {updating.has(guest._id) ? (
-                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
-                        ) : guest.isActive !== false ? (
-                          <HiXCircle className="w-4 h-4 mr-1" />
-                        ) : (
-                          <HiCheckCircle className="w-4 h-4 mr-1" />
-                        )}
-                        {guest.isActive !== false ? t('hotelAdmin.guests.actions.deactivate') : t('hotelAdmin.guests.actions.activate')}
-                      </button>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => openEditModal(guest)}
+                          disabled={updating.has(guest._id)}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <HiPencil className="w-4 h-4 mr-1" />
+                          Edit Room
+                        </button>
+                        <button
+                          onClick={() => toggleGuestStatus(guest._id, guest.isActive !== false)}
+                          disabled={updating.has(guest._id)}
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                            guest.isActive !== false
+                              ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                              : 'bg-green-100 text-green-700 hover:bg-green-200'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                          {updating.has(guest._id) ? (
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
+                          ) : guest.isActive !== false ? (
+                            <HiXCircle className="w-4 h-4 mr-1" />
+                          ) : (
+                            <HiCheckCircle className="w-4 h-4 mr-1" />
+                          )}
+                          {guest.isActive !== false ? t('hotelAdmin.guests.actions.deactivate') : t('hotelAdmin.guests.actions.activate')}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -466,6 +550,90 @@ const GuestsPage = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Guest Modal */}
+      {editModal.isOpen && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Edit Guest Information
+              </h3>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Guest Name
+                  </label>
+                  <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">
+                    {getGuestName(editModal.guest)}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Room Number
+                  </label>
+                  <input
+                    type="text"
+                    value={editModal.roomNumber}
+                    onChange={(e) => setEditModal(prev => ({ ...prev, roomNumber: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter room number"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Check-in Date
+                  </label>
+                  <input
+                    type="date"
+                    value={editModal.checkInDate}
+                    onChange={(e) => setEditModal(prev => ({ ...prev, checkInDate: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Check-out Date
+                  </label>
+                  <input
+                    type="date"
+                    value={editModal.checkOutDate}
+                    onChange={(e) => setEditModal(prev => ({ ...prev, checkOutDate: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={closeEditModal}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={updateGuestInfo}
+                  disabled={updating.has(editModal.guest?._id)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {updating.has(editModal.guest?._id) ? (
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Updating...
+                    </div>
+                  ) : (
+                    'Update'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

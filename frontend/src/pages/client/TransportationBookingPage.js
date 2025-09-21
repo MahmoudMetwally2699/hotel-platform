@@ -12,6 +12,8 @@ import React, { useState, useEffect } from 'react';
 import { getVehicleIcon } from '../../utils/vehicleIconMap';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../redux/slices/authSlice';
 import {
   FaCar,
   FaArrowLeft,
@@ -33,6 +35,7 @@ const TransportationBookingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { hotelId } = useParams();
+  const currentUser = useSelector(selectCurrentUser);
 
   // Get service and hotel from location state
   const { service: passedService, hotel: passedHotel } = location.state || {};
@@ -52,7 +55,6 @@ const TransportationBookingPage = () => {
   const [bookingDetails, setBookingDetails] = useState({
     pickupDate: '',
     pickupTime: '',
-    pickupLocation: '',
     dropoffLocation: '',
     returnDate: '', // For round-trip bookings
     returnTime: '',
@@ -328,7 +330,7 @@ const TransportationBookingPage = () => {
         serviceId: service?._id,
         hotelId,
         tripDetails: {
-          pickupLocation: bookingDetails.pickupLocation || 'Hotel lobby',
+          pickupLocation: currentUser?.roomNumber || 'Hotel Room',
           destination: bookingDetails.dropoffLocation,
           scheduledDateTime: `${bookingDetails.pickupDate}T${bookingDetails.pickupTime}:00.000Z`,
           passengerCount: bookingDetails.passengerCount || 1,
@@ -370,7 +372,7 @@ const TransportationBookingPage = () => {
       case 2:
         return selectedVehicles.every(vehicle => serviceTypes[vehicle.id]);
       case 3:
-        return bookingDetails.pickupDate && bookingDetails.pickupTime && bookingDetails.pickupLocation;
+        return bookingDetails.pickupDate && bookingDetails.pickupTime && currentUser?.roomNumber;
       default:
         return true;
     }
@@ -980,13 +982,9 @@ const TransportationBookingPage = () => {
                           <FaMapMarkerAlt className="inline mr-2 text-green-600" />
                           {t('transportationBooking.pickupLocation')}
                         </label>
-                        <input
-                          type="text"
-                          value={bookingDetails.pickupLocation}
-                          onChange={(e) => setBookingDetails(prev => ({ ...prev, pickupLocation: e.target.value }))}
-                          placeholder={t('transportationBooking.placeholders.pickupAddress')}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white/90 backdrop-blur-sm"
-                        />
+                        <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700 font-medium">
+                          Room {currentUser?.roomNumber || 'N/A'}
+                        </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1162,7 +1160,7 @@ const TransportationBookingPage = () => {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <p><strong>{t('transportationBooking.pickupDate')}:</strong> {bookingDetails.pickupDate}</p>
                       <p><strong>{t('transportationBooking.pickupTime')}:</strong> {bookingDetails.pickupTime}</p>
-                      <p><strong>{t('transportationBooking.pickup')}:</strong> {bookingDetails.pickupLocation || t('transportationBooking.notSpecified')}</p>
+                      <p><strong>{t('transportationBooking.pickup')}:</strong> Room {currentUser?.roomNumber || t('transportationBooking.notSpecified')}</p>
                       <p><strong>{t('transportationBooking.dropoff')}:</strong> {bookingDetails.dropoffLocation || t('transportationBooking.notSpecified')}</p>
                       {bookingDetails.returnDate && (
                         <>

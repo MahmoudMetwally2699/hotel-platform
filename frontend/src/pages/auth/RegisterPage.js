@@ -30,8 +30,6 @@ const RegisterPage = () => {
   const role = useSelector(selectAuthRole);
 
   const [showError, setShowError] = useState(false);
-  const [hotels, setHotels] = useState([]);
-  const [loadingHotels, setLoadingHotels] = useState(true);
 
   // QR Code functionality
   const [searchParams] = useSearchParams();
@@ -49,6 +47,15 @@ const RegisterPage = () => {
       .required(t('register.validation.phoneRequired'))
       .matches(/^[+]?[\d\s\-().]{7,20}$/, t('register.validation.phoneInvalid')),
     selectedHotelId: Yup.string().required(t('register.validation.hotelRequired')),
+    roomNumber: Yup.string()
+      .required('Room number is required')
+      .matches(/^[A-Za-z0-9]+$/, 'Room number should only contain letters and numbers'),
+    checkInDate: Yup.date()
+      .required('Check-in date is required')
+      .min(new Date().toISOString().split('T')[0], 'Check-in date cannot be in the past'),
+    checkOutDate: Yup.date()
+      .required('Check-out date is required')
+      .min(Yup.ref('checkInDate'), 'Check-out date must be after check-in date'),
     password: Yup.string()
     .min(4, 'Password must be at least 4 characters')
     .required(t('register.validation.passwordRequired')),
@@ -56,22 +63,7 @@ const RegisterPage = () => {
       .oneOf([Yup.ref('password'), null], t('register.validation.passwordsMatch'))
       .required(t('register.validation.confirmPasswordRequired')),
     acceptTerms: Yup.boolean().oneOf([true], t('register.validation.acceptTermsRequired'))
-  });// Fetch available hotels
-  useEffect(() => {
-    const fetchHotels = async () => {
-      try {
-        const response = await hotelService.getAllHotels();
-        setHotels(response.data || []);
-      } catch (error) {
-        console.error('Error fetching hotels:', error);
-        setHotels([]);
-      } finally {
-        setLoadingHotels(false);
-      }
-    };
-
-    fetchHotels();
-  }, []);
+  });
 
   // Handle redirection after successful registration
   useEffect(() => {
@@ -173,6 +165,9 @@ const RegisterPage = () => {
     email: '',
     phone: '',
     selectedHotelId: qrHotelInfo?.hotelId || '',
+    roomNumber: '',
+    checkInDate: '',
+    checkOutDate: '',
     password: '',
     confirmPassword: '',
     role: 'guest', // Fixed role for client registration
@@ -185,6 +180,9 @@ const RegisterPage = () => {
       phone: values.phone,
       password: values.password,
       selectedHotelId: values.selectedHotelId,
+      roomNumber: values.roomNumber,
+      checkInDate: values.checkInDate,
+      checkOutDate: values.checkOutDate,
       qrBased: !!qrHotelInfo, // Flag to indicate QR-based registration
     };
 
@@ -395,7 +393,7 @@ const RegisterPage = () => {
                 </label>
 
                 {/* QR Code Hotel Info Display */}
-                {qrHotelInfo && (
+                {qrHotelInfo ? (
                   <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -414,29 +412,26 @@ const RegisterPage = () => {
                       </button>
                     </div>
                   </div>
+                ) : (
+                  /* QR Scanner Only */
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowQRScanner(true)}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      disabled={validatingQR}
+                    >
+                      <HiQrcode className="h-5 w-5" />
+                      <span>{validatingQR ? 'Validating...' : 'Scan QR Code'}</span>
+                    </button>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Scan the QR code at hotel reception to proceed with registration
+                    </p>
+                  </div>
                 )}
 
-                {/* QR Scanner or Hotel Dropdown */}
-                {!qrHotelInfo ? (
-                  <div className="space-y-3">
-                    {/* QR Scan Option */}
-                    <div className="text-center">
-                      <button
-                        type="button"
-                        onClick={() => setShowQRScanner(true)}
-                        className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        disabled={validatingQR}
-                      >
-                        <HiQrcode className="h-5 w-5" />
-                        <span>{validatingQR ? 'Validating...' : 'Scan QR Code'}</span>
-                      </button>
-                      <p className="mt-1 text-xs text-gray-500">
-                        Scan the QR code at hotel reception for quick registration
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  // Use Field with render prop to ensure proper form state management
+                {/* Hidden field for QR hotel selection */}
+                {qrHotelInfo && (
                   <Field name="selectedHotelId">
                     {({ field, form }) => {
                       // Ensure the field value is set when QR info is available
@@ -455,9 +450,71 @@ const RegisterPage = () => {
                 )}
 
                 <ErrorMessage name="selectedHotelId" component="div" className="mt-1 text-sm text-red-600" />
-                {hotels.length === 0 && !loadingHotels && !qrHotelInfo && (
-                  <p className="mt-1 text-sm text-yellow-600">{t('register.noHotelsAvailable')}</p>
-                )}
+              </div>
+
+              {/* Room Number Field */}
+              <div>
+                <label htmlFor="roomNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                  Room Number <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 15h8" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11v4" />
+                    </svg>
+                  </div>
+                  <Field
+                    type="text"
+                    name="roomNumber"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., 101, A205, Suite1"
+                  />
+                </div>
+                <ErrorMessage name="roomNumber" component="div" className="mt-1 text-sm text-red-600" />
+              </div>
+
+              {/* Check-in Date Field */}
+              <div>
+                <label htmlFor="checkInDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  Check-in Date <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <Field
+                    type="date"
+                    name="checkInDate"
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <ErrorMessage name="checkInDate" component="div" className="mt-1 text-sm text-red-600" />
+              </div>
+
+              {/* Check-out Date Field */}
+              <div>
+                <label htmlFor="checkOutDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  Check-out Date <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                    </svg>
+                  </div>
+                  <Field
+                    type="date"
+                    name="checkOutDate"
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <ErrorMessage name="checkOutDate" component="div" className="mt-1 text-sm text-red-600" />
               </div>
 
               <div>

@@ -1652,6 +1652,81 @@ router.patch('/guests/:guestId/status', catchAsync(async (req, res, next) => {
 }));
 
 /**
+ * @route   PATCH /api/hotel/guests/:guestId
+ * @desc    Update guest information (room number, check-in/out dates)
+ * @access  Private/HotelAdmin
+ */
+router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
+  const { guestId } = req.params;
+  const { roomNumber, checkInDate, checkOutDate } = req.body;
+  const hotelId = req.user.hotelId;
+
+  // Find the guest
+  const guest = await User.findById(guestId);
+
+  if (!guest) {
+    return next(new AppError('Guest not found', 404));
+  }
+
+  if (guest.role !== 'guest') {
+    return next(new AppError('User is not a guest', 400));
+  }
+
+  // Check if this guest has any association with this hotel
+  const hasHotelAssociation = await Booking.findOne({
+    userId: guestId,
+    hotelId: hotelId
+  });
+
+  if (!hasHotelAssociation && guest.selectedHotelId?.toString() !== hotelId.toString()) {
+    return next(new AppError('Guest not associated with this hotel', 403));
+  }
+
+  // Validate dates if provided
+  if (checkInDate && checkOutDate) {
+    const checkIn = new Date(checkInDate);
+    const checkOut = new Date(checkOutDate);
+
+    if (checkOut <= checkIn) {
+      return next(new AppError('Check-out date must be after check-in date', 400));
+    }
+  }
+
+  // Build update object
+  const updateData = {};
+  if (roomNumber !== undefined) updateData.roomNumber = roomNumber;
+  if (checkInDate !== undefined) updateData.checkInDate = checkInDate;
+  if (checkOutDate !== undefined) updateData.checkOutDate = checkOutDate;
+
+  // Update checkout time if checkout date is changed
+  if (checkOutDate) {
+    const checkoutDateTime = new Date(checkOutDate);
+    checkoutDateTime.setHours(16, 0, 0, 0); // Set to 4:00 PM
+    updateData.checkoutTime = checkoutDateTime;
+  }
+
+  // Update guest information
+  const updatedGuest = await User.findByIdAndUpdate(
+    guestId,
+    updateData,
+    { new: true, select: '-password -passwordChangedAt -passwordResetToken -passwordResetExpires' }
+  );
+
+  // Log the action
+  logger.info(`Hotel admin ${req.user.email} updated guest ${guest.email} information`, {
+    updates: updateData
+  });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Guest information updated successfully',
+    data: {
+      guest: updatedGuest
+    }
+  });
+}));
+
+/**
  * @route   GET /api/hotel/markup-settings
  * @desc    Get hotel markup settings
  * @access  Private/HotelAdmin

@@ -11,6 +11,7 @@ const { catchAsync, AppError } = require('../middleware/error');
 const { protect, restrictTo } = require('../middleware/auth');
 const User = require('../models/User');
 const Hotel = require('../models/Hotel');
+const SuperHotel = require('../models/SuperHotel');
 const ServiceProvider = require('../models/ServiceProvider');
 const Service = require('../models/Service');
 const Booking = require('../models/Booking');
@@ -647,6 +648,382 @@ router.get('/analytics/platform', catchAsync(async (req, res) => {
       hotelPerformance,
       categoryPerformance,
       timeRange
+    }
+  });
+}));
+
+// ===========================================
+// SUPER HOTEL MANAGEMENT ROUTES
+// ===========================================
+
+/**
+ * @route   GET /api/superadmin/superhotels
+ * @desc    Get all super hotels
+ * @access  Private/SuperAdmin
+ */
+router.get('/superhotels', catchAsync(async (req, res) => {
+  const { page = 1, limit = 10, search, isActive } = req.query;
+
+  // Build filter
+  const filter = {};
+  if (search) {
+    filter.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } },
+      { 'contactPerson.name': { $regex: search, $options: 'i' } }
+    ];
+  }
+  if (isActive !== undefined) {
+    filter.isActive = isActive === 'true';
+  }
+
+  // Execute query with pagination
+  const skip = (page - 1) * limit;
+
+  const [superHotels, total] = await Promise.all([
+    SuperHotel.find(filter)
+      .populate('assignedHotels', 'name address location isActive isPublished')
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit)),
+    SuperHotel.countDocuments(filter)
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      superHotels,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    }
+  });
+}));
+
+/**
+ * @route   POST /api/superadmin/superhotels
+ * @desc    Create a new super hotel
+ * @access  Private/SuperAdmin
+ */
+router.post('/superhotels', catchAsync(async (req, res) => {
+  const {
+    name,
+    description,
+    email,
+    password,
+    assignedHotels,
+    contactPerson,
+    permissions
+  } = req.body;
+
+  // Validate required fields
+  if (!name || !email || !password) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Name, email, and password are required'
+    });
+  }
+
+  // Check if email already exists
+  const existingSuperHotel = await SuperHotel.findOne({ email });
+  if (existingSuperHotel) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'A super hotel with this email already exists'
+    });
+  }
+
+  // Validate assigned hotels exist
+  if (assignedHotels && assignedHotels.length > 0) {
+    const hotelCount = await Hotel.countDocuments({
+      _id: { $in: assignedHotels },
+      isActive: true
+    });
+
+    if (hotelCount !== assignedHotels.length) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'One or more assigned hotels do not exist or are inactive'
+      });
+    }
+  }
+
+  // Create super hotel
+  const superHotel = await SuperHotel.create({
+    name,
+    description,
+    email,
+    password,
+    assignedHotels: assignedHotels || [],
+    contactPerson,
+    permissions,
+    createdBy: req.user._id
+  });
+
+  // Populate for response
+  await superHotel.populate('assignedHotels', 'name address location');
+  await superHotel.populate('createdBy', 'firstName lastName email');
+
+  logger.info('Super hotel created successfully', {
+    superHotelId: superHotel._id,
+    name: superHotel.name,
+    createdBy: req.user.email
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: {
+      superHotel
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/superadmin/superhotels/:id
+ * @desc    Get super hotel by ID
+ * @access  Private/SuperAdmin
+ */
+router.get('/superhotels/:id', catchAsync(async (req, res) => {
+  const superHotel = await SuperHotel.findById(req.params.id)
+    .populate('assignedHotels', 'name address location contactInfo isActive isPublished')
+    .populate('createdBy', 'firstName lastName email');
+
+  if (!superHotel) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Super hotel not found'
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      superHotel
+    }
+  });
+}));
+
+/**
+ * @route   PUT /api/superadmin/superhotels/:id
+ * @desc    Update super hotel
+ * @access  Private/SuperAdmin
+ */
+router.put('/superhotels/:id', catchAsync(async (req, res) => {
+  const { name, description, contactPerson, permissions, isActive, assignedHotels } = req.body;
+
+  // Validate assigned hotels if provided
+  if (assignedHotels && assignedHotels.length > 0) {
+    const hotelCount = await Hotel.countDocuments({
+      _id: { $in: assignedHotels },
+      isActive: true
+    });
+
+    if (hotelCount !== assignedHotels.length) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'One or more assigned hotels do not exist or are inactive'
+      });
+    }
+  }
+
+  const superHotel = await SuperHotel.findByIdAndUpdate(
+    req.params.id,
+    {
+      name,
+      description,
+      contactPerson,
+      permissions,
+      isActive,
+      assignedHotels,
+      updatedAt: Date.now()
+    },
+    {
+      new: true,
+      runValidators: true
+    }
+  ).populate('assignedHotels', 'name address location')
+   .populate('createdBy', 'firstName lastName email');
+
+  if (!superHotel) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Super hotel not found'
+    });
+  }
+
+  logger.info('Super hotel updated successfully', {
+    superHotelId: superHotel._id,
+    updatedBy: req.user.email
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      superHotel
+    }
+  });
+}));
+
+/**
+ * @route   DELETE /api/superadmin/superhotels/:id
+ * @desc    Delete super hotel
+ * @access  Private/SuperAdmin
+ */
+router.delete('/superhotels/:id', catchAsync(async (req, res) => {
+  const superHotel = await SuperHotel.findByIdAndDelete(req.params.id);
+
+  if (!superHotel) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Super hotel not found'
+    });
+  }
+
+  logger.info('Super hotel deleted successfully', {
+    superHotelId: req.params.id,
+    deletedBy: req.user.email
+  });
+
+  res.status(204).json({
+    status: 'success',
+    data: null
+  });
+}));
+
+/**
+ * @route   PUT /api/superadmin/superhotels/:id/assign-hotels
+ * @desc    Assign hotels to super hotel
+ * @access  Private/SuperAdmin
+ */
+router.put('/superhotels/:id/assign-hotels', catchAsync(async (req, res) => {
+  const { hotelIds } = req.body;
+
+  if (!hotelIds || !Array.isArray(hotelIds)) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Hotel IDs array is required'
+    });
+  }
+
+  // Validate hotels exist
+  const hotels = await Hotel.find({
+    _id: { $in: hotelIds },
+    isActive: true
+  }).select('_id name');
+
+  if (hotels.length !== hotelIds.length) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'One or more hotels do not exist or are inactive'
+    });
+  }
+
+  const superHotel = await SuperHotel.findByIdAndUpdate(
+    req.params.id,
+    {
+      assignedHotels: hotelIds,
+      updatedAt: Date.now()
+    },
+    { new: true }
+  ).populate('assignedHotels', 'name address location');
+
+  if (!superHotel) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Super hotel not found'
+    });
+  }
+
+  logger.info('Hotels assigned to super hotel', {
+    superHotelId: superHotel._id,
+    hotelCount: hotelIds.length,
+    assignedBy: req.user.email
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      superHotel
+    }
+  });
+}));
+
+/**
+ * @route   PUT /api/superadmin/superhotels/:id/reset-password
+ * @desc    Reset super hotel password
+ * @access  Private/SuperAdmin
+ */
+router.put('/superhotels/:id/reset-password', catchAsync(async (req, res) => {
+  const { newPassword } = req.body;
+
+  if (!newPassword || newPassword.length < 6) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'New password must be at least 6 characters long'
+    });
+  }
+
+  const superHotel = await SuperHotel.findById(req.params.id);
+
+  if (!superHotel) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Super hotel not found'
+    });
+  }
+
+  // Update password (will be hashed by pre-save middleware)
+  superHotel.password = newPassword;
+  superHotel.passwordChangedAt = Date.now();
+  await superHotel.save();
+
+  logger.info('Super hotel password reset', {
+    superHotelId: superHotel._id,
+    resetBy: req.user.email
+  });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Password reset successfully'
+  });
+}));
+
+/**
+ * @route   GET /api/superadmin/superhotels/stats
+ * @desc    Get super hotels statistics
+ * @access  Private/SuperAdmin
+ */
+router.get('/superhotels/stats', catchAsync(async (req, res) => {
+  const [
+    totalSuperHotels,
+    activeSuperHotels,
+    totalAssignedHotels,
+    recentSuperHotels
+  ] = await Promise.all([
+    SuperHotel.countDocuments(),
+    SuperHotel.countDocuments({ isActive: true }),
+    SuperHotel.aggregate([
+      { $unwind: '$assignedHotels' },
+      { $group: { _id: null, count: { $sum: 1 } } }
+    ]),
+    SuperHotel.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('assignedHotels', 'name')
+      .select('name email assignedHotels createdAt isActive')
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      totalSuperHotels,
+      activeSuperHotels,
+      totalAssignedHotels: totalAssignedHotels[0]?.count || 0,
+      recentSuperHotels
     }
   });
 }));

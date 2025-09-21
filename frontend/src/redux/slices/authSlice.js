@@ -10,10 +10,38 @@ import { cleanupClerkTokens, isClerkToken } from '../../utils/cleanupClerkTokens
 // Auth service is already instantiated in the imported module
 
 // Helper function to get initial state with localStorage backup
-const getInitialAuthState = () => {  try {
+const getInitialAuthState = () => {
+  try {
+    console.log('🔍 Checking authentication state on app init:');
+    console.log('🔍 All localStorage keys:', Object.keys(localStorage));
+    console.log('🔍 localStorage.token:', localStorage.getItem('token'));
+    console.log('🔍 localStorage.superHotelToken:', localStorage.getItem('superHotelToken'));
+    console.log('🔍 localStorage.user:', localStorage.getItem('user'));
+    console.log('🔍 localStorage.superHotelData:', localStorage.getItem('superHotelData'));
+
+    // Check if we have Super Hotel authentication data
+    const superHotelToken = localStorage.getItem('superHotelToken');
+    const superHotelData = localStorage.getItem('superHotelData');
+    const hasSuperHotelAuth = !!(superHotelToken && superHotelData);
+
+    // Check if we're on a Super Hotel route OR have Super Hotel auth
+    const isOnSuperHotelRoute = window.location.pathname.startsWith('/super-hotel-admin') || hasSuperHotelAuth;
+    console.log('🔍 Is on Super Hotel route:', isOnSuperHotelRoute);
+    console.log('🔍 Has Super Hotel Auth:', hasSuperHotelAuth);
+
     // Check if we have a valid token in cookies or localStorage
     // First, try localStorage (which we control completely)
     let token = localStorage.getItem('token');
+    let storedUser = localStorage.getItem('user');
+
+    // If on Super Hotel route, check Super Hotel tokens instead
+    if (isOnSuperHotelRoute) {
+      if (superHotelToken && superHotelData) {
+        console.log('🏨 Using Super Hotel authentication');
+        token = superHotelToken;
+        storedUser = superHotelData;
+      }
+    }
 
     // If no token in localStorage, check cookies for our specific JWT token
     if (!token) {
@@ -29,6 +57,8 @@ const getInitialAuthState = () => {  try {
     }
       console.log('🔍 Checking authentication state on app init:');
     console.log('Token found:', token ? 'Yes (length: ' + token.length + ')' : 'No');
+    console.log('🔍 Authentication method:', isOnSuperHotelRoute ? 'Super Hotel' : 'Regular');
+    console.log('🔍 Token source:', isOnSuperHotelRoute && token ? 'superHotelToken' : 'regular token');
 
     // Check if this token is a Clerk token (which we should ignore)
     if (token && isClerkToken(token)) {
@@ -39,8 +69,7 @@ const getInitialAuthState = () => {  try {
 
     console.log('Token format check:', token ? (token.split('.').length === 3 ? 'Valid JWT format' : 'Invalid JWT format') : 'No token');
 
-    // Check if we have user data in localStorage
-    const storedUser = localStorage.getItem('user');
+    // Check if we have user data in localStorage (already retrieved above)
     console.log('Stored user found:', storedUser ? 'Yes' : 'No');
       if (token && storedUser) {
       // Check if this is a valid JWT token (should have 3 parts separated by dots)
@@ -67,23 +96,48 @@ const getInitialAuthState = () => {  try {
             // Token is still valid, restore user state
             const userData = JSON.parse(storedUser);
             console.log('✅ Restoring authentication state from localStorage:', userData);
+
+            // Determine role based on authentication type
+            let userRole = 'guest'; // default
+            if (isOnSuperHotelRoute) {
+              userRole = 'superHotel';
+            } else {
+              userRole = userData.role || decoded.role || 'guest';
+            }
+
+            console.log('🔍 Role assignment:', {
+              isOnSuperHotelRoute,
+              finalRole: userRole,
+              userDataRole: userData.role,
+              decodedRole: decoded.role
+            });
+
             return {
               user: userData,
               isAuthenticated: true,
               isLoading: false,
               error: null,
-              role: userData.role || decoded.role || 'guest',
+              role: userRole,
             };
           } else {
             console.warn('⚠️ JWT token expired but keeping user data - refresh mechanism will handle this');
             // Don't clear localStorage immediately - let the refresh token mechanism handle it
             const userData = JSON.parse(storedUser);
+
+            // Determine role based on authentication type
+            let userRole = 'guest'; // default
+            if (isOnSuperHotelRoute) {
+              userRole = 'superHotel';
+            } else {
+              userRole = userData.role || decoded.role || 'guest';
+            }
+
             return {
               user: userData,
               isAuthenticated: false, // Mark as not authenticated but keep user data
               isLoading: false,
               error: null,
-              role: userData.role || decoded.role || 'guest',
+              role: userRole,
             };
           }
         } catch (error) {

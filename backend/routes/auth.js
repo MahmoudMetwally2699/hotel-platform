@@ -111,6 +111,9 @@ router.post('/register', catchAsync(async (req, res, next) => {
     password,
     phone,
     selectedHotelId,
+    roomNumber,
+    checkInDate,
+    checkOutDate,
     qrBased // Optional flag to indicate QR-based registration
   } = req.body;
 
@@ -118,7 +121,10 @@ router.post('/register', catchAsync(async (req, res, next) => {
     firstName,
     email,
     phone,
-    selectedHotelId
+    selectedHotelId,
+    roomNumber,
+    checkInDate,
+    checkOutDate
   });
 
   // Validate required fields
@@ -136,6 +142,28 @@ router.post('/register', catchAsync(async (req, res, next) => {
   }
   if (!selectedHotelId) {
     return next(new AppError('Hotel selection is required', 400));
+  }
+  if (!roomNumber) {
+    return next(new AppError('Room number is required', 400));
+  }
+  if (!checkInDate) {
+    return next(new AppError('Check-in date is required', 400));
+  }
+  if (!checkOutDate) {
+    return next(new AppError('Check-out date is required', 400));
+  }
+
+  // Validate dates
+  const checkIn = new Date(checkInDate);
+  const checkOut = new Date(checkOutDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (checkIn < today) {
+    return next(new AppError('Check-in date cannot be in the past', 400));
+  }
+  if (checkOut <= checkIn) {
+    return next(new AppError('Check-out date must be after check-in date', 400));
   }
 
   // Check if user already exists
@@ -158,6 +186,10 @@ router.post('/register', catchAsync(async (req, res, next) => {
     phone,
     role: 'guest',
     selectedHotelId,
+    roomNumber,
+    checkInDate,
+    checkOutDate,
+    hasActiveBooking: true, // Set to true since they're providing booking details
     isActive: true
   });
 
@@ -571,6 +603,35 @@ router.post('/validate-qr', catchAsync(async (req, res, next) => {
     logger.error('QR validation error:', error);
     return next(new AppError('Failed to validate QR code', 500));
   }
+}));
+
+/**
+ * @route   GET /auth/verify-session
+ * @desc    Verify if user session is still valid
+ * @access  Private
+ */
+router.get('/verify-session', protect, catchAsync(async (req, res, next) => {
+  // If we reach here, the protect middleware has already verified the token
+  // and checked that the user is active
+
+  const user = req.user;
+
+  // Additional check for guest checkout expiration
+  if (user.role === 'guest' && user.isCheckoutExpired && user.isCheckoutExpired()) {
+    logger.info(`Session verification failed - checkout expired for user ${user._id}`);
+    return next(new AppError('Your checkout time has passed and your account has been deactivated. Please contact hotel reception for assistance.', 401));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Session is valid',
+    data: {
+      userId: user._id,
+      role: user.role,
+      isActive: user.isActive,
+      checkoutTime: user.checkoutTime
+    }
+  });
 }));
 
 module.exports = router;

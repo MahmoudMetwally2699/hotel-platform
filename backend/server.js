@@ -9,6 +9,7 @@ const socketIo = require('socket.io');
 const { connectDB } = require('./config/database');
 const { globalErrorHandler } = require('./middleware/error');
 const logger = require('./utils/logger');
+const checkoutScheduler = require('./utils/checkoutScheduler');
 
 // Load environment variables
 require('dotenv').config();
@@ -23,6 +24,11 @@ connectDB().catch(err => {
   console.error('Database connection failed:', err);
   process.exit(1);
 });
+
+// Start checkout scheduler
+console.log('⏰ Starting checkout scheduler...');
+checkoutScheduler.start();
+console.log('✅ Checkout scheduler started');
 
 const app = express();
 const server = http.createServer(app);
@@ -180,6 +186,13 @@ try {
     console.error('❌ WhatsApp webhook routes failed:', error.message);
   }
 
+  try {
+    app.use('/api/admin', require('./routes/admin'));
+    console.log('✅ Super Hotel admin routes loaded');
+  } catch (error) {
+    console.error('❌ Super Hotel admin routes failed:', error.message);
+  }
+
   console.log('✅ All routes configured');
 
   // Socket.io connection handling
@@ -249,6 +262,7 @@ app.use(globalErrorHandler);
 // Graceful shutdown handling
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully');
+  checkoutScheduler.stop();
   server.close(() => {
     logger.info('Process terminated');
     process.exit(0);
@@ -257,6 +271,7 @@ process.on('SIGTERM', () => {
 
 process.on('SIGINT', () => {
   logger.info('SIGINT received, shutting down gracefully');
+  checkoutScheduler.stop();
   server.close(() => {
     logger.info('Process terminated');
     process.exit(0);

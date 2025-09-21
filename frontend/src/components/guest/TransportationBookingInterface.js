@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import {
@@ -27,11 +28,13 @@ import {
   FaShoppingCart
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
+import { selectCurrentUser } from '../../redux/slices/authSlice';
 
 const TransportationBookingInterface = () => {
   const { hotelId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const currentUser = useSelector(selectCurrentUser);
 
   // State management
   const [loading, setLoading] = useState(true);
@@ -43,8 +46,7 @@ const TransportationBookingInterface = () => {
   const [scheduling, setScheduling] = useState({
     pickupDate: '',
     pickupTime: '',
-    pickupLocation: '',
-    dropoffLocation: '',
+    destination: '', // Only need destination, pickup is user's room
     returnDate: '', // For round-trip bookings
     returnTime: '',
     specialRequests: '',
@@ -187,8 +189,13 @@ const TransportationBookingInterface = () => {
       return;
     }
 
-    if (!scheduling.pickupLocation) {
-      toast.error(t('guest.transportation.providePickupLocation'));
+    if (!currentUser?.roomNumber) {
+      toast.error('Room number is required. Please update your profile.');
+      return;
+    }
+
+    if (!scheduling.destination) {
+      toast.error('Please provide destination address');
       return;
     }
 
@@ -207,13 +214,14 @@ const TransportationBookingInterface = () => {
           returnTime: scheduling.returnTime
         },
         guestDetails: {
+          roomNumber: currentUser.roomNumber,
           passengerCount: scheduling.passengerCount,
           luggageCount: scheduling.luggageCount,
           specialRequests: scheduling.specialRequests
         },
         location: {
-          pickupLocation: scheduling.pickupLocation,
-          dropoffLocation: scheduling.dropoffLocation || scheduling.pickupLocation,
+          pickupLocation: currentUser.roomNumber,
+          dropoffLocation: scheduling.destination,
           pickupInstructions: scheduling.specialRequests
         }
       };
@@ -573,15 +581,16 @@ const TransportationBookingInterface = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <FaMapMarkerAlt className="inline mr-2" />
-                      {t('guest.transportation.pickup')} {t('common.address')}
+                      Pickup Location (Your Room)
                     </label>
-                    <input
-                      type="text"
-                      value={scheduling.pickupLocation}
-                      onChange={(e) => setScheduling(prev => ({ ...prev, pickupLocation: e.target.value }))}
-                      placeholder={t('guest.transportation.enterPickupLocation')}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    />
+                    <div className="w-full p-3 border border-gray-300 rounded-md bg-gray-50">
+                      <span className="text-gray-700 font-medium">
+                        Room {currentUser?.roomNumber || 'Not set'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Pickup will be from your registered room
+                    </p>
                   </div>
 
                   <div>
@@ -591,8 +600,8 @@ const TransportationBookingInterface = () => {
                     </label>
                     <input
                       type="text"
-                      value={scheduling.dropoffLocation}
-                      onChange={(e) => setScheduling(prev => ({ ...prev, dropoffLocation: e.target.value }))}
+                      value={scheduling.destination}
+                      onChange={(e) => setScheduling(prev => ({ ...prev, destination: e.target.value }))}
                       placeholder={t('guest.transportation.enterDestinationAddress')}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     />

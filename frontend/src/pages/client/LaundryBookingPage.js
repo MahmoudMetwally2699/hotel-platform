@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import {
   FaTshirt,
@@ -27,12 +28,14 @@ import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
 import useRTL from '../../hooks/useRTL';
 import { formatPriceByLanguage } from '../../utils/currency';
+import { selectCurrentUser } from '../../redux/slices/authSlice';
 
 const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
   const { isRTL } = useRTL();
   const navigate = useNavigate();
   const location = useLocation();
   const { hotelId } = useParams();
+  const currentUser = useSelector(selectCurrentUser);
   // Get service and hotel from location state
   const { service: passedService, hotel: passedHotel } = location.state || {};
   const [service, setService] = useState(passedService || null);
@@ -51,8 +54,6 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
   const [bookingDetails, setBookingDetails] = useState({
     preferredDate: '',
     preferredTime: '',
-    pickupLocation: '',
-    deliveryLocation: '',
     specialRequests: ''
   });
 
@@ -300,6 +301,12 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
 
   // Handle booking submission
   const handleBookingSubmit = async () => {
+    // Validate room number
+    if (!currentUser?.roomNumber) {
+      toast.error('Room number is required. Please update your profile.');
+      return;
+    }
+
     try {
       setSubmitting(true);
 
@@ -327,11 +334,12 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
           preferredTime: bookingDetails.preferredTime
         },
         location: {
-          pickupLocation: bookingDetails.pickupLocation,
-          deliveryLocation: bookingDetails.deliveryLocation,
+          pickupLocation: currentUser.roomNumber,
+          deliveryLocation: currentUser.roomNumber,
           pickupInstructions: bookingDetails.specialRequests
         },
         guestDetails: {
+          roomNumber: currentUser.roomNumber,
           specialRequests: bookingDetails.specialRequests
         },
         pricing: {
@@ -980,32 +988,19 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <FaMapMarkerAlt className="inline mr-2" />
-                        {t('laundryBooking.pickupLocation')}
-                      </label>
-                      <input
-                        type="text"
-                        value={bookingDetails.pickupLocation}
-                        onChange={(e) => setBookingDetails(prev => ({ ...prev, pickupLocation: e.target.value }))}
-                        placeholder={t('laundryBooking.placeholders.roomNumber')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <FaMapMarkerAlt className="inline mr-2" />
+                      Room Number
+                    </label>
+                    <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                      <span className="text-gray-700 font-medium">
+                        Room {currentUser?.roomNumber || 'number not set'}
+                      </span>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <FaMapMarkerAlt className="inline mr-2" />
-                        {t('laundryBooking.deliveryLocation')}
-                      </label>
-                      <input
-                        type="text"
-                        value={bookingDetails.deliveryLocation}
-                        onChange={(e) => setBookingDetails(prev => ({ ...prev, deliveryLocation: e.target.value }))}
-                        placeholder={t('laundryBooking.placeholders.sameAsPickup')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Pickup and delivery will be from/to your registered room
+                    </p>
                   </div>
 
                   <div>
@@ -1055,8 +1050,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <p><strong>{t('laundryBooking.date')}:</strong> {bookingDetails.preferredDate}</p>
                       <p><strong>{t('laundryBooking.time')}:</strong> {bookingDetails.preferredTime}</p>
-                      <p><strong>{t('laundryBooking.pickup')}:</strong> {bookingDetails.pickupLocation || t('laundryBooking.notSpecified')}</p>
-                      <p><strong>{t('laundryBooking.delivery')}:</strong> {bookingDetails.deliveryLocation || t('laundryBooking.sameAsPickup')}</p>
+                      <p><strong>Room Number:</strong> Room {currentUser?.roomNumber || 'Not set'}</p>
                       {bookingDetails.specialRequests && (
                         <p><strong>{t('laundryBooking.specialRequests')}:</strong> {bookingDetails.specialRequests}</p>
                       )}

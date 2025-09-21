@@ -11,6 +11,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../redux/slices/authSlice';
 import { toast } from 'react-toastify';
 import {
   FaUtensils,
@@ -32,6 +34,7 @@ const RestaurantBookingInterface = () => {
   const { hotelId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const currentUser = useSelector(selectCurrentUser);
 
   // State management
   const [loading, setLoading] = useState(true);
@@ -42,7 +45,6 @@ const RestaurantBookingInterface = () => {
   const [scheduling, setScheduling] = useState({
     preferredDate: '',
     preferredTime: '',
-    deliveryLocation: '',
     specialRequests: ''
   });
   const [bookingStep, setBookingStep] = useState(1); // 1: Items, 2: Schedule, 3: Confirm
@@ -175,11 +177,11 @@ const RestaurantBookingInterface = () => {
           preferredTime: scheduling.preferredTime
         },
         guestDetails: {
-          deliveryLocation: scheduling.deliveryLocation || '',
+          deliveryLocation: currentUser?.roomNumber || 'Room',
           specialRequests: scheduling.specialRequests
         },
         location: {
-          deliveryLocation: scheduling.deliveryLocation,
+          deliveryLocation: currentUser?.roomNumber || 'Room',
           deliveryInstructions: scheduling.specialRequests
         },
         pricing: {
@@ -493,13 +495,9 @@ const RestaurantBookingInterface = () => {
                     <FaMapMarkerAlt className="inline mr-2" />
                     Delivery Location
                   </label>
-                  <input
-                    type="text"
-                    value={scheduling.deliveryLocation}
-                    onChange={(e) => setScheduling(prev => ({ ...prev, deliveryLocation: e.target.value }))}
-                    placeholder={t('guest.restaurant.roomNumberOrAddress')}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-gray-700 font-medium">
+                    Room {currentUser?.roomNumber || 'N/A'}
+                  </div>
                 </div>
 
                 <div className="mt-6">
@@ -556,7 +554,7 @@ const RestaurantBookingInterface = () => {
                     </div>
                     <div>
                       <p className="text-gray-600">{t('guest.restaurant.deliveryLocation')}</p>
-                      <p className="font-medium">{scheduling.deliveryLocation}</p>
+                      <p className="font-medium">Room {currentUser?.roomNumber || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-gray-600">{t('guest.restaurant.restaurant')}</p>
@@ -643,7 +641,7 @@ const RestaurantBookingInterface = () => {
                   <>
                     <button
                       onClick={() => setBookingStep(3)}
-                      disabled={!scheduling.preferredDate || !scheduling.preferredTime || !scheduling.deliveryLocation}
+                      disabled={!scheduling.preferredDate || !scheduling.preferredTime || !currentUser?.roomNumber}
                       className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Review Order

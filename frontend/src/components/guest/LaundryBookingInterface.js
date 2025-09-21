@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import {
@@ -26,11 +27,13 @@ import {
   FaShoppingCart
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
+import { selectCurrentUser } from '../../redux/slices/authSlice';
 
 const LaundryBookingInterface = () => {
   const { hotelId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const currentUser = useSelector(selectCurrentUser);
 
   // State management
   const [loading, setLoading] = useState(true);
@@ -42,8 +45,6 @@ const LaundryBookingInterface = () => {
   const [scheduling, setScheduling] = useState({
     preferredDate: '',
     preferredTime: '',
-    pickupLocation: '',
-    deliveryLocation: '',
     specialRequests: ''
   });  const [bookingStep, setBookingStep] = useState(1); // 1: Items, 2: Schedule, 3: Confirm
   const [submitting, setSubmitting] = useState(false);
@@ -177,6 +178,11 @@ const LaundryBookingInterface = () => {
       return;
     }
 
+    if (!currentUser?.roomNumber) {
+      toast.error('Room number is required. Please update your profile.');
+      return;
+    }
+
     try {
       setSubmitting(true);
 
@@ -190,12 +196,12 @@ const LaundryBookingInterface = () => {
           preferredTime: scheduling.preferredTime
         },
         guestDetails: {
-          roomNumber: scheduling.pickupLocation || '',
+          roomNumber: currentUser?.roomNumber || '',
           specialRequests: scheduling.specialRequests
         },
         location: {
-          pickupLocation: scheduling.pickupLocation,
-          deliveryLocation: scheduling.deliveryLocation || scheduling.pickupLocation,
+          pickupLocation: currentUser?.roomNumber || '',
+          deliveryLocation: currentUser?.roomNumber || '',
           pickupInstructions: scheduling.specialRequests
         },
         pricing: {
@@ -558,29 +564,16 @@ const LaundryBookingInterface = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <FaMapMarkerAlt className="inline mr-2" />
-                      Pickup Location (Room Number)
+                      Room Number
                     </label>
-                    <input
-                      type="text"
-                      value={scheduling.pickupLocation}
-                      onChange={(e) => setScheduling(prev => ({ ...prev, pickupLocation: e.target.value }))}
-                      placeholder="e.g., Room 205"
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <FaMapMarkerAlt className="inline mr-2" />
-                      Delivery Location
-                    </label>
-                    <input
-                      type="text"
-                      value={scheduling.deliveryLocation}
-                      onChange={(e) => setScheduling(prev => ({ ...prev, deliveryLocation: e.target.value }))}
-                      placeholder="Same as pickup (leave empty)"
-                      className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    />
+                    <div className="w-full p-3 border border-gray-300 rounded-md bg-gray-50">
+                      <span className="text-gray-700 font-medium">
+                        Room {currentUser?.roomNumber || 'number not set'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Pickup and delivery will be from/to your registered room
+                    </p>
                   </div>
                 </div>
 
@@ -650,8 +643,8 @@ const LaundryBookingInterface = () => {
                       <p className="font-medium">{scheduling.preferredTime}</p>
                     </div>
                     <div>
-                      <p className="text-gray-600">Pickup Location</p>
-                      <p className="font-medium">{scheduling.pickupLocation}</p>
+                      <p className="text-gray-600">Room Number</p>
+                      <p className="font-medium">Room {currentUser?.roomNumber || 'Not set'}</p>
                     </div>
                     <div>
                       <p className="text-gray-600">Service Provider</p>
@@ -746,7 +739,7 @@ const LaundryBookingInterface = () => {
                   <>
                     <button
                       onClick={() => setBookingStep(3)}
-                      disabled={!scheduling.preferredDate || !scheduling.preferredTime || !scheduling.pickupLocation}
+                      disabled={!scheduling.preferredDate || !scheduling.preferredTime || !currentUser?.roomNumber}
                       className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Review Booking

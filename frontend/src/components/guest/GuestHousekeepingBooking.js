@@ -4,6 +4,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../redux/slices/authSlice';
 import {
   FaBroom,
   FaClock,
@@ -27,6 +29,7 @@ import { useTranslation } from 'react-i18next';
 
 const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const { currentUser, isAuthenticated } = useAuth();
+  const currentUserFromRedux = useSelector(selectCurrentUser);
   const { t } = useTranslation();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -364,6 +367,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
         serviceCategory: selectedService.category, // Include the service category
         hotelId,
         ...bookingDetails,
+        roomNumber: currentUserFromRedux?.roomNumber || currentUser?.roomNumber || bookingDetails.roomNumber,
         preferredTime: backendTime, // Send 'now' for backend compatibility
         serviceType: 'housekeeping',
         status: 'pending',
@@ -665,14 +669,9 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                 <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">{t('housekeeping.roomNumber')}</label>
                 <div className="relative">
                   <FaMapMarkerAlt className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-[#3B5787] text-xs sm:text-sm" />
-                  <input
-                    type="text"
-                    value={bookingDetails.roomNumber}
-                    onChange={(e) => setBookingDetails(prev => ({ ...prev, roomNumber: e.target.value }))}
-                    className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] text-xs sm:text-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:border-[#67BAE0]/50"
-                    placeholder={t('housekeeping.roomNumber', 'Room number')}
-                    required
-                  />
+                  <div className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl bg-gray-50 text-[#3B5787] text-xs sm:text-sm font-medium">
+                    {currentUserFromRedux?.roomNumber || currentUser?.roomNumber || 'N/A'}
+                  </div>
                 </div>
               </div>
 
