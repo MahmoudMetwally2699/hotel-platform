@@ -7,6 +7,7 @@ import apiClient from './api.service';
 import { AUTH_API, CLIENT_API } from '../config/api.config';
 import jwt_decode from 'jwt-decode';
 import cookieHelper from '../utils/cookieHelper';
+import { clearAllAuthData, clearRegularAuthData } from '../utils/authCleanup';
 
 class AuthService {
   constructor() {
@@ -258,16 +259,27 @@ class AuthService {
 
       this.lastCheckAuthCall = now;
 
-      console.log('🔍 checkAuth: Making request to /api/auth/me...');
+      // Check if we're on a Super Hotel route or have Super Hotel data
+      const isOnSuperHotelRoute = window.location.pathname.startsWith('/super-hotel-admin');
+      const hasSuperHotelData = localStorage.getItem('superHotelData');
+      const isSupeHotelAuth = isOnSuperHotelRoute || hasSuperHotelData;
+
+      let endpoint = AUTH_API.CHECK; // Default to regular auth check
+      if (isSupeHotelAuth) {
+        endpoint = '/api/admin/auth/me'; // Super Hotel auth check
+        console.log('🏨 checkAuth: Using Super Hotel authentication endpoint');
+      }
+
+      console.log(`🔍 checkAuth: Making request to ${endpoint}...`);
       // This will trigger the auth interceptor if the token is invalid
-      this.pendingCheckAuth = apiClient.get(AUTH_API.CHECK);
+      this.pendingCheckAuth = apiClient.get(endpoint);
 
       const response = await this.pendingCheckAuth;
       this.pendingCheckAuth = null;
 
       console.log('✅ checkAuth: Response received:', response.data);
 
-      if (response.data.success) {
+      if (response.data.success || response.data.status === 'success') {
         console.log('✅ checkAuth: Auth successful, user data:', response.data.data);
         // Don't store in localStorage since we're using cookies
         // The user data will be managed by Redux
@@ -350,10 +362,8 @@ class AuthService {
   clearSession() {
     // We can't directly clear HttpOnly cookies from JavaScript
     // The backend will handle cookie removal on logout
-    // Remove user data and token from localStorage (backup)
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    console.log('🧹 Session data cleared from localStorage');
+    // Use comprehensive auth cleanup utility
+    clearAllAuthData();
   }
 }
 

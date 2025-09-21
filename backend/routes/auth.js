@@ -260,6 +260,10 @@ router.post('/login', catchAsync(async (req, res, next) => {
     phone: user.phone,
     role: user.role,
     avatar: user.avatar,
+    roomNumber: user.roomNumber,
+    checkInDate: user.checkInDate,
+    checkOutDate: user.checkOutDate,
+    hasActiveBooking: user.hasActiveBooking,
     selectedHotelId: user.selectedHotelId,
     hotelId: user.hotelId,
     serviceProviderId: user.serviceProviderId

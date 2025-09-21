@@ -70,6 +70,9 @@ const AuthGuard = () => {
           case 'superadmin':
             navigate('/superadmin/dashboard');
             break;
+          case 'superHotel':
+            navigate('/super-hotel-admin/dashboard');
+            break;
           default:
             navigate('/');
             break;
@@ -111,6 +114,12 @@ const AuthGuard = () => {
 
     if (location.pathname.startsWith('/superadmin/') && role !== 'superadmin') {
       console.log('❌ AuthGuard - Access denied to superadmin route, role:', role);
+      navigate('/forbidden');
+      return;
+    }
+
+    if (location.pathname.startsWith('/super-hotel-admin/') && role !== 'superHotel') {
+      console.log('❌ AuthGuard - Access denied to super-hotel-admin route, role:', role);
       navigate('/forbidden');
       return;
     }

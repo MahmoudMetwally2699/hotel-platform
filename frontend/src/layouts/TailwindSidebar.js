@@ -3,7 +3,7 @@
  * Role-based navigation sidebar with mobile bottom navigation bar
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fa';
 import useAuth from '../hooks/useAuth';
 import useServiceProviderCategories from '../hooks/useServiceProviderCategories';
+import { resolveAuthConflicts } from '../utils/authCleanup';
 
 const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
   const { t, i18n } = useTranslation();
@@ -23,6 +24,11 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
   const [showMobileCategories, setShowMobileCategories] = useState(false);
+
+  // Resolve authentication conflicts on mount and location change
+  useEffect(() => {
+    resolveAuthConflicts(location.pathname);
+  }, [location.pathname]);
 
   // Check if current language is RTL
   const isRTL = i18n.language === 'ar';
@@ -349,6 +355,12 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
   };
 
   const navigationItems = getNavigationItems();
+
+  // Don't render sidebar content if role is not available
+  if (!role) {
+    console.log('⚠️ TailwindSidebar - No role available, not rendering navigation');
+    return null;
+  }
 
   return (
     <>

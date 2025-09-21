@@ -28,6 +28,14 @@ export const useAuth = () => {
   });
   const role = useSelector(selectAuthRole);
 
+  // Add specific role debugging
+  console.log('🔍 useAuth - Role state:', {
+    role,
+    roleSource: 'Redux selector',
+    currentUserRole: currentUser?.role,
+    roleMatch: role === currentUser?.role
+  });
+
   // Track if we've already checked authentication to prevent loops
   const [authChecked, setAuthChecked] = React.useState(false);
   /**

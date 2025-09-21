@@ -23,10 +23,28 @@ const protect = catchAsync(async (req, res, next) => {
   // 1) Getting token and check if it's there
   let token;
 
+  // Manual cookie parsing as fallback
+  const parseCookies = (cookieHeader) => {
+    const cookies = {};
+    if (cookieHeader) {
+      cookieHeader.split(';').forEach(cookie => {
+        const [name, value] = cookie.trim().split('=');
+        if (name && value) {
+          cookies[name] = value;
+        }
+      });
+    }
+    return cookies;
+  };
+
+  const parsedCookies = parseCookies(req.headers.cookie);
+
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   } else if (req.cookies && req.cookies.jwt) {
     token = req.cookies.jwt;
+  } else if (parsedCookies.jwt) {
+    token = parsedCookies.jwt;
   }
 
   if (!token) {
@@ -267,13 +285,43 @@ const protectSuperHotel = catchAsync(async (req, res, next) => {
   // 1) Getting token and check if it's there
   let token;
 
+  console.log('🔐 protectSuperHotel - Checking token sources...');
+  console.log('🔐 Authorization header:', req.headers.authorization);
+  console.log('🔐 Cookies:', req.cookies);
+  console.log('🔐 Raw Cookie header:', req.headers.cookie);
+
+  // Manual cookie parsing as fallback
+  const parseCookies = (cookieHeader) => {
+    const cookies = {};
+    if (cookieHeader) {
+      cookieHeader.split(';').forEach(cookie => {
+        const [name, value] = cookie.trim().split('=');
+        if (name && value) {
+          cookies[name] = value;
+        }
+      });
+    }
+    return cookies;
+  };
+
+  const parsedCookies = parseCookies(req.headers.cookie);
+  console.log('🔐 Manually parsed cookies:', parsedCookies);
+
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
+    console.log('🔐 Token found in Authorization header');
   } else if (req.cookies && req.cookies.superHotelJwt) {
     token = req.cookies.superHotelJwt;
+    console.log('🔐 Token found in cookie');
+  } else if (parsedCookies.superHotelJwt) {
+    token = parsedCookies.superHotelJwt;
+    console.log('🔐 Token found in manually parsed cookies');
   }
 
+  console.log('🔐 Final token:', token ? 'Present' : 'Missing');
+
   if (!token) {
+    console.log('🔐 No token found, denying access');
     logger.logSecurity('SUPER_HOTEL_ACCESS_DENIED_NO_TOKEN', req);
     return next(new AppError('You are not logged in! Please log in to get access.', 401));
   }

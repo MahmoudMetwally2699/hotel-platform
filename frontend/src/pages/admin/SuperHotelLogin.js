@@ -21,6 +21,7 @@ const SuperHotelLogin = () => {
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies in request
         body: JSON.stringify(formData)
       });
 
@@ -28,12 +29,10 @@ const SuperHotelLogin = () => {
         const data = await response.json();
         console.log('SuperHotelLogin: Login response data:', data);
 
-        // Store Super Hotel specific tokens only (don't interfere with main auth)
-        localStorage.setItem('superHotelToken', data.token);
+        // Store only Super Hotel user data in localStorage (not the token - it's in cookies)
         localStorage.setItem('superHotelData', JSON.stringify(data.data.superHotel));
 
-        console.log('SuperHotelLogin: Super Hotel tokens stored');
-        console.log('SuperHotelLogin: superHotelToken:', localStorage.getItem('superHotelToken'));
+        console.log('SuperHotelLogin: Super Hotel data stored (token is in cookies)');
 
         toast.success('Login successful');
         navigate('/super-hotel-admin/dashboard');

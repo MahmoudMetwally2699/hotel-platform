@@ -39,12 +39,11 @@ const SuperHotelDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const token = localStorage.getItem('superHotelToken');
-      console.log('🔍 Fetching dashboard data with token:', token ? 'Present' : 'Missing');
+      console.log('🔍 Fetching dashboard data using cookies');
 
       const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
+        credentials: 'include', // Include cookies
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });

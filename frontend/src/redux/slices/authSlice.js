@@ -6,6 +6,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import authService from '../../services/auth.service';
 import { cleanupClerkTokens, isClerkToken } from '../../utils/cleanupClerkTokens';
+import { resolveAuthConflicts, detectAuthConflicts, hasSuperHotelCookie } from '../../utils/authCleanup';
 
 // Auth service is already instantiated in the imported module
 
@@ -15,14 +16,18 @@ const getInitialAuthState = () => {
     console.log('🔍 Checking authentication state on app init:');
     console.log('🔍 All localStorage keys:', Object.keys(localStorage));
     console.log('🔍 localStorage.token:', localStorage.getItem('token'));
-    console.log('🔍 localStorage.superHotelToken:', localStorage.getItem('superHotelToken'));
-    console.log('🔍 localStorage.user:', localStorage.getItem('user'));
     console.log('🔍 localStorage.superHotelData:', localStorage.getItem('superHotelData'));
+    console.log('🔍 superHotelCookie:', hasSuperHotelCookie() ? 'Present' : 'Missing');
+
+    // First, check for and resolve any authentication conflicts
+    const conflictResolved = resolveAuthConflicts();
+    if (conflictResolved) {
+      console.log('🔧 Authentication conflicts resolved, rechecking state...');
+    }
 
     // Check if we have Super Hotel authentication data
-    const superHotelToken = localStorage.getItem('superHotelToken');
     const superHotelData = localStorage.getItem('superHotelData');
-    const hasSuperHotelAuth = !!(superHotelToken && superHotelData);
+    const hasSuperHotelAuth = !!(hasSuperHotelCookie() && superHotelData);
 
     // Check if we're on a Super Hotel route OR have Super Hotel auth
     const isOnSuperHotelRoute = window.location.pathname.startsWith('/super-hotel-admin') || hasSuperHotelAuth;
@@ -34,11 +39,13 @@ const getInitialAuthState = () => {
     let token = localStorage.getItem('token');
     let storedUser = localStorage.getItem('user');
 
-    // If on Super Hotel route, check Super Hotel tokens instead
+    // If on Super Hotel route, check Super Hotel auth instead
     if (isOnSuperHotelRoute) {
-      if (superHotelToken && superHotelData) {
+      if (hasSuperHotelCookie() && superHotelData) {
         console.log('🏨 Using Super Hotel authentication');
-        token = superHotelToken;
+        // For Super Hotel, we can't access the cookie value directly from JavaScript
+        // We'll use a placeholder token and let the backend validate the cookie
+        token = 'superhotel-cookie-auth';
         storedUser = superHotelData;
       }
     }
@@ -58,7 +65,7 @@ const getInitialAuthState = () => {
       console.log('🔍 Checking authentication state on app init:');
     console.log('Token found:', token ? 'Yes (length: ' + token.length + ')' : 'No');
     console.log('🔍 Authentication method:', isOnSuperHotelRoute ? 'Super Hotel' : 'Regular');
-    console.log('🔍 Token source:', isOnSuperHotelRoute && token ? 'superHotelToken' : 'regular token');
+    console.log('🔍 Token source:', isOnSuperHotelRoute && token ? 'superHotelCookie' : 'regular token');
 
     // Check if this token is a Clerk token (which we should ignore)
     if (token && isClerkToken(token)) {
@@ -67,11 +74,25 @@ const getInitialAuthState = () => {
       cleanupClerkTokens(); // Clean up any Clerk tokens
     }
 
-    console.log('Token format check:', token ? (token.split('.').length === 3 ? 'Valid JWT format' : 'Invalid JWT format') : 'No token');
+    console.log('Token format check:', token ? (token === 'superhotel-cookie-auth' ? 'Super Hotel Cookie Auth' : token.split('.').length === 3 ? 'Valid JWT format' : 'Invalid JWT format') : 'No token');
 
     // Check if we have user data in localStorage (already retrieved above)
     console.log('Stored user found:', storedUser ? 'Yes' : 'No');
       if (token && storedUser) {
+      // Special handling for Super Hotel cookie authentication
+      if (token === 'superhotel-cookie-auth') {
+        console.log('🏨 Super Hotel cookie authentication detected');
+        const userData = JSON.parse(storedUser);
+
+        return {
+          user: userData,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+          role: 'superHotel',
+        };
+      }
+
       // Check if this is a valid JWT token (should have 3 parts separated by dots)
       const tokenParts = token.split('.');
 
@@ -489,16 +510,21 @@ const authSlice = createSlice({
 
         // FIXED: Handle the nested response structure correctly
         // The API returns { success: true, data: { user_object } }
+        // Super Hotel API returns { status: 'success', data: { superHotel: superHotel_object } }
         // But sometimes the entire response gets stored as action.payload
         let userData;
         if (responseData.success && responseData.data) {
-          // Case 1: Full API response structure
+          // Case 1: Regular API response structure { success: true, data: user_object }
           userData = responseData.data;
+        } else if (responseData.status === 'success' && responseData.data && responseData.data.superHotel) {
+          // Case 2: Super Hotel API response structure { status: 'success', data: { superHotel: superHotel_object } }
+          userData = responseData.data.superHotel;
+          userData.role = 'superHotel'; // Ensure Super Hotel role is set
         } else if (responseData.user) {
-          // Case 2: Data is nested under 'user' property
+          // Case 3: Data is nested under 'user' property
           userData = responseData.user;
         } else {
-          // Case 3: Data is the responseData itself
+          // Case 4: Data is the responseData itself
           userData = responseData;
         }
 

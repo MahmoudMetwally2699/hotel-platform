@@ -32,11 +32,17 @@ const createSendToken = (superHotel, statusCode, req, res) => {
 
   const cookieOptions = {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    httpOnly: true,
-    secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+    httpOnly: process.env.NODE_ENV === 'production', // Allow JS access in development for debugging
+    secure: process.env.NODE_ENV === 'production', // Only use HTTPS in production
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
   };
 
+  console.log('🍪 Setting superHotelJwt cookie with options:', cookieOptions);
+  console.log('🍪 Token being set:', token.substring(0, 20) + '...');
   res.cookie('superHotelJwt', token, cookieOptions);
+
+  // Verify cookie was set by checking response headers
+  console.log('🍪 Response headers after setting cookie:', res.getHeaders());
 
   // Remove password from output
   superHotel.password = undefined;

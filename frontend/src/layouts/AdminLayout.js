@@ -3,6 +3,8 @@ import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { API_BASE_URL } from '../config/api.config';
 
+import { clearSuperHotelAuthData } from '../utils/authCleanup';
+
 const AdminLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -20,19 +22,12 @@ const AdminLayout = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('superHotelToken');
-      console.log('AdminLayout: Checking auth, token exists:', !!token);
+      console.log('AdminLayout: Checking auth using cookies');
+      console.log('AdminLayout: Current cookies:', document.cookie);
 
-      if (!token) {
-        console.log('AdminLayout: No token found, redirecting to login');
-        navigate('/super-hotel-admin/login');
-        return;
-      }
-
-      console.log('AdminLayout: Making auth check request to backend');
       const response = await fetch(`${API_BASE_URL}/admin/auth/me`, {
+        credentials: 'include', // Include cookies
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -44,15 +39,13 @@ const AdminLayout = ({ children }) => {
         console.log('AdminLayout: Auth successful, user data:', data.data.superHotel);
         setSuperHotel(data.data.superHotel);
       } else {
-        console.log('AdminLayout: Auth failed, clearing tokens and redirecting');
-        localStorage.removeItem('superHotelToken');
-        localStorage.removeItem('superHotelData');
+        console.log('AdminLayout: Auth failed, clearing data and redirecting');
+        clearSuperHotelAuthData();
         navigate('/super-hotel-admin/login');
       }
     } catch (error) {
       console.error('AdminLayout: Auth check error:', error);
-      localStorage.removeItem('superHotelToken');
-      localStorage.removeItem('superHotelData');
+      clearSuperHotelAuthData();
       navigate('/super-hotel-admin/login');
     } finally {
       setLoading(false);
@@ -63,8 +56,8 @@ const AdminLayout = ({ children }) => {
     try {
       await fetch(`${API_BASE_URL}/admin/auth/logout`, {
         method: 'POST',
+        credentials: 'include', // Include cookies
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('superHotelToken')}`,
           'Content-Type': 'application/json'
         }
       });
@@ -72,9 +65,8 @@ const AdminLayout = ({ children }) => {
       console.error('Logout error:', error);
     }
 
-    // Clear Super Hotel tokens only
-    localStorage.removeItem('superHotelToken');
-    localStorage.removeItem('superHotelData');
+    // Clear Super Hotel data only (cookies are cleared by server)
+    clearSuperHotelAuthData();
 
     toast.success('Logged out successfully');
     navigate('/super-hotel-admin/login');

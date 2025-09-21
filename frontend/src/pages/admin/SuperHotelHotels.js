@@ -13,10 +13,9 @@ const SuperHotelHotels = () => {
 
   const fetchHotels = async () => {
     try {
-      const token = localStorage.getItem('superHotelToken');
       const response = await fetch(`${API_BASE_URL}/admin/hotels`, {
+        credentials: 'include', // Include cookies
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
