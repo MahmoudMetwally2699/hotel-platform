@@ -330,8 +330,17 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       quantity = 1,
       selectedTime,
       options,
-      serviceCombination // Add service combination support
+      serviceCombination, // Add service combination support
+      paymentMethod = 'online' // Add payment method selection
     } = req.body;
+
+    // Validate payment method
+    if (!['online', 'cash'].includes(paymentMethod)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment method. Must be either "online" or "cash".'
+      });
+    }
 
     // Get user details
     const user = await User.findById(req.user.id)
@@ -395,7 +404,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       // Guest details for easy access
       guestDetails: {
         firstName: user.firstName,
-        lastName: user.lastName || '', // Make lastName optional
+        lastName: user.lastName || user.firstName || 'Guest', // Ensure lastName is never empty
         email: user.email,
         phone: user.phone,
         roomNumber: roomNumber
@@ -442,13 +451,26 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
 
       // Payment information
       payment: {
-        method: 'credit-card', // Default payment method
-        status: 'pending'
+        paymentMethod,
+        method: paymentMethod === 'online' ? 'credit-card' : 'cash',
+        status: 'pending',
+        paymentStatus: 'pending'
       },
 
       specialRequests,
-      status: 'pending'
+      status: 'pending' // Use valid status value
     });
+
+    // Set different statuses based on payment method
+    if (paymentMethod === 'cash') {
+      booking.payment.paymentStatus = 'pending';
+      booking.status = 'pending'; // Use valid status for cash payments
+    } else {
+      booking.payment.paymentStatus = 'pending';
+      booking.status = 'pending'; // Normal flow for online payments
+    }
+
+    await booking.save();
 
     // Update user's booking history
     await User.findByIdAndUpdate(req.user.id, {
@@ -475,13 +497,21 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
 
     // Send confirmation email to guest
     try {
+      const paymentMethodText = paymentMethod === 'cash'
+        ? 'Cash (Payment at hotel)'
+        : 'Online payment required';
+
+      const paymentInstructions = paymentMethod === 'cash'
+        ? 'Payment will be collected when the service is provided.'
+        : 'Please complete your online payment to confirm this booking.';
+
       await sendEmail({
         email: user.email,
         subject: `Booking Confirmation - ${service.name}`,
         message: `
           Dear ${user.firstName},
 
-          Your booking for ${service.name} has been confirmed!
+          Your booking for ${service.name} has been ${paymentMethod === 'cash' ? 'confirmed' : 'created'}!
 
           Booking Details:
           - Booking Number: ${bookingNumber}
@@ -491,8 +521,12 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           - Room: ${roomNumber}
           - Quantity: ${quantity}
           - Total Amount: $${finalPrice} ${service.pricing.currency || 'EGP'}
+          - Payment Method: ${paymentMethodText}
 
           Special Requests: ${specialRequests || 'None'}
+
+          Payment Information:
+          ${paymentInstructions}
 
           Your service provider will be notified and will confirm the appointment details shortly.
 
@@ -506,6 +540,14 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
 
     // Send notification email to service provider
     try {
+      const paymentMethodText = paymentMethod === 'cash'
+        ? 'Cash (Payment at hotel)'
+        : 'Online payment';
+
+      const paymentStatus = paymentMethod === 'cash'
+        ? 'Payment will be collected when service is provided'
+        : 'Payment pending online confirmation';
+
       await sendEmail({
         email: service.providerId.email,
         subject: `New Booking - ${service.name}`,
@@ -528,6 +570,8 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           - Requested Time: ${selectedTime || 'To be confirmed'}
           - Quantity: ${quantity}
           - Amount: $${providerAmount} ${service.pricing.currency || 'EGP'}
+          - Payment Method: ${paymentMethodText}
+          - Payment Status: ${paymentStatus}
 
           Special Requests: ${specialRequests || 'None'}
 
@@ -592,11 +636,18 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       // Don't fail the booking if WhatsApp fails
     }
 
+    // Create appropriate response message based on payment method
+    const successMessage = paymentMethod === 'cash'
+      ? 'Booking created successfully. Payment will be collected at the hotel. The service provider has been notified.'
+      : 'Booking created successfully. Please proceed to payment. The service provider has been notified.';
+
     res.status(201).json({
       success: true,
       data: {
         ...booking.toObject(),
-        message: 'Booking created successfully. The service provider has been notified.'
+        message: successMessage,
+        paymentMethod,
+        requiresPayment: paymentMethod === 'online'
       }
     });
   } catch (error) {
@@ -660,18 +711,18 @@ router.get('/bookings', protect, restrictTo('guest'), async (req, res) => {
     // If status filter is provided, apply it to housekeeping query too
     if (status) housekeepingByEmailQuery.status = status;
 
-    console.log('🔍 Guest bookings - User ID:', req.user.id);
-    console.log('🔍 Guest bookings - User email:', req.user.email);
-    console.log('🔍 Guest bookings - Regular query:', regularBookingsQuery);
-    console.log('🔍 Guest bookings - Housekeeping query:', housekeepingByEmailQuery);
+    // console.log('🔍 Guest bookings - User ID:', req.user.id);
+    // console.log('🔍 Guest bookings - User email:', req.user.email);
+    // console.log('🔍 Guest bookings - Regular query:', regularBookingsQuery);
+    // console.log('🔍 Guest bookings - Housekeeping query:', housekeepingByEmailQuery);
 
     // Debug: Check all housekeeping bookings to see what emails they have
     const allHousekeepingBookings = await Booking.find({ serviceType: 'housekeeping' }).lean();
-    console.log('🔍 All housekeeping bookings emails:', allHousekeepingBookings.map(b => ({
-      id: b._id,
-      email: b.guestDetails?.email,
-      guestId: b.guestId
-    })));
+    // console.log('🔍 All housekeeping bookings emails:', allHousekeepingBookings.map(b => ({
+    //   id: b._id,
+    //   email: b.guestDetails?.email,
+    //   guestId: b.guestId
+    // })));
 
     // Get both regular bookings and housekeeping bookings by email
     const [regularBookings, housekeepingBookings] = await Promise.all([
@@ -1341,7 +1392,17 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
       expressSurcharge,
       schedule,
       guestDetails,
-      location    } = req.body;
+      location,
+      paymentMethod = 'online' // Add payment method selection
+    } = req.body;
+
+    // Validate payment method
+    if (!['online', 'cash'].includes(paymentMethod)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment method. Must be either "online" or "cash".'
+      });
+    }
 
     console.log('🔍 Booking data received:', {
       serviceId,
@@ -1436,7 +1497,7 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
       // Guest details
       guestDetails: {
         firstName: user.firstName,
-        lastName: user.lastName || '',
+        lastName: user.lastName || user.firstName || 'Guest', // Ensure lastName is never empty
         email: user.email,
         phone: user.phone,
         roomNumber: guestDetails?.roomNumber || user.roomNumber || roomNumber || ''
@@ -1528,12 +1589,14 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
         hotelEarnings: hotelEarnings
       },
 
-      status: 'pending',
+      status: 'pending', // Use valid status value instead of 'pending_payment'
 
-      // Payment information - default to pending payment
+      // Payment information with method selection
       payment: {
-        method: req.body.paymentMethod || 'credit-card',
-        status: 'pending'
+        paymentMethod,
+        method: paymentMethod === 'online' ? 'credit-card' : 'cash',
+        status: 'pending',
+        paymentStatus: 'pending'
       }
     });
 
@@ -1573,9 +1636,14 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
       // Don't fail the booking if email fails
     }
 
+    // Create appropriate response message based on payment method
+    const successMessage = paymentMethod === 'cash'
+      ? 'Laundry booking created successfully. Payment will be collected at the hotel.'
+      : 'Laundry booking created successfully. Please proceed to payment.';
+
     res.status(201).json({
       success: true,
-      message: 'Laundry booking created successfully',
+      message: successMessage,
       data: {
         booking: {
           id: booking._id,
@@ -1584,7 +1652,9 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
           totalAmount: totalAmount,
           schedule: booking.schedule,
           serviceName: service.name,
-          providerName: service.providerId.businessName
+          providerName: service.providerId.businessName,
+          paymentMethod,
+          requiresPayment: paymentMethod === 'online'
         }
       }
     });
@@ -1759,8 +1829,17 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
       expressSurcharge,
       schedule,
       guestDetails,
-      location
+      location,
+      paymentMethod = 'online' // Add payment method selection
     } = req.body;
+
+    // Validate payment method
+    if (!['online', 'cash'].includes(paymentMethod)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment method. Must be either "online" or "cash".'
+      });
+    }
 
     console.log('🚗 Transportation booking data received:', {
       serviceId,
@@ -1864,8 +1943,16 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
       hotelEarnings,
       markupPercentage: markup,
       paymentStatus: 'pending',
-      status: 'pending',
-      notes: guestDetails.specialRequests || ''
+      status: 'pending', // Use valid status value
+      notes: guestDetails.specialRequests || '',
+
+      // Payment information with method selection
+      payment: {
+        paymentMethod,
+        method: paymentMethod === 'online' ? 'credit-card' : 'cash',
+        status: 'pending',
+        paymentStatus: 'pending'
+      }
     });
 
     await booking.save();
@@ -1978,9 +2065,14 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
       // Don't fail the booking if WhatsApp fails
     }
 
+    // Create appropriate response message based on payment method
+    const successMessage = paymentMethod === 'cash'
+      ? 'Transportation booking created successfully. Payment will be collected at pickup.'
+      : 'Transportation booking created successfully. Please proceed to payment.';
+
     res.status(201).json({
       success: true,
-      message: 'Transportation booking created successfully',
+      message: successMessage,
       data: {
         booking: {
           id: booking._id,
@@ -1988,7 +2080,9 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
           totalAmount: booking.totalAmount,
           scheduledDate: booking.scheduledDate,
           status: booking.status,
-          providerName: service.providerId.businessName
+          providerName: service.providerId.businessName,
+          paymentMethod,
+          requiresPayment: paymentMethod === 'online'
         }
       }
     });
@@ -2552,6 +2646,85 @@ router.get('/bookings/housekeeping/:bookingId', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error'
+    });
+  }
+});
+
+/**
+ * @desc    Update booking payment method
+ * @route   PUT /api/client/bookings/:id/payment-method
+ * @access  Private/Guest
+ */
+router.put('/bookings/:id/payment-method', protect, restrictTo('guest'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { paymentMethod } = req.body;
+
+    // Validate payment method
+    if (!['online', 'cash'].includes(paymentMethod)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment method. Must be either "online" or "cash".'
+      });
+    }
+
+    // Find the booking
+    const booking = await Booking.findOne({
+      _id: id,
+      guestId: req.user.id
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    // Update payment method
+    booking.payment.paymentMethod = paymentMethod;
+    booking.payment.method = paymentMethod === 'online' ? 'credit-card' : 'cash';
+
+    // Update booking status based on payment method
+    if (paymentMethod === 'cash') {
+      booking.status = 'pending'; // Use valid status value
+      booking.payment.paymentStatus = 'pending';
+    } else {
+      booking.status = 'pending';
+      booking.payment.paymentStatus = 'pending';
+    }
+
+    await booking.save();
+
+    // Log the change
+    logger.info('Payment method updated', {
+      bookingId: booking._id,
+      bookingNumber: booking.bookingNumber,
+      paymentMethod,
+      guestId: req.user.id
+    });
+
+    res.json({
+      success: true,
+      message: paymentMethod === 'cash'
+        ? 'Payment method updated to cash. Payment will be collected at the hotel.'
+        : 'Payment method updated to online payment.',
+      data: {
+        booking: {
+          id: booking._id,
+          bookingNumber: booking.bookingNumber,
+          status: booking.status,
+          paymentMethod: booking.payment.paymentMethod,
+          paymentStatus: booking.payment.paymentStatus
+        }
+      }
+    });
+
+  } catch (error) {
+    logger.error('Update payment method error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating payment method'
     });
   }
 });

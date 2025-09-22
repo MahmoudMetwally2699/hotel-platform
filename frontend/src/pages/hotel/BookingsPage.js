@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchHotelBookings, selectAllBookings, selectBookingLoading } from '../../redux/slices/bookingSlice';
 import useAuth from '../../hooks/useAuth';
+import apiClient from '../../services/api.service';
 
 /**
  * Hotel Admin Bookings Management Page
@@ -40,6 +41,42 @@ const BookingsPage = () => {
   const handleViewDetails = (booking) => {
     setSelectedBooking(booking);
     setIsModalOpen(true);
+  };
+
+  // Handle marking cash payment as paid
+  const handleMarkCashPaymentPaid = async (bookingId) => {
+    try {
+      const response = await apiClient.put(`/hotel/bookings/${bookingId}/payment-status`, {
+        paymentStatus: 'paid'
+      });
+
+      if (response.data.status === 'success') {
+        // Update the local state
+        const updatedBooking = {
+          ...selectedBooking,
+          payment: {
+            ...selectedBooking.payment,
+            paymentStatus: 'paid',
+            paymentDate: new Date().toISOString(),
+            status: 'completed'
+          },
+          status: selectedBooking.status === 'pending_payment' ? 'confirmed' : selectedBooking.status
+        };
+        setSelectedBooking(updatedBooking);
+
+        // Refresh the bookings list
+        if (user?.hotelId) {
+          dispatch(fetchHotelBookings(user.hotelId));
+        }
+
+        alert('Cash payment marked as paid successfully!');
+      } else {
+        throw new Error(response.data.message || 'Failed to update payment status');
+      }
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      alert(error.response?.data?.message || 'Failed to update payment status. Please try again.');
+    }
   };
 
   // Format date
@@ -138,7 +175,23 @@ const BookingsPage = () => {
                     <td className="py-3 px-4">
                       <div className="font-medium">${booking.totalAmount.toFixed(2)}</div>
                       <div className="text-xs text-gray-500">
-                        {booking.paymentStatus === 'PAID' ? 'Paid' : 'Unpaid'}
+                        {booking.payment?.paymentMethod === 'cash' ? (
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            booking.payment?.paymentStatus === 'paid'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {booking.payment?.paymentStatus === 'paid' ? 'Cash Paid' : 'Cash Pending'}
+                          </span>
+                        ) : (
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            booking.payment?.paymentStatus === 'paid'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {booking.payment?.paymentStatus === 'paid' ? 'Online Paid' : 'Payment Pending'}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -192,13 +245,35 @@ const BookingsPage = () => {
               <div>
                 <h3 className="font-medium text-gray-700 mb-2">Payment Information</h3>
                 <div className="bg-gray-50 p-4 rounded-md">
-                  <p><span className="font-medium">Total Amount:</span> ${selectedBooking.totalAmount.toFixed(2)}</p>
-                  <p><span className="font-medium">Payment Status:</span> {selectedBooking.paymentStatus}</p>
-                  {selectedBooking.paymentMethod && (
-                    <p><span className="font-medium">Payment Method:</span> {selectedBooking.paymentMethod}</p>
+                  <p><span className="font-medium">Total Amount:</span> ${selectedBooking.totalAmount?.toFixed(2) || selectedBooking.pricing?.totalAmount?.toFixed(2) || 'N/A'}</p>
+                  <p><span className="font-medium">Payment Method:</span> {
+                    selectedBooking.payment?.paymentMethod === 'cash' ? 'Cash (Pay at Hotel)' :
+                    selectedBooking.payment?.paymentMethod === 'online' ? 'Online Payment' :
+                    selectedBooking.paymentMethod || 'N/A'
+                  }</p>
+                  <p><span className="font-medium">Payment Status:</span>
+                    <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                      selectedBooking.payment?.paymentStatus === 'paid'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {selectedBooking.payment?.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+                    </span>
+                  </p>
+                  {selectedBooking.payment?.paymentDate && (
+                    <p><span className="font-medium">Payment Date:</span> {formatDate(selectedBooking.payment.paymentDate)}</p>
                   )}
-                  {selectedBooking.paymentDate && (
-                    <p><span className="font-medium">Payment Date:</span> {formatDate(selectedBooking.paymentDate)}</p>
+
+                  {/* Cash Payment Action Button */}
+                  {selectedBooking.payment?.paymentMethod === 'cash' && selectedBooking.payment?.paymentStatus === 'pending' && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <button
+                        onClick={() => handleMarkCashPaymentPaid(selectedBooking._id)}
+                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+                      >
+                        Mark Cash Payment as Paid
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

@@ -126,6 +126,26 @@ const OrdersPage = () => {
     setPage(1); // reset paging on sort
   };
 
+  const getServiceDisplayName = (order) => {
+    if (order.payment?.paymentMethod === 'cash') {
+      // For cash payments, show service type instead of specific service name
+      const serviceType = order.serviceType || 'regular';
+      switch (serviceType) {
+        case 'laundry':
+          return 'Laundry Service';
+        case 'housekeeping':
+          return 'Housekeeping Service';
+        case 'transportation':
+          return 'Transportation Service';
+        default:
+          return `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} Service`;
+      }
+    } else {
+      // For online payments, show the specific service name
+      return order.serviceDetails?.name || order.serviceId?.name || order.serviceName || 'N/A';
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed':
@@ -416,7 +436,7 @@ const OrdersPage = () => {
                       <div>
                         <div className="text-[#3B5787] font-semibold">#{order.bookingNumber || order._id?.slice(-8)}</div>
                         <div className="text-sm font-medium text-gray-900">
-                          {order.serviceDetails?.name || order.serviceId?.name || order.serviceName || 'N/A'}
+                          {getServiceDisplayName(order)}
                         </div>
                         <div className="text-xs text-gray-500">
                           {order.hotel?.name || order.hotelId?.name || order.hotelName || 'N/A'}
@@ -431,7 +451,7 @@ const OrdersPage = () => {
                         {order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}
                       </span>
                       <span className="text-xs text-gray-500">
-                        {new Date(order.createdAt).toLocaleDateString()} • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card'}
                       </span>
                     </div>
                     <div className="mt-3 flex items-center gap-2">
@@ -508,6 +528,9 @@ const OrdersPage = () => {
                           )}
                         </div>
                       </th>
+                      <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-[#3B5787] uppercase tracking-wider">
+                        Payment Method
+                      </th>
                       <th
                         className="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-[#3B5787] uppercase tracking-wider cursor-pointer hover:bg-[#67BAE0]/10"
                         onClick={() => handleSort('status')}
@@ -548,7 +571,7 @@ const OrdersPage = () => {
                         </td>
                         <td className="px-4 lg:px-6 py-4 text-sm text-gray-700">
                           <span className="font-medium text-gray-900">
-                            {order.serviceDetails?.name || order.serviceId?.name || order.serviceName || 'N/A'}
+                            {getServiceDisplayName(order)}
                           </span>
                         </td>
                         <td className="px-4 lg:px-6 py-4 text-sm text-gray-700">
@@ -556,6 +579,9 @@ const OrdersPage = () => {
                         </td>
                         <td className="px-4 lg:px-6 py-4 text-sm font-semibold text-[#3B5787]">
                           ${(order.pricing?.totalAmount || order.totalAmount || 0).toFixed(2)}
+                        </td>
+                        <td className="px-4 lg:px-6 py-4 text-sm text-gray-700">
+                          {order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card'}
                         </td>
                         <td className="px-4 lg:px-6 py-4">
                           <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border ${getStatusColor(order.status)}`}>
@@ -702,7 +728,7 @@ const OrdersPage = () => {
                     <div className="bg-gradient-to-r from-[#3B5787]/5 to-[#67BAE0]/5 rounded-lg p-4 border border-[#67BAE0]/20">
                       <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide">Service</p>
                       <p className="mt-2 text-lg font-medium text-gray-900">
-                        {currentOrder.serviceDetails?.name || currentOrder.serviceId?.name || currentOrder.serviceName || 'Unknown Service'}
+                        {getServiceDisplayName(currentOrder)}
                       </p>
                     </div>
 
@@ -860,7 +886,7 @@ const OrdersPage = () => {
                             <div>
                               <span className="text-sm font-medium text-gray-700">Service: </span>
                               <span className="text-sm text-gray-900">
-                                {currentOrder.serviceDetails?.name || currentOrder.serviceName || 'Laundry Service'}
+                                {getServiceDisplayName(currentOrder)}
                               </span>
                             </div>
                             <div>
@@ -1176,6 +1202,12 @@ const OrdersPage = () => {
                         <div className="border-t pt-2 flex justify-between font-semibold text-[#3B5787]">
                           <span>Total Amount:</span>
                           <span>${(currentOrder.pricing?.totalAmount || currentOrder.totalAmount || 0).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Payment Method:</span>
+                          <span className="font-medium">
+                            {currentOrder.payment?.paymentMethod === 'cash' ? 'Cash at Hotel' : 'Online Payment'}
+                          </span>
                         </div>
                       </div>
                     </div>

@@ -11,6 +11,8 @@ import { format } from 'date-fns';
 import useAuth from '../../hooks/useAuth';
 import { API_BASE_URL, CLIENT_API } from '../../config/api.config';
 import ServiceCombinationSelector from '../../components/client/ServiceCombinationSelector';
+import { useTranslation } from 'react-i18next';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 const ServiceDetailsPage = () => {
   const { id } = useParams();
@@ -18,7 +20,8 @@ const ServiceDetailsPage = () => {
   const dispatch = useDispatch();
   const { isAuthenticated } = useAuth();
   const service = useSelector(selectServiceDetails);
-  const isLoading = useSelector(selectServiceLoading);  const [selectedDate, setSelectedDate] = useState(new Date());
+  const isLoading = useSelector(selectServiceLoading);
+  const { i18n } = useTranslation();  const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState('09:00 AM'); // Set default time
   const [quantity, setQuantity] = useState(1);
   const [selectedCombination, setSelectedCombination] = useState(null);
@@ -343,7 +346,7 @@ const ServiceDetailsPage = () => {
             <div className="mb-4 sm:mb-6">
               <div className="flex items-baseline">
                 <span className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  ${Math.round(((service.pricing?.finalPrice || service.pricing?.basePrice || service.basePrice || 0) * 100)) / 100}
+                  {formatPriceByLanguage((service.pricing?.finalPrice || service.pricing?.basePrice || service.basePrice || 0), i18n.language)}
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-gray-500 mt-1">Per unit • Includes all taxes and fees</p>

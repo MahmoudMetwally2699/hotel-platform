@@ -2951,4 +2951,131 @@ router.get('/qr/info', catchAsync(async (req, res, next) => {
   }
 }));
 
+/**
+ * @route   PUT /api/hotel/bookings/:id/payment-status
+ * @desc    Update payment status for a booking (cash payments)
+ * @access  Private/HotelAdmin
+ */
+router.put('/bookings/:id/payment-status', catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const { paymentStatus } = req.body;
+  const hotelId = req.user.hotelId;
+
+  // Validate payment status
+  if (!['pending', 'paid', 'failed'].includes(paymentStatus)) {
+    return next(new AppError('Invalid payment status. Must be pending, paid, or failed.', 400));
+  }
+
+  // Find the booking and verify it belongs to this hotel
+  const booking = await Booking.findOne({
+    _id: id,
+    hotelId: hotelId
+  });
+
+  if (!booking) {
+    return next(new AppError('Booking not found or access denied', 404));
+  }
+
+  // Only allow updating cash payment status
+  if (booking.payment.paymentMethod !== 'cash') {
+    return next(new AppError('Payment status can only be updated for cash payments', 400));
+  }
+
+  // Update payment status
+  booking.payment.paymentStatus = paymentStatus;
+  if (paymentStatus === 'paid') {
+    booking.payment.paymentDate = new Date();
+    booking.payment.status = 'completed';
+    // Update overall booking status if payment is complete
+    if (booking.status === 'pending_payment') {
+      booking.status = 'confirmed';
+    }
+  } else if (paymentStatus === 'failed') {
+    booking.payment.status = 'failed';
+  }
+
+  await booking.save();
+
+  // Log the payment status update
+  logger.info('Payment status updated by hotel admin', {
+    bookingId: booking._id,
+    bookingNumber: booking.bookingNumber,
+    paymentStatus,
+    hotelId,
+    adminId: req.user.id
+  });
+
+  // Send notification email to guest about payment status update
+  try {
+    const user = await User.findById(booking.guestId);
+    if (user && user.email) {
+      let emailSubject, emailMessage;
+
+      if (paymentStatus === 'paid') {
+        emailSubject = `Payment Confirmed - ${booking.bookingNumber}`;
+        emailMessage = `
+          Dear ${user.firstName},
+
+          Your cash payment for booking ${booking.bookingNumber} has been confirmed by the hotel.
+
+          Booking Details:
+          - Booking Number: ${booking.bookingNumber}
+          - Service: ${booking.serviceDetails.name}
+          - Total Amount: $${booking.pricing.totalAmount} ${booking.pricing.currency}
+          - Payment Date: ${new Date().toLocaleDateString()}
+
+          Your service is now confirmed and ready to proceed.
+
+          Thank you for your business!
+          Hotel Service Platform
+        `;
+      } else if (paymentStatus === 'failed') {
+        emailSubject = `Payment Issue - ${booking.bookingNumber}`;
+        emailMessage = `
+          Dear ${user.firstName},
+
+          There was an issue with your cash payment for booking ${booking.bookingNumber}.
+
+          Please contact the hotel reception to resolve this payment issue.
+
+          Booking Number: ${booking.bookingNumber}
+          Service: ${booking.serviceDetails.name}
+          Total Amount: $${booking.pricing.totalAmount} ${booking.pricing.currency}
+
+          Hotel Service Platform
+        `;
+      }
+
+      if (emailSubject && emailMessage) {
+        await sendEmail({
+          email: user.email,
+          subject: emailSubject,
+          message: emailMessage
+        });
+      }
+    }
+  } catch (emailError) {
+    logger.error('Failed to send payment status notification email', {
+      error: emailError,
+      bookingId: booking._id
+    });
+    // Don't fail the request if email fails
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: `Payment status updated to ${paymentStatus}`,
+    data: {
+      booking: {
+        id: booking._id,
+        bookingNumber: booking.bookingNumber,
+        paymentStatus: booking.payment.paymentStatus,
+        paymentMethod: booking.payment.paymentMethod,
+        paymentDate: booking.payment.paymentDate,
+        status: booking.status
+      }
+    }
+  });
+}));
+
 module.exports = router;

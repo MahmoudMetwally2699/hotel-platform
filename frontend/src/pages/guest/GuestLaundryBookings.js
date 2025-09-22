@@ -17,7 +17,8 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaCalendarAlt,
-  FaCheck
+  FaCheck,
+  FaClock
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { formatPriceByLanguage } from '../../utils/currency';
@@ -31,7 +32,7 @@ const GuestLaundryBookings = () => {
   // Debug timestamp
   console.log('🔄 GuestLaundryBookings component loaded/updated at:', new Date().toISOString());
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [selectedTab, setSelectedTab] = useState('confirmed');
+  const [selectedTab, setSelectedTab] = useState('pending');
 
   // Debug selectedBooking changes
   useEffect(() => {
@@ -70,8 +71,9 @@ const GuestLaundryBookings = () => {
   const itemsPerPage = 10;
 
   const tabs = [
-    { id: 'confirmed', label: t('laundry.labels.confirmed', 'Confirmed'), icon: FaCheck },
-    { id: 'completed', label: t('laundry.labels.completed', 'Completed'), icon: FaCheck }
+    { id: 'pending', label: t('serviceProvider.laundry.labels.pending', 'Pending'), icon: FaClock },
+    { id: 'confirmed', label: t('serviceProvider.laundry.labels.confirmed', 'Confirmed'), icon: FaCheck },
+    { id: 'completed', label: t('serviceProvider.laundry.labels.completed', 'Completed'), icon: FaCheck }
   ];
 
   useEffect(() => {
@@ -357,7 +359,7 @@ const GuestLaundryBookings = () => {
       </div>
 
       {/* Ultra Compact Pricing */}
-      {booking.pricing?.total && (
+      {(booking.pricing?.totalAmount || booking.pricing?.total) && (
         <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg p-2 mb-2 border border-emerald-200">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-1.5">
@@ -366,7 +368,8 @@ const GuestLaundryBookings = () => {
             </div>
             <span className="text-base font-bold text-emerald-600 bg-white/70 px-2 py-0.5 rounded-md">
               {(() => {
-                const total = booking.pricing?.total ||
+                const total = booking.pricing?.totalAmount ||
+                             booking.pricing?.total ||
                              booking.payment?.paidAmount ||
                              booking.payment?.amount ||
                              booking.totalAmount ||
@@ -656,13 +659,15 @@ const GuestLaundryBookings = () => {
                         <span className="text-xl font-bold text-emerald-600">
                           {(() => {
                             // Try multiple potential locations for the total amount
-                            const total = selectedBooking.pricing?.total ||
+                            const total = selectedBooking.pricing?.totalAmount ||
+                                         selectedBooking.pricing?.total ||
                                          selectedBooking.payment?.paidAmount ||
                                          selectedBooking.payment?.amount ||
                                          selectedBooking.totalAmount ||
                                          selectedBooking.amount;
 
                             console.log('💰 Total amount sources:', {
+                              pricingTotalAmount: selectedBooking.pricing?.totalAmount,
                               pricingTotal: selectedBooking.pricing?.total,
                               paymentPaidAmount: selectedBooking.payment?.paidAmount,
                               paymentAmount: selectedBooking.payment?.amount,
@@ -770,19 +775,24 @@ const GuestLaundryBookings = () => {
                                   }
                                   // PRIORITY 1: Use actual individual item pricing if available
                                   else if (item.basePrice) {
-                                    // Use the base price from laundry booking (individual item price)
-                                    itemPrice = item.basePrice * (item.quantity || 1);
-                                    console.log(`✅ USING ACTUAL PRICE: ${item.itemName} = ${item.basePrice} × ${item.quantity || 1} = ${itemPrice}`);
+                                    // Calculate base price with markup applied
+                                    const basePrice = item.basePrice * (item.quantity || 1);
+                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                    itemPrice = basePrice * (1 + markupPercentage / 100);
+                                    console.log(`✅ USING MARKUP PRICE: ${item.itemName} = ${item.basePrice} × ${item.quantity || 1} × (1 + ${markupPercentage}%) = ${itemPrice}`);
                                   }
                                   else if (item.price && item.quantity && item.price !== bookingTotal) {
-                                    // Use individual price × quantity if it's not the booking total
-                                    itemPrice = item.price * item.quantity;
-                                    console.log(`✅ USING ITEM PRICE: ${item.itemName} = ${item.price} × ${item.quantity} = ${itemPrice}`);
+                                    // Calculate price with markup applied
+                                    const basePrice = item.price * item.quantity;
+                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                    itemPrice = basePrice * (1 + markupPercentage / 100);
+                                    console.log(`✅ USING MARKUP ITEM PRICE: ${item.itemName} = ${item.price} × ${item.quantity} × (1 + ${markupPercentage}%) = ${itemPrice}`);
                                   }
                                   else if (item.price && item.price !== bookingTotal) {
-                                    // Use individual price if it's not the booking total
-                                    itemPrice = item.price;
-                                    console.log(`✅ USING SINGLE PRICE: ${item.itemName} = ${item.price}`);
+                                    // Calculate single price with markup applied
+                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                    itemPrice = item.price * (1 + markupPercentage / 100);
+                                    console.log(`✅ USING MARKUP SINGLE PRICE: ${item.itemName} = ${item.price} × (1 + ${markupPercentage}%) = ${itemPrice}`);
                                   }
                                   // FALLBACK: Check if multiple items all have the same price as the total (definitely wrong)
                                   else if (allItems.length > 1) {
@@ -792,22 +802,27 @@ const GuestLaundryBookings = () => {
                                     );
 
                                     if (allItemsSamePrice) {
-                                      // All items showing total price - definitely incorrect, divide evenly
-                                      itemPrice = bookingTotal / allItems.length;
-                                      console.log(`🔧 FALLBACK FIXED: All ${allItems.length} items had same price as total (${bookingTotal}), divided evenly: ${itemPrice}`);
+                                      // All items showing total price - definitely incorrect, divide evenly and apply markup
+                                      const baseItemPrice = bookingTotal / allItems.length;
+                                      const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                      itemPrice = baseItemPrice * (1 + markupPercentage / 100);
+                                      console.log(`🔧 FALLBACK MARKUP FIXED: All ${allItems.length} items had same price as total (${bookingTotal}), divided evenly and applied ${markupPercentage}% markup: ${itemPrice}`);
                                     } else {
-                                      // Use the item's totalPrice even if it might be wrong
-                                      itemPrice = item.totalPrice || bookingTotal / allItems.length;
+                                      // Apply markup to the item's totalPrice
+                                      const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                      itemPrice = (item.totalPrice || bookingTotal / allItems.length) * (1 + markupPercentage / 100);
                                     }
                                   }
-                                  // Single item - use its own pricing
+                                  // Single item - use its own pricing with markup
                                   else {
-                                    itemPrice = item.totalPrice || bookingTotal;
+                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                    itemPrice = (item.totalPrice || bookingTotal) * (1 + markupPercentage / 100);
                                   }
 
                                   // Final fallback
                                   if (!itemPrice && bookingTotal) {
-                                    itemPrice = bookingTotal;
+                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                    itemPrice = bookingTotal * (1 + markupPercentage / 100);
                                   }
 
                                   console.log('💰 Enhanced item price for', item.itemName, ':', {

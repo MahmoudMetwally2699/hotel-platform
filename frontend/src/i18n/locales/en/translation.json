@@ -13,6 +13,7 @@
     "submit": "Submit",
     "cancel": "Cancel",
     "save": "Save",
+    "markAsCompleted": "Mark as Completed",
     "delete": "Delete",
     "edit": "Edit",
     "view": "View",
@@ -884,6 +885,7 @@
       "noBookingsDescription": "You don't have any laundry bookings yet.",
       "startBooking": "Start Booking",
       "labels": {
+        "pending": "Pending",
         "pendingPayment": "Pending Payment",
         "confirmed": "Confirmed",
         "completed": "Completed",
@@ -1429,6 +1431,140 @@
     "platformName": "Hotel Service Platform",
     "allRightsReserved": "All rights reserved"
   },
+  "landingPage": {
+    "nav": {
+      "services": "Services",
+      "howToBook": "How to Book",
+      "reviews": "Reviews",
+      "myBookings": "My Bookings",
+      "signIn": "Sign In"
+    },
+    "hero": {
+      "welcomeBadge": "✨ Welcome to Premium Hotel Services",
+      "title": "Book Hotel Services",
+      "titleHighlight": "Made Simple",
+      "description": "From laundry and transportation to housekeeping and dining - get everything you need during your hotel stay with just a few taps. Pay online or at the hotel.",
+      "viewMyServices": "View My Services",
+      "chooseYourHotel": "Choose Your Hotel",
+      "exploreServices": "Explore Services",
+      "securePayments": "Secure Payments",
+      "instantBooking": "Instant Booking",
+      "access247": "24/7 Access",
+      "rating": "4.8/5 Rating"
+    },
+    "services": {
+      "title": "Everything You Need During Your Stay",
+      "subtitle": "Convenient, reliable services delivered right to your room or wherever you need them",
+      "laundry": {
+        "title": "Laundry & Dry Cleaning",
+        "description": "Professional laundry services with same-day options. Wash, fold, iron - we handle it all."
+      },
+      "transportation": {
+        "title": "Transportation",
+        "description": "Airport transfers, city tours, car rentals. Reliable transportation at your fingertips."
+      },
+      "housekeeping": {
+        "title": "Housekeeping",
+        "description": "Extra cleaning, towel refresh, special requests. Keep your room perfect throughout your stay."
+      },
+      "roomService": {
+        "title": "Room Service & Dining",
+        "description": "Delicious meals delivered to your room. Breakfast, lunch, dinner, and special dietary needs."
+      },
+      "benefits": {
+        "title": "Why Choose Our Services?",
+        "flexiblePayment": "Flexible Payment",
+        "flexiblePaymentDesc": "Pay online with card or cash at hotel checkout. No hidden fees.",
+        "fastReliable": "Fast & Reliable",
+        "fastReliableDesc": "Quick response times and reliable service delivery every time.",
+        "easyBooking": "Easy Booking",
+        "easyBookingDesc": "Book anytime, track your orders, and get real-time updates."
+      }
+    },
+    "howItWorks": {
+      "title": "Book in 3 Simple Steps",
+      "subtitle": "Getting the services you need has never been easier. Book, pay, and relax.",
+      "step1": {
+        "title": "Choose Your Service",
+        "description": "Browse available services, select what you need, and customize your order with special requests."
+      },
+      "step2": {
+        "title": "Pay Your Way",
+        "description": "Choose online payment for instant confirmation or pay cash at the hotel front desk when you check out."
+      },
+      "step3": {
+        "title": "Relax & Enjoy",
+        "description": "Track your order status in real-time and receive your service at the scheduled time. That's it!"
+      },
+      "payment": {
+        "title": "Payment Made Simple",
+        "subtitle": "Choose the payment method that works best for you",
+        "onlinePayment": {
+          "title": "Online Payment",
+          "description": "Secure card payment with instant confirmation",
+          "features": "✓ Instant booking confirmation<br/>✓ Secure SSL encryption<br/>✓ No additional fees"
+        },
+        "cashPayment": {
+          "title": "Cash at Hotel",
+          "description": "Pay when you check out - no advance payment needed",
+          "features": "✓ Pay at checkout<br/>✓ Added to room bill<br/>✓ Convenient for guests"
+        }
+      }
+    },
+    "testimonials": {
+      "title": "What Our Guests Say",
+      "subtitle": "Real experiences from guests who have used our hotel services",
+      "testimonial1": {
+        "name": "Sarah M., Business Traveler",
+        "text": "The laundry service was a lifesaver during my week-long business trip. Picked up my clothes in the morning and they were back perfectly pressed by evening. Paid cash at checkout - so convenient!",
+        "hotel": "Grand Hotel, Dubai"
+      },
+      "testimonial2": {
+        "name": "Michael R., Family Vacation",
+        "text": "Booked airport transfer for our whole family through the app. Driver was on time, vehicle was clean and comfortable. The online payment was secure and instant. Will definitely use again!",
+        "hotel": "Seaside Resort, Miami"
+      },
+      "testimonial3": {
+        "name": "Emma L., Leisure Traveler",
+        "text": "Room service breakfast was delivered hot and fresh right on time. The housekeeping team was amazing too - they even left little chocolates on my pillow. Cash payment at checkout was perfect for my budget.",
+        "hotel": "Mountain Lodge, Aspen"
+      },
+      "trustedBy": "Trusted by guests at premium hotels worldwide"
+    },
+    "stats": {
+      "title": "Join Thousands of Happy Guests",
+      "subtitle": "Experience the convenience of modern hotel services",
+      "servicesDelivered": "Services Delivered",
+      "servicesDeliveredSub": "Every month",
+      "averageRating": "Average Rating",
+      "averageRatingSub": "From 10K+ reviews",
+      "partnerHotels": "Partner Hotels",
+      "partnerHotelsSub": "Worldwide",
+      "serviceAvailable": "Service Available",
+      "serviceAvailableSub": "Anytime you need"
+    },
+    "cta": {
+      "title": "Ready to Experience Better Hotel Stays?",
+      "subtitle": "Join thousands of guests who have discovered the convenience of on-demand hotel services. Your next stay just got a whole lot better.",
+      "bookFirstService": "Book Your First Service",
+      "exploreServices": "Explore Services",
+      "footerText": "No registration required • Pay your way • 100% secure"
+    },
+    "footer": {
+      "description": "Making hotel stays more convenient and enjoyable. Book laundry, transportation, housekeeping, and dining services with just a few taps.",
+      "forGuests": "For Guests",
+      "ourServices": "Our Services",
+      "howToBook": "How to Book",
+      "guestReviews": "Guest Reviews",
+      "helpCenter": "Help Center",
+      "support": "Support",
+      "guestSupport": "Guest Support",
+      "faq": "FAQ",
+      "contactUs": "Contact Us",
+      "privacySecurity": "Privacy & Security",
+      "copyright": "© 2025 QuickRoom. All rights reserved. Designed for exceptional guest experiences."
+    }
+  },
   "categories": {
     "availableAt": "Available at",
     "totalServices": "Total Services",
@@ -1766,6 +1902,7 @@
     "myBookings": "My Transportation Bookings",
     "bookingsSubtitle": "Manage and pay for your transportation quotes and bookings.",
     "createQuote": "Create Quote",
+    "markCompleted": "Mark as Completed",
     "createQuoteFor": "Create Quote for",
     "tripDetails": "Trip Details",
     "noBookings": "No Bookings Found",
@@ -1773,7 +1910,8 @@
     "tabs": {
       "pendingQuotes": "Pending Quotes",
       "pendingPayment": "Pending Payment",
-      "confirmed": "Confirmed"
+      "confirmed": "Paid by Cash",
+      "completed": "Completed"
     },
     "labels": {
       "waitingForQuote": "Waiting for quote",
@@ -1795,10 +1933,12 @@
       "fetchBookings": "Failed to fetch bookings",
       "invalidPrice": "Please enter a valid price",
       "createQuote": "Failed to create quote",
-      "fetchBookingDetails": "Failed to fetch booking details"
+      "fetchBookingDetails": "Failed to fetch booking details",
+      "markCompleted": "Failed to mark booking as completed"
     },
     "success": {
-      "quoteCreated": "Quote created successfully"
+      "quoteCreated": "Quote created successfully",
+      "markedCompleted": "Booking marked as completed successfully"
     },
     "status": {
       "pending_quote": "Pending quote",

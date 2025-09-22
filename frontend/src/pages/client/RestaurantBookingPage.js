@@ -26,12 +26,13 @@ import {
 import apiClient from '../../services/api.service';
 import MenuItemCard from '../../components/guest/MenuItemCard';
 import useRTL from '../../hooks/useRTL';
+import { formatPriceByLanguage, formatTotalWithSar } from '../../utils/currency';
 
 const RestaurantBookingPage = () => {
   const { hotelId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isRTL, textAlign } = useRTL();
   const currentUser = useSelector(selectCurrentUser);
 
@@ -202,23 +203,18 @@ const RestaurantBookingPage = () => {
         pricing: {
           subtotal: calculatePricing().subtotal,
           total: calculatePricing().total
-        }
+        },
+        serviceName: service?.name || 'Restaurant Service'
       };
 
-      const paymentResponse = await apiClient.post('/payments/kashier/create-payment-session', {
-        bookingData,
-        bookingType: 'restaurant',
-        amount: calculatePricing().total,
-        currency: 'USD'
-      });
+      console.log('🍽️ Proceeding to payment method selection for restaurant booking');
 
-      if (paymentResponse.data.success) {
-        const { paymentUrl } = paymentResponse.data.data;
-        toast.success('Redirecting to payment...');
-        window.location.href = paymentUrl;
-      } else {
-        throw new Error(paymentResponse.data.message || t('guest.payment.failedCreateSession'));
-      }
+      // Store booking data in localStorage and navigate to payment method selection
+      localStorage.setItem('pendingBookingData', JSON.stringify(bookingData));
+
+      // Navigate to payment method selection page
+      navigate(`/payment-method?serviceType=restaurant&amount=${calculatePricing().total}&currency=USD`);
+
     } catch (error) {
       console.error('❌ Booking submission error:', error);
       toast.error(error.response?.data?.message || t('guest.restaurant.failedToCreateBooking'));
@@ -560,9 +556,9 @@ const RestaurantBookingPage = () => {
                     <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                       <div>
                         <p className="font-medium">{item.name}</p>
-                        <p className="text-xs text-gray-600">Qty: {item.quantity} × ${item.price}</p>
+                        <p className="text-xs text-gray-600">Qty: {item.quantity} × {formatPriceByLanguage(item.price, i18n.language)}</p>
                       </div>
-                      <span className="font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+                      <span className="font-semibold">{formatPriceByLanguage(item.price * item.quantity, i18n.language)}</span>
                     </div>
                   ))}
                 </div>
@@ -570,7 +566,7 @@ const RestaurantBookingPage = () => {
                 <div className="mt-4 pt-4 border-t">
                   <div className="flex justify-between items-center font-bold text-lg">
                     <span>{t('guest.restaurant.total')}</span>
-                    <span className="text-[#3B5787]">${pricing.total.toFixed(2)}</span>
+                    <span className="text-[#3B5787]">{formatTotalWithSar(pricing.total, i18n.language)}</span>
                   </div>
                 </div>
 
@@ -620,7 +616,7 @@ const RestaurantBookingPage = () => {
                       <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                         <div className="flex-1">
                           <p className="font-medium text-sm">{item.name}</p>
-                          <p className="text-xs text-gray-600">${item.price} each</p>
+                          <p className="text-xs text-gray-600">{formatPriceByLanguage(item.price, i18n.language)} each</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
@@ -646,7 +642,7 @@ const RestaurantBookingPage = () => {
                   <div className="border-t pt-3 mb-4">
                     <div className="flex justify-between items-center font-bold">
                       <span>{t('guest.restaurant.total')}</span>
-                      <span className="text-lg text-[#3B5787]">${pricing.total.toFixed(2)}</span>
+                      <span className="text-lg text-[#3B5787]">{formatTotalWithSar(pricing.total, i18n.language)}</span>
                     </div>
                   </div>
                 </>

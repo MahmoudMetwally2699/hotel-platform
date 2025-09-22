@@ -332,7 +332,9 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
       type: Number,
       default: 0,
       min: [0, 'Additional services total cannot be negative']
-    },    deliveryCharge: {
+    },
+
+    deliveryCharge: {
       type: Number,
       default: 0,
       min: [0, 'Delivery charge cannot be negative']
@@ -451,15 +453,32 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
 
   // Payment Information
   payment: {
+    // Payment method selection
+    paymentMethod: {
+      type: String,
+      enum: ['online', 'cash'],
+      required: [true, 'Payment method selection is required'],
+      default: 'online'
+    },
+
+    // Payment processing method (specific implementation)
     method: {
       type: String,
       enum: ['credit-card', 'debit-card', 'paypal', 'stripe', 'cash', 'wallet', 'bank-transfer'],
       required: [true, 'Payment method is required']
     },
 
+    // Payment status with additional values for cash payments
     status: {
       type: String,
       enum: ['pending', 'processing', 'completed', 'failed', 'refunded', 'partially-refunded'],
+      default: 'pending'
+    },
+
+    // Overall payment status for the booking
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'paid', 'failed'],
       default: 'pending'
     },
 

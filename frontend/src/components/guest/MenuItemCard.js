@@ -7,6 +7,8 @@
 import React from 'react';
 import { FaPlus, FaMinus, FaLeaf, FaPepperHot, FaClock } from 'react-icons/fa';
 import useRTL from '../../hooks/useRTL';
+import { useTranslation } from 'react-i18next';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 const MenuItemCard = ({
   item,
@@ -17,6 +19,7 @@ const MenuItemCard = ({
   isMobile = false
 }) => {
   const { isRTL, textAlign } = useRTL();
+  const { t, i18n } = useTranslation();
 
   const spicy = (level) =>
     level === 'mild' ? '' :
@@ -27,7 +30,7 @@ const MenuItemCard = ({
   const Price = () => (
     <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} items-baseline gap-1 ${textAlign}`}>
       <span className="text-xl font-extrabold tracking-tight text-gray-900">
-        €{Number(item.price || 0).toFixed(2)}
+        {formatPriceByLanguage(Number(item.price || 0), i18n.language)}
       </span>
       <span className="text-[11px] text-gray-500">{isRTL ? '/ للطلب' : '/ item'}</span>
     </div>

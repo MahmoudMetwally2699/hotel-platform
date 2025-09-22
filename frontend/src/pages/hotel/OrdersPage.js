@@ -262,6 +262,7 @@ const OrdersPage = () => {
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[150px]">{t('hotelAdmin.orders.table.provider')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.orders.table.date')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.orders.table.amount')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">Payment Method</th>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.orders.table.status')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">{t('hotelAdmin.orders.table.actions')}</th>
                       </tr>
@@ -349,6 +350,11 @@ const OrdersPage = () => {
                                  order.totalAmount ||
                                  order.finalPrice ||
                                  order.quotedPrice || 0).toFixed(2)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className="text-sm text-gray-700">
+                              {order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card'}
                             </span>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
@@ -452,12 +458,17 @@ const OrdersPage = () => {
                         <div className="text-xs text-modern-darkGray">
                           {new Date(order.createdAt || order.appointmentDate).toLocaleDateString()}
                         </div>
-                        <div className="text-sm font-bold text-gray-900">
-                          ${(order.pricing?.totalAmount ||
-                             order.payment?.totalAmount ||
-                             order.totalAmount ||
-                             order.finalPrice ||
-                             order.quotedPrice || 0).toFixed(2)}
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-gray-900">
+                            ${(order.pricing?.totalAmount ||
+                               order.payment?.totalAmount ||
+                               order.totalAmount ||
+                               order.finalPrice ||
+                               order.quotedPrice || 0).toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card'}
+                          </div>
                         </div>
                       </div>
 
@@ -635,6 +646,12 @@ const OrdersPage = () => {
                          selectedOrder.totalAmount ||
                          selectedOrder.finalPrice ||
                          selectedOrder.quotedPrice || 0).toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Payment Method:</span>
+                    <p className="font-medium">
+                      {selectedOrder.payment?.paymentMethod === 'cash' ? 'Cash at Hotel' : 'Online Payment'}
                     </p>
                   </div>
                 </div>

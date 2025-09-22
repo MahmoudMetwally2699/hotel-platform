@@ -27,7 +27,7 @@ import {
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
 import useRTL from '../../hooks/useRTL';
-import { formatPriceByLanguage } from '../../utils/currency';
+import { formatPriceByLanguage, formatTotalWithSar } from '../../utils/currency';
 import { selectCurrentUser } from '../../redux/slices/authSlice';
 
 const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
@@ -347,27 +347,16 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
           expressCharge: pricing.expressCharge,
           total: pricing.total
         },
-        paymentMethod: 'credit-card' // Default payment method
+        serviceName: service?.name || 'Laundry Service'
       };
 
-      console.log('🔵 Creating direct payment session for laundry booking');
+      console.log('🔵 Proceeding to payment method selection for laundry booking');
 
-      // Create payment session directly without creating booking first
-      const paymentResponse = await apiClient.post('/payments/kashier/create-payment-session', {
-        bookingData,
-        bookingType: 'laundry',
-        amount: pricing.total,
-        currency: 'USD'
-      });
+      // Store booking data in localStorage and navigate to payment method selection
+      localStorage.setItem('pendingBookingData', JSON.stringify(bookingData));
 
-      if (paymentResponse.data.success) {
-        const { paymentUrl } = paymentResponse.data.data;
-        toast.success(t('laundryBooking.redirectingToPayment'));
-        // Redirect to Kashier payment page
-        window.location.href = paymentUrl;
-      } else {
-        throw new Error(paymentResponse.data.message || 'Failed to create payment session');
-      }
+      // Navigate to payment method selection page
+      navigate(`/payment-method?serviceType=laundry&amount=${pricing.total}&currency=USD`);
 
     } catch (error) {
       console.error('❌ Booking submission error:', error);
@@ -1086,7 +1075,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
 
                 <div className="flex justify-between text-lg font-bold">
                   <span>{t('laundryBooking.total')}</span>
-                  <span className="text-green-600">{formatPriceByLanguage(pricing.total, i18n.language)}</span>
+                  <span className="text-green-600">{formatTotalWithSar(pricing.total, i18n.language)}</span>
                 </div>
               </div>
 
@@ -1178,7 +1167,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                     )}
                     <div className="flex justify-between font-bold text-green-600 mt-1">
                       <span>Total</span>
-                      <span>{formatPriceByLanguage(pricing.total, i18n.language)}</span>
+                      <span>{formatTotalWithSar(pricing.total, i18n.language)}</span>
                     </div>
                   </div>
                 </div>
@@ -1212,7 +1201,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold text-green-600">
-                  {formatPriceByLanguage(pricing.total, i18n.language)}
+                  {formatTotalWithSar(pricing.total, i18n.language)}
                 </div>
                 {expressService && (
                   <div className="text-xs text-yellow-600">

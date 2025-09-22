@@ -610,7 +610,7 @@ router.get('/provider', protect, restrictTo('service'), async (req, res) => {
 
     const query = {
       serviceProviderId: serviceProviderId,
-      bookingStatus: status
+      bookingStatus: status === 'completed' ? { $in: ['completed', 'payment_completed'] } : status
     };
 
     const bookings = await TransportationBooking.find(query)
@@ -870,6 +870,170 @@ router.delete('/:bookingId', protect, async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Server error while cancelling booking'
+    });
+  }
+});
+
+/**
+ * @desc    Update payment method for transportation booking
+ * @route   PUT /api/transportation-bookings/:id/payment-method
+ * @access  Private/Guest
+ */
+router.put('/:id/payment-method', protect, restrictTo('guest'), async (req, res) => {
+  try {
+    const { paymentMethod } = req.body;
+
+    // Validate payment method
+    if (!['online', 'cash'].includes(paymentMethod)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment method. Must be either "online" or "cash".'
+      });
+    }
+
+    // Find the booking and ensure it belongs to the current user
+    const booking = await TransportationBooking.findOne({
+      _id: req.params.id,
+      guestId: req.user._id
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    // Check if booking status allows payment method change
+    if (!['payment_pending', 'pending_quote'].includes(booking.bookingStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment method can only be updated for pending bookings'
+      });
+    }
+
+    // Update payment method
+    booking.payment = {
+      ...booking.payment,
+      paymentMethod: paymentMethod,
+      method: paymentMethod === 'online' ? 'credit-card' : 'cash',
+      status: paymentMethod === 'cash' ? 'pending' : 'pending'
+    };
+
+    // If cash payment, update booking status
+    if (paymentMethod === 'cash') {
+      booking.bookingStatus = 'confirmed';
+    }
+
+    await booking.save();
+
+    logger.info('Transportation booking payment method updated', {
+      bookingId: booking._id,
+      bookingReference: booking.bookingReference,
+      paymentMethod,
+      newStatus: booking.bookingStatus
+    });
+
+    res.json({
+      success: true,
+      message: paymentMethod === 'cash'
+        ? 'Payment method updated successfully. Payment will be collected at the hotel.'
+        : 'Payment method updated successfully.',
+      data: {
+        booking: {
+          id: booking._id,
+          bookingReference: booking.bookingReference,
+          bookingStatus: booking.bookingStatus,
+          payment: booking.payment
+        }
+      }
+    });
+
+  } catch (error) {
+    logger.error('Update transportation booking payment method error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating payment method'
+    });
+  }
+});
+
+/**
+ * @desc    Update booking status
+ * @route   PUT /api/transportation-bookings/:id/status
+ * @access  Private/Service Provider
+ */
+router.put('/:id/status', protect, restrictTo('service'), async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    // Validate status
+    const validStatuses = ['pending_quote', 'quote_sent', 'quote_accepted', 'payment_pending', 'confirmed', 'payment_completed', 'service_active', 'completed', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value'
+      });
+    }
+
+    // Get service provider ID from auth middleware
+    let serviceProviderId;
+    if (req.user.serviceProviderId) {
+      serviceProviderId = req.user.serviceProviderId._id || req.user.serviceProviderId;
+    } else {
+      // Fallback to database lookup if not in auth middleware
+      const serviceProvider = await ServiceProvider.findOne({ userId: req.user._id });
+      if (!serviceProvider) {
+        return res.status(404).json({
+          success: false,
+          message: 'Service provider profile not found'
+        });
+      }
+      serviceProviderId = serviceProvider._id;
+    }
+
+    // Find the booking and ensure it belongs to the current service provider
+    const booking = await TransportationBooking.findOne({
+      _id: req.params.id,
+      serviceProviderId: serviceProviderId
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    // Update booking status
+    booking.bookingStatus = status;
+    await booking.save();
+
+    logger.info('Transportation booking status updated', {
+      bookingId: booking._id,
+      bookingReference: booking.bookingReference,
+      oldStatus: booking.bookingStatus,
+      newStatus: status,
+      updatedBy: req.user._id
+    });
+
+    res.json({
+      success: true,
+      message: 'Booking status updated successfully',
+      data: {
+        booking: {
+          id: booking._id,
+          bookingReference: booking.bookingReference,
+          bookingStatus: booking.bookingStatus
+        }
+      }
+    });
+
+  } catch (error) {
+    logger.error('Update transportation booking status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating booking status'
     });
   }
 });

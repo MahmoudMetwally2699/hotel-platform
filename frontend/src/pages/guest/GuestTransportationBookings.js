@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   FaCar,
   FaCalendarAlt,
@@ -26,6 +26,7 @@ import { formatPriceByLanguage } from '../../utils/currency';
 const GuestTransportationBookings = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState('payment_pending');
@@ -36,6 +37,21 @@ const GuestTransportationBookings = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalBookings, setTotalBookings] = useState(0);
   const itemsPerPage = 10;
+
+  // Initialize selectedTab from URL parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      // Map URL tab parameter to internal tab id
+      const tabMapping = {
+        'waitingForQuote': 'pending_quote',
+        'readyForPayment': 'payment_pending',
+        'confirmed': 'payment_completed'
+      };
+      const mappedTab = tabMapping[tabParam] || 'payment_pending';
+      setSelectedTab(mappedTab);
+    }
+  }, [searchParams]);
 
   const tabs = [
     { id: 'pending_quote', label: t('transportation.labels.waitingForQuote'), icon: FaClock },
@@ -87,27 +103,18 @@ const GuestTransportationBookings = () => {
     }
   };
 
-  const handlePayNow = async (bookingId) => {
-    try {
-      console.log('🔵 handlePayNow called with bookingId:', bookingId);
+  const handlePayNow = async (booking) => {
+    console.log('🔵 handlePayNow called with booking:', booking);
 
-      // Create Kashier payment session
-      const response = await apiClient.post('/payments/kashier/create-session', {
-        bookingId: bookingId
-      });
+    // For both pending_quote and payment_pending status, redirect to payment method selection first
+    const amount = booking.quote?.finalPrice || booking.totalAmount || 0;
+    const currency = booking.pricing?.currency || 'EGP';
 
-      console.log('✅ Payment session response:', response.data);
+    const paymentUrl = `/payment-method?bookingId=${booking._id}&amount=${amount}&currency=${currency}&serviceType=transportation`;
+    console.log('🔄 GuestTransportationBookings - navigating to:', paymentUrl);
 
-      if (response.data.success) {
-        const { paymentUrl } = response.data.data;
-
-        // Redirect to Kashier payment page
-        window.location.href = paymentUrl;
-      }
-    } catch (error) {
-      console.error('❌ Error creating payment session:', error);
-      toast.error(error.response?.data?.message || 'Failed to create payment session');
-    }
+    // Navigate to payment method selection page with booking details
+    navigate(paymentUrl);
   };
 
   const handleViewDetails = async (bookingId) => {
@@ -233,10 +240,10 @@ const GuestTransportationBookings = () => {
           <span>Details</span>
         </button>
 
-        {/* Show Pay Now button for payment_pending status */}
-        {booking.bookingStatus === 'payment_pending' && (
+        {/* Show Pay Now button for payment_pending and pending_quote status */}
+        {(booking.bookingStatus === 'payment_pending' || booking.bookingStatus === 'pending_quote') && (
           <button
-            onClick={() => handlePayNow(booking._id)}
+            onClick={() => handlePayNow(booking)}
             className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-md font-semibold text-xs shadow-md hover:shadow-lg transition-all duration-200"
           >
             <FaMoneyBillWave />
@@ -274,7 +281,17 @@ const GuestTransportationBookings = () => {
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setSelectedTab(tab.id)}
+                  onClick={() => {
+                    setSelectedTab(tab.id);
+                    // Update URL parameter
+                    const urlMapping = {
+                      'pending_quote': 'waitingForQuote',
+                      'payment_pending': 'readyForPayment',
+                      'payment_completed': 'confirmed'
+                    };
+                    const urlTab = urlMapping[tab.id] || 'readyForPayment';
+                    navigate(`/my-bookings?tab=${urlTab}`, { replace: true });
+                  }}
                   className={`flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
                     selectedTab === tab.id
                       ? 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white shadow-lg transform scale-[1.02]'

@@ -80,7 +80,8 @@ const TransportationBookingManagement = () => {
   const tabs = [
     { id: 'pending_quote', label: t('transportation.tabs.pendingQuotes'), icon: FaQuoteLeft },
     { id: 'payment_pending', label: t('transportation.tabs.pendingPayment'), icon: FaClock },
-    { id: 'payment_completed', label: t('transportation.tabs.confirmed'), icon: FaCheck }
+    { id: 'confirmed', label: t('transportation.tabs.confirmed'), icon: FaCheck },
+    { id: 'completed', label: t('transportation.tabs.completed'), icon: FaCheck }
   ];
 
   const fetchBookings = useCallback(async () => {
@@ -141,10 +142,27 @@ const TransportationBookingManagement = () => {
     }
   };
 
+  const handleMarkCompleted = async (bookingId) => {
+    try {
+      const response = await apiClient.put(`/transportation-bookings/${bookingId}/status`, {
+        status: 'completed'
+      });
+
+      if (response.data.success) {
+        toast.success(t('transportation.success.markedCompleted'));
+        fetchBookings(); // Refresh the list
+      }
+    } catch (error) {
+      console.error('Error marking booking as completed:', error);
+      toast.error(error.response?.data?.message || t('transportation.errors.markCompleted'));
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       'pending_quote': 'bg-yellow-100 text-yellow-800',
       'payment_pending': 'bg-orange-100 text-orange-800',
+      'confirmed': 'bg-blue-100 text-blue-800',
       'payment_completed': 'bg-green-100 text-green-800',
       'completed': 'bg-gray-100 text-gray-800',
       'cancelled': 'bg-red-100 text-red-800',
@@ -246,6 +264,16 @@ const TransportationBookingManagement = () => {
             >
               <FaMoneyBillWave className="mr-2" />
               {t('transportation.createQuote')}
+            </button>
+          )}
+
+          {booking.bookingStatus === 'confirmed' && (
+            <button
+              onClick={() => handleMarkCompleted(booking._id)}
+              className={BTN.primary + " flex-1 sm:flex-none bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"}
+            >
+              <FaCheck className="mr-2" />
+              {t('transportation.markCompleted')}
             </button>
           )}
         </div>

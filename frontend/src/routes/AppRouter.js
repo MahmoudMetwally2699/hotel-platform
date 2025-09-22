@@ -37,6 +37,7 @@ const GuestRestaurantBookings = lazy(() => import('../pages/guest/GuestRestauran
 const GuestHousekeepingBookings = lazy(() => import('../pages/guest/GuestHousekeepingBookings'));
 const PaymentSuccess = lazy(() => import('../pages/guest/PaymentSuccess'));
 const PaymentFailed = lazy(() => import('../pages/guest/PaymentFailed'));
+const PaymentMethodSelectionPage = lazy(() => import('../pages/client/PaymentMethodSelectionPage'));
 const ProfilePage = lazy(() => import('../pages/common/ProfilePage'));
 const AdminAccessPage = lazy(() => import('../pages/common/AdminAccessPage'));
 
@@ -117,6 +118,7 @@ const AppRouter = () => {
         <Route path="/hotels/:hotelId/services/housekeeping/booking" element={<TailwindLayout><HousekeepingBookingPage /></TailwindLayout>} />
         <Route path="/guest/payment-success" element={<TailwindLayout><PaymentSuccess /></TailwindLayout>} />
         <Route path="/guest/payment-failed" element={<TailwindLayout><PaymentFailed /></TailwindLayout>} />
+        <Route path="/payment-method" element={<TailwindLayout><PaymentMethodSelectionPage /></TailwindLayout>} />
         <Route path="/services/:category" element={<ServiceListPage />} />
         <Route path="/services/details/:id" element={<ServiceDetailsPage />} />
 

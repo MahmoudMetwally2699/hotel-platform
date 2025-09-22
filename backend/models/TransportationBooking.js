@@ -103,7 +103,8 @@ const transportationBookingSchema = new mongoose.Schema({
       'quote_sent',          // Service provider has sent quote to client
       'quote_accepted',      // Client accepted the quote
       'payment_pending',     // Payment session created, waiting for payment
-      'payment_completed',   // Payment successful
+      'confirmed',           // Cash payment confirmed, waiting for service completion
+      'payment_completed',   // Online payment successful
       'service_active',      // Transportation service is ongoing
       'completed',           // Service completed successfully
       'cancelled',           // Booking cancelled
@@ -152,14 +153,30 @@ const transportationBookingSchema = new mongoose.Schema({
 
   // Payment Information (Kashier.io Integration)
   payment: {
+    // Payment method selection
+    paymentMethod: {
+      type: String,
+      enum: ['online', 'cash'],
+      required: [true, 'Payment method selection is required'],
+      default: 'online'
+    },
+
     status: {
       type: String,
       enum: ['pending', 'processing', 'completed', 'failed', 'refunded'],
       default: 'pending'
     },
+
+    // Overall payment status for the booking
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'paid', 'failed'],
+      default: 'pending'
+    },
+
     method: {
       type: String,
-      enum: ['credit-card', 'debit-card', 'wallet', 'bank-transfer']
+      enum: ['credit-card', 'debit-card', 'wallet', 'bank-transfer', 'cash']
     },
 
     // Kashier.io specific fields

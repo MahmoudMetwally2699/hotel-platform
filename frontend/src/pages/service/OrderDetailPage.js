@@ -199,6 +199,12 @@ const OrderDetailPage = () => {
               <dt className="text-sm font-medium text-gray-500">Payment Status</dt>
               <dd className="mt-1 text-sm text-gray-900">{order.paymentStatus || 'Not Paid'}</dd>
             </div>
+            <div className="sm:col-span-1">
+              <dt className="text-sm font-medium text-gray-500">Payment Method</dt>
+              <dd className="mt-1 text-sm text-gray-900">
+                {order.payment?.paymentMethod === 'cash' ? 'Cash (Pay at Hotel)' : 'Visa/Card (Online)'}
+              </dd>
+            </div>
           </dl>
         </div>
       </div>

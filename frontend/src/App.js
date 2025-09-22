@@ -26,6 +26,7 @@ const PUBLIC_ROUTES = [
   '/contact',
   '/guest/payment-success',
   '/guest/payment-failed',
+  '/payment-method',
   '/forbidden' // Add forbidden page as public route to prevent loops
 ];
 

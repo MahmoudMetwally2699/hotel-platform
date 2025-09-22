@@ -1,15 +1,15 @@
 /**
  * Currency Utility
- * Handles currency formatting for Egyptian Pound (EGP)
+ * Handles currency formatting for US Dollar (USD)
  */
 
 /**
- * Format price with Egyptian Pound currency
+ * Format price with US Dollar currency
  * @param {number} price - The price to format
- * @param {string} locale - The locale to use for formatting (default: 'ar-EG' for Arabic Egypt)
+ * @param {string} locale - The locale to use for formatting (default: 'en-US' for English US)
  * @returns {string} - Formatted price string
  */
-export const formatPrice = (price, locale = 'ar-EG') => {
+export const formatPrice = (price, locale = 'en-US') => {
   if (price === null || price === undefined || isNaN(price)) {
     return 'غير محدد'; // "Not specified" in Arabic
   }
@@ -17,21 +17,21 @@ export const formatPrice = (price, locale = 'ar-EG') => {
   const numericPrice = parseFloat(price);
 
   try {
-    // Format with Egyptian Pound currency
+    // Format with US Dollar currency
     return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'EGP',
+      currency: 'USD',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(numericPrice);
   } catch (error) {
     // Fallback formatting if Intl is not supported
-    return `${numericPrice.toFixed(2)} ج.م`;
+    return `$${numericPrice.toFixed(2)}`;
   }
 };
 
 /**
- * Format price with Egyptian Pound currency for English locale
+ * Format price with US Dollar currency for English locale
  * @param {number} price - The price to format
  * @returns {string} - Formatted price string
  */
@@ -43,16 +43,16 @@ export const formatPriceEn = (price) => {
   const numericPrice = parseFloat(price);
 
   try {
-    // Format with Egyptian Pound currency for English
-    return new Intl.NumberFormat('en-EG', {
+    // Format with US Dollar currency for English
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'EGP',
+      currency: 'USD',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(numericPrice);
   } catch (error) {
     // Fallback formatting
-    return `EGP ${numericPrice.toFixed(2)}`;
+    return `$${numericPrice.toFixed(2)}`;
   }
 };
 
@@ -64,7 +64,7 @@ export const formatPriceEn = (price) => {
  */
 export const formatPriceByLanguage = (price, language = 'ar') => {
   if (language === 'ar') {
-    return formatPrice(price, 'ar-EG');
+    return formatPrice(price, 'ar-SA'); // Use Saudi Arabia locale for Arabic
   } else {
     return formatPriceEn(price);
   }
@@ -76,27 +76,51 @@ export const formatPriceByLanguage = (price, language = 'ar') => {
  * @returns {string} - Currency symbol
  */
 export const getCurrencySymbol = (language = 'ar') => {
-  return language === 'ar' ? 'ج.م' : 'EGP';
+  return '$';
 };
 
 /**
- * Convert USD to EGP (approximate conversion)
- * This should ideally be replaced with real-time exchange rates
+ * Convert USD to SAR (Saudi Riyal)
  * @param {number} usdAmount - Amount in USD
- * @param {number} exchangeRate - USD to EGP exchange rate (default: 30)
- * @returns {number} - Amount in EGP
+ * @param {number} exchangeRate - USD to SAR exchange rate (default: 3.751)
+ * @returns {number} - Amount in SAR
  */
-export const convertUsdToEgp = (usdAmount, exchangeRate = 30) => {
+export const convertUsdToSar = (usdAmount, exchangeRate = 3.751) => {
   if (!usdAmount || isNaN(usdAmount)) return 0;
   return parseFloat(usdAmount) * exchangeRate;
+};
+
+/**
+ * Format total price with USD and SAR equivalent in brackets
+ * @param {number} price - The price in USD to format
+ * @param {string} language - Current language ('ar' or 'en')
+ * @returns {string} - Formatted price string with SAR equivalent
+ */
+export const formatTotalWithSar = (price, language = 'ar') => {
+  if (price === null || price === undefined || isNaN(price)) {
+    return 'غير محدد'; // "Not specified" in Arabic
+  }
+
+  const numericPrice = parseFloat(price);
+  const usdFormatted = formatPriceByLanguage(numericPrice, language);
+  const sarAmount = convertUsdToSar(numericPrice);
+  const sarFormatted = new Intl.NumberFormat(language === 'ar' ? 'ar-SA' : 'en-SA', {
+    style: 'currency',
+    currency: 'SAR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(sarAmount);
+
+  return `${usdFormatted} (${sarFormatted})`;
 };
 
 const currencyUtils = {
   formatPrice,
   formatPriceEn,
   formatPriceByLanguage,
+  formatTotalWithSar,
   getCurrencySymbol,
-  convertUsdToEgp
+  convertUsdToSar
 };
 
 export default currencyUtils;

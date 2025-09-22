@@ -9,9 +9,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { fetchServicesByCategory, selectServicesLoading, selectServicesByCategory } from '../../redux/slices/serviceSlice';
 import useRTL from '../../hooks/useRTL';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 const ServiceListPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isRTL } = useRTL();
   const { category } = useParams();
   const navigate = useNavigate();
@@ -152,7 +153,7 @@ const ServiceListPage = () => {
                   </div>
                 )}                {/* Price Tag */}
                 <div className="absolute bottom-0 right-0 bg-primary-main text-white px-2 sm:px-3 py-1 rounded-tl-lg font-semibold text-xs sm:text-sm">
-                  ${(Math.round(((service.pricing?.finalPrice || service.pricing?.basePrice || service.basePrice || 0) * 100)) / 100).toFixed(2)}
+                  {formatPriceByLanguage((service.pricing?.finalPrice || service.pricing?.basePrice || service.basePrice || 0), i18n.language)}
                 </div>
               </div>
 

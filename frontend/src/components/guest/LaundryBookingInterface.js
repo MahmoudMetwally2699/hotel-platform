@@ -28,11 +28,12 @@ import {
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { selectCurrentUser } from '../../redux/slices/authSlice';
+import { formatTotalWithSar } from '../../utils/currency';
 
 const LaundryBookingInterface = () => {
   const { hotelId } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const currentUser = useSelector(selectCurrentUser);
 
   // State management
@@ -719,7 +720,7 @@ const LaundryBookingInterface = () => {
                 )}
                 <div className="flex justify-between text-lg font-bold pt-2 border-t">
                   <span>Total</span>
-                  <span className="text-blue-600">${pricing.total}</span>
+                  <span className="text-blue-600">{formatTotalWithSar(pricing.total, i18n.language)}</span>
                 </div>
               </div>
 
