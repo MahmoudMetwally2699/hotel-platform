@@ -105,6 +105,11 @@ const LoginPage = () => {
   const validateQRToken = useCallback(async (qrToken) => {
     setValidatingQR(true);
     try {
+      // Clear any existing authentication session to prevent cookie interference
+      // This ensures QR scanning works even if user has previous login cookies
+      console.log('Clearing existing session before QR validation...');
+      authService.clearSession();
+
       const response = await authService.validateQRToken(qrToken, 'login');
 
       if (response.data && response.data.hotelId) {
@@ -291,6 +296,23 @@ const LoginPage = () => {
                     <HiQrcode className="h-5 w-5" />
                     <span>{validatingQR ? 'Validating...' : 'Scan QR Code to Login'}</span>
                   </button>
+
+                  {/* Clear Session Button for users with login cookies */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      authService.clearSession();
+                      toast.success('Session cleared! You can now scan QR codes without interference.');
+                    }}
+                    className="ml-2 inline-flex items-center space-x-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    title="Clear any existing login data that might interfere with QR scanning"
+                  >
+                    <span className="text-sm">Clear Session</span>
+                  </button>
+
+                  <p className="mt-2 text-xs text-orange-600">
+                    If QR scanning doesn't work, try clicking "Clear Session" first
+                  </p>
                 </div>
               )}
 

@@ -17,6 +17,7 @@ import * as Yup from 'yup';
 import { HiUser, HiMail, HiLockClosed, HiQrcode } from 'react-icons/hi';
 import { register, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole } from '../../redux/slices/authSlice';
 import hotelService from '../../services/hotel.service';
+import authService from '../../services/auth.service';
 import { toast } from 'react-hot-toast';
 
 const RegisterPage = () => {
@@ -113,6 +114,11 @@ const RegisterPage = () => {
   const validateQRToken = async (qrToken) => {
     setValidatingQR(true);
     try {
+      // Clear any existing authentication session to prevent cookie interference
+      // This ensures QR scanning works even if user has previous login cookies
+      console.log('Clearing existing session before QR validation...');
+      authService.clearSession();
+
       const response = await hotelService.validateQRToken(qrToken);
 
       if (response.data && response.data.hotelId) {
@@ -436,8 +442,25 @@ const RegisterPage = () => {
                       <HiQrcode className="h-5 w-5" />
                       <span>{validatingQR ? 'Validating...' : 'Scan QR Code'}</span>
                     </button>
+
+                    {/* Clear Session Button for users with login cookies */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        authService.clearSession();
+                        toast.success('Session cleared! You can now scan QR codes without interference.');
+                      }}
+                      className="ml-2 inline-flex items-center space-x-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                      title="Clear any existing login data that might interfere with QR scanning"
+                    >
+                      <span className="text-sm">Clear Session</span>
+                    </button>
+
                     <p className="mt-1 text-xs text-gray-500">
                       Scan the QR code at hotel reception to proceed with registration
+                    </p>
+                    <p className="mt-1 text-xs text-orange-600">
+                      If QR scanning doesn't work, try clicking "Clear Session" first
                     </p>
                   </div>
                 )}
