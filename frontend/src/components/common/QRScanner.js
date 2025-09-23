@@ -45,7 +45,7 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
         videoRef.current,
         (result) => {
           console.log('QR Code scanned:', result.data);
-          
+
           // Stop scanning
           qrScanner.stop();
           setIsScanning(false);
@@ -74,7 +74,7 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
 
       // Start scanning
       await qrScanner.start();
-      
+
       setScanner(qrScanner);
       setIsScanning(true);
       setError(null);
@@ -84,9 +84,9 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
 
     } catch (error) {
       console.error('Error initializing QR scanner:', error);
-      
+
       let errorMessage = 'Failed to initialize camera. ';
-      
+
       if (error.name === 'AbortError') {
         errorMessage += 'Camera initialization was interrupted. Please try again.';
         console.log('AbortError detected, will retry initialization...');
@@ -108,7 +108,7 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
         errorMessage += 'Please check camera permissions and try again.';
         setPermissions('denied');
       }
-      
+
       setError(errorMessage);
       onScanError?.('Failed to initialize scanner');
     }
@@ -232,7 +232,7 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
   // Initialize scanner when video element is ready
   useEffect(() => {
     let isMounted = true;
-    
+
     if (permissions === 'granted' && videoRef.current && !isScanning && !scanner) {
       console.log('Video element ready, initializing scanner...');
       // Small delay to ensure DOM is fully ready
