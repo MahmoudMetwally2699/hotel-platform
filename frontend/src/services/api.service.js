@@ -39,10 +39,10 @@ apiClient.interceptors.request.use(
     }
 
     // Skip authentication for public endpoints
-    const isPublicEndpoint = config.url?.includes('/auth/login') || 
-                             config.url?.includes('/auth/register') || 
-                             config.url?.includes('/auth/validate-qr') || 
-                             config.url?.includes('/auth/forgot-password') || 
+    const isPublicEndpoint = config.url?.includes('/auth/login') ||
+                             config.url?.includes('/auth/register') ||
+                             config.url?.includes('/auth/validate-qr') ||
+                             config.url?.includes('/auth/forgot-password') ||
                              config.url?.includes('/auth/reset-password');
 
     // If this is a public endpoint, don't add authentication
