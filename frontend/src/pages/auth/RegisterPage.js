@@ -119,6 +119,11 @@ const RegisterPage = () => {
         setQrHotelInfo(response.data);
         toast.success(`Hotel "${response.data.hotelName}" selected from QR code!`);
 
+        // Update form field directly if ref is available
+        if (formFieldUpdaterRef.current) {
+          formFieldUpdaterRef.current('selectedHotelId', response.data.hotelId);
+        }
+
         // Clear QR parameter from URL
         const newSearchParams = new URLSearchParams(searchParams);
         newSearchParams.delete('qr');
@@ -159,12 +164,15 @@ const RegisterPage = () => {
     toast.info('QR hotel selection cleared. You can now select manually.');
   };
 
-  // Initial form values - use QR hotel if available
+  // Handle QR hotel selection to preserve form data
+  const formFieldUpdaterRef = React.useRef(null);
+
+  // Initial form values - static initial values
   const initialValues = {
     firstName: '',
     email: '',
     phone: '',
-    selectedHotelId: qrHotelInfo?.hotelId || '',
+    selectedHotelId: '',
     roomNumber: '',
     checkInDate: '',
     checkOutDate: '',
@@ -225,9 +233,13 @@ const RegisterPage = () => {
           initialValues={initialValues}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
-          enableReinitialize={true}
+          enableReinitialize={false}
         >
-          {({ isSubmitting }) => (
+          {({ isSubmitting, setFieldValue }) => {
+            // Store the setFieldValue function for QR updates
+            formFieldUpdaterRef.current = setFieldValue;
+
+            return (
             <Form className="space-y-4">              <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('register.firstName')} <span className="text-red-500">*</span>
@@ -580,7 +592,8 @@ const RegisterPage = () => {
                 )}
               </button>
             </Form>
-          )}
+            );
+          }}
         </Formik>        <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             {t('register.alreadyHaveAccount')}{' '}

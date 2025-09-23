@@ -2197,6 +2197,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
       serviceId,
       serviceName,
       serviceCategory,
+      specificCategory, // Add the new specific category field
       hotelId,
       guestName,
       roomNumber,
@@ -2336,7 +2337,8 @@ router.post('/bookings/housekeeping', async (req, res) => {
       // Service Details - store the actual housekeeping category
       serviceDetails: {
         name: service ? service.name : serviceName,
-        category: 'housekeeping' // Use 'housekeeping' since that's what the Booking model expects
+        category: 'housekeeping', // Use 'housekeeping' since that's what the Booking model expects
+        specificCategory: specificCategory // Add the specific category for analysis
       },
 
       // Booking Configuration

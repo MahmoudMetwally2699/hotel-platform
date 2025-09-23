@@ -23,7 +23,6 @@ const PaymentMethodSelectionPage = () => {
   const [searchParams] = useSearchParams();
 
   const [paymentMethod, setPaymentMethod] = useState('online');
-  const [loading, setLoading] = useState(false);
   const [bookingData, setBookingData] = useState(null);
   const [processingPayment, setProcessingPayment] = useState(false);
 
@@ -217,28 +216,28 @@ const PaymentMethodSelectionPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header - More compact on mobile */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <button
                 onClick={handleGoBack}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 disabled={processingPayment}
               >
-                <FaArrowLeft className="w-5 h-5" />
+                <FaArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900">
                   {t('payment.selectPaymentMethod', 'Select Payment Method')}
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600 hidden sm:block">
                   {t('payment.selectPreferredMethod', 'Choose your preferred payment method to complete the booking')}
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 text-green-600">
+            <div className="hidden sm:flex items-center space-x-2 text-green-600">
               <FaShieldAlt className="w-5 h-5" />
               <span className="font-medium">{t('payment.secure', 'Secure')}</span>
             </div>
@@ -246,115 +245,121 @@ const PaymentMethodSelectionPage = () => {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Payment Method Selection */}
-          <div className="lg:col-span-2">
-            <PaymentMethodSelection
-              selectedMethod={paymentMethod}
-              onMethodChange={handlePaymentMethodChange}
-              totalAmount={getDisplayAmount()}
-              currency={currency}
-              showPricing={true}
-            />
-          </div>
+      {/* Main Content - More compact layout on mobile */}
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-8">
+        <div className="flex flex-col space-y-3 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
+          {/* Order Summary - Show first on mobile, compact */}
+          <div className="lg:col-span-1 lg:order-2">
+            <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-4 lg:p-6 lg:sticky lg:top-8">
+              {/* Mobile: Show total prominently */}
+              <div className="flex items-center justify-between mb-3 lg:hidden">
+                <span className="text-lg font-semibold text-gray-900">Total:</span>
+                <span className="text-xl font-bold text-gray-900">
+                  {new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: currency,
+                    minimumFractionDigits: 2,
+                  }).format(getDisplayAmount())}
+                </span>
+              </div>
 
-          {/* Order Summary Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border p-6 sticky top-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                {t('payment.orderSummary', 'Order Summary')}
-              </h3>
+              {/* Desktop: Full order summary */}
+              <div className="hidden lg:block">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {t('payment.orderSummary', 'Order Summary')}
+                </h3>
 
-              {/* Service Details */}
-              {bookingData && (
-                <div className="space-y-3 mb-6">
-                  {serviceType && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">{t('payment.service', 'Service')}:</span>
-                      <span className="font-medium">{serviceType.charAt(0).toUpperCase() + serviceType.slice(1)}</span>
-                    </div>
-                  )}
+                {/* Service Details */}
+                {bookingData && (
+                  <div className="space-y-3 mb-6">
+                    {serviceType && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">{t('payment.service', 'Service')}:</span>
+                        <span className="font-medium">{serviceType.charAt(0).toUpperCase() + serviceType.slice(1)}</span>
+                      </div>
+                    )}
 
-                  {bookingData.quantity && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">{t('payment.quantity', 'Quantity')}:</span>
-                      <span className="font-medium">{bookingData.quantity}</span>
-                    </div>
-                  )}
+                    {bookingData.quantity && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">{t('payment.quantity', 'Quantity')}:</span>
+                        <span className="font-medium">{bookingData.quantity}</span>
+                      </div>
+                    )}
 
-                  {bookingData.schedule?.preferredDate && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">{t('payment.date', 'Date')}:</span>
-                      <span className="font-medium">
-                        {new Date(bookingData.schedule.preferredDate).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
+                    {bookingData.schedule?.preferredDate && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">{t('payment.date', 'Date')}:</span>
+                        <span className="font-medium">
+                          {new Date(bookingData.schedule.preferredDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
 
-                  {bookingData.schedule?.preferredTime && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">{t('payment.time', 'Time')}:</span>
-                      <span className="font-medium">{bookingData.schedule.preferredTime}</span>
-                    </div>
-                  )}
-                </div>
-              )}
+                    {bookingData.schedule?.preferredTime && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">{t('payment.time', 'Time')}:</span>
+                        <span className="font-medium">{bookingData.schedule.preferredTime}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-              {/* Total Amount */}
-              <div className="border-t pt-4 mb-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-900">
-                    {t('payment.total', 'Total')}:
-                  </span>
-                  <span className="text-2xl font-bold text-gray-900">
-                    {new Intl.NumberFormat('en-US', {
-                      style: 'currency',
-                      currency: currency,
-                      minimumFractionDigits: 2,
-                    }).format(getDisplayAmount())}
-                  </span>
+                {/* Total Amount */}
+                <div className="border-t pt-4 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold text-gray-900">
+                      {t('payment.total', 'Total')}:
+                    </span>
+                    <span className="text-2xl font-bold text-gray-900">
+                      {new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: currency,
+                        minimumFractionDigits: 2,
+                      }).format(getDisplayAmount())}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Payment Method Summary */}
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h4 className="font-medium text-gray-900 mb-2">
-                  {t('payment.selectedMethod', 'Selected Method')}:
-                </h4>
-                <div className="flex items-center space-x-3">
-                  {paymentMethod === 'online' ? (
-                    <>
-                      <FaCreditCard className="w-5 h-5 text-blue-600" />
-                      <span className="text-gray-700">{t('payment.methods.online.title', 'Pay Online')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <FaMoneyBillWave className="w-5 h-5 text-green-600" />
-                      <span className="text-gray-700">{t('payment.methods.cash.title', 'Pay at Hotel')}</span>
-                    </>
-                  )}
+              {/* Payment Method Summary - Compact */}
+              <div className="bg-gray-50 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-900 text-sm">
+                    {t('payment.selectedMethod', 'Method')}:
+                  </span>
+                  <div className="flex items-center space-x-2">
+                    {paymentMethod === 'online' ? (
+                      <>
+                        <FaCreditCard className="w-4 h-4 text-blue-600" />
+                        <span className="text-gray-700 text-sm">{t('payment.methods.online.title', 'Pay Online')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaMoneyBillWave className="w-4 h-4 text-green-600" />
+                        <span className="text-gray-700 text-sm">{t('payment.methods.cash.title', 'Pay at Hotel')}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Proceed Button */}
+              {/* Proceed Button - More prominent on mobile */}
               <button
                 onClick={handleProceedToPayment}
                 disabled={!paymentMethod || processingPayment}
                 className={`
-                  w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-200
+                  w-full py-3 sm:py-4 px-4 sm:px-6 rounded-lg font-semibold text-white transition-all duration-200 text-base
                   ${paymentMethod === 'online'
                     ? 'bg-blue-600 hover:bg-blue-700'
                     : 'bg-green-600 hover:bg-green-700'
                   }
                   disabled:opacity-50 disabled:cursor-not-allowed
-                  ${processingPayment ? 'opacity-50' : 'hover:shadow-lg transform hover:scale-[1.02]'}
+                  ${processingPayment ? 'opacity-50' : 'hover:shadow-lg'}
                 `}
               >
                 {processingPayment ? (
                   <div className="flex items-center justify-center space-x-2">
-                    <FaSpinner className="w-5 h-5 animate-spin" />
+                    <FaSpinner className="w-4 h-4 animate-spin" />
                     <span>{t('payment.processing', 'Processing...')}</span>
                   </div>
                 ) : (
@@ -366,15 +371,18 @@ const PaymentMethodSelectionPage = () => {
                   </>
                 )}
               </button>
-
-              {/* Additional Info */}
-              <div className="mt-4 text-xs text-gray-500 text-center">
-                {paymentMethod === 'online'
-                  ? t('payment.onlineInfo', 'You will be redirected to our secure payment gateway')
-                  : t('payment.cashInfo', 'Your booking will be confirmed immediately')
-                }
-              </div>
             </div>
+          </div>
+
+          {/* Payment Method Selection - More compact on mobile */}
+          <div className="lg:col-span-2 lg:order-1">
+            <PaymentMethodSelection
+              selectedMethod={paymentMethod}
+              onMethodChange={handlePaymentMethodChange}
+              totalAmount={getDisplayAmount()}
+              currency={currency}
+              showPricing={false}
+            />
           </div>
         </div>
       </div>

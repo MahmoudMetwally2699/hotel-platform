@@ -85,7 +85,30 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
       enum: ['laundry', 'transportation', 'tours', 'restaurant', 'dining', 'cleaning', 'amenities', 'maintenance', 'housekeeping']
     },
     subcategory: String,
-    description: String
+    description: String,
+    // Specific category for housekeeping services (required for analysis)
+    specificCategory: {
+      type: String,
+      required: function() {
+        return this.serviceType === 'housekeeping';
+      },
+      enum: [
+        // Maintenance categories
+        'electrical_issues',
+        'plumbing_issues',
+        'ac_heating',
+        'furniture_repair',
+        'electronics_issues',
+        // Room cleaning categories
+        'general_cleaning',
+        'deep_cleaning',
+        'stain_removal',
+        // Amenities categories
+        'bathroom_amenities',
+        'room_supplies',
+        'cleaning_supplies'
+      ]
+    }
   },
   // Booking Configuration
   bookingConfig: {

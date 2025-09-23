@@ -127,14 +127,29 @@ const OrdersPage = () => {
   };
 
   const getServiceDisplayName = (order) => {
+    // For housekeeping orders, show service category instead of service name
+    if (order.serviceType === 'housekeeping') {
+      const category = order.serviceDetails?.category || 'housekeeping';
+
+      switch (category) {
+        case 'cleaning':
+        case 'room cleaning':
+          return 'Room Cleaning';
+        case 'amenities':
+          return 'Amenities Request';
+        case 'maintenance':
+          return 'Maintenance Request';
+        default:
+          return 'Housekeeping Service';
+      }
+    }
+
     if (order.payment?.paymentMethod === 'cash') {
       // For cash payments, show service type instead of specific service name
       const serviceType = order.serviceType || 'regular';
       switch (serviceType) {
         case 'laundry':
           return 'Laundry Service';
-        case 'housekeeping':
-          return 'Housekeeping Service';
         case 'transportation':
           return 'Transportation Service';
         default:
@@ -144,6 +159,28 @@ const OrdersPage = () => {
       // For online payments, show the specific service name
       return order.serviceDetails?.name || order.serviceId?.name || order.serviceName || 'N/A';
     }
+  };
+
+  // Helper function to get human-readable category names for housekeeping
+  const getHousekeepingCategoryName = (specificCategory) => {
+    const categoryNames = {
+      // Maintenance categories
+      'electrical_issues': 'Electrical Issues',
+      'plumbing_issues': 'Plumbing Issues',
+      'ac_heating': 'AC & Heating',
+      'furniture_repair': 'Furniture Repair',
+      'electronics_issues': 'Electronics Issues',
+      // Room cleaning categories
+      'general_cleaning': 'General Room Cleaning',
+      'deep_cleaning': 'Deep Cleaning',
+      'stain_removal': 'Stain Removal',
+      // Amenities categories
+      'bathroom_amenities': 'Bathroom Amenities',
+      'room_supplies': 'Room Supplies',
+      'cleaning_supplies': 'Cleaning Supplies'
+    };
+
+    return categoryNames[specificCategory] || specificCategory?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Not specified';
   };
 
   const getStatusColor = (status) => {
@@ -438,6 +475,12 @@ const OrdersPage = () => {
                         <div className="text-sm font-medium text-gray-900">
                           {getServiceDisplayName(order)}
                         </div>
+                        {/* Show issue category for housekeeping orders */}
+                        {order.serviceType === 'housekeeping' && order.serviceDetails?.specificCategory && (
+                          <div className="text-xs text-purple-600 font-medium mt-1">
+                            {getHousekeepingCategoryName(order.serviceDetails.specificCategory)}
+                          </div>
+                        )}
                         <div className="text-xs text-gray-500">
                           {order.hotel?.name || order.hotelId?.name || order.hotelName || 'N/A'}
                         </div>
@@ -1078,6 +1121,15 @@ const OrdersPage = () => {
                                 {currentOrder.serviceDetails?.category || currentOrder.category || 'Housekeeping'}
                               </span>
                             </div>
+                            {/* Issue Category - NEW FIELD */}
+                            {currentOrder.serviceDetails?.specificCategory && (
+                              <div>
+                                <span className="text-sm font-medium text-gray-700">Issue Category: </span>
+                                <span className="text-sm text-purple-700 font-medium">
+                                  {getHousekeepingCategoryName(currentOrder.serviceDetails.specificCategory)}
+                                </span>
+                              </div>
+                            )}
                             {currentOrder.serviceDetails?.subcategory && (
                               <div>
                                 <span className="text-sm font-medium text-gray-700">Subcategory: </span>

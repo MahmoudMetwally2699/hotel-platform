@@ -41,7 +41,30 @@ const handleCastErrorDB = (err) => {
  * @returns {AppError}
  */
 const handleDuplicateFieldsDB = (err) => {
-  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+  // Handle both old and new MongoDB driver error formats
+  const errorMessage = err.errmsg || err.message || '';
+
+  // Check if this is an email duplicate error (which we want to handle specially for hotels)
+  if (errorMessage.includes('email_1') || errorMessage.includes('email')) {
+    // Check if it's a hotel-scoped email error
+    if (errorMessage.includes('selectedHotelId')) {
+      return new AppError('Email already exists for this hotel. Please use a different email or login instead.', 400);
+    } else {
+      return new AppError('Email already exists. For hotel guests, please scan the QR code at reception to register.', 400);
+    }
+  }
+
+  // For other duplicate fields, try to extract the value
+  let value = 'this value';
+  try {
+    const match = errorMessage.match(/(["'])(\\?.)*?\1/);
+    if (match) {
+      value = match[0];
+    }
+  } catch (e) {
+    // If we can't extract the value, use a generic message
+  }
+
   const message = `Duplicate field value: ${value}. Please use another value!`;
   return new AppError(message, 400);
 };

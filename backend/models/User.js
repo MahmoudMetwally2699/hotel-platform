@@ -33,7 +33,6 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true,
     lowercase: true,
     validate: [validator.isEmail, 'Please provide a valid email']
   },  phone: {
@@ -258,6 +257,15 @@ userSchema.index({ role: 1, isActive: 1 });
 userSchema.index({ hotelId: 1, role: 1 });
 userSchema.index({ serviceProviderId: 1, role: 1 });
 userSchema.index({ selectedHotelId: 1, role: 1 });
+
+// Compound unique index for hotel-scoped emails (for guests)
+userSchema.index(
+  { email: 1, selectedHotelId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { role: 'guest' }
+  }
+);
 
 // Virtual fields
 userSchema.virtual('fullName').get(function() {

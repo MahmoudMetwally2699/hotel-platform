@@ -6,7 +6,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import authService from '../../services/auth.service';
 import { cleanupClerkTokens, isClerkToken } from '../../utils/cleanupClerkTokens';
-import { resolveAuthConflicts, detectAuthConflicts, hasSuperHotelCookie } from '../../utils/authCleanup';
+import { resolveAuthConflicts, hasSuperHotelCookie } from '../../utils/authCleanup';
 
 // Auth service is already instantiated in the imported module
 
@@ -222,10 +222,10 @@ const initialState = getInitialAuthState();
 // Async thunks for auth actions
 export const login = createAsyncThunk(
   'auth/login',
-  async ({ email, password, role }, { rejectWithValue }) => {
+  async ({ email, password, role, hotelId }, { rejectWithValue }) => {
     try {
-      console.log('Login attempt with:', { email, role });
-      const response = await authService.login(email, password, role);
+      console.log('Login attempt with:', { email, role, hotelId });
+      const response = await authService.login(email, password, role, hotelId);
       console.log('Login response:', response);
 
       // Ensure the role is set correctly in the response
@@ -364,7 +364,8 @@ const authSlice = createSlice({
         console.log('Role set to:', state.role);
 
         state.error = null;
-      }).addCase(login.rejected, (state, action) => {
+      })
+      .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;

@@ -341,6 +341,159 @@ const categoryTemplates = {
       { id: 'deep_cleaning', name: 'Deep Cleaning', icon: '🧽', basePrice: 50, unit: 'per room', description: 'Thorough deep cleaning' },
       { id: 'maintenance_request', name: 'Maintenance Request', icon: '🔧', basePrice: 20, unit: 'per request', description: 'Basic maintenance service' }
     ]
+  },
+
+  // Housekeeping specific categories for detailed reporting and analysis
+  housekeepingCategories: {
+    maintenance: {
+      electrical_issues: {
+        name: 'Electrical Issues',
+        icon: '⚡',
+        examples: [
+          'Power outage in room',
+          'Key card not working',
+          'Light bulb not working',
+          'Power outlet issues',
+          'Bathroom light issues',
+          'AC not working electrically',
+          'Refrigerator not cooling',
+          'TV not turning on'
+        ]
+      },
+      plumbing_issues: {
+        name: 'Plumbing Issues',
+        icon: '🔧',
+        examples: [
+          'Sink clogged',
+          'Drain clogged',
+          'Water leak',
+          'Toilet flush issues',
+          'AC leaking water',
+          'No hot water',
+          'Low water pressure'
+        ]
+      },
+      ac_heating: {
+        name: 'AC & Heating',
+        icon: '❄️',
+        examples: [
+          'AC not cooling',
+          'Heater not heating',
+          'AC making noise',
+          'Remote control issues'
+        ]
+      },
+      furniture_repair: {
+        name: 'Furniture Repair',
+        icon: '🪑',
+        examples: [
+          'Chair or table repair',
+          'Door lock issues',
+          'Closet door stuck',
+          'Curtain stuck',
+          'Bed repair needed',
+          'Window won\'t close'
+        ]
+      },
+      electronics_issues: {
+        name: 'Electronics Issues',
+        icon: '📺',
+        examples: [
+          'TV not working',
+          'WiFi connection problems',
+          'TV remote not working',
+          'Telephone problems'
+        ]
+      }
+    },
+    cleaning: {
+      general_cleaning: {
+        name: 'General Room Cleaning',
+        icon: '🧹',
+        examples: [
+          'Bathroom cleaning',
+          'Change bed sheets',
+          'Vacuum floor',
+          'Clean windows',
+          'Empty trash',
+          'Disinfect surfaces',
+          'Mop bathroom floor',
+          'Clean glass surfaces'
+        ]
+      },
+      deep_cleaning: {
+        name: 'Deep Cleaning',
+        icon: '🧽',
+        examples: [
+          'Deep bathroom cleaning',
+          'Clean refrigerator',
+          'Clean behind furniture',
+          'Sanitize door handles',
+          'Clean air vents',
+          'Polish wood surfaces',
+          'Clean light fixtures',
+          'Disinfect remote controls'
+        ]
+      },
+      stain_removal: {
+        name: 'Stain Removal',
+        icon: '🧴',
+        examples: [
+          'Carpet stain removal',
+          'Upholstery stains',
+          'Wall marks removal',
+          'Bathroom tile stains',
+          'Water spots on glass',
+          'Coffee stains',
+          'Food stains',
+          'Makeup stains'
+        ]
+      }
+    },
+    amenities: {
+      bathroom_amenities: {
+        name: 'Bathroom Amenities',
+        icon: '🛁',
+        examples: [
+          'Fresh towels',
+          'Extra towels',
+          'Toiletries refill',
+          'Toilet paper replacement',
+          'New shower curtain',
+          'Bath mat replacement',
+          'Soap dispensers refill',
+          'Hair dryer check'
+        ]
+      },
+      room_supplies: {
+        name: 'Room Supplies',
+        icon: '🛏️',
+        examples: [
+          'Extra pillows',
+          'Extra blankets',
+          'Fresh bed linens',
+          'Coffee supplies',
+          'Mini bar restocking',
+          'Ice bucket refill',
+          'Fresh glasses',
+          'Room service items'
+        ]
+      },
+      cleaning_supplies: {
+        name: 'Cleaning Supplies',
+        icon: '🧴',
+        examples: [
+          'Vacuum cleaner bags',
+          'Cleaning supplies restock',
+          'Air freshener',
+          'Tissue box replacement',
+          'Hand sanitizer refill',
+          'Disinfectant supplies',
+          'Laundry bags',
+          'Cleaning cloths'
+        ]
+      }
+    }
   }
 };
 

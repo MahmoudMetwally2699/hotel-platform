@@ -44,7 +44,8 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     preferredTime: '09:00',
     scheduledDateTime: '',
     specialRequests: '',
-    guestEmail: ''
+    guestEmail: '',
+    specificCategory: '' // New field for specific category selection
   });
 
   // Quick hints state
@@ -290,6 +291,30 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     }
   ];
 
+  // Specific categories for each service type (for dropdown selection)
+  const getSpecificCategories = (serviceCategory) => {
+    const categories = {
+      maintenance: [
+        { value: 'electrical_issues', label: 'Electrical Issues', icon: '⚡' },
+        { value: 'plumbing_issues', label: 'Plumbing Issues', icon: '🔧' },
+        { value: 'ac_heating', label: 'AC & Heating', icon: '❄️' },
+        { value: 'furniture_repair', label: 'Furniture Repair', icon: '🪑' },
+        { value: 'electronics_issues', label: 'Electronics Issues', icon: '📺' }
+      ],
+      cleaning: [
+        { value: 'general_cleaning', label: 'General Room Cleaning', icon: '🧹' },
+        { value: 'deep_cleaning', label: 'Deep Cleaning', icon: '🧽' },
+        { value: 'stain_removal', label: 'Stain Removal', icon: '🧴' }
+      ],
+      amenities: [
+        { value: 'bathroom_amenities', label: 'Bathroom Amenities', icon: '🛁' },
+        { value: 'room_supplies', label: 'Room Supplies', icon: '🛏️' },
+        { value: 'cleaning_supplies', label: 'Cleaning Supplies', icon: '🧴' }
+      ]
+    };
+    return categories[serviceCategory] || [];
+  };
+
   // Auto-populate user data if logged in
   useEffect(() => {
     if (isAuthenticated && currentUser) {
@@ -357,6 +382,13 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     e.preventDefault();
     setSubmitting(true);
 
+    // Validate required fields
+    if (!bookingDetails.specificCategory) {
+      toast.error('Please select an issue category');
+      setSubmitting(false);
+      return;
+    }
+
     try {
       // For backend compatibility, keep 'now' for ASAP but also provide display text
       const backendTime = bookingDetails.preferredTime === 'asap' ? 'now' : bookingDetails.preferredTime;
@@ -365,6 +397,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
         serviceId: selectedService.id,
         serviceName: selectedService.name,
         serviceCategory: selectedService.category, // Include the service category
+        specificCategory: bookingDetails.specificCategory, // Include the specific category for analysis
         hotelId,
         ...bookingDetails,
         roomNumber: currentUserFromRedux?.roomNumber || currentUser?.roomNumber || bookingDetails.roomNumber,
@@ -398,7 +431,8 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       preferredTime: '09:00',
       scheduledDateTime: '',
       specialRequests: '',
-      guestEmail: ''
+      guestEmail: '',
+      specificCategory: ''
     });
   };
 
@@ -673,6 +707,36 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                     {currentUserFromRedux?.roomNumber || currentUser?.roomNumber || 'N/A'}
                   </div>
                 </div>
+              </div>
+
+              {/* Issue Category Selection - Required Field */}
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">
+                  Issue Category <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={bookingDetails.specificCategory}
+                    onChange={(e) => setBookingDetails(prev => ({ ...prev, specificCategory: e.target.value }))}
+                    className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] text-xs sm:text-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:border-[#67BAE0]/50 appearance-none"
+                    required
+                  >
+                    <option value="" disabled>Select issue category...</option>
+                    {getSpecificCategories(selectedService.category).map(category => (
+                      <option key={category.value} value={category.value}>
+                        {category.icon} {category.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg className="w-4 h-4 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+                {!bookingDetails.specificCategory && (
+                  <p className="text-xs text-red-500 mt-1">Please select a category for your request</p>
+                )}
               </div>
 
               {/* Additional Notes with Quick Hints */}

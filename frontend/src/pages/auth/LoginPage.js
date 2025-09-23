@@ -3,26 +3,35 @@
  * Handles authentication for guests/clients only
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useTranslation } from 'react-i18next';
-import { HiMail, HiLockClosed } from 'react-icons/hi';
+import { HiMail, HiLockClosed, HiQrcode } from 'react-icons/hi';
 import { login, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole, clearError, clearLoading, setError } from '../../redux/slices/authSlice';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
+import QRScanner from '../../components/common/QRScanner';
+import authService from '../../services/auth.service';
+import { toast } from 'react-hot-toast';
 
 const LoginPage = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const authError = useSelector(selectAuthError);
   const isLoading = useSelector(selectAuthLoading);
   const role = useSelector(selectAuthRole);
   const [showError, setShowError] = useState(false);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
+
+  // QR Code functionality
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [qrHotelInfo, setQrHotelInfo] = useState(null);
+  const [validatingQR, setValidatingQR] = useState(false);
 
   // Validation schema with translations
   const validationSchema = Yup.object({
@@ -90,6 +99,66 @@ const LoginPage = () => {
     dispatch(clearLoading());
   }, [dispatch]);
 
+  /**
+   * Validate QR token and extract hotel information for login
+   */
+  const validateQRToken = useCallback(async (qrToken) => {
+    setValidatingQR(true);
+    try {
+      const response = await authService.validateQRToken(qrToken, 'login');
+
+      if (response.data && response.data.hotelId) {
+        setQrHotelInfo(response.data);
+        toast.success(`Ready to login to "${response.data.hotelName}"!`);
+
+        // Clear QR parameter from URL
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete('qr');
+        navigate({
+          pathname: '/login',
+          search: newSearchParams.toString()
+        }, { replace: true });
+      }
+    } catch (error) {
+      console.error('QR validation error:', error);
+      toast.error(error.response?.data?.message || 'Invalid QR code. Please try again or login manually.');
+    } finally {
+      setValidatingQR(false);
+    }
+  }, [navigate, searchParams]);
+
+  /**
+   * Handle successful QR scan
+   */
+  const handleQRScanSuccess = (qrToken) => {
+    setShowQRScanner(false);
+    validateQRToken(qrToken);
+  };
+
+  /**
+   * Handle QR scan error
+   */
+  const handleQRScanError = (error) => {
+    console.error('QR scan error:', error);
+    toast.error('Failed to scan QR code. Please try again.');
+  };
+
+  /**
+   * Clear QR hotel selection
+   */
+  const clearQRSelection = () => {
+    setQrHotelInfo(null);
+    toast.info('QR hotel selection cleared. You can now login manually.');
+  };
+
+  // Check for QR token in URL parameters on component mount
+  useEffect(() => {
+    const qrToken = searchParams.get('qr');
+    if (qrToken) {
+      validateQRToken(qrToken);
+    }
+  }, [searchParams, validateQRToken]);
+
   // Initial form values
   const initialValues = {
     email: '',
@@ -97,13 +166,19 @@ const LoginPage = () => {
     role: 'guest', // Fixed role for client login
   };  // Handle form submission
   const handleSubmit = (values) => {
-    console.log('Submitting login form with values:', values);
+    // Include hotelId from QR info if available
+    const loginData = {
+      ...values,
+      hotelId: qrHotelInfo?.hotelId || null
+    };
+
+    console.log('Submitting login form with values:', loginData);
 
     // Clear any previous errors
     dispatch(clearError());
 
-    // Dispatch the login action
-    const loginPromise = dispatch(login(values));
+    // Dispatch the login action with hotelId
+    const loginPromise = dispatch(login(loginData));
 
     // Set a timeout to clear loading state if login takes too long
     const timeoutId = setTimeout(() => {
@@ -179,6 +254,46 @@ const LoginPage = () => {
         >
           {({ isSubmitting }) => (
             <Form>
+              {/* QR Code Hotel Info Display */}
+              {qrHotelInfo ? (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <HiQrcode className="h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="text-sm font-medium text-green-800">Login to {qrHotelInfo.hotelName}</p>
+                        <p className="text-xs text-green-600">Hotel selected via QR code</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={clearQRSelection}
+                      className="text-xs text-green-600 hover:text-green-800 underline"
+                    >
+                      Change Hotel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* QR Scanner Required Notice */
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                  <HiQrcode className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                  <h3 className="text-sm font-medium text-blue-800 mb-2">QR Code Required for Login</h3>
+                  <p className="text-xs text-blue-600 mb-3">
+                    To login, you must scan the QR code at hotel reception. This ensures you're logging into the correct hotel.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowQRScanner(true)}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    disabled={validatingQR}
+                  >
+                    <HiQrcode className="h-5 w-5" />
+                    <span>{validatingQR ? 'Validating...' : 'Scan QR Code to Login'}</span>
+                  </button>
+                </div>
+              )}
+
               <div className="mb-4">
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   {t('login.emailAddress')}
@@ -190,8 +305,9 @@ const LoginPage = () => {
                   <Field
                     type="email"
                     name="email"
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={t('login.enterYourEmail')}
+                    disabled={!qrHotelInfo}
+                    className={`w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${!qrHotelInfo ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}`}
+                    placeholder={qrHotelInfo ? t('login.enterYourEmail') : 'Scan QR code first'}
                   />
                 </div>
                 <ErrorMessage name="email" component="div" className="mt-1 text-sm text-red-600" />
@@ -206,8 +322,9 @@ const LoginPage = () => {
                   <Field
                     type="password"
                     name="password"
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={t('login.enterYourPassword')}
+                    disabled={!qrHotelInfo}
+                    className={`w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${!qrHotelInfo ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}`}
+                    placeholder={qrHotelInfo ? t('login.enterYourPassword') : 'Scan QR code first'}
                   />
                 </div>
                 <ErrorMessage name="password" component="div" className="mt-1 text-sm text-red-600" />
@@ -219,29 +336,41 @@ const LoginPage = () => {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    disabled={!qrHotelInfo}
+                    className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${!qrHotelInfo ? 'cursor-not-allowed opacity-60' : ''}`}
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  <label htmlFor="remember-me" className={`ml-2 block text-sm text-gray-700 ${!qrHotelInfo ? 'opacity-60' : ''}`}>
                     {t('login.rememberMe')}
                   </label>
                 </div>
 
                 <div className="text-sm">
-                  <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                    {t('login.forgotYourPassword')}
-                  </Link>
+                  {qrHotelInfo ? (
+                    <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                      {t('login.forgotYourPassword')}
+                    </Link>
+                  ) : (
+                    <span className="font-medium text-gray-400 cursor-not-allowed">
+                      {t('login.forgotYourPassword')}
+                    </span>
+                  )}
                 </div>
               </div>
 
               <button
                 type="submit"
-                // Only disable the button while Formik is submitting. Don't keep it disabled based on global isLoading
-                disabled={isSubmitting}
+                // Disable the button if no QR info, while submitting, or loading
+                disabled={!qrHotelInfo || isSubmitting}
                 className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#3B5787' }}
               >
-                {/* Show spinner when submitting or when the global loading flag is set, but do not keep the button disabled because of global loading */}
-                {(isSubmitting || isLoading) ? (
+                {/* Show different text based on state */}
+                {!qrHotelInfo ? (
+                  <div className="flex items-center justify-center">
+                    <HiQrcode className="h-5 w-5 mr-2" />
+                    <span>Scan QR Code to Enable Login</span>
+                  </div>
+                ) : (isSubmitting || isLoading) ? (
                   <div className="flex items-center justify-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -264,8 +393,22 @@ const LoginPage = () => {
               {t('login.signUp')}
             </Link>
           </p>
+          {!qrHotelInfo && (
+            <p className="text-xs text-gray-500 mt-2">
+              QR scan required for login only. Registration is always available.
+            </p>
+          )}
         </div>
       </div>
+
+      {/* QR Scanner Modal */}
+      {showQRScanner && (
+        <QRScanner
+          onScanSuccess={handleQRScanSuccess}
+          onScanError={handleQRScanError}
+          onClose={() => setShowQRScanner(false)}
+        />
+      )}
     </div>
   );
 };

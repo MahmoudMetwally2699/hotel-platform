@@ -7,7 +7,7 @@ import apiClient from './api.service';
 import { AUTH_API, CLIENT_API } from '../config/api.config';
 import jwt_decode from 'jwt-decode';
 import cookieHelper from '../utils/cookieHelper';
-import { clearAllAuthData, clearRegularAuthData } from '../utils/authCleanup';
+import { clearAllAuthData } from '../utils/authCleanup';
 
 class AuthService {
   constructor() {
@@ -20,8 +20,10 @@ class AuthService {
    * @param {string} email - User's email
    * @param {string} password - User's password
    * @param {string} role - User's role (guest, hotel, service, superadmin)
+   * @param {string} hotelId - Optional hotel ID for hotel-scoped authentication
    * @returns {Promise} - Response from API
-   */  async login(email, password, role = 'guest') {
+   */
+  async login(email, password, role = 'guest', hotelId = null) {
     try {
       let endpoint = AUTH_API.LOGIN;
 
@@ -30,9 +32,17 @@ class AuthService {
         endpoint = CLIENT_API.LOGIN;
       }
 
-      console.log(`Making login request to ${endpoint} with role: ${role}`);
+      console.log(`Making login request to ${endpoint} with role: ${role}${hotelId ? `, hotelId: ${hotelId}` : ''}`);
       console.log('API Base URL:', apiClient.defaults.baseURL);
-      console.log('Full URL:', `${apiClient.defaults.baseURL}${endpoint}`);      const response = await apiClient.post(endpoint, { email, password, role });
+      console.log('Full URL:', `${apiClient.defaults.baseURL}${endpoint}`);
+
+      // Include hotelId in request if provided
+      const loginData = { email, password, role };
+      if (hotelId) {
+        loginData.hotelId = hotelId;
+      }
+
+      const response = await apiClient.post(endpoint, loginData);
       console.log('Login response received:', response.data);
 
       // Store tokens and user data properly
@@ -168,6 +178,24 @@ class AuthService {
       const response = await apiClient.post(AUTH_API.RESET_PASSWORD, {
         token,
         password,
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Validate QR token for login context
+   * @param {string} qrToken - QR token to validate
+   * @param {string} context - Context: 'login' or 'registration'
+   * @returns {Promise} - Response from API
+   */
+  async validateQRToken(qrToken, context = 'login') {
+    try {
+      const response = await apiClient.post('/auth/validate-qr', {
+        qrToken,
+        context
       });
       return response.data;
     } catch (error) {

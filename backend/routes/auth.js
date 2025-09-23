@@ -166,11 +166,14 @@ router.post('/register', catchAsync(async (req, res, next) => {
     return next(new AppError('Check-out date must be after check-in date', 400));
   }
 
-  // Check if user already exists
-  const existingUser = await User.findOne({ email: email.toLowerCase() });
+  // Check if user already exists for this specific hotel
+  const existingUser = await User.findOne({
+    email: email.toLowerCase(),
+    selectedHotelId: selectedHotelId
+  });
   if (existingUser) {
-    logger.logSecurity('REGISTRATION_ATTEMPT_EXISTING_EMAIL', req, { email });
-    return next(new AppError('User with this email already exists', 400));
+    logger.logSecurity('REGISTRATION_ATTEMPT_EXISTING_EMAIL_HOTEL', req, { email, hotelId: selectedHotelId });
+    return next(new AppError('User with this email already exists for this hotel', 400));
   }
 
   // Verify hotel exists
@@ -211,38 +214,67 @@ router.post('/register', catchAsync(async (req, res, next) => {
 
 /**
  * @route   POST /api/auth/login
- * @desc    Login user (all roles)
+ * @desc    Login user (all roles) with optional hotel-scoped authentication
  * @access  Public
  */
 router.post('/login', catchAsync(async (req, res, next) => {
-  const { email, password, role } = req.body;
+  const { email, password, role, hotelId } = req.body;
 
   // Check if email and password are provided
   if (!email || !password) {
     logger.logSecurity('LOGIN_ATTEMPT_MISSING_CREDENTIALS', req, { email });
     return next(new AppError('Please provide email and password', 400));
-  }  // Find user and include password field and other necessary fields
-  const user = await User.findOne({
+  }
+
+  // For guest role, require hotelId (QR-based login)
+  if (role === 'guest' && !hotelId) {
+    logger.logSecurity('LOGIN_ATTEMPT_GUEST_NO_HOTEL_ID', req, { email });
+    return next(new AppError('Hotel identification required. Please scan QR code at hotel reception.', 400));
+  }
+
+  // Build user query with hotel context if provided
+  let userQuery = {
     email: email.toLowerCase(),
     isActive: true
-  }).select('+password').populate('selectedHotelId', 'name address');  // Check if user exists and password is correct
+  };
+
+  // If hotelId is provided, scope the search to that hotel
+  if (hotelId) {
+    userQuery.selectedHotelId = hotelId;
+  }
+
+  // Find user and include password field and other necessary fields
+  const user = await User.findOne(userQuery)
+    .select('+password')
+    .populate('selectedHotelId', 'name address');
+
+  // Check if user exists and password is correct
   if (!user) {
-    logger.logSecurity('LOGIN_ATTEMPT_INVALID_CREDENTIALS_NO_USER', req, { email });
-    return next(new AppError('Incorrect email or password', 401));
+    const logData = { email, hotelId };
+    if (hotelId) {
+      logger.logSecurity('LOGIN_ATTEMPT_INVALID_CREDENTIALS_HOTEL_SCOPED', req, logData);
+      return next(new AppError('Invalid credentials or user not found for this hotel', 401));
+    } else {
+      logger.logSecurity('LOGIN_ATTEMPT_INVALID_CREDENTIALS_NO_USER', req, logData);
+      return next(new AppError('Incorrect email or password', 401));
+    }
   }
 
   // Check password
   const isPasswordCorrect = await user.correctPassword(password, user.password);
   if (!isPasswordCorrect) {
-    logger.logSecurity('LOGIN_ATTEMPT_INVALID_PASSWORD', req, { email });
+    const logData = { email, hotelId };
+    logger.logSecurity('LOGIN_ATTEMPT_INVALID_PASSWORD', req, logData);
     return next(new AppError('Incorrect email or password', 401));
   }
+
   // Check role if specified
   if (role && user.role !== role) {
     logger.logSecurity('LOGIN_ATTEMPT_WRONG_ROLE', req, {
       email,
       expectedRole: role,
-      actualRole: user.role
+      actualRole: user.role,
+      hotelId
     });
     return next(new AppError('Invalid login credentials for this portal', 401));
   }
@@ -250,7 +282,14 @@ router.post('/login', catchAsync(async (req, res, next) => {
   // Update last login
   user.lastLogin = new Date();
   await user.save({ validateBeforeSave: false });
-  logger.logAuth('USER_LOGIN', user, req);
+
+  const logData = { hotelId };
+  if (hotelId) {
+    logger.logAuth('USER_LOGIN_VIA_QR', user, req, logData);
+  } else {
+    logger.logAuth('USER_LOGIN', user, req, logData);
+  }
+
   // Create a clean user object for response (excluding sensitive fields)
   const userForToken = {
     _id: user._id,
@@ -271,7 +310,8 @@ router.post('/login', catchAsync(async (req, res, next) => {
 
   console.log('🔍 Login response user data:', userForToken);
 
-  createSendToken(userForToken, 200, res, 'Login successful');
+  const message = hotelId ? 'Hotel-scoped login successful' : 'Login successful';
+  createSendToken(userForToken, 200, res, message);
 }));
 
 /**
@@ -574,11 +614,11 @@ const qrUtils = require('../utils/qr');
 
 /**
  * @route   POST /api/auth/validate-qr
- * @desc    Validate QR token and return hotel information for registration
+ * @desc    Validate QR token and return hotel information for registration and login
  * @access  Public
  */
 router.post('/validate-qr', catchAsync(async (req, res, next) => {
-  const { qrToken } = req.body;
+  const { qrToken, context = 'registration' } = req.body;
 
   if (!qrToken) {
     return next(new AppError('QR token is required', 400));
@@ -588,14 +628,22 @@ router.post('/validate-qr', catchAsync(async (req, res, next) => {
     // Process QR token and validate hotel
     const hotelInfo = await qrUtils.processQRRegistration(qrToken);
 
-    logger.info('QR token validated for registration', {
+    // Add context-specific information
+    const responseData = {
+      ...hotelInfo,
+      context: context,
+      supportedActions: ['registration', 'login']
+    };
+
+    logger.info(`QR token validated for ${context}`, {
       hotelId: hotelInfo.hotelId,
-      hotelName: hotelInfo.hotelName
+      hotelName: hotelInfo.hotelName,
+      context: context
     });
 
     res.status(200).json({
       status: 'success',
-      data: hotelInfo
+      data: responseData
     });
 
   } catch (error) {
