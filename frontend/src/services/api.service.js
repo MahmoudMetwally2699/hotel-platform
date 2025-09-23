@@ -38,6 +38,18 @@ apiClient.interceptors.request.use(
       console.log('API Request Auth Debug: No token found');
     }
 
+    // Skip authentication for public endpoints
+    const isPublicEndpoint = config.url?.includes('/auth/login') || 
+                             config.url?.includes('/auth/register') || 
+                             config.url?.includes('/auth/validate-qr') || 
+                             config.url?.includes('/auth/forgot-password') || 
+                             config.url?.includes('/auth/reset-password');
+
+    // If this is a public endpoint, don't add authentication
+    if (isPublicEndpoint) {
+      return config;
+    }
+
     // If token exists, check if it's expired
     if (token) {
       const decoded = jwt_decode(token);
@@ -130,7 +142,7 @@ apiClient.interceptors.response.use(
           // If the 401 comes from login/register or related auth actions, don't override the message
           // or redirect — let the component handle the error so it can show e.g. "Incorrect email or password".
           const url = error.config?.url || '';
-          const isAuthAction = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh-token') || url.includes('/auth/forgot-password') || url.includes('/auth/reset-password');
+          const isAuthAction = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh-token') || url.includes('/auth/forgot-password') || url.includes('/auth/reset-password') || url.includes('/auth/validate-qr');
 
           if (is401HandlingInProgress) {
             console.log('401 handling already in progress, skipping redirect');

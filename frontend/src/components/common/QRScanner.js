@@ -44,7 +44,7 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
       const qrScanner = new QrScanner(
         videoRef.current,
         (result) => {
-          console.log('QR Code scanned:', result.data);
+          console.log('QR Code scanned - Raw data:', result.data);
 
           // Stop scanning
           qrScanner.stop();
@@ -55,9 +55,21 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
           if (result.data.includes('qr=')) {
             const urlParams = new URLSearchParams(result.data.split('?')[1]);
             qrToken = urlParams.get('qr');
+            console.log('Extracted QR token from URL parameter:', qrToken);
+          } else {
+            console.log('Using raw QR data as token:', qrToken);
+          }
+
+          // Add additional validation to check if it looks like a refresh token
+          if (qrToken && qrToken.includes('refreshToken')) {
+            console.error('WARNING: QR code contains refreshToken instead of qrToken!', qrToken);
+            setError('Invalid QR code: This appears to be a refresh token instead of a hotel QR code.');
+            onScanError?.('Invalid QR code format - contains refresh token');
+            return;
           }
 
           if (qrToken) {
+            console.log('Calling onScanSuccess with qrToken:', qrToken);
             onScanSuccess(qrToken);
           } else {
             setError('Invalid QR code format. Please scan a valid hotel registration QR code.');

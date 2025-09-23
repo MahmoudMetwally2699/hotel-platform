@@ -466,9 +466,12 @@ class HotelService {
    */
   async validateQRToken(qrToken) {
     try {
+      console.log('Validating QR token:', { qrToken, length: qrToken?.length });
       const response = await apiClient.post('/auth/validate-qr', { qrToken });
+      console.log('QR validation successful:', response.data);
       return response.data;
     } catch (error) {
+      console.error('QR validation failed:', error);
       throw error;
     }
   }
