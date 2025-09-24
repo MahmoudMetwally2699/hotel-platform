@@ -42,10 +42,10 @@ const SuperHotelAnalytics = () => {
   const fetchAvailableHotels = useCallback(async () => {
     try {
       console.log('🏨 Fetching available hotels...');
-      
+
       // Get SuperHotel token from localStorage
       const superHotelToken = localStorage.getItem('superHotelToken');
-      
+
       // Prepare headers
       const headers = {
         'Content-Type': 'application/json'
@@ -55,7 +55,7 @@ const SuperHotelAnalytics = () => {
       if (superHotelToken) {
         headers['Authorization'] = `Bearer ${superHotelToken}`;
       }
-      
+
       const response = await fetch(`${API_BASE_URL}/admin/hotels`, {
         method: 'GET',
         headers,
@@ -87,7 +87,7 @@ const SuperHotelAnalytics = () => {
 
       // Get SuperHotel token from localStorage
       const superHotelToken = localStorage.getItem('superHotelToken');
-      
+
       // Prepare headers
       const headers = {
         'Content-Type': 'application/json'
@@ -149,7 +149,7 @@ const SuperHotelAnalytics = () => {
     try {
       // Get SuperHotel token from localStorage
       const superHotelToken = localStorage.getItem('superHotelToken');
-      
+
       // Prepare headers
       const headers = {
         'Content-Type': 'application/json'
@@ -159,7 +159,7 @@ const SuperHotelAnalytics = () => {
       if (superHotelToken) {
         headers['Authorization'] = `Bearer ${superHotelToken}`;
       }
-      
+
       const params = new URLSearchParams({
         timeRange,
         format,
