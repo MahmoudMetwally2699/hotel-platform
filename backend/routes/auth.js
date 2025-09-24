@@ -55,7 +55,7 @@ const createSendToken = (user, statusCode, res, message = 'Success') => {
     expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
     httpOnly: process.env.NODE_ENV === 'production', // Allow JS access in development
     secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   };
 
   res.cookie('jwt', token, cookieOptions);
@@ -322,12 +322,16 @@ router.post('/login', catchAsync(async (req, res, next) => {
 router.post('/logout', protect, (req, res) => {
   res.cookie('jwt', 'loggedout', {
     expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
   });
 
   res.cookie('refreshToken', 'loggedout', {
     expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
   });
 
   logger.logAuth('USER_LOGOUT', req.user, req);

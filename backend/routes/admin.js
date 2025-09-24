@@ -33,9 +33,9 @@ const createSendToken = (superHotel, statusCode, req, res) => {
 
   const cookieOptions = {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    httpOnly: process.env.NODE_ENV === 'production', // Allow JS access in development for debugging
+    httpOnly: true, // Always use httpOnly for security
     secure: process.env.NODE_ENV === 'production', // Only use HTTPS in production
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // 'none' allows cross-origin cookies
   };
 
   console.log('🍪 Setting superHotelJwt cookie with options:', cookieOptions);
@@ -102,7 +102,9 @@ router.post('/auth/login', catchAsync(async (req, res, next) => {
 router.post('/auth/logout', (req, res) => {
   res.cookie('superHotelJwt', 'loggedout', {
     expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict'
   });
 
   res.status(200).json({
