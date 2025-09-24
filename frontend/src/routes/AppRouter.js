@@ -54,6 +54,7 @@ const SuperHotelsPage = lazy(() => import('../pages/superadmin/SuperHotelsPage')
 const SuperHotelLogin = lazy(() => import('../pages/admin/SuperHotelLogin'));
 const SuperHotelDashboard = lazy(() => import('../pages/admin/SuperHotelDashboard'));
 const SuperHotelHotels = lazy(() => import('../pages/admin/SuperHotelHotels'));
+const SuperHotelAnalytics = lazy(() => import('../pages/admin/SuperHotelAnalytics'));
 const AdminLayout = lazy(() => import('../layouts/AdminLayout'));
 const SuperHotelAuthWrapper = lazy(() => import('../components/common/SuperHotelAuthWrapper'));
 
@@ -587,18 +588,10 @@ const AppRouter = () => {
           }
         />
         <Route
-          path="/super-hotel-admin/clients"
-          element={
-            <Suspense fallback={<LoadingScreen />}>
-              <AdminLayout><div className="p-6 text-center text-gray-600">Clients page coming soon</div></AdminLayout>
-            </Suspense>
-          }
-        />
-        <Route
           path="/super-hotel-admin/analytics"
           element={
             <Suspense fallback={<LoadingScreen />}>
-              <AdminLayout><div className="p-6 text-center text-gray-600">Analytics page coming soon</div></AdminLayout>
+              <AdminLayout><SuperHotelAnalytics /></AdminLayout>
             </Suspense>
           }
         />

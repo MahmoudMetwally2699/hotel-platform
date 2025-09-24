@@ -323,7 +323,10 @@ router.get('/my-hotel', protect, restrictTo('guest'), async (req, res) => {
  * @access  Private
  */
 router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
-  try {    const {
+  try {
+    console.log('🔍 Booking request body:', JSON.stringify(req.body, null, 2));
+
+    const {
       serviceId,
       bookingDate,
       specialRequests,
@@ -331,8 +334,120 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       selectedTime,
       options,
       serviceCombination, // Add service combination support
-      paymentMethod = 'online' // Add payment method selection
+      paymentMethod = 'online', // Add payment method selection
+      // Restaurant booking fields
+      menuItems,
+      deliveryTime,
+      deliveryDate,
+      schedule,
+      guestDetails,
+      location,
+      roomNumber: requestRoomNumber
     } = req.body;
+
+    // Extract dates and times from different possible locations
+    const extractedDeliveryDate = deliveryDate || schedule?.preferredDate;
+    const extractedDeliveryTime = deliveryTime || schedule?.preferredTime;
+    const extractedRoomNumber = requestRoomNumber || guestDetails?.deliveryLocation || location?.deliveryLocation;
+
+    console.log('🔍 Extracted fields:', {
+      serviceId,
+      bookingDate,
+      deliveryDate,
+      extractedDeliveryDate,
+      selectedTime,
+      deliveryTime,
+      extractedDeliveryTime,
+      extractedRoomNumber,
+      paymentMethod,
+      hasMenuItems: !!menuItems,
+      menuItemsCount: menuItems?.length
+    });
+
+    // Validate required fields
+    if (!serviceId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Service ID is required'
+      });
+    }
+
+    // For restaurant bookings, use deliveryDate as bookingDate if bookingDate is not provided
+    const finalBookingDate = bookingDate || extractedDeliveryDate;
+    let finalSelectedTime = selectedTime || extractedDeliveryTime;
+
+    if (!finalBookingDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Booking date or delivery date is required'
+      });
+    }
+
+    if (!finalSelectedTime) {
+      // For restaurant bookings, provide default times for meal periods
+      finalSelectedTime = '12:00'; // Default lunch time
+    } else if (finalSelectedTime && !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(finalSelectedTime)) {
+      // Convert meal period names to times
+      switch (finalSelectedTime.toLowerCase()) {
+        case 'breakfast':
+          finalSelectedTime = '08:00';
+          break;
+        case 'lunch':
+          finalSelectedTime = '12:00';
+          break;
+        case 'dinner':
+          finalSelectedTime = '19:00';
+          break;
+        default:
+          finalSelectedTime = '12:00'; // Default fallback
+      }
+
+      console.log('🔍 Converted meal period to time:', {
+        originalTime: extractedDeliveryTime,
+        finalTime: finalSelectedTime
+      });
+    }
+
+    if (!finalSelectedTime) {
+      return res.status(400).json({
+        success: false,
+        message: 'Selected time or delivery time is required'
+      });
+    }
+
+    // Validate date format
+    const parsedDate = new Date(finalBookingDate);
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid booking date format'
+      });
+    }
+
+    // Validate time format (HH:MM) - make this more flexible for restaurant bookings
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(finalSelectedTime)) {
+      console.log('🔍 Time validation failed:', {
+        finalSelectedTime,
+        regex: timeRegex.toString()
+      });
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid time format. Please use HH:MM format (e.g., 14:30)'
+      });
+    }
+
+    // Validate that booking date is not in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    parsedDate.setHours(0, 0, 0, 0);
+
+    if (parsedDate < today) {
+      return res.status(400).json({
+        success: false,
+        message: 'Booking date cannot be in the past'
+      });
+    }
 
     // Validate payment method
     if (!['online', 'cash'].includes(paymentMethod)) {
@@ -347,7 +462,14 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       .select('firstName lastName email phone roomNumber selectedHotelId checkInDate checkOutDate');
 
     // Room number can be provided in the booking request if not in user profile
-    const roomNumber = user.roomNumber || req.body.roomNumber;
+    const roomNumber = user.roomNumber || extractedRoomNumber || req.body.roomNumber;
+
+    console.log('🔍 Room number resolution:', {
+      userRoomNumber: user.roomNumber,
+      extractedRoomNumber,
+      bodyRoomNumber: req.body.roomNumber,
+      finalRoomNumber: roomNumber
+    });
 
     if (!roomNumber) {
       return res.status(400).json({
@@ -377,17 +499,53 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       markup = hotel.markupSettings.categories[service.category];
     }
 
-    // Determine base price - use service combination price if available
+    // Determine base price - use service combination price if available, or calculate from menu items
     let basePrice;
-    if (serviceCombination && service.packagePricing?.isPackageService) {
+    let finalQuantity = quantity;
+
+    if (menuItems && menuItems.length > 0) {
+      // For restaurant bookings, calculate total from menu items
+      // Use totalPrice if available, otherwise calculate from price * quantity
+      basePrice = menuItems.reduce((total, item) => {
+        const itemPrice = item.totalPrice || (item.price * item.quantity);
+        return total + itemPrice;
+      }, 0);
+      finalQuantity = menuItems.reduce((total, item) => total + item.quantity, 0);
+
+      console.log('🔍 Restaurant pricing calculation:', {
+        menuItems: menuItems.map(item => ({
+          itemName: item.itemName,
+          price: item.price,
+          quantity: item.quantity,
+          totalPrice: item.totalPrice,
+          calculatedTotal: item.totalPrice || (item.price * item.quantity)
+        })),
+        basePrice,
+        finalQuantity
+      });
+    } else if (serviceCombination && service.packagePricing?.isPackageService) {
       basePrice = serviceCombination.finalPrice || service.pricing.basePrice;
     } else {
       basePrice = service.pricing.basePrice;
     }
 
-    const finalPrice = Math.round((basePrice * (1 + markup / 100) * quantity) * 100) / 100;
-    const hotelCommission = Math.round((basePrice * (markup / 100) * quantity) * 100) / 100;
-    const providerAmount = Math.round((basePrice * quantity) * 100) / 100;
+    // Ensure basePrice is a valid number
+    if (isNaN(basePrice) || basePrice <= 0) {
+      console.error('🔍 Invalid basePrice calculated:', {
+        basePrice,
+        menuItems: menuItems?.length,
+        serviceCombination: !!serviceCombination,
+        servicePricing: service.pricing
+      });
+      return res.status(400).json({
+        success: false,
+        message: 'Unable to calculate booking price. Please check menu items or service pricing.'
+      });
+    }
+
+    const finalPrice = Math.round((basePrice * (1 + markup / 100)) * 100) / 100;
+    const hotelCommission = Math.round((basePrice * (markup / 100)) * 100) / 100;
+    const providerAmount = Math.round(basePrice * 100) / 100;
 
     // Generate booking number
     const bookingNumber = `BK${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
@@ -418,14 +576,15 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
         description: service.description
       },      // Booking configuration
       bookingConfig: {
-        quantity,
+        quantity: finalQuantity,
         selectedOptions: options || [],
-        selectedTime,
-        serviceCombination: serviceCombination || null // Store selected service combination
+        selectedTime: finalSelectedTime,
+        serviceCombination: serviceCombination || null, // Store selected service combination
+        menuItems: menuItems || [] // Store menu items for restaurant bookings
       },// Scheduling
       schedule: {
-        preferredDate: new Date(bookingDate),
-        preferredTime: selectedTime,
+        preferredDate: parsedDate,
+        preferredTime: finalSelectedTime,
         estimatedDuration: {
           value: service.duration || 60,
           unit: 'minutes'
@@ -435,9 +594,9 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       // Pricing breakdown
       pricing: {
         basePrice,
-        quantity,
-        subtotal: basePrice * quantity,
-        totalBeforeMarkup: basePrice * quantity,
+        quantity: finalQuantity,
+        subtotal: basePrice,
+        totalBeforeMarkup: basePrice,
         markup: {
           percentage: markup,
           amount: hotelCommission
@@ -479,7 +638,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           bookingId: booking._id,
           serviceId,
           hotelId: service.hotelId,
-          date: new Date(bookingDate)
+          date: parsedDate
         }
       },
       hasActiveBooking: true
@@ -516,10 +675,10 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           Booking Details:
           - Booking Number: ${bookingNumber}
           - Service: ${service.name}
-          - Date: ${new Date(bookingDate).toLocaleDateString()}
-          - Time: ${selectedTime || 'To be confirmed'}
+          - Date: ${new Date(finalBookingDate).toLocaleDateString()}
+          - Time: ${finalSelectedTime || 'To be confirmed'}
           - Room: ${roomNumber}
-          - Quantity: ${quantity}
+          - Quantity: ${finalQuantity}
           - Total Amount: $${finalPrice} ${service.pricing.currency || 'EGP'}
           - Payment Method: ${paymentMethodText}
 
@@ -566,9 +725,9 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           Booking Details:
           - Booking Number: ${bookingNumber}
           - Service: ${service.name}
-          - Requested Date: ${new Date(bookingDate).toLocaleDateString()}
-          - Requested Time: ${selectedTime || 'To be confirmed'}
-          - Quantity: ${quantity}
+          - Requested Date: ${new Date(finalBookingDate).toLocaleDateString()}
+          - Requested Time: ${finalSelectedTime || 'To be confirmed'}
+          - Quantity: ${finalQuantity}
           - Amount: $${providerAmount} ${service.pricing.currency || 'EGP'}
           - Payment Method: ${paymentMethodText}
           - Payment Status: ${paymentStatus}
@@ -596,8 +755,8 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           hotelName: hotel.name,
           serviceProviderName: service.providerId.businessName,
           serviceType: service.name,
-          pickupDate: new Date(bookingDate).toLocaleDateString('ar-EG'),
-          pickupTime: selectedTime || 'سيتم التأكيد',
+          pickupDate: new Date(finalBookingDate).toLocaleDateString('ar-EG'),
+          pickupTime: finalSelectedTime || 'سيتم التأكيد',
           roomNumber,
           totalAmount: finalPrice,
           paymentStatus: 'في انتظار الدفع'
@@ -617,8 +776,8 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           hotelName: hotel.name,
           roomNumber,
           guestPhone: user.phone,
-          pickupDate: new Date(bookingDate).toLocaleDateString('ar-EG'),
-          pickupTime: selectedTime || 'سيتم التأكيد',
+          pickupDate: new Date(finalBookingDate).toLocaleDateString('ar-EG'),
+          pickupTime: finalSelectedTime || 'سيتم التأكيد',
           serviceType: service.name,
           specialNotes: specialRequests,
           baseAmount: providerAmount
@@ -1421,6 +1580,35 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
       });
     }
 
+    // Validate schedule
+    if (!schedule || !schedule.preferredDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Schedule with preferred date is required'
+      });
+    }
+
+    // Validate date format
+    const parsedDate = new Date(schedule.preferredDate);
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid preferred date format'
+      });
+    }
+
+    // Validate that booking date is not in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    parsedDate.setHours(0, 0, 0, 0);
+
+    if (parsedDate < today) {
+      return res.status(400).json({
+        success: false,
+        message: 'Booking date cannot be in the past'
+      });
+    }
+
     // Validate service exists and is active
     const service = await Service.findOne({
       _id: serviceId,      hotelId: hotelId,
@@ -1554,7 +1742,7 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
         specialRequests: guestDetails?.specialRequests || ''
       },      // Scheduling
       schedule: {
-        preferredDate: new Date(schedule.preferredDate),
+        preferredDate: parsedDate,
         preferredTime: normalizedTime,
         estimatedDuration: {
           value: 24,
@@ -1858,6 +2046,44 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
       });
     }
 
+    // Validate schedule
+    if (!schedule || !schedule.pickupDate || !schedule.pickupTime) {
+      return res.status(400).json({
+        success: false,
+        message: 'Schedule with pickup date and time is required'
+      });
+    }
+
+    // Validate date format
+    const parsedDate = new Date(schedule.pickupDate);
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid pickup date format'
+      });
+    }
+
+    // Validate time format (HH:MM)
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(schedule.pickupTime)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid pickup time format. Please use HH:MM format (e.g., 14:30)'
+      });
+    }
+
+    // Validate that booking date is not in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    parsedDate.setHours(0, 0, 0, 0);
+
+    if (parsedDate < today) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pickup date cannot be in the past'
+      });
+    }
+
     // Validate service exists and is active
     const service = await Service.findOne({
       _id: serviceId,
@@ -1897,8 +2123,8 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
     // Generate booking number
     const bookingNumber = `TR${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
-    // Create booking with parsed date
-    const scheduledDate = new Date(`${schedule.pickupDate}T${schedule.pickupTime}:00.000Z`);
+    // Create booking with validated date
+    const scheduledDate = new Date(`${parsedDate.toISOString().split('T')[0]}T${schedule.pickupTime}:00.000Z`);
 
     const booking = new Booking({
       bookingId: bookingNumber,
@@ -2208,6 +2434,44 @@ router.post('/bookings/housekeeping', async (req, res) => {
       guestEmail,
       estimatedDuration
     } = req.body;
+
+    // Validate required fields
+    if (!serviceId && !serviceName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Service ID or service name is required'
+      });
+    }
+
+    if (!hotelId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Hotel ID is required'
+      });
+    }
+
+    // Validate schedule if provided
+    if (scheduledDateTime) {
+      const parsedDate = new Date(scheduledDateTime);
+      if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid scheduled date format'
+        });
+      }
+
+      // Validate that booking date is not in the past (allow same day)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      parsedDate.setHours(0, 0, 0, 0);
+
+      if (parsedDate < today) {
+        return res.status(400).json({
+          success: false,
+          message: 'Scheduled date cannot be in the past'
+        });
+      }
+    }
 
     console.log('🔧 Housekeeping booking - Extracted data:', {
       serviceId, serviceName, hotelId, guestName, roomNumber, phoneNumber
