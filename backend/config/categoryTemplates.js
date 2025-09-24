@@ -221,30 +221,32 @@ const categoryTemplates = {
     ],
     serviceTypes: [
       {
-        id: 'wash_only',
-        name: 'Wash Only',
-        description: 'Machine wash with appropriate detergent',
-        duration: { value: 24, unit: 'hours' }
+        id: 'hourly',
+        name: 'Hourly Rental',
+        description: 'Rent by the hour with driver',
+        pricingType: 'per-hour',
+        minimumHours: 2
       },
       {
-        id: 'iron_only',
-        name: 'Iron Only',
-        description: 'Professional ironing and pressing',
-        duration: { value: 12, unit: 'hours' }
-      },
-      {
-        id: 'wash_iron',
-        name: 'Wash + Iron',
-        description: 'Complete wash and iron service',
-        duration: { value: 24, unit: 'hours' },
+        id: 'daily',
+        name: 'Daily Rental',
+        description: 'Full day rental with driver',
+        pricingType: 'per-day',
         isPopular: true
       },
       {
-        id: 'dry_cleaning',
-        name: 'Dry Cleaning',
-        description: 'Professional dry cleaning service',
-        duration: { value: 48, unit: 'hours' }
-      }    ],
+        id: 'airport',
+        name: 'Airport Transfer',
+        description: 'One-way airport pickup/drop',
+        pricingType: 'fixed'
+      },
+      {
+        id: 'city_tour',
+        name: 'City Tour',
+        description: 'Guided city sightseeing',
+        pricingType: 'fixed'
+      }
+    ],
   },
 
   dining: {
