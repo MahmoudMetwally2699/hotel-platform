@@ -65,8 +65,9 @@ export const clearRegularAuthData = () => {
 export const clearSuperHotelAuthData = () => {
   console.log('🧹 Clearing Super Hotel authentication data...');
 
-  // Only clear localStorage data (cookies are handled by server)
+  // Clear localStorage data (cookies are handled by server)
   localStorage.removeItem('superHotelData');
+  localStorage.removeItem('superHotelToken'); // Also clear token fallback
 
   console.log('✅ Super Hotel authentication data cleared');
 };

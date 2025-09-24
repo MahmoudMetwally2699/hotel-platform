@@ -22,14 +22,26 @@ const AdminLayout = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      console.log('AdminLayout: Checking auth using cookies');
+      console.log('AdminLayout: Checking auth using cookies and token fallback');
       console.log('AdminLayout: Current cookies:', document.cookie);
+      
+      // Get superHotel token from localStorage as fallback
+      const superHotelToken = localStorage.getItem('superHotelToken');
+      console.log('AdminLayout: SuperHotel token in localStorage:', superHotelToken ? 'Present' : 'Missing');
+
+      // Prepare headers - include Authorization header if token exists
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (superHotelToken) {
+        headers['Authorization'] = `Bearer ${superHotelToken}`;
+        console.log('AdminLayout: Added Authorization header with token');
+      }
 
       const response = await fetch(`${API_BASE_URL}/admin/auth/me`, {
         credentials: 'include', // Include cookies
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers
       });
 
       console.log('AdminLayout: Auth response status:', response.status);

@@ -41,11 +41,11 @@ const getInitialAuthState = () => {
 
     // If on Super Hotel route, check Super Hotel auth instead
     if (isOnSuperHotelRoute) {
-      if (hasSuperHotelCookie() && superHotelData) {
+      const superHotelToken = localStorage.getItem('superHotelToken');
+      if ((hasSuperHotelCookie() || superHotelToken) && superHotelData) {
         console.log('🏨 Using Super Hotel authentication');
-        // For Super Hotel, we can't access the cookie value directly from JavaScript
-        // We'll use a placeholder token and let the backend validate the cookie
-        token = 'superhotel-cookie-auth';
+        // Use the actual token from localStorage if available, otherwise use placeholder
+        token = superHotelToken || 'superhotel-cookie-auth';
         storedUser = superHotelData;
       }
     }

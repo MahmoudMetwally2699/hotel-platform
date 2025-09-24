@@ -286,9 +286,13 @@ const protectSuperHotel = catchAsync(async (req, res, next) => {
   let token;
 
   console.log('🔐 protectSuperHotel - Checking token sources...');
+  console.log('🔐 Request URL:', req.originalUrl);
+  console.log('🔐 Request method:', req.method);
   console.log('🔐 Authorization header:', req.headers.authorization);
-  console.log('🔐 Cookies:', req.cookies);
+  console.log('🔐 Cookies object:', req.cookies);
   console.log('🔐 Raw Cookie header:', req.headers.cookie);
+  console.log('🔐 Request origin:', req.headers.origin);
+  console.log('🔐 Request host:', req.headers.host);
 
   // Manual cookie parsing as fallback
   const parseCookies = (cookieHeader) => {
@@ -307,6 +311,7 @@ const protectSuperHotel = catchAsync(async (req, res, next) => {
   const parsedCookies = parseCookies(req.headers.cookie);
   console.log('🔐 Manually parsed cookies:', parsedCookies);
 
+  // Check Authorization header first (more reliable for cross-origin)
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
     console.log('🔐 Token found in Authorization header');
@@ -318,7 +323,7 @@ const protectSuperHotel = catchAsync(async (req, res, next) => {
     console.log('🔐 Token found in manually parsed cookies');
   }
 
-  console.log('🔐 Final token:', token ? 'Present' : 'Missing');
+  console.log('🔐 Final token:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
 
   if (!token) {
     console.log('🔐 No token found, denying access');

@@ -29,10 +29,16 @@ const SuperHotelLogin = () => {
         const data = await response.json();
         console.log('SuperHotelLogin: Login response data:', data);
 
-        // Store only Super Hotel user data in localStorage (not the token - it's in cookies)
+        // Store Super Hotel user data in localStorage
         localStorage.setItem('superHotelData', JSON.stringify(data.data.superHotel));
+        
+        // Also store the token in localStorage as fallback for cross-origin cookie issues
+        if (data.token) {
+          localStorage.setItem('superHotelToken', data.token);
+          console.log('SuperHotelLogin: Token stored in localStorage as fallback');
+        }
 
-        console.log('SuperHotelLogin: Super Hotel data stored (token is in cookies)');
+        console.log('SuperHotelLogin: Super Hotel data stored (token in cookies + localStorage fallback)');
 
         toast.success('Login successful');
         navigate('/super-hotel-admin/dashboard');
