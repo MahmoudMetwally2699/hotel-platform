@@ -24,7 +24,7 @@ const AdminLayout = ({ children }) => {
     try {
       console.log('AdminLayout: Checking auth using cookies and token fallback');
       console.log('AdminLayout: Current cookies:', document.cookie);
-      
+
       // Get superHotel token from localStorage as fallback
       const superHotelToken = localStorage.getItem('superHotelToken');
       console.log('AdminLayout: SuperHotel token in localStorage:', superHotelToken ? 'Present' : 'Missing');
@@ -33,7 +33,7 @@ const AdminLayout = ({ children }) => {
       const headers = {
         'Content-Type': 'application/json'
       };
-      
+
       if (superHotelToken) {
         headers['Authorization'] = `Bearer ${superHotelToken}`;
         console.log('AdminLayout: Added Authorization header with token');

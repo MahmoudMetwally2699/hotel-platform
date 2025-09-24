@@ -31,7 +31,7 @@ const SuperHotelLogin = () => {
 
         // Store Super Hotel user data in localStorage
         localStorage.setItem('superHotelData', JSON.stringify(data.data.superHotel));
-        
+
         // Also store the token in localStorage as fallback for cross-origin cookie issues
         if (data.token) {
           localStorage.setItem('superHotelToken', data.token);

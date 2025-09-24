@@ -33,7 +33,7 @@ const createSendToken = (superHotel, statusCode, req, res) => {
 
   // For production deployment on Vercel, we need specific cookie settings for cross-origin
   const isProduction = process.env.NODE_ENV === 'production';
-  
+
   const cookieOptions = {
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
     httpOnly: true, // Always use httpOnly for security
@@ -46,7 +46,7 @@ const createSendToken = (superHotel, statusCode, req, res) => {
   console.log('🍪 Token being set:', token.substring(0, 20) + '...');
   console.log('🍪 Request origin:', req.headers.origin);
   console.log('🍪 Request host:', req.headers.host);
-  
+
   res.cookie('superHotelJwt', token, cookieOptions);
 
   // Verify cookie was set by checking response headers
