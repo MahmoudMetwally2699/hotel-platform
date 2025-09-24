@@ -30,7 +30,7 @@ apiClient.interceptors.request.use(
         url: config.url,
         method: config.method
       });
-    }    
+    }
 
     // Skip authentication for public endpoints
     const isPublicEndpoint = config.url?.includes('/auth/login') ||
@@ -55,7 +55,7 @@ apiClient.interceptors.request.use(
     } else {
       // For regular routes, get token from cookies or localStorage as fallback
       token = cookieHelper.getAuthToken() || localStorage.getItem('token');
-      
+
       // Only log in development and when no token is found
       if (process.env.NODE_ENV === 'development' && !token) {
         console.log('API Request Auth Debug: No regular token found');
