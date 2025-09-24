@@ -42,11 +42,23 @@ const SuperHotelAnalytics = () => {
   const fetchAvailableHotels = useCallback(async () => {
     try {
       console.log('🏨 Fetching available hotels...');
+      
+      // Get SuperHotel token from localStorage
+      const superHotelToken = localStorage.getItem('superHotelToken');
+      
+      // Prepare headers
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+
+      // Add Authorization header if token exists
+      if (superHotelToken) {
+        headers['Authorization'] = `Bearer ${superHotelToken}`;
+      }
+      
       const response = await fetch(`${API_BASE_URL}/admin/hotels`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         credentials: 'include'
       });
 
@@ -70,11 +82,21 @@ const SuperHotelAnalytics = () => {
   const fetchAnalyticsData = useCallback(async () => {
     try {
       setLoading(true);
-      // The token is stored in cookies as 'superHotelJwt', not in localStorage
-      // So we don't need to manually retrieve it - just use credentials: 'include'
-
       console.log('🔍 Fetching analytics data...');
       console.log(' API_BASE_URL:', API_BASE_URL);
+
+      // Get SuperHotel token from localStorage
+      const superHotelToken = localStorage.getItem('superHotelToken');
+      
+      // Prepare headers
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+
+      // Add Authorization header if token exists
+      if (superHotelToken) {
+        headers['Authorization'] = `Bearer ${superHotelToken}`;
+      }
 
       const params = new URLSearchParams({
         timeRange,
@@ -85,10 +107,8 @@ const SuperHotelAnalytics = () => {
 
       const response = await fetch(`${API_BASE_URL}/admin/analytics/comprehensive?${params}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include' // This will send the superHotelJwt cookie automatically
+        headers,
+        credentials: 'include' // Fallback to cookies
       });
 
       console.log('📡 Response status:', response.status);
@@ -127,6 +147,19 @@ const SuperHotelAnalytics = () => {
 
   const exportData = async (format = 'json') => {
     try {
+      // Get SuperHotel token from localStorage
+      const superHotelToken = localStorage.getItem('superHotelToken');
+      
+      // Prepare headers
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+
+      // Add Authorization header if token exists
+      if (superHotelToken) {
+        headers['Authorization'] = `Bearer ${superHotelToken}`;
+      }
+      
       const params = new URLSearchParams({
         timeRange,
         format,
@@ -135,9 +168,7 @@ const SuperHotelAnalytics = () => {
 
       const response = await fetch(`${API_BASE_URL}/admin/analytics/export?${params}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         credentials: 'include' // Use cookie-based authentication
       });
 

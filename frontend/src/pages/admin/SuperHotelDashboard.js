@@ -39,13 +39,26 @@ const SuperHotelDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      console.log('🔍 Fetching dashboard data using cookies');
+      console.log('🔍 Fetching dashboard data with SuperHotel token');
+
+      // Get SuperHotel token from localStorage
+      const superHotelToken = localStorage.getItem('superHotelToken');
+      console.log('🔍 SuperHotel token:', superHotelToken ? 'Present' : 'Missing');
+
+      // Prepare headers
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+
+      // Add Authorization header if token exists
+      if (superHotelToken) {
+        headers['Authorization'] = `Bearer ${superHotelToken}`;
+        console.log('🔍 Added Authorization header to dashboard request');
+      }
 
       const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
-        credentials: 'include', // Include cookies
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        credentials: 'include', // Include cookies as fallback
+        headers
       });
 
       console.log('🔍 Dashboard API response status:', response.status);

@@ -13,11 +13,24 @@ const SuperHotelHotels = () => {
 
   const fetchHotels = async () => {
     try {
+      // Get SuperHotel token from localStorage
+      const superHotelToken = localStorage.getItem('superHotelToken');
+      console.log('🔍 SuperHotel token for hotels:', superHotelToken ? 'Present' : 'Missing');
+
+      // Prepare headers
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+
+      // Add Authorization header if token exists
+      if (superHotelToken) {
+        headers['Authorization'] = `Bearer ${superHotelToken}`;
+        console.log('🔍 Added Authorization header to hotels request');
+      }
+
       const response = await fetch(`${API_BASE_URL}/admin/hotels`, {
-        credentials: 'include', // Include cookies
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        credentials: 'include', // Include cookies as fallback
+        headers
       });
 
       if (response.ok) {
