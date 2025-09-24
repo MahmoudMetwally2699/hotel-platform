@@ -30,13 +30,7 @@ apiClient.interceptors.request.use(
         url: config.url,
         method: config.method
       });
-    }    // Get token from cookies or localStorage as fallback
-    let token = cookieHelper.getAuthToken() || localStorage.getItem('token');
-
-    // Only log in development and when no token is found
-    if (process.env.NODE_ENV === 'development' && !token) {
-      console.log('API Request Auth Debug: No token found');
-    }
+    }    
 
     // Skip authentication for public endpoints
     const isPublicEndpoint = config.url?.includes('/auth/login') ||
@@ -50,8 +44,26 @@ apiClient.interceptors.request.use(
       return config;
     }
 
-    // If token exists, check if it's expired
-    if (token) {
+    // Check if we're on SuperHotel routes and get SuperHotel token
+    const isOnSuperHotelRoute = window.location.pathname.startsWith('/super-hotel-admin');
+    let token;
+
+    if (isOnSuperHotelRoute) {
+      // For SuperHotel routes, use SuperHotel token from localStorage
+      token = localStorage.getItem('superHotelToken');
+      console.log('API Request: Using SuperHotel token:', token ? 'Present' : 'Missing');
+    } else {
+      // For regular routes, get token from cookies or localStorage as fallback
+      token = cookieHelper.getAuthToken() || localStorage.getItem('token');
+      
+      // Only log in development and when no token is found
+      if (process.env.NODE_ENV === 'development' && !token) {
+        console.log('API Request Auth Debug: No regular token found');
+      }
+    }
+
+    // If token exists, check if it's expired (only for regular tokens, skip for SuperHotel)
+    if (token && !isOnSuperHotelRoute) {
       const decoded = jwt_decode(token);
       const currentTime = Date.now() / 1000;
 
@@ -88,8 +100,10 @@ apiClient.interceptors.request.use(
           return Promise.reject('Authentication failed. Please login again.');
         }
       }
+    }
 
-      // Add token to headers
+    // Add token to headers if we have one
+    if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
