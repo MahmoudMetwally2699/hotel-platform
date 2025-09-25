@@ -34,6 +34,7 @@ import MoneyIcon from '@mui/icons-material/Money';
 import CommuteIcon from '@mui/icons-material/Commute';
 import TourIcon from '@mui/icons-material/Tour';
 import LocalLaundryServiceIcon from '@mui/icons-material/LocalLaundryService';
+import FeedbackIcon from '@mui/icons-material/Feedback';
 import CloseIcon from '@mui/icons-material/Close';
 import useAuth from '../../hooks/useAuth';
 
@@ -48,6 +49,7 @@ const getNavigationItems = (t) => ({
     { text: t('navigation.hotelAdmins'), icon: <PeopleIcon />, path: '/superadmin/hotel-admins' },
     { text: t('navigation.serviceProviders'), icon: <CategoryIcon />, path: '/superadmin/service-providers' },
     { text: t('navigation.users'), icon: <PersonIcon />, path: '/superadmin/users' },
+    { text: t('navigation.feedback'), icon: <FeedbackIcon />, path: '/superadmin/feedback' },
     { text: t('navigation.analytics'), icon: <BarChartIcon />, path: '/superadmin/analytics' },
     { text: t('navigation.settings'), icon: <SettingsIcon />, path: '/superadmin/settings' },
   ],
@@ -55,6 +57,7 @@ const getNavigationItems = (t) => ({
     { text: t('navigation.dashboard'), icon: <DashboardIcon />, path: '/hotel/dashboard' },
     { text: t('navigation.orders'), icon: <AssignmentIcon />, path: '/hotel/orders' },
     { text: t('navigation.serviceProviders'), icon: <CategoryIcon />, path: '/hotel/service-providers' },
+    { text: t('navigation.feedback'), icon: <FeedbackIcon />, path: '/hotel/feedback' },
     { text: t('navigation.revenue'), icon: <MoneyIcon />, path: '/hotel/revenue' },
     { text: t('navigation.settings'), icon: <SettingsIcon />, path: '/hotel/settings' },
   ],
@@ -62,6 +65,7 @@ const getNavigationItems = (t) => ({
     { text: t('navigation.dashboard'), icon: <DashboardIcon />, path: '/service/dashboard' },
     { text: t('navigation.services'), icon: <RoomServiceIcon />, path: '/service/services' },
     { text: t('navigation.orders'), icon: <AssignmentIcon />, path: '/service/orders' },
+    { text: t('navigation.feedback'), icon: <FeedbackIcon />, path: '/service/feedback' },
     { text: t('navigation.earnings'), icon: <PaymentIcon />, path: '/service/earnings' },
     { text: t('navigation.settings'), icon: <SettingsIcon />, path: '/service/settings' },
   ],
@@ -71,6 +75,7 @@ const getNavigationItems = (t) => ({
     { text: t('navigation.transportation'), icon: <CommuteIcon />, path: '/services/transportation' },
     { text: t('navigation.travelTourism'), icon: <TourIcon />, path: '/services/tourism' },
     { text: t('navigation.myBookings'), icon: <BookOnlineIcon />, path: '/bookings' },
+    { text: t('navigation.feedback'), icon: <FeedbackIcon />, path: '/feedback' },
     { text: t('navigation.profile'), icon: <PersonIcon />, path: '/profile' },
   ],
 });

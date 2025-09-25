@@ -347,7 +347,7 @@ const TransportationBookingPage = () => {
       await apiClient.post('/transportation-bookings/guest', bookingData);
 
       toast.success(t('transportationBooking.bookingRequestSuccess'));
-  navigate('/my-bookings?tab=waitingForQuote');
+  navigate('/my-transportation-bookings?tab=waitingForQuote');
 
     } catch (error) {
       console.error('Error creating booking:', error);

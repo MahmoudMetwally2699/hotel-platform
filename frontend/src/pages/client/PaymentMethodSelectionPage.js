@@ -135,23 +135,54 @@ const PaymentMethodSelectionPage = () => {
         if (response.data.success) {
           toast.success(t('payment.cashBookingSuccess', 'Booking confirmed! Payment will be collected at the hotel.'));
 
-          // Navigate to appropriate bookings list - get serviceType from searchParams
-          const urlServiceType = searchParams.get('serviceType');
-          switch (urlServiceType) {
-            case 'laundry':
-              navigate('/my-laundry-bookings');
-              break;
-            case 'transportation':
-              navigate('/my-bookings');
-              break;
-            case 'restaurant':
-              navigate('/my-restaurant-bookings');
-              break;
-            case 'housekeeping':
-              navigate('/my-housekeeping-bookings');
-              break;
-            default:
-              navigate('/my-bookings');
+          console.log('💰 Cash payment response:', {
+            fullResponse: response.data,
+            data: response.data.data,
+            booking: response.data.booking,
+            originalBookingId: bookingId
+          });
+
+          // Navigate to PaymentSuccess page to show feedback modal (backup to global interceptor)
+          const updatedBooking = response.data.data?.booking || response.data.data || response.data.booking;
+          const bookingReference = updatedBooking?.bookingNumber || updatedBooking?._id || updatedBooking?.id || bookingId;
+
+          console.log('💰 Extracted booking reference:', {
+            updatedBooking,
+            bookingReference,
+            bookingNumber: updatedBooking?.bookingNumber,
+            bookingId: updatedBooking?._id,
+            fallbackId: bookingId
+          });
+
+          // Check if global interceptor will handle redirect
+          if (!response.data.redirectUrl && !response.data.data?.redirectUrl) {
+            console.log('💰 No redirectUrl in response, using manual navigation as backup');
+
+            if (!bookingReference || bookingReference === 'undefined') {
+              console.error('🔴 Unable to get booking reference for redirect');
+              toast.error('Booking updated but unable to show confirmation. Please check your bookings.');
+              // Fall back to bookings list if we can't get the booking reference
+              const urlServiceType = searchParams.get('serviceType');
+              switch (urlServiceType) {
+                case 'laundry':
+                  navigate('/my-laundry-bookings');
+                  break;
+                case 'restaurant':
+                  navigate('/my-restaurant-bookings');
+                  break;
+                case 'transportation':
+                  navigate('/my-transportation-bookings');
+                  break;
+                default:
+                  navigate('/my-transportation-bookings');
+              }
+              return;
+            }
+
+            // Manual redirect as backup
+            navigate(`/guest/payment-success?booking=${bookingReference}&paymentMethod=cash&serviceType=${searchParams.get('serviceType') || 'regular'}`);
+          } else {
+            console.log('💰 Global interceptor should handle redirect, redirectUrl found:', response.data.redirectUrl || response.data.data?.redirectUrl);
           }
         }
       } else if (bookingData) {
@@ -162,6 +193,9 @@ const PaymentMethodSelectionPage = () => {
         switch (serviceType) {
           case 'laundry':
             response = await apiClient.post('/client/bookings/laundry', bookingPayload);
+            break;
+          case 'restaurant':
+            response = await apiClient.post('/client/bookings', bookingPayload);
             break;
           case 'transportation':
             response = await apiClient.post('/client/bookings/transportation', bookingPayload);
@@ -176,22 +210,51 @@ const PaymentMethodSelectionPage = () => {
 
           toast.success(t('payment.cashBookingCreated', 'Booking created successfully! Payment will be collected at the hotel.'));
 
-          // Navigate to the appropriate bookings list based on service type
-          switch (serviceType) {
-            case 'laundry':
-              navigate('/my-laundry-bookings');
-              break;
-            case 'transportation':
-              navigate('/my-bookings');
-              break;
-            case 'restaurant':
-              navigate('/my-restaurant-bookings');
-              break;
-            case 'housekeeping':
-              navigate('/my-housekeeping-bookings');
-              break;
-            default:
-              navigate('/my-bookings');
+          console.log('💰 New cash booking response:', {
+            fullResponse: response.data,
+            data: response.data.data,
+            booking: response.data.booking
+          });
+
+          // Navigate to PaymentSuccess page to show feedback modal (backup to global interceptor)
+          const newBooking = response.data.data?.booking || response.data.booking || response.data;
+          const bookingReference = newBooking?.bookingNumber || newBooking?._id || newBooking?.id;
+
+          console.log('💰 New booking reference:', {
+            newBooking,
+            bookingReference,
+            bookingNumber: newBooking?.bookingNumber,
+            bookingId: newBooking?._id
+          });
+
+          // Check if global interceptor will handle redirect
+          if (!response.data.redirectUrl && !response.data.data?.redirectUrl) {
+            console.log('💰 No redirectUrl in response, using manual navigation as backup');
+
+            if (!bookingReference || bookingReference === 'undefined') {
+              console.error('🔴 Unable to get booking reference for new booking redirect');
+              toast.error('Booking created but unable to show confirmation. Please check your bookings.');
+              // Fall back to bookings list if we can't get the booking reference
+              switch (serviceType) {
+                case 'laundry':
+                  navigate('/my-laundry-bookings');
+                  break;
+                case 'restaurant':
+                  navigate('/my-restaurant-bookings');
+                  break;
+                case 'transportation':
+                  navigate('/my-transportation-bookings');
+                  break;
+                default:
+                  navigate('/my-transportation-bookings');
+              }
+              return;
+            }
+
+            // Manual redirect as backup
+            navigate(`/guest/payment-success?booking=${bookingReference}&paymentMethod=cash&serviceType=${serviceType}`);
+          } else {
+            console.log('💰 Global interceptor should handle redirect, redirectUrl found:', response.data.redirectUrl || response.data.data?.redirectUrl);
           }
         }
       } else {

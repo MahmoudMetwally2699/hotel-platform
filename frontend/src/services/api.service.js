@@ -120,6 +120,24 @@ apiClient.interceptors.response.use(
   (response) => {
     // Reset 401 handling flag on successful responses
     is401HandlingInProgress = false;
+
+    // Handle cash payment redirects globally
+    if (response.data && response.data.redirectUrl && response.data.paymentMethod === 'cash') {
+      console.log('🎯 Cash payment redirect detected:', response.data.redirectUrl);
+
+      // Use setTimeout to prevent navigation during current response handling
+      setTimeout(() => {
+        window.location.href = response.data.redirectUrl;
+      }, 100);
+    } else if (response.data && response.data.data && response.data.data.redirectUrl && response.data.data.paymentMethod === 'cash') {
+      console.log('🎯 Cash payment redirect detected (nested):', response.data.data.redirectUrl);
+
+      // Use setTimeout to prevent navigation during current response handling
+      setTimeout(() => {
+        window.location.href = response.data.data.redirectUrl;
+      }, 100);
+    }
+
     return response;
   },
   (error) => {

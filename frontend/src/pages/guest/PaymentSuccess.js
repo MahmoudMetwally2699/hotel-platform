@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { FaCheckCircle, FaCar, FaCalendarAlt, FaMapMarkerAlt, FaMoneyBillWave, FaReceipt, FaHome, FaTshirt, FaUtensils } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { formatPriceByLanguage } from '../../utils/currency';
+import FeedbackModal from '../../components/guest/FeedbackModal';
 
 const PaymentSuccess = () => {
   const { t } = useTranslation();
@@ -17,6 +18,8 @@ const PaymentSuccess = () => {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   const bookingId = searchParams.get('booking') || searchParams.get('bookingRef') || searchParams.get('merchantOrderId');
 
@@ -25,21 +28,29 @@ const PaymentSuccess = () => {
       bookingId,
       allParams: Object.fromEntries(searchParams.entries()),
       paymentStatus: searchParams.get('paymentStatus'),
+      paymentMethod: searchParams.get('paymentMethod'),
+      serviceType: searchParams.get('serviceType'),
       transactionId: searchParams.get('transactionId')
     });
 
-    if (bookingId) {
+    if (bookingId && bookingId !== 'undefined' && bookingId !== 'null') {
       // Check if we have payment success parameters from Kashier
       const paymentStatus = searchParams.get('paymentStatus');
       const transactionId = searchParams.get('transactionId');
+      const paymentMethod = searchParams.get('paymentMethod');
 
       if (paymentStatus === 'SUCCESS' && transactionId) {
         // Update booking status first, then fetch details
         updateBookingStatusFromPayment();
+      } else if (paymentMethod === 'cash') {
+        // For cash payments, directly fetch booking details
+        console.log('🔵 Cash payment detected, fetching booking details directly');
+        fetchBookingDetails();
       } else {
         fetchBookingDetails();
       }
     } else {
+      console.error('🔴 PaymentSuccess: Invalid booking ID:', bookingId);
       setError(t('paymentSuccess.noBookingId'));
       setLoading(false);
     }
@@ -92,11 +103,29 @@ const PaymentSuccess = () => {
       let response;
       let bookingType = 'unknown';
 
+      // Check if bookingId looks like a booking number (not MongoDB ObjectId)
+      const isBookingNumber = bookingId && (
+        bookingId.startsWith('LN') ||  // Laundry booking number
+        bookingId.startsWith('BK') ||  // Regular booking number
+        bookingId.startsWith('TR') ||  // Transportation booking number
+        bookingId.startsWith('RS') ||  // Restaurant booking number
+        bookingId.length < 24 ||       // Too short for ObjectId
+        !bookingId.match(/^[0-9a-fA-F]{24}$/) // Not a valid ObjectId format
+      );
+
+      console.log('🔍 Booking ID analysis:', {
+        bookingId,
+        isBookingNumber,
+        length: bookingId?.length,
+        startsWithLN: bookingId?.startsWith('LN'),
+        startsWithBK: bookingId?.startsWith('BK')
+      });
+
       // Check if this looks like a temporary merchant order ID (TEMP_ prefix or long alphanumeric)
       const isTempId = bookingId.startsWith('TEMP_') || (bookingId.length > 24 && !bookingId.match(/^[0-9a-fA-F]{24}$/));
 
-      if (isTempId) {
-        // For temporary IDs, use the merchant order endpoint
+      if (isTempId || isBookingNumber) {
+        // For temporary IDs or booking numbers, use the merchant order endpoint
         try {
           response = await apiClient.get(`/client/bookings/by-merchant-order/${bookingId}`);
           if (response.data && response.data.success) {
@@ -105,15 +134,21 @@ const PaymentSuccess = () => {
             // Determine booking type from multiple indicators
             let detectedType = 'unknown';
 
-            // Check booking ID pattern first (most reliable)
-            if (bookingId.includes('TEMP_LAUNDRY_')) {
+            // Priority 1: Check URL serviceType parameter first (most reliable for cash payments)
+            const urlServiceType = searchParams.get('serviceType');
+            if (urlServiceType && ['laundry', 'transportation', 'restaurant', 'dining'].includes(urlServiceType)) {
+              detectedType = urlServiceType === 'dining' ? 'restaurant' : urlServiceType;
+              console.log('🎯 Using URL serviceType:', urlServiceType, '-> detectedType:', detectedType);
+            }
+            // Priority 2: Check booking ID pattern
+            else if (bookingId.includes('TEMP_LAUNDRY_')) {
               detectedType = 'laundry';
             } else if (bookingId.includes('TEMP_TRANSPORT_')) {
               detectedType = 'transportation';
             } else if (bookingId.includes('TEMP_RESTAURANT_')) {
               detectedType = 'restaurant';
             }
-            // Check data structure - look for laundry items in multiple locations
+            // Priority 3: Check data structure - look for laundry items in multiple locations
             else if ((bookingData.bookingConfig?.laundryItems && bookingData.bookingConfig.laundryItems.length > 0) ||
                      (bookingData.laundryItems && bookingData.laundryItems.length > 0)) {
               detectedType = 'laundry';
@@ -161,8 +196,8 @@ const PaymentSuccess = () => {
             setError(t('paymentSuccess.bookingProcessing'));
             return;
           }
-          console.log('Merchant order lookup failed:', err.message);
-          // For temp IDs, don't fall back to standard endpoints - they will fail
+          console.log('Merchant order/booking number lookup failed:', err.message);
+          // For temp IDs or booking numbers, don't fall back to standard endpoints - they will fail
           setError(t('paymentSuccess.unableRetrieve'));
           return;
         }
@@ -219,7 +254,7 @@ const PaymentSuccess = () => {
     } finally {
       setLoading(false);
     }
-  }, [bookingId, t]);
+  }, [bookingId, searchParams, t]);
 
   const handleViewBookings = () => {
     navigate('/guest/bookings');
@@ -228,6 +263,47 @@ const PaymentSuccess = () => {
   const handleGoHome = () => {
     navigate('/');
   };
+
+  const handleFeedbackSubmitted = (feedbackData) => {
+    setFeedbackSubmitted(true);
+    console.log('Feedback submitted:', feedbackData);
+  };
+
+  // Auto-show feedback modal after booking is loaded and payment is confirmed
+  useEffect(() => {
+    if (booking && !feedbackSubmitted && !showFeedbackModal) {
+      // Check if this is a cash payment from URL params
+      const paymentMethod = searchParams.get('paymentMethod');
+      const isCashPayment = paymentMethod === 'cash' || booking.payment?.paymentMethod === 'cash';
+
+      // Check if payment is completed/confirmed OR if it's a cash payment
+      const isPaymentCompleted =
+        ['completed', 'confirmed'].includes(booking.status) ||
+        ['paid', 'completed'].includes(booking.payment?.status) ||
+        isCashPayment; // Cash payments should always show feedback
+
+      console.log('🔍 Feedback Modal Check:', {
+        bookingId: booking._id || booking.bookingNumber,
+        bookingStatus: booking.status,
+        paymentStatus: booking.payment?.status,
+        paymentMethod: booking.payment?.paymentMethod,
+        urlPaymentMethod: paymentMethod,
+        isCashPayment,
+        isPaymentCompleted,
+        showFeedbackModal,
+        feedbackSubmitted
+      });
+
+      if (isPaymentCompleted) {
+        // Show feedback modal after a short delay for better UX
+        const timer = setTimeout(() => {
+          setShowFeedbackModal(true);
+        }, 2000);
+
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [booking, feedbackSubmitted, showFeedbackModal, searchParams]);
 
   if (loading) {
     return (
@@ -780,6 +856,14 @@ const PaymentSuccess = () => {
             {t('paymentSuccess.needHelp', { email: 'support@hotelplatform.com' })}
           </p>
         </div>
+
+        {/* Feedback Modal */}
+        <FeedbackModal
+          isOpen={showFeedbackModal}
+          onClose={() => setShowFeedbackModal(false)}
+          booking={booking}
+          onFeedbackSubmitted={handleFeedbackSubmitted}
+        />
       </div>
     </div>
   );

@@ -622,8 +622,9 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
 
     // Set different statuses based on payment method
     if (paymentMethod === 'cash') {
-      booking.payment.paymentStatus = 'pending';
-      booking.status = 'pending'; // Use valid status for cash payments
+      booking.payment.paymentStatus = 'paid'; // Cash payments are considered paid
+      booking.payment.status = 'completed'; // Payment completed at hotel
+      booking.status = 'confirmed'; // Booking is confirmed for cash payments
     } else {
       booking.payment.paymentStatus = 'pending';
       booking.status = 'pending'; // Normal flow for online payments
@@ -800,13 +801,22 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       ? 'Booking created successfully. Payment will be collected at the hotel. The service provider has been notified.'
       : 'Booking created successfully. Please proceed to payment. The service provider has been notified.';
 
+    // Determine redirect URL for cash payments to show feedback
+    let redirectUrl = null;
+    if (paymentMethod === 'cash') {
+      const bookingReference = booking.bookingNumber || booking._id;
+      const serviceTypeParam = booking.serviceType || service.category || 'regular';
+      redirectUrl = `/guest/payment-success?booking=${bookingReference}&paymentMethod=cash&serviceType=${serviceTypeParam}`;
+    }
+
     res.status(201).json({
       success: true,
       data: {
         ...booking.toObject(),
         message: successMessage,
         paymentMethod,
-        requiresPayment: paymentMethod === 'online'
+        requiresPayment: paymentMethod === 'online',
+        redirectUrl // Add redirect URL for cash payments
       }
     });
   } catch (error) {
@@ -833,9 +843,20 @@ router.get('/bookings', protect, restrictTo('guest'), async (req, res) => {
 
     // Add category filtering for laundry bookings
     if (category === 'laundry') {
-      // Find services with laundry category
+      // Find services with laundry category OR bookings with serviceType 'laundry'
       const laundryServices = await Service.find({ category: 'laundry' }).select('_id');
-      query.serviceId = { $in: laundryServices.map(s => s._id) };
+      const laundryServiceIds = laundryServices.map(s => s._id);
+
+      // Filter by both serviceId (regular bookings) AND serviceType (laundry bookings)
+      query.$or = [
+        { serviceId: { $in: laundryServiceIds } },
+        { serviceType: 'laundry' }
+      ];
+
+      console.log('🔍 Laundry category filter applied:', {
+        laundryServiceIds: laundryServiceIds.map(id => id.toString()),
+        queryWithOr: query
+      });
     } else if (category === 'transportation') {
       // Find services with transportation category
       const transportServices = await Service.find({ category: 'transportation' }).select('_id');
@@ -870,10 +891,11 @@ router.get('/bookings', protect, restrictTo('guest'), async (req, res) => {
     // If status filter is provided, apply it to housekeeping query too
     if (status) housekeepingByEmailQuery.status = status;
 
-    // console.log('🔍 Guest bookings - User ID:', req.user.id);
-    // console.log('🔍 Guest bookings - User email:', req.user.email);
-    // console.log('🔍 Guest bookings - Regular query:', regularBookingsQuery);
-    // console.log('🔍 Guest bookings - Housekeeping query:', housekeepingByEmailQuery);
+    console.log('🔍 Guest bookings - User ID:', req.user.id);
+    console.log('🔍 Guest bookings - User email:', req.user.email);
+    console.log('🔍 Guest bookings - Base query:', query);
+    console.log('🔍 Guest bookings - Regular query:', regularBookingsQuery);
+    console.log('🔍 Guest bookings - Housekeeping query:', housekeepingByEmailQuery);
 
     // Debug: Check all housekeeping bookings to see what emails they have
     const allHousekeepingBookings = await Booking.find({ serviceType: 'housekeeping' }).lean();
@@ -901,6 +923,14 @@ router.get('/bookings', protect, restrictTo('guest'), async (req, res) => {
     ]);
 
     console.log('🔍 Guest bookings - Regular bookings found:', regularBookings.length);
+    console.log('🔍 Guest bookings - Regular bookings details:', regularBookings.map(b => ({
+      id: b._id,
+      serviceType: b.serviceType,
+      serviceName: b.serviceId?.name,
+      serviceCategory: b.serviceId?.category,
+      status: b.status,
+      createdAt: b.createdAt
+    })));
     console.log('🔍 Guest bookings - Housekeeping bookings found:', housekeepingBookings.length);
     console.log('🔍 Guest bookings - Housekeeping bookings details:', housekeepingBookings.map(b => ({
       id: b._id,
@@ -983,6 +1013,8 @@ router.get('/bookings/by-merchant-order/:merchantOrderId', async (req, res) => {
   try {
     const { merchantOrderId } = req.params;
 
+    console.log('🔍 Looking for booking by merchant order ID:', merchantOrderId);
+
     let booking = null;
 
     // First try to find in regular bookings by bookingNumber (for laundry)
@@ -991,12 +1023,16 @@ router.get('/bookings/by-merchant-order/:merchantOrderId', async (req, res) => {
       .populate('hotelId', 'name address contactPhone contactEmail')
       .populate('serviceProviderId', 'businessName contactPhone contactEmail');
 
+    console.log('🔍 Found booking by bookingNumber:', !!booking, booking?.bookingNumber);
+
     // If not found by bookingNumber, try to find by payment.kashier.sessionId for temp laundry bookings
     if (!booking) {
       booking = await Booking.findOne({ 'payment.kashier.sessionId': merchantOrderId })
         .populate('serviceId', 'name description category images')
         .populate('hotelId', 'name address contactPhone contactEmail')
         .populate('serviceProviderId', 'businessName contactPhone contactEmail');
+
+      console.log('🔍 Found booking by sessionId:', !!booking, booking?.bookingNumber);
     }
 
     if (!booking) {
@@ -1777,14 +1813,14 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
         hotelEarnings: hotelEarnings
       },
 
-      status: 'pending', // Use valid status value instead of 'pending_payment'
+      status: paymentMethod === 'cash' ? 'confirmed' : 'pending', // Cash bookings are confirmed immediately
 
       // Payment information with method selection
       payment: {
         paymentMethod,
         method: paymentMethod === 'online' ? 'credit-card' : 'cash',
-        status: 'pending',
-        paymentStatus: 'pending'
+        status: paymentMethod === 'cash' ? 'completed' : 'pending',
+        paymentStatus: paymentMethod === 'cash' ? 'paid' : 'pending'
       }
     });
 
@@ -2168,16 +2204,16 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
       providerEarnings,
       hotelEarnings,
       markupPercentage: markup,
-      paymentStatus: 'pending',
-      status: 'pending', // Use valid status value
+      paymentStatus: paymentMethod === 'cash' ? 'paid' : 'pending',
+      status: paymentMethod === 'cash' ? 'confirmed' : 'pending', // Cash bookings are confirmed immediately
       notes: guestDetails.specialRequests || '',
 
       // Payment information with method selection
       payment: {
         paymentMethod,
         method: paymentMethod === 'online' ? 'credit-card' : 'cash',
-        status: 'pending',
-        paymentStatus: 'pending'
+        status: paymentMethod === 'cash' ? 'completed' : 'pending',
+        paymentStatus: paymentMethod === 'cash' ? 'paid' : 'pending'
       }
     });
 
@@ -2994,5 +3030,9 @@ router.put('/bookings/:id/payment-method', protect, restrictTo('guest'), async (
     });
   }
 });
+
+// Import and use feedback routes
+const feedbackRoutes = require('./feedback');
+router.use('/', feedbackRoutes);
 
 module.exports = router;

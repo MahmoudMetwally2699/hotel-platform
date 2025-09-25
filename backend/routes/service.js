@@ -2470,8 +2470,13 @@ router.get('/inside-services', catchAsync(async (req, res) => {
 
   // Initialize insideServices if it doesn't exist or filter existing ones
   if (!provider.insideServices || provider.insideServices.length === 0) {
+    // Use findByIdAndUpdate to avoid triggering full validation
+    await ServiceProvider.findByIdAndUpdate(
+      providerId,
+      { insideServices: filteredServices },
+      { new: false, runValidators: false }
+    );
     provider.insideServices = filteredServices;
-    await provider.save();
   } else {
     // Filter existing services based on admin permissions and update with filtered services
     const allowedServiceIds = filteredServices.map(s => s.id);
@@ -2481,13 +2486,20 @@ router.get('/inside-services', catchAsync(async (req, res) => {
     const existingServiceIds = existingAllowedServices.map(s => s.id);
     const missingServices = filteredServices.filter(s => !existingServiceIds.includes(s.id));
 
+    let updatedInsideServices;
     if (missingServices.length > 0) {
-      provider.insideServices = [...existingAllowedServices, ...missingServices];
-      await provider.save();
+      updatedInsideServices = [...existingAllowedServices, ...missingServices];
     } else {
-      provider.insideServices = existingAllowedServices;
-      await provider.save();
+      updatedInsideServices = existingAllowedServices;
     }
+
+    // Use findByIdAndUpdate to avoid triggering full validation
+    await ServiceProvider.findByIdAndUpdate(
+      providerId,
+      { insideServices: updatedInsideServices },
+      { new: false, runValidators: false }
+    );
+    provider.insideServices = updatedInsideServices;
   }
 
   res.status(200).json({
@@ -2989,5 +3001,9 @@ router.put('/housekeeping-bookings/:bookingId/status', catchAsync(async (req, re
     message: `Booking status updated to ${status}`
   });
 }));
+
+// Import and use feedback routes for service providers
+const feedbackRoutes = require('./feedback');
+router.use('/', feedbackRoutes);
 
 module.exports = router;

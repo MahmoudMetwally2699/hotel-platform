@@ -8,6 +8,20 @@ import { CLIENT_API, HOTEL_ADMIN_API } from '../config/api.config';
 
 class BookingService {
   /**
+   * Create a new booking
+   * @param {Object} bookingData - Booking data
+   * @returns {Promise} - Response from API
+   */
+  async createBooking(bookingData) {
+    try {
+      const response = await apiClient.post(CLIENT_API.BOOKINGS, bookingData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Get user's bookings
    * @returns {Promise} - Response from API
    */
@@ -19,6 +33,7 @@ class BookingService {
       throw error;
     }
   }
+
   /**
    * Get hotel's bookings (for authenticated hotel admin)
    * @returns {Promise} - Response from API
@@ -75,20 +90,6 @@ class BookingService {
   }
 
   /**
-   * Create a new booking
-   * @param {Object} bookingData - Booking data including hotelId, serviceId, etc.
-   * @returns {Promise} - Response from API
-   */
-  async createBooking(bookingData) {
-    try {
-      const response = await apiClient.post(CLIENT_API.BOOKINGS, bookingData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
    * Update booking status
    * @param {string} bookingId - Booking ID
    * @param {string} status - New status (confirmed, completed, cancelled, etc.)
@@ -129,7 +130,8 @@ class BookingService {
       return response.data;
     } catch (error) {
       throw error;
-    }  }
+    }
+  }
 }
 
 const bookingService = new BookingService();

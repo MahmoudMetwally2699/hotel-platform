@@ -26,6 +26,10 @@ import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { FaStar, FaTimes } from 'react-icons/fa';
+
+// Remove the problematic import for now
+// import FeedbackModal from './FeedbackModal';
 
 const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const { currentUser, isAuthenticated } = useAuth();
@@ -36,6 +40,11 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const [selectedService, setSelectedService] = useState(null);
   const [bookingStep, setBookingStep] = useState('select'); // 'select', 'details', 'confirmation'
   const [submitting, setSubmitting] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [completedBooking, setCompletedBooking] = useState(null);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const [bookingDetails, setBookingDetails] = useState({
     guestName: '',
@@ -264,32 +273,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     });
   };
 
-  const serviceCategories = [
-    {
-      value: 'amenities',
-      label: t('housekeeping.categories.amenities', 'Amenities'),
-      icon: FaMapMarkerAlt,
-      color: 'gray',
-      image: '/amenities.jpg',
-      description: t('housekeeping.descriptions.amenities', 'Fresh towels and supplies')
-    },
-    {
-      value: 'cleaning',
-      label: t('housekeeping.categories.cleaning', 'Room Cleaning'),
-      icon: FaBroom,
-      color: 'blue',
-      image: '/roomcleaning.jpg',
-      description: t('housekeeping.descriptions.cleaning', 'Professional room cleaning')
-    },
-    {
-      value: 'maintenance',
-      label: t('housekeeping.categories.maintenance', 'Maintenance'),
-      icon: FaCheck,
-      color: 'amber',
-      image: '/maintaince.jpg',
-      description: 'Repairs and technical support'
-    }
-  ];
+  // Service categories are now dynamically loaded from the API
 
   // Specific categories for each service type (for dropdown selection)
   const getSpecificCategories = (serviceCategory) => {
@@ -355,8 +339,25 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   }, [fetchAvailableServices]);
 
   const getCategoryInfo = (category) => {
-    const categoryInfo = serviceCategories.find(cat => cat.value === category);
-    return categoryInfo || { label: category, icon: FaBroom, color: 'blue' };
+    // Since we no longer have hardcoded categories, return a default info
+    const defaultInfo = { label: category, icon: FaBroom, color: 'blue' };
+
+    // Try to find the service in our services array to get better info
+    const service = services.find(s => s.subcategory === category || s.category === category);
+    if (service) {
+      let icon = FaBroom;
+      if (category === 'maintenance') icon = FaWrench;
+      if (category === 'cleaning') icon = FaBroom;
+      if (category === 'amenities') icon = FaMapMarkerAlt;
+
+      return {
+        label: service.name || category,
+        icon: icon,
+        color: 'blue'
+      };
+    }
+
+    return defaultInfo;
   };
 
   const handleServiceSelect = (service) => {
@@ -408,16 +409,92 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
         estimatedDuration: selectedService.estimatedDuration
       };
 
-      await apiClient.post('/client/bookings/housekeeping', bookingData);
+      const response = await apiClient.post('/client/bookings/housekeeping', bookingData);
+
+      // Store the completed booking for feedback modal - use the response data
+      if (response.data?.success && response.data?.data) {
+        setCompletedBooking({
+          _id: response.data.data.bookingId, // Use bookingId from response
+          ...response.data.data,
+          serviceType: 'housekeeping'
+        });
+      } else {
+        // Fallback for demo
+        setCompletedBooking({
+          _id: 'demo-booking-' + Date.now(),
+          ...bookingData,
+          bookingNumber: 'HK' + Date.now()
+        });
+      }
+
       setBookingStep('confirmation');
       toast.success('Housekeeping service booked successfully!');
+
+      // Show feedback modal after a brief delay
+      setTimeout(() => {
+        setShowFeedbackModal(true);
+      }, 1500);
+
     } catch (error) {
       console.error('Error booking service:', error);
-      // Simulate success for demo
+      // Simulate success for demo - you can remove this later
+      const demoBooking = {
+        _id: 'demo-booking-' + Date.now(),
+        serviceId: selectedService.id,
+        serviceName: selectedService.name,
+        serviceCategory: selectedService.category,
+        hotelId,
+        roomNumber: currentUserFromRedux?.roomNumber || currentUser?.roomNumber || bookingDetails.roomNumber,
+        serviceType: 'housekeeping',
+        bookingNumber: 'HK' + Date.now()
+      };
+      setCompletedBooking(demoBooking);
+
       setBookingStep('confirmation');
       toast.success('Housekeeping service booked successfully!');
+
+      // Show feedback modal after a brief delay
+      setTimeout(() => {
+        setShowFeedbackModal(true);
+      }, 1500);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleFeedbackSubmitted = async () => {
+    if (feedbackRating === 0) {
+      toast.error('Please select a rating');
+      return;
+    }
+
+    setSubmittingFeedback(true);
+    try {
+      const feedbackData = {
+        bookingId: completedBooking._id || completedBooking.id,
+        rating: feedbackRating,
+        comment: feedbackComment.trim(),
+        serviceType: 'housekeeping'
+      };
+
+      console.log('💬 Submitting feedback:', feedbackData);
+
+      const response = await apiClient.post('/client/feedback', feedbackData);
+
+      if (response.data.success) {
+        toast.success('Thank you for your feedback!');
+        setShowFeedbackModal(false);
+        // Reset feedback form
+        setFeedbackRating(0);
+        setFeedbackComment('');
+      } else {
+        toast.error(response.data.message || 'Failed to submit feedback');
+      }
+    } catch (error) {
+      console.error('Feedback submission error:', error);
+      toast.error('Failed to submit feedback. Please try again.');
+    } finally {
+      setSubmittingFeedback(false);
     }
   };
 
@@ -537,68 +614,90 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
           <div className="bg-white rounded-2xl shadow-sm p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">{t('housekeeping.guestServices', 'Guest services')}</h2>
 
-            {/* Service Categories Layout */}
-            <div className="max-w-sm mx-auto space-y-4">
-              {/* Top Row - Two Items */}
-              <div className="grid grid-cols-2 gap-4">
-                {serviceCategories.slice(0, 2).map(category => {
-                  return (
-                    <button
-                      key={category.value}
-                      onClick={() => {
-                        const service = { category: category.value, name: category.label };
-                        handleServiceSelect(service);
-                      }}
-                      className="group bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-all w-full"
-                    >
-                      <div className="aspect-square rounded-xl overflow-hidden mb-3 w-full">
-                        <img
-                          src={category.image}
-                          alt={category.label}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <h3 className="font-medium text-gray-900 text-sm text-center">{category.label}</h3>
-                    </button>
-                  );
-                }).filter(Boolean)}
+            {/* Check if we have any services */}
+            {services.length === 0 ? (
+              <div className="text-center py-12">
+                <FaBroom className="text-6xl text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">{t('housekeeping.noServices', 'No Services Available')}</h3>
+                <p className="text-gray-500">{t('housekeeping.noServicesDescription', 'Housekeeping services are currently not available.')}</p>
               </div>
+            ) : (
+              /* Service Categories Layout - Dynamic from API */
+              <div className="max-w-sm mx-auto space-y-4">
+                {/* Dynamic Services from API */}
+                <div className="grid grid-cols-1 gap-4">
+                  {services.map((service, index) => {
+                    // Get image based on service subcategory or default
+                    const getServiceImage = (service) => {
+                      const subcategory = service.subcategory?.toLowerCase();
+                      if (subcategory === 'maintenance') return '/maintaince.jpg';
+                      if (subcategory === 'cleaning') return '/roomcleaning.jpg';
+                      if (subcategory === 'amenities') return '/amenities.jpg';
+                      return '/housekeeping-header.jpg'; // Default image
+                    };
 
-              {/* Bottom Row - Centered Single Item */}
-              {serviceCategories.slice(2).map(category => {
-                return (
-                  <div key={category.value} className="flex justify-center">
-                    <button
-                      onClick={() => {
-                        const service = { category: category.value, name: category.label };
-                        handleServiceSelect(service);
-                      }}
-                      className="group bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-all w-40"
-                    >
-                      <div className="aspect-square rounded-xl overflow-hidden mb-3 w-full">
-                        <img
-                          src={category.image}
-                          alt={category.label}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <h3 className="font-medium text-gray-900 text-sm text-center">{category.label}</h3>
-                    </button>
-                  </div>
-                );
-              }).filter(Boolean)}
-            </div>
+                    // Get appropriate icon based on service subcategory
+                    const getServiceIcon = (service) => {
+                      const subcategory = service.subcategory?.toLowerCase();
+                      if (subcategory === 'maintenance') return FaWrench;
+                      if (subcategory === 'cleaning') return FaBroom;
+                      if (subcategory === 'amenities') return FaMapMarkerAlt;
+                      return FaBroom; // Default icon
+                    };
+
+                    const ServiceIcon = getServiceIcon(service);
+
+                    return (
+                      <button
+                        key={service._id || index}
+                        onClick={() => handleServiceSelect({
+                          id: service._id,
+                          name: service.name,
+                          category: service.subcategory || service.category,
+                          description: service.description,
+                          estimatedDuration: service.estimatedDuration || 30
+                        })}
+                        className="group bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-all w-full"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className="flex-shrink-0">
+                            <div className="w-16 h-16 rounded-xl overflow-hidden">
+                              <img
+                                src={getServiceImage(service)}
+                                alt={service.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0 text-left">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <ServiceIcon className="text-[#3B5787] text-sm flex-shrink-0" />
+                              <h3 className="font-medium text-gray-900 text-sm truncate capitalize">
+                                {service.subcategory || service.category || 'Service'}
+                              </h3>
+                            </div>
+                            {service.description && (
+                              <p className="text-xs text-gray-500 line-clamp-2">{service.description}</p>
+                            )}
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-xs text-gray-600 font-medium truncate">
+                                {service.name}
+                              </span>
+                              <div className="flex items-center space-x-1">
+                                <span className="text-xs text-green-600 font-medium">Available</span>
+                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* No Services Message */}
-        {services.length === 0 && (
-          <div className="text-center py-12">
-            <FaBroom className="text-6xl text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">{t('housekeeping.noServices', 'No Services Available')}</h3>
-            <p className="text-gray-500">{t('housekeeping.noServicesDescription', 'Housekeeping services are currently not available.')}</p>
-          </div>
-        )}
       </div>
     );
   }
@@ -880,20 +979,21 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   // Confirmation Step
   if (bookingStep === 'confirmation') {
     return (
-      <div className="max-w-2xl mx-auto p-6">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FaCheck className="text-3xl text-green-600" />
-          </div>
+      <>
+        <div className="max-w-2xl mx-auto p-6">
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FaCheck className="text-3xl text-green-600" />
+            </div>
 
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">{t('housekeeping.bookingConfirmed', 'Booking Confirmed!')}</h1>
+            <h1 className="text-2xl font-bold text-gray-800 mb-4">{t('housekeeping.bookingConfirmed', 'Booking Confirmed!')}</h1>
 
-          <p className="text-gray-600 mb-6">
-            {t('housekeeping.confirmationMessage', 'Your housekeeping service request has been submitted successfully. Our housekeeping team will contact you shortly to confirm the timing.')}
-          </p>
+            <p className="text-gray-600 mb-6">
+              {t('housekeeping.confirmationMessage', 'Your housekeeping service request has been submitted successfully. Our housekeeping team will contact you shortly to confirm the timing.')}
+            </p>
 
-          <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-            <h3 className="font-semibold text-gray-800 mb-3">Booking Details:</h3>
+            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+              <h3 className="font-semibold text-gray-800 mb-3">Booking Details:</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Service:</span>
@@ -934,10 +1034,127 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
               {t('common.back', 'Back to Services')}
             </button>
           </div>
+          </div>
         </div>
-      </div>
+
+        {/* Simple Inline Feedback Modal */}
+        {showFeedbackModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full mx-4 overflow-hidden shadow-2xl relative">
+              {/* Header */}
+              <div
+                className="h-20 relative flex items-center justify-center"
+                style={{ background: `linear-gradient(135deg, #67BAE0 0%, #3B5787 100%)` }}
+              >
+                <h2 className="text-xl font-semibold text-white">Share your feedback</h2>
+                <button
+                  onClick={() => setShowFeedbackModal(false)}
+                  className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
+                >
+                  <FaTimes size={16} />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="text-center mb-6">
+                  <div
+                    className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                    style={{ backgroundColor: '#67BAE0' }}
+                  >
+                    <FaStar className="text-white text-2xl" />
+                  </div>
+                </div>
+
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  handleFeedbackSubmitted();
+                }} className="space-y-6">
+                  {/* Star Rating */}
+                  <div className="text-center">
+                    <div className="flex justify-center gap-2 mb-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setFeedbackRating(star)}
+                          className="transition-all duration-200 hover:scale-110 focus:outline-none"
+                        >
+                          <FaStar
+                            size={32}
+                            className={`transition-colors duration-200 ${
+                              star <= feedbackRating
+                                ? 'text-yellow-400'
+                                : 'text-gray-300 hover:text-yellow-400'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {feedbackRating === 0 && 'Please select a rating'}
+                      {feedbackRating === 1 && 'Poor'}
+                      {feedbackRating === 2 && 'Fair'}
+                      {feedbackRating === 3 && 'Good'}
+                      {feedbackRating === 4 && 'Very Good'}
+                      {feedbackRating === 5 && 'Excellent'}
+                    </p>
+                  </div>
+
+                  {/* Comment Section */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#3B5787' }}>
+                      Any suggestions for improvement? (optional)
+                    </label>
+                    <textarea
+                      value={feedbackComment}
+                      onChange={(e) => setFeedbackComment(e.target.value)}
+                      placeholder="Your feedback"
+                      rows={4}
+                      maxLength={1000}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                      style={{ focusRingColor: '#67BAE0' }}
+                      disabled={submittingFeedback}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      {feedbackComment.length}/1000 characters
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowFeedbackModal(false)}
+                      className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all duration-200"
+                      disabled={submittingFeedback}
+                    >
+                      Skip
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={feedbackRating === 0 || submittingFeedback}
+                      className="flex-1 py-3 px-4 rounded-lg text-white font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        background: feedbackRating === 0 ? '#9CA3AF' : 'linear-gradient(135deg, #67BAE0 0%, #3B5787 100%)'
+                      }}
+                    >
+                      {submittingFeedback ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Submitting...
+                        </div>
+                      ) : (
+                        'Send Feedback'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
-};
-
-export default GuestHousekeepingBooking;
+};export default GuestHousekeepingBooking;

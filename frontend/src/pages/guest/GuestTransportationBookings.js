@@ -46,7 +46,7 @@ const GuestTransportationBookings = () => {
       const tabMapping = {
         'waitingForQuote': 'pending_quote',
         'readyForPayment': 'payment_pending',
-        'confirmed': 'payment_completed'
+        'completed': 'completed'
       };
       const mappedTab = tabMapping[tabParam] || 'payment_pending';
       setSelectedTab(mappedTab);
@@ -56,7 +56,7 @@ const GuestTransportationBookings = () => {
   const tabs = [
     { id: 'pending_quote', label: t('transportation.labels.waitingForQuote'), icon: FaClock },
     { id: 'payment_pending', label: t('transportation.labels.readyForPayment'), icon: FaMoneyBillWave },
-    { id: 'payment_completed', label: t('transportation.labels.confirmed'), icon: FaCheck }
+    { id: 'completed', label: t('transportation.labels.completed'), icon: FaCheck }
   ];
 
   useEffect(() => {
@@ -106,7 +106,7 @@ const GuestTransportationBookings = () => {
   const handlePayNow = async (booking) => {
     console.log('🔵 handlePayNow called with booking:', booking);
 
-    // For both pending_quote and payment_pending status, redirect to payment method selection first
+    // For payment_pending status, redirect to payment method selection to complete payment
     const amount = booking.quote?.finalPrice || booking.totalAmount || 0;
     const currency = booking.pricing?.currency || 'EGP';
 
@@ -240,8 +240,8 @@ const GuestTransportationBookings = () => {
           <span>Details</span>
         </button>
 
-        {/* Show Pay Now button for payment_pending and pending_quote status */}
-        {(booking.bookingStatus === 'payment_pending' || booking.bookingStatus === 'pending_quote') && (
+        {/* Show Pay Now button only for payment_pending status (quote ready for payment) */}
+        {booking.bookingStatus === 'payment_pending' && (
           <button
             onClick={() => handlePayNow(booking)}
             className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-md font-semibold text-xs shadow-md hover:shadow-lg transition-all duration-200"
@@ -290,7 +290,7 @@ const GuestTransportationBookings = () => {
                       'payment_completed': 'confirmed'
                     };
                     const urlTab = urlMapping[tab.id] || 'readyForPayment';
-                    navigate(`/my-bookings?tab=${urlTab}`, { replace: true });
+                    navigate(`/my-transportation-bookings?tab=${urlTab}`, { replace: true });
                   }}
                   className={`flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
                     selectedTab === tab.id

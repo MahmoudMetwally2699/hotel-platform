@@ -90,7 +90,8 @@
     "transportationBookings": "Transportation",
     "laundryBookings": "Laundry",
     "restaurantBookings": "Restaurant Orders",
-    "housekeepingBookings": "Housekeeping"
+    "housekeepingBookings": "Housekeeping",
+    "feedback": "Feedback"
   },"auth": {
     "signIn": "Sign In",
     "signUp": "Sign Up",
@@ -2485,5 +2486,22 @@
         "networkError": "Network error occurred"
       }
     }
+  },
+  "feedback": {
+    "title": "Share your feedback",
+    "ratingRequired": "Please provide a rating",
+    "commentLabel": "Any suggestions for further improvement? (optional)",
+    "commentPlaceholder": "Your feedback",
+    "privacyNote": "Don't include personal or customer data in this feedback.",
+    "charactersRemaining": "characters",
+    "skip": "Skip",
+    "submit": "Send Feedback",
+    "submitting": "Submitting...",
+    "submitError": "Failed to submit feedback. Please try again.",
+    "rating1": "Poor",
+    "rating2": "Fair",
+    "rating3": "Good",
+    "rating4": "Very Good",
+    "rating5": "Excellent"
   }
 }

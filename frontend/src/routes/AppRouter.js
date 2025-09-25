@@ -92,6 +92,12 @@ const CategorySelectionDashboard = lazy(() => import('../components/service/Cate
 const ServiceProviderAnalytics = lazy(() => import('../components/service/ServiceProviderAnalytics'));
 const ServiceProviderServicesPage = lazy(() => import('../pages/service/ServicesPage'));
 
+// Feedback Pages
+const ServiceProviderFeedbackView = lazy(() => import('../components/service/FeedbackView'));
+const HotelFeedbackView = lazy(() => import('../components/hotel/FeedbackView'));
+const SuperAdminFeedbackView = lazy(() => import('../components/superadmin/FeedbackView'));
+const GuestFeedbackView = lazy(() => import('../components/guest/FeedbackView'));
+
 // Error Pages
 const NotFoundPage = lazy(() => import('../pages/errors/NotFoundPage'));
 const ForbiddenPage = lazy(() => import('../pages/errors/ForbiddenPage'));
@@ -125,7 +131,7 @@ const AppRouter = () => {
 
         {/* Protected Client/Guest Routes */}
         <Route
-          path="/my-bookings"
+          path="/my-transportation-bookings"
           element={
             <ProtectedRoute allowedRoles="guest">
               <TailwindLayout>
@@ -194,6 +200,16 @@ const AppRouter = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/feedback"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <GuestFeedbackView />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
 
         {/* Super Admin Routes */}
         <Route
@@ -245,6 +261,16 @@ const AppRouter = () => {
             <ProtectedRoute allowedRoles="superadmin">
               <TailwindLayout>
                 <SuperAdminAnalyticsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/superadmin/feedback"
+          element={
+            <ProtectedRoute allowedRoles="superadmin">
+              <TailwindLayout>
+                <SuperAdminFeedbackView />
               </TailwindLayout>
             </ProtectedRoute>
           }
@@ -319,6 +345,16 @@ const AppRouter = () => {
             <ProtectedRoute allowedRoles="hotel">
               <TailwindLayout>
                 <HotelAdminRevenuePage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel/feedback"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelFeedbackView />
               </TailwindLayout>
             </ProtectedRoute>
           }
@@ -496,6 +532,16 @@ const AppRouter = () => {
             <ProtectedRoute allowedRoles="service">
               <TailwindLayout>
                 <ServiceProviderEarningsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/service/feedback"
+          element={
+            <ProtectedRoute allowedRoles="service">
+              <TailwindLayout>
+                <ServiceProviderFeedbackView />
               </TailwindLayout>
             </ProtectedRoute>
           }

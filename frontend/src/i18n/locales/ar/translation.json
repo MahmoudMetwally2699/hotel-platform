@@ -88,7 +88,8 @@
     "transportationBookings": "النقل",
     "laundryBookings": "الغسيل",
     "restaurantBookings": "طلبات المطعم",
-    "housekeepingBookings": "التنظيف"
+    "housekeepingBookings": "التنظيف",
+    "feedback": "الملاحظات"
   },"auth": {
     "signIn": "تسجيل الدخول",
     "signUp": "إنشاء حساب",
@@ -2540,5 +2541,22 @@
         "networkError": "حدث خطأ في الشبكة"
       }
     }
+  },
+  "feedback": {
+    "title": "شارك رأيك",
+    "ratingRequired": "يرجى تقديم تقييم",
+    "commentLabel": "أي اقتراحات للتحسين؟ (اختياري)",
+    "commentPlaceholder": "رأيك",
+    "privacyNote": "لا تضمن بيانات شخصية أو معلومات العملاء في هذا التقييم.",
+    "charactersRemaining": "حرف",
+    "skip": "تخطي",
+    "submit": "إرسال التقييم",
+    "submitting": "جاري الإرسال...",
+    "submitError": "فشل في إرسال التقييم. يرجى المحاولة مرة أخرى.",
+    "rating1": "ضعيف",
+    "rating2": "مقبول",
+    "rating3": "جيد",
+    "rating4": "جيد جداً",
+    "rating5": "ممتاز"
   }
 }

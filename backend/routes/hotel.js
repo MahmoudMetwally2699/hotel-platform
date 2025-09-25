@@ -1317,21 +1317,28 @@ router.put('/service-providers/:id/categories', restrictProviderToHotelAdmin, ca
     });
   }
 
-  // Update service provider
-  serviceProvider.categories = validSelectedCategories;
-  serviceProvider.serviceTemplates = updatedServiceTemplates;
-  await serviceProvider.save();
+  // Update service provider using findOneAndUpdate to avoid validation on unchanged fields
+  const updatedServiceProvider = await ServiceProvider.findOneAndUpdate(
+    { _id: providerId, hotelId },
+    {
+      $set: {
+        categories: validSelectedCategories,
+        serviceTemplates: updatedServiceTemplates
+      }
+    },
+    { new: true, runValidators: true }
+  );
 
-  logger.info(`Service provider categories updated: ${serviceProvider.businessName}`, {
+  logger.info(`Service provider categories updated: ${updatedServiceProvider.businessName}`, {
     hotelId,
-    serviceProviderId: serviceProvider._id,
+    serviceProviderId: updatedServiceProvider._id,
     selectedCategories: validSelectedCategories
   });
 
   res.status(200).json({
     status: 'success',
     data: {
-      serviceProvider,
+      serviceProvider: updatedServiceProvider,
       selectedCategories: validSelectedCategories
     }
   });
@@ -3077,5 +3084,9 @@ router.put('/bookings/:id/payment-status', catchAsync(async (req, res, next) => 
     }
   });
 }));
+
+// Import and use feedback routes for hotel
+const feedbackRoutes = require('./feedback');
+router.use('/', feedbackRoutes);
 
 module.exports = router;

@@ -80,6 +80,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           { name: t('navigation.hotels'), path: '/superadmin/hotels', icon: 'building' },
           { name: t('navigation.hotelAdmins'), path: '/superadmin/hotel-admins', icon: 'users' },
           { name: t('navigation.superHotels'), path: '/superadmin/super-hotels', icon: 'star' },
+          { name: t('navigation.feedback'), path: '/superadmin/feedback', icon: 'feedback' },
           { name: t('navigation.platformAnalytics'), path: '/superadmin/analytics', icon: 'chart-bar' },
           { name: t('navigation.platformMetrics'), path: '/superadmin/platform-metrics', icon: 'presentation-chart-line' },
           { name: t('navigation.settings'), path: '/superadmin/settings', icon: 'cog' }
@@ -90,6 +91,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           { name: t('navigation.orders'), path: '/hotel/orders', icon: 'shopping-bag' },
           { name: t('navigation.guests'), path: '/hotel/guests', icon: 'users' },
           { name: t('navigation.serviceProviders'), path: '/hotel/service-providers', icon: 'briefcase' },
+          { name: t('navigation.feedback'), path: '/hotel/feedback', icon: 'feedback' },
           { name: t('navigation.revenue'), path: '/hotel/revenue', icon: 'cash' },
           { name: t('navigation.qrCodes'), path: '/hotel/qr-codes', icon: 'qr-code' },
           { name: t('navigation.settings'), path: '/hotel/settings', icon: 'cog' }
@@ -167,6 +169,9 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           });
         }
 
+        // Add feedback
+        serviceNavItems.push({ name: t('navigation.feedback'), path: '/service/feedback', icon: 'feedback' });
+
         // Add earnings
         serviceNavItems.push({ name: t('navigation.earnings'), path: '/service/earnings', icon: 'cash' });
 
@@ -178,12 +183,13 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
             name: t('navigation.myBookings'),
             icon: 'clipboard-list',
             submenu: [
-              { name: t('navigation.transportationBookings'), path: '/my-bookings', icon: 'truck' },
+              { name: t('navigation.transportationBookings'), path: '/my-transportation-bookings', icon: 'truck' },
               { name: t('navigation.laundryBookings'), path: '/my-laundry-bookings', icon: 'sparkles' },
               { name: t('navigation.restaurantBookings'), path: '/my-restaurant-bookings', icon: 'utensils' },
               { name: t('navigation.housekeepingBookings'), path: '/my-housekeeping-bookings', icon: 'broom' }
             ]
           },
+          { name: t('navigation.feedback'), path: '/feedback', icon: 'feedback' },
           { name: t('navigation.profile'), path: '/profile', icon: 'user' }
         ];
       default:
@@ -343,6 +349,18 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         return (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        );
+      case 'feedback':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+        );
+      case 'star':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
           </svg>
         );
       default:

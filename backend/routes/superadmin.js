@@ -1028,4 +1028,8 @@ router.get('/superhotels/stats', catchAsync(async (req, res) => {
   });
 }));
 
+// Import and use feedback routes for superadmin
+const feedbackRoutes = require('./feedback');
+router.use('/', feedbackRoutes);
+
 module.exports = router;
