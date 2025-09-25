@@ -3002,8 +3002,65 @@ router.put('/housekeeping-bookings/:bookingId/status', catchAsync(async (req, re
   });
 }));
 
-// Import and use feedback routes for service providers
-const feedbackRoutes = require('./feedback');
-router.use('/', feedbackRoutes);
+/**
+ * @route   GET /api/service/service-feedback
+ * @desc    Get service provider feedback
+ * @access  Private/ServiceProvider
+ */
+router.get('/service-feedback', catchAsync(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const skip = (page - 1) * limit;
+  const { rating, status = 'active', sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+
+  // Get service provider ID from middleware
+  const providerId = req.user.serviceProviderId;
+
+  // Build query
+  const query = {
+    serviceProviderId: providerId._id || providerId,
+    status
+  };
+
+  if (rating) {
+    query.rating = parseInt(rating);
+  }
+
+  // Build sort
+  const sort = {};
+  sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+  const Feedback = require('../models/Feedback');
+
+  const feedbacks = await Feedback.find(query)
+    .populate([
+      { path: 'hotelId', select: 'name' },
+      { path: 'serviceId', select: 'title category' },
+      { path: 'bookingId', select: 'bookingNumber' }
+    ])
+    .sort(sort)
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Feedback.countDocuments(query);
+
+  // Get statistics
+  const stats = await Feedback.getServiceProviderRating(providerId._id || providerId);
+
+  res.json({
+    success: true,
+    data: {
+      feedbacks,
+      statistics: stats,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalFeedbacks: total,
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPreviousPage: page > 1
+      }
+    }
+  });
+}));
 
 module.exports = router;
