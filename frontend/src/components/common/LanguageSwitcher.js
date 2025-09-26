@@ -36,15 +36,15 @@ const LanguageSwitcher = ({ className = '' }) => {
     <div className={`relative inline-block text-left ${className}`}>
       <button
         type="button"
-        className="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        className="inline-flex items-center justify-center w-full px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="true"
         aria-expanded={isOpen}
       >
-        <LanguageIcon className="w-4 h-4 mr-2" />
+        <LanguageIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
         <span className="mr-1">{currentLanguage.flag}</span>
         <span className="hidden sm:inline">{currentLanguage.name}</span>
-        <ChevronDownIcon className="w-4 h-4 ml-2 -mr-1" />
+        <ChevronDownIcon className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 -mr-1" />
       </button>
 
       {isOpen && (
@@ -56,7 +56,7 @@ const LanguageSwitcher = ({ className = '' }) => {
           />
 
           {/* Dropdown menu */}
-          <div className="absolute right-0 z-20 w-48 mt-2 origin-top-right bg-white border border-gray-200 rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+          <div className="absolute right-0 z-20 w-36 sm:w-48 mt-2 origin-top-right bg-white border border-gray-200 rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
             <div className="py-1" role="menu">
               {languages.map((language) => (
                 <button
@@ -66,7 +66,7 @@ const LanguageSwitcher = ({ className = '' }) => {
                     language.code === i18n.language
                       ? 'bg-indigo-50 text-indigo-700'
                       : 'text-gray-700 hover:bg-gray-100'
-                  } group flex items-center px-4 py-2 text-sm w-full text-left transition-colors duration-200`}
+                  } group flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm w-full text-left transition-colors duration-200`}
                   role="menuitem"
                 >
                   <span className="mr-3">{language.flag}</span>
