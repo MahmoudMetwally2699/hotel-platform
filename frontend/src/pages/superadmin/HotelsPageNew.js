@@ -40,7 +40,14 @@ const SuperAdminHotelsPage = () => {
     },
     facilities: [],
     isActive: true,
-    isPublished: false
+    isPublished: false,
+    // Payment Settings
+    paymentSettings: {
+      enableOnlinePayment: false,
+      currency: 'USD',
+      taxRate: 0,
+      acceptedMethods: ['cash']
+    }
   });
 
   useEffect(() => {
@@ -107,7 +114,14 @@ const SuperAdminHotelsPage = () => {
       },
       facilities: [],
       isActive: true,
-      isPublished: false
+      isPublished: false,
+      // Payment Settings
+      paymentSettings: {
+        enableOnlinePayment: false,
+        currency: 'USD',
+        taxRate: 0,
+        acceptedMethods: ['cash']
+      }
     });
     setSelectedHotel(null);
   };
@@ -128,7 +142,14 @@ const SuperAdminHotelsPage = () => {
       },
       facilities: hotel.facilities || [],
       isActive: hotel.isActive,
-      isPublished: hotel.isPublished
+      isPublished: hotel.isPublished,
+      // Payment Settings
+      paymentSettings: {
+        enableOnlinePayment: hotel.paymentSettings?.enableOnlinePayment || false,
+        currency: hotel.paymentSettings?.currency || 'USD',
+        taxRate: hotel.paymentSettings?.taxRate || 0,
+        acceptedMethods: hotel.paymentSettings?.acceptedMethods || ['cash']
+      }
     });
     setShowEditModal(true);
   };
@@ -142,6 +163,15 @@ const SuperAdminHotelsPage = () => {
         address: {
           ...prev.address,
           [addressField]: value
+        }
+      }));
+    } else if (name.startsWith('paymentSettings.')) {
+      const paymentField = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        paymentSettings: {
+          ...prev.paymentSettings,
+          [paymentField]: type === 'checkbox' ? checked : (type === 'number' ? parseInt(value) || 0 : value)
         }
       }));
     } else {

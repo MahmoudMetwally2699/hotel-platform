@@ -1,467 +1,151 @@
 /**
- * Home Page - Guest Landing Page
- * Modern, welcoming landing page designed specifically for hotel guests
+ * Home Page - Simple Guest Landing Page
+ * Redesigned to match the exact mobile-like interface from the screenshot
  */
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { selectIsAuthenticated } from '../../redux/slices/authSlice';
+import { selectIsAuthenticated, selectCurrentUser, selectAuthRole } from '../../redux/slices/authSlice';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 
 const HomePage = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
-  const { t, i18n } = useTranslation();
-  const isRTL = i18n.dir() === 'rtl';
+  const user = useSelector(selectCurrentUser);
+  const role = useSelector(selectAuthRole);
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  // Redirect authenticated guests to categories page
+  useEffect(() => {
+    if (isAuthenticated && role === 'guest' && user) {
+      console.log('Authenticated guest detected, redirecting to categories page');
+
+      // Get user data to extract hotelId
+      let hotelId = user?.selectedHotelId;
+
+      // If hotelId is an object, extract the ID
+      if (hotelId && typeof hotelId === 'object') {
+        hotelId = hotelId._id || hotelId.id || hotelId.toString();
+      }
+
+      if (hotelId && typeof hotelId === 'string' && hotelId !== '[object Object]') {
+        navigate(`/hotels/${hotelId}/categories`, { replace: true });
+        return;
+      } else {
+        console.log('No valid hotel ID found for authenticated guest');
+      }
+    }
+  }, [isAuthenticated, role, user, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Language Switcher - Top Right */}
-      <div className="absolute top-4 right-4 z-20">
-        <LanguageSwitcher />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-qickroom-lightBlue to-qickroom-blue relative overflow-hidden">
+      {/* Header/Navigation */}
+      <nav className="flex justify-between items-center p-6">
+        {/* Left side - Login button */}
+        <Link
+          to="/login"
+          className="bg-white/90 backdrop-blur-sm text-qickroom-blue px-6 py-2 rounded-full font-medium hover:bg-white transition-colors duration-200"
+        >
+          {t('homepage.login', 'دخول')}
+        </Link>
 
-      {/* Navigation */}
-      <nav className="bg-white/90 backdrop-blur-md border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <img src="/qickroom.png" alt="QuickRoom" className="h-8 w-8 mr-2" />
-              <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                QuickRoom
-              </div>
-            </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="#services" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">{t('landingPage.nav.services')}</a>
-              <a href="#how-it-works" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">{t('landingPage.nav.howToBook')}</a>
-              <a href="#testimonials" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">{t('landingPage.nav.reviews')}</a>
-              {isAuthenticated ? (
-                <Link
-                  to="/my-hotel-services"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-                >
-                  {t('landingPage.nav.myBookings')}
-                </Link>
-              ) : (
-                <Link
-                  to="/login"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-                >
-                  {t('landingPage.nav.signIn')}
-                </Link>
-              )}
-            </div>
+        {/* Right side - Language Switcher and Logo */}
+        <div className="flex items-center space-x-4">
+          <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+            <LanguageSwitcher />
           </div>
+          <span className="text-white text-lg font-semibold">Qickroom</span>
         </div>
       </nav>
 
-      {/* Hero Section - Guest Focused */}
-      <section className="relative overflow-hidden pt-16 pb-24">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#3B5787] via-[#67BAE0] to-[#3B5787]"></div>
-        <div className="absolute inset-0 bg-black/10"></div>
+      {/* Main Content */}
+      <div className="flex items-center justify-center min-h-[calc(100vh-200px)] px-4">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-32 h-32 bg-white rounded-full"></div>
-          <div className="absolute top-40 right-32 w-24 h-24 bg-white rounded-full"></div>
-          <div className="absolute bottom-32 left-1/4 w-20 h-20 bg-white rounded-full"></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:py-24 lg:px-8">
-          <div className="text-center">
-            <div className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-              <span className="text-white text-sm font-medium">{t('landingPage.hero.welcomeBadge')}</span>
-            </div>
-
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              {t('landingPage.hero.title')}
-              <span className="block text-yellow-300">{t('landingPage.hero.titleHighlight')}</span>
+          {/* Left side - Text Content */}
+          <div className="text-center lg:text-right space-y-6">
+            <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight">
+              {t('homepage.mainTitle', 'منصة خدمات الغرف لفندقك')}
             </h1>
-
-            <p className="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto leading-relaxed">
-              {t('landingPage.hero.description')}
+            <p className="text-xl lg:text-2xl text-white/90 leading-relaxed">
+              {t('homepage.subtitle', 'حلول رقمية متطورة لخدمات الضيوف')}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-              {isAuthenticated ? (
-                <Link
-                  to="/my-hotel-services"
-                  className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-50 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
-                >
-                  {t('landingPage.hero.viewMyServices')}
-                </Link>
-              ) : (
-                <Link
-                  to="/register"
-                  className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-50 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
-                >
-                  {t('landingPage.hero.chooseYourHotel')}
-                </Link>
-              )}
-              <a
-                href="#services"
-                className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-300"
-              >
-                {t('landingPage.hero.exploreServices')}
-              </a>
-            </div>
-
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap justify-center items-center gap-8 text-white">
-              <div className="flex items-center">
-                <span className="text-2xl mr-2">🔒</span>
-                <span className="text-sm font-medium">{t('landingPage.hero.securePayments')}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-2xl mr-2">⚡</span>
-                <span className="text-sm font-medium">{t('landingPage.hero.instantBooking')}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-2xl mr-2">📱</span>
-                <span className="text-sm font-medium">{t('landingPage.hero.access247')}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-2xl mr-2">⭐</span>
-                <span className="text-sm font-medium">{t('landingPage.hero.rating')}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Section - Guest Focused */}
-      <section id="services" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {t('landingPage.services.title')}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              {t('landingPage.services.subtitle')}
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="group bg-white border border-[#67BAE0] rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">🧺</div>
-              <h3 className="text-xl font-bold text-[#3B5787] mb-3">{t('landingPage.services.laundry.title')}</h3>
-              <p className="text-black mb-4">{t('landingPage.services.laundry.description')}</p>
-            </div>
-
-            <div className="group bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">�</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('landingPage.services.transportation.title')}</h3>
-              <p className="text-gray-600 mb-4">{t('landingPage.services.transportation.description')}</p>
-            </div>
-
-            <div className="group bg-white border border-[#67BAE0] rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">🧹</div>
-              <h3 className="text-xl font-bold text-[#3B5787] mb-3">{t('landingPage.services.housekeeping.title')}</h3>
-              <p className="text-black mb-4">{t('landingPage.services.housekeeping.description')}</p>
-            </div>
-
-            <div className="group bg-white border border-[#67BAE0] rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">🍽️</div>
-              <h3 className="text-xl font-bold text-[#3B5787] mb-3">{t('landingPage.services.roomService.title')}</h3>
-              <p className="text-black mb-4">{t('landingPage.services.roomService.description')}</p>
-            </div>
-          </div>
-
-          {/* Service Benefits */}
-          <div className="mt-16 bg-white rounded-3xl p-8 md:p-12 border border-[#67BAE0]">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-[#3B5787] mb-4">{t('landingPage.services.benefits.title')}</h3>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-[#67BAE0] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">💳</span>
-                </div>
-                <h4 className="font-semibold text-[#3B5787] mb-2">{t('landingPage.services.benefits.flexiblePayment')}</h4>
-                <p className="text-black text-sm">{t('landingPage.services.benefits.flexiblePaymentDesc')}</p>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-[#67BAE0] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">⚡</span>
-                </div>
-                <h4 className="font-semibold text-[#3B5787] mb-2">{t('landingPage.services.benefits.fastReliable')}</h4>
-                <p className="text-black text-sm">{t('landingPage.services.benefits.fastReliableDesc')}</p>
-              </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">�</span>
-                </div>
-                <h4 className="font-semibold text-gray-900 mb-2">{t('landingPage.services.benefits.easyBooking')}</h4>
-                <p className="text-gray-600 text-sm">{t('landingPage.services.benefits.easyBookingDesc')}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section - Guest Focused */}
-      <section id="how-it-works" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#3B5787] mb-4">
-              {t('landingPage.howItWorks.title')}
-            </h2>
-            <p className="text-xl text-black max-w-2xl mx-auto">
-              {t('landingPage.howItWorks.subtitle')}
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            <div className="text-center relative">
-              <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg">
-                1
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">{t('landingPage.howItWorks.step1.title')}</h3>
-              <p className="text-gray-600 leading-relaxed">
-                {t('landingPage.howItWorks.step1.description')}
-              </p>
-              <div className={`absolute top-10 ${isRTL ? '-left-4' : '-right-4'} hidden md:block`}>
-                <svg className="w-8 h-8 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d={isRTL ? "M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" : "M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"} clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="text-center relative">
-              <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg">
-                2
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">{t('landingPage.howItWorks.step2.title')}</h3>
-              <p className="text-gray-600 leading-relaxed">
-                {t('landingPage.howItWorks.step2.description')}
-              </p>
-              <div className={`absolute top-10 ${isRTL ? '-left-4' : '-right-4'} hidden md:block`}>
-                <svg className="w-8 h-8 text-green-300" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d={isRTL ? "M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" : "M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"} clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-violet-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg">
-                3
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">{t('landingPage.howItWorks.step3.title')}</h3>
-              <p className="text-gray-600 leading-relaxed">
-                {t('landingPage.howItWorks.step3.description')}
-              </p>
-            </div>
-          </div>
-
-          {/* Payment Options Highlight */}
-          <div className="bg-white rounded-3xl p-8 md:p-12 border border-[#67BAE0] mt-16">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-[#3B5787] mb-4">{t('landingPage.howItWorks.payment.title')}</h3>
-              <p className="text-black">{t('landingPage.howItWorks.payment.subtitle')}</p>
-            </div>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="text-center p-6 bg-white rounded-2xl border border-[#67BAE0]">
-                <div className="text-4xl mb-4">💳</div>
-                <h4 className="text-lg font-bold text-[#3B5787] mb-2">{t('landingPage.howItWorks.payment.onlinePayment.title')}</h4>
-                <p className="text-black mb-4">{t('landingPage.howItWorks.payment.onlinePayment.description')}</p>
-                <div className="text-sm text-[#3B5787] font-medium" dangerouslySetInnerHTML={{ __html: t('landingPage.howItWorks.payment.onlinePayment.features') }}></div>
-              </div>
-              <div className="text-center p-6 bg-white rounded-2xl border border-[#67BAE0]">
-                <div className="text-4xl mb-4">💵</div>
-                <h4 className="text-lg font-bold text-[#3B5787] mb-2">{t('landingPage.howItWorks.payment.cashPayment.title')}</h4>
-                <p className="text-black mb-4">{t('landingPage.howItWorks.payment.cashPayment.description')}</p>
-                <div className="text-sm text-[#3B5787] font-medium" dangerouslySetInnerHTML={{ __html: t('landingPage.howItWorks.payment.cashPayment.features') }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-24 bg-[#67BAE0]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              {t('landingPage.testimonials.title')}
-            </h2>
-            <p className="text-xl text-white max-w-2xl mx-auto">
-              {t('landingPage.testimonials.subtitle')}
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-2xl border border-[#3B5787] shadow-sm">
-              <div className="flex items-center mb-4">
-                <div className="flex text-[#3B5787]">
-                  {'★'.repeat(5)}
-                </div>
-                <span className="ml-2 text-sm text-[#3B5787]">{t('landingPage.testimonials.testimonial1.name')}</span>
-              </div>
-              <p className="text-black italic mb-4">
-                {t('landingPage.testimonials.testimonial1.text')}
-              </p>
-              <div className="text-sm text-[#3B5787] font-medium">{t('landingPage.testimonials.testimonial1.hotel')}</div>
-            </div>
-
-            <div className="bg-white p-8 rounded-2xl border border-[#3B5787] shadow-sm">
-              <div className="flex items-center mb-4">
-                <div className="flex text-[#3B5787]">
-                  {'★'.repeat(5)}
-                </div>
-                <span className="ml-2 text-sm text-[#3B5787]">{t('landingPage.testimonials.testimonial2.name')}</span>
-              </div>
-              <p className="text-black italic mb-4">
-                {t('landingPage.testimonials.testimonial2.text')}
-              </p>
-              <div className="text-sm text-[#3B5787] font-medium">{t('landingPage.testimonials.testimonial2.hotel')}</div>
-            </div>
-
-            <div className="bg-white p-8 rounded-2xl border border-[#3B5787] shadow-sm">
-              <div className="flex items-center mb-4">
-                <div className="flex text-[#3B5787]">
-                  {'★'.repeat(5)}
-                </div>
-                <span className="ml-2 text-sm text-[#3B5787]">{t('landingPage.testimonials.testimonial3.name')}</span>
-              </div>
-              <p className="text-black italic mb-4">
-                {t('landingPage.testimonials.testimonial3.text')}
-              </p>
-              <div className="text-sm text-[#3B5787] font-medium">{t('landingPage.testimonials.testimonial3.hotel')}</div>
-            </div>
-          </div>
-
-          {/* Trust Badges */}
-          <div className="mt-16 text-center">
-            <p className="text-gray-600 mb-8">{t('landingPage.testimonials.trustedBy')}</p>
-            <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-              <div className="text-2xl font-bold text-gray-400">�</div>
-              <div className="text-2xl font-bold text-gray-400">⭐</div>
-              <div className="text-2xl font-bold text-gray-400">🔒</div>
-              <div className="text-2xl font-bold text-gray-400">⚡</div>
-              <div className="text-2xl font-bold text-gray-400">💎</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section - Guest Focused */}
-      <section className="py-24 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">{t('landingPage.stats.title')}</h2>
-            <p className="text-blue-100">{t('landingPage.stats.subtitle')}</p>
-          </div>
-          <div className="grid md:grid-cols-4 gap-8 text-center">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-              <div className="text-4xl md:text-5xl font-bold mb-2">50K+</div>
-              <div className="text-blue-100">{t('landingPage.stats.servicesDelivered')}</div>
-              <div className="text-sm text-blue-200 mt-1">{t('landingPage.stats.servicesDeliveredSub')}</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-              <div className="text-4xl md:text-5xl font-bold mb-2">4.8/5</div>
-              <div className="text-blue-100">{t('landingPage.stats.averageRating')}</div>
-              <div className="text-sm text-blue-200 mt-1">{t('landingPage.stats.averageRatingSub')}</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-              <div className="text-4xl md:text-5xl font-bold mb-2">500+</div>
-              <div className="text-blue-100">{t('landingPage.stats.partnerHotels')}</div>
-              <div className="text-sm text-blue-200 mt-1">{t('landingPage.stats.partnerHotelsSub')}</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-              <div className="text-4xl md:text-5xl font-bold mb-2">24/7</div>
-              <div className="text-blue-100">{t('landingPage.stats.serviceAvailable')}</div>
-              <div className="text-sm text-blue-200 mt-1">{t('landingPage.stats.serviceAvailableSub')}</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section - Guest Focused */}
-      <section className="py-24 bg-gray-900 text-white">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            {t('landingPage.cta.title')}
-          </h2>
-          <p className="text-xl text-gray-300 mb-8">
-            {t('landingPage.cta.subtitle')}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {isAuthenticated ? (
+            {/* Service Access Button */}
+            <div className="pt-4">
               <Link
-                to="/my-hotel-services"
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
+                to={isAuthenticated ? "/hotels" : "/login"}
+                className="inline-flex items-center justify-center bg-white text-qickroom-blue px-8 py-4 rounded-full font-semibold text-lg hover:bg-white/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
               >
-                {t('landingPage.hero.viewMyServices')}
+                <span className="ml-2">{t('homepage.accessService', 'دخول إلى الخدمة')}</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14" />
+                </svg>
               </Link>
-            ) : (
-              <>
-                <Link
-                  to="/select-hotel"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
-                >
-                  {t('landingPage.cta.bookFirstService')}
-                </Link>
-                <a
-                  href="#services"
-                  className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-gray-900 transition-all duration-300"
-                >
-                  {t('landingPage.cta.exploreServices')}
-                </a>
-              </>
-            )}
+            </div>
           </div>
-          <div className="mt-8 text-gray-400 text-sm">
-            {t('landingPage.cta.footerText')}
-          </div>
-        </div>
-      </section>
 
-      {/* Footer - Guest Focused */}
-      <footer className="bg-gray-800 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="md:col-span-2">
-              <div className="flex items-center mb-4">
-                <img src="/qickroom.png" alt="QuickRoom" className="h-8 w-8 mr-2" />
-                <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                  QuickRoom
+          {/* Right side - Mobile Phone Mockup */}
+          <div className="flex justify-center lg:justify-start">
+            <div className="relative">
+              {/* Phone Frame */}
+              <div className="relative bg-black rounded-[3rem] p-2 shadow-2xl">
+                <div className="bg-white rounded-[2.5rem] overflow-hidden" style={{ width: '280px', height: '580px' }}>
+                  {/* Phone Screen Content */}
+                  <div className="h-full bg-gray-50 flex flex-col items-center justify-center p-8">
+
+                    {/* Qickroom Logo in Phone */}
+                    <div className="mb-8">
+                      <div className="bg-qickroom-blue/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                        <img
+                          src="/qickroom.png"
+                          alt="Qickroom"
+                          className="h-10 w-10"
+                        />
+                      </div>
+                      <h2 className="text-qickroom-blue text-xl font-bold text-center">
+                        Qickroom
+                      </h2>
+                    </div>
+
+                    {/* Service Title in Phone */}
+                    <div className="text-center mb-8">
+                      <h3 className="text-gray-800 text-lg font-semibold mb-2">
+                        {t('homepage.phoneTitle', 'Hotel Services Platform')}
+                      </h3>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        {t('homepage.phoneSubtitle', 'خدمات رقمية متطورة لتجربة الضيوف')}
+                      </p>
+                    </div>
+
+                    {/* Service Access Button in Phone */}
+                    <div className="w-full px-4">
+                      <div className="bg-qickroom-blue text-white py-3 px-6 rounded-xl font-medium text-center mb-3">
+                        <span>{t('homepage.serviceLogin', 'دخول إلى الخدمة')}</span>
+                      </div>
+
+                      <div className="text-center">
+                        <span className="text-gray-500 text-sm">
+                          {t('homepage.createAccount', 'إنشاء حساب جديد')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <p className="text-gray-400 text-sm mb-4 max-w-md">
-                {t('landingPage.footer.description')}
-              </p>
-              <div className="flex space-x-4">
-                <div className="text-2xl">🔒</div>
-                <div className="text-2xl">⚡</div>
-                <div className="text-2xl">⭐</div>
-                <div className="text-2xl">💎</div>
-              </div>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4">{t('landingPage.footer.forGuests')}</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#services" className="hover:text-white transition-colors">{t('landingPage.footer.ourServices')}</a></li>
-                <li><a href="#how-it-works" className="hover:text-white transition-colors">{t('landingPage.footer.howToBook')}</a></li>
-                <li><a href="#testimonials" className="hover:text-white transition-colors">{t('landingPage.footer.guestReviews')}</a></li>
-                <li><a href="/help" className="hover:text-white transition-colors">{t('landingPage.footer.helpCenter')}</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">{t('landingPage.footer.support')}</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="mailto:guest.support@hotelhup.com" className="hover:text-white transition-colors">{t('landingPage.footer.guestSupport')}</a></li>
-                <li><a href="/faq" className="hover:text-white transition-colors">{t('landingPage.footer.faq')}</a></li>
-                <li><a href="/contact" className="hover:text-white transition-colors">{t('landingPage.footer.contactUs')}</a></li>
-                <li><a href="/privacy" className="hover:text-white transition-colors">{t('landingPage.footer.privacySecurity')}</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-700 mt-12 pt-8 text-center text-sm text-gray-400">
-            <p>{t('landingPage.footer.copyright')}</p>
           </div>
         </div>
-      </footer>
+      </div>
+
+      {/* Footer */}
+      <div className="absolute bottom-0 left-0 right-0 text-center p-4">
+        <p className="text-white/70 text-sm">
+          {t('homepage.footer', '© 2024 Qickroom. جميع الحقوق محفوظة')}
+        </p>
+      </div>
     </div>
   );
 };

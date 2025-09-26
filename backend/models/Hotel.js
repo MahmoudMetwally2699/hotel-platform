@@ -322,6 +322,12 @@ const hotelSchema = new mongoose.Schema({
       default: 0,
       min: [0, 'Tax rate cannot be negative'],
       max: [50, 'Tax rate cannot exceed 50%']
+    },
+
+    enableOnlinePayment: {
+      type: Boolean,
+      default: false,
+      index: true
     }
   },
 

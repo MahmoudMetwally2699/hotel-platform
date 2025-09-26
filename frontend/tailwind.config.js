@@ -25,6 +25,11 @@ module.exports = {
           gray: '#F8FAFC',
           darkGray: '#64748B',
         },
+        // Custom colors for new design
+        qickroom: {
+          blue: '#3B5787',
+          lightBlue: '#67BAE0',
+        },
         background: {
           paper: '#fff',
           default: '#f5f5f5',

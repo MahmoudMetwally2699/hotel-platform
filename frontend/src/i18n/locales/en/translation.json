@@ -1430,7 +1430,16 @@
     "transportationDescription": "Car rentals and taxi services",
     "tourismDescription": "Tours and local experiences",
     "platformName": "Hotel Service Platform",
-    "allRightsReserved": "All rights reserved"
+    "allRightsReserved": "All rights reserved",
+    "login": "Login",
+    "mainTitle": "Your Hotel Room Services Platform",
+    "subtitle": "Advanced digital solutions for guest services",
+    "accessService": "Access Service",
+    "phoneTitle": "Hotel Services Platform",
+    "phoneSubtitle": "Advanced digital solutions for guest experience",
+    "serviceLogin": "Service Login",
+    "createAccount": "Create New Account",
+    "footer": "© 2024 Qickroom. All rights reserved"
   },
   "landingPage": {
     "nav": {

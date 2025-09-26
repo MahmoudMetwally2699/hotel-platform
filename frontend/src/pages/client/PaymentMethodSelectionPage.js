@@ -22,15 +22,18 @@ const PaymentMethodSelectionPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [paymentMethod, setPaymentMethod] = useState('online');
+  const [paymentMethod, setPaymentMethod] = useState('cash'); // Default to cash
   const [bookingData, setBookingData] = useState(null);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [hotelPaymentSettings, setHotelPaymentSettings] = useState(null);
+  const [loadingPaymentSettings, setLoadingPaymentSettings] = useState(true);
 
   // Get booking data from URL params or localStorage
   const bookingId = searchParams.get('bookingId');
   const amount = searchParams.get('amount');
   const currency = searchParams.get('currency') || 'EGP';
   const serviceType = searchParams.get('serviceType') || 'regular';
+  const hotelId = searchParams.get('hotelId');
 
   console.log('🔄 PaymentMethodSelectionPage - URL params:', {
     bookingId,
@@ -50,7 +53,52 @@ const PaymentMethodSelectionPage = () => {
         console.error('Error parsing booking data:', error);
       }
     }
-  }, []);
+
+    // Fetch hotel payment settings
+    const fetchHotelPaymentSettings = async () => {
+      let targetHotelId = hotelId;
+
+      // If no hotelId in URL params, try to get it from booking data
+      if (!targetHotelId && savedBookingData) {
+        try {
+          const data = JSON.parse(savedBookingData);
+          targetHotelId = data.hotelId;
+        } catch (error) {
+          console.error('Error parsing booking data for hotelId:', error);
+        }
+      }
+
+      if (!targetHotelId) {
+        console.log('No hotelId found, defaulting to cash only');
+        setLoadingPaymentSettings(false);
+        return;
+      }
+
+      try {
+        setLoadingPaymentSettings(true);
+        const response = await apiClient.get(`/client/hotels/${targetHotelId}/payment-settings`);
+
+        if (response.data.success) {
+          setHotelPaymentSettings(response.data.data.paymentSettings);
+
+          // Set default payment method based on hotel settings
+          if (response.data.data.paymentSettings.enableOnlinePayment) {
+            setPaymentMethod('online');
+          } else {
+            setPaymentMethod('cash');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching hotel payment settings:', error);
+        // Default to cash only if error
+        setPaymentMethod('cash');
+      } finally {
+        setLoadingPaymentSettings(false);
+      }
+    };
+
+    fetchHotelPaymentSettings();
+  }, [hotelId]);
 
   const handlePaymentMethodChange = (method) => {
     setPaymentMethod(method);
@@ -439,13 +487,21 @@ const PaymentMethodSelectionPage = () => {
 
           {/* Payment Method Selection - More compact on mobile */}
           <div className="lg:col-span-2 lg:order-1">
-            <PaymentMethodSelection
-              selectedMethod={paymentMethod}
-              onMethodChange={handlePaymentMethodChange}
-              totalAmount={getDisplayAmount()}
-              currency={currency}
-              showPricing={false}
-            />
+            {loadingPaymentSettings ? (
+              <div className="flex items-center justify-center py-8">
+                <FaSpinner className="w-6 h-6 animate-spin text-blue-600" />
+                <span className="ml-2 text-gray-600">Loading payment options...</span>
+              </div>
+            ) : (
+              <PaymentMethodSelection
+                selectedMethod={paymentMethod}
+                onMethodChange={handlePaymentMethodChange}
+                totalAmount={getDisplayAmount()}
+                currency={currency}
+                showPricing={false}
+                hotelPaymentSettings={hotelPaymentSettings}
+              />
+            )}
           </div>
         </div>
       </div>

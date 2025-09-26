@@ -58,6 +58,13 @@ const SuperAdminHotelsPage = () => {
       issuedDate: '',
       expiryDate: ''
     },
+    // Payment Settings
+    paymentSettings: {
+      enableOnlinePayment: false,
+      currency: 'USD',
+      taxRate: 0,
+      acceptedMethods: ['cash']
+    },
     // Hotel Admin credentials
     adminData: {
       firstName: '',
@@ -337,6 +344,13 @@ const SuperAdminHotelsPage = () => {
         issuedDate: '',
         expiryDate: ''
       },
+      // Payment Settings
+      paymentSettings: {
+        enableOnlinePayment: false,
+        currency: 'USD',
+        taxRate: 0,
+        acceptedMethods: ['cash']
+      },
       adminData: {
         firstName: '',
         lastName: '',
@@ -372,7 +386,14 @@ const SuperAdminHotelsPage = () => {
       },
       facilities: hotel.facilities || [],
       isActive: hotel.isActive,
-      isPublished: hotel.isPublished
+      isPublished: hotel.isPublished,
+      // Payment Settings
+      paymentSettings: {
+        enableOnlinePayment: hotel.paymentSettings?.enableOnlinePayment || false,
+        currency: hotel.paymentSettings?.currency || 'USD',
+        taxRate: hotel.paymentSettings?.taxRate || 0,
+        acceptedMethods: hotel.paymentSettings?.acceptedMethods || ['cash']
+      }
     });
     setShowEditModal(true);
   };  const handleInputChange = (e) => {
@@ -402,6 +423,15 @@ const SuperAdminHotelsPage = () => {
         businessLicense: {
           ...prev.businessLicense,
           [licenseField]: value
+        }
+      }));
+    } else if (name.startsWith('paymentSettings.')) {
+      const paymentField = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        paymentSettings: {
+          ...prev.paymentSettings,
+          [paymentField]: type === 'checkbox' ? checked : (type === 'number' ? parseInt(value) || 0 : value)
         }
       }));
     } else {
@@ -830,6 +860,58 @@ const SuperAdminHotelsPage = () => {
                   </div>
                 </div>
 
+                {/* Payment Settings Section */}
+                <div className="border-t pt-4">
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Payment Settings</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="paymentSettings.enableOnlinePayment"
+                          checked={formData.paymentSettings.enableOnlinePayment}
+                          onChange={handleInputChange}
+                          className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Enable Online Payment (Kashier.io)</span>
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1">Allow guests to pay online using Kashier.io payment gateway</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Currency</label>
+                      <select
+                        name="paymentSettings.currency"
+                        value={formData.paymentSettings.currency}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="GBP">GBP - British Pound</option>
+                        <option value="CAD">CAD - Canadian Dollar</option>
+                        <option value="AUD">AUD - Australian Dollar</option>
+                        <option value="EGP">EGP - Egyptian Pound</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <div className="w-full md:w-1/2">
+                      <label className="block text-sm font-medium text-gray-700">Tax Rate (%)</label>
+                      <input
+                        type="number"
+                        name="paymentSettings.taxRate"
+                        value={formData.paymentSettings.taxRate}
+                        onChange={handleInputChange}
+                        min="0"
+                        max="50"
+                        step="0.1"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Enter tax rate as a percentage (0-50%)</p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Hotel Admin Credentials Section */}
                 <div className="border-t pt-4">
                   <h4 className="text-md font-medium text-gray-900 mb-3">Hotel Admin Credentials</h4>
@@ -1066,6 +1148,58 @@ const SuperAdminHotelsPage = () => {
                     rows={3}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
+                </div>
+
+                {/* Payment Settings Section */}
+                <div className="border-t pt-4">
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Payment Settings</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="paymentSettings.enableOnlinePayment"
+                          checked={formData.paymentSettings?.enableOnlinePayment || false}
+                          onChange={handleInputChange}
+                          className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                        />
+                        <span className="ml-2 text-sm text-gray-700 font-medium">Enable Online Payment (Kashier.io)</span>
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1 ml-6">Allow guests to pay online using Kashier.io payment gateway</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Currency</label>
+                      <select
+                        name="paymentSettings.currency"
+                        value={formData.paymentSettings?.currency || 'USD'}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="GBP">GBP - British Pound</option>
+                        <option value="CAD">CAD - Canadian Dollar</option>
+                        <option value="AUD">AUD - Australian Dollar</option>
+                        <option value="EGP">EGP - Egyptian Pound</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <div className="w-full md:w-1/2">
+                      <label className="block text-sm font-medium text-gray-700">Tax Rate (%)</label>
+                      <input
+                        type="number"
+                        name="paymentSettings.taxRate"
+                        value={formData.paymentSettings?.taxRate || 0}
+                        onChange={handleInputChange}
+                        min="0"
+                        max="50"
+                        step="0.1"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Enter tax rate as a percentage (0-50%)</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex items-center space-x-4">

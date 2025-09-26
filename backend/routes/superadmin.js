@@ -256,6 +256,13 @@ router.post('/hotels', catchAsync(async (req, res, next) => {
       images: hotelData.images || [],
       isActive: hotelData.isActive || true,
       isPublished: hotelData.isPublished || false,
+      // Payment settings
+      paymentSettings: {
+        enableOnlinePayment: hotelData.paymentSettings?.enableOnlinePayment || false,
+        currency: hotelData.paymentSettings?.currency || 'USD',
+        taxRate: hotelData.paymentSettings?.taxRate || 0,
+        acceptedMethods: hotelData.paymentSettings?.acceptedMethods || ['cash']
+      },
       metadata: {
         createdBy: req.user._id,
         source: 'admin'

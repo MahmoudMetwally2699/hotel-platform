@@ -10,7 +10,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import { HiMail, HiLockClosed, HiQrcode } from 'react-icons/hi';
-import { login, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole, clearError, clearLoading, setError } from '../../redux/slices/authSlice';
+import { login, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole, selectCurrentUser, clearError, clearLoading, setError } from '../../redux/slices/authSlice';
 import LanguageSwitcher from '../../components/common/LanguageSwitcher';
 import QRScanner from '../../components/common/QRScanner';
 import authService from '../../services/auth.service';
@@ -25,6 +25,7 @@ const LoginPage = () => {
   const authError = useSelector(selectAuthError);
   const isLoading = useSelector(selectAuthLoading);
   const role = useSelector(selectAuthRole);
+  const user = useSelector(selectCurrentUser);
   const [showError, setShowError] = useState(false);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
 
@@ -52,8 +53,23 @@ const LoginPage = () => {
         // Redirect based on role
         switch (role) {
           case 'guest':
-            console.log('Redirecting guest to homepage');
-            navigate('/', { replace: true });
+            console.log('Redirecting guest to categories page');
+            // Get user data to extract hotelId
+            const userData = user;
+            let hotelId = userData?.selectedHotelId;
+
+            // If hotelId is an object, extract the ID
+            if (hotelId && typeof hotelId === 'object') {
+              hotelId = hotelId._id || hotelId.id || hotelId.toString();
+            }
+
+            if (hotelId && typeof hotelId === 'string' && hotelId !== '[object Object]') {
+              navigate(`/hotels/${hotelId}/categories`, { replace: true });
+            } else {
+              // Fallback to homepage if no valid hotel ID
+              console.log('No valid hotel ID found, redirecting to homepage');
+              navigate('/', { replace: true });
+            }
             break;
           case 'superadmin':
             console.log('Redirecting superadmin to dashboard');
@@ -80,7 +96,7 @@ const LoginPage = () => {
     }, 100); // Small delay to allow auth state to settle
 
     return () => clearTimeout(timer);
-  }, [isAuthenticated, role, navigate]);
+  }, [isAuthenticated, role, user, navigate]);
 
   // Display error for 5 seconds
   useEffect(() => {

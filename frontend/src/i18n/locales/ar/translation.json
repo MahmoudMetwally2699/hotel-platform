@@ -1494,7 +1494,16 @@
     "transportationDescription": "تأجير السيارات وخدمات التاكسي",
     "tourismDescription": "الجولات والتجارب المحلية",
     "platformName": "منصة خدمات الفنادق",
-    "allRightsReserved": "جميع الحقوق محفوظة"
+    "allRightsReserved": "جميع الحقوق محفوظة",
+    "login": "دخول",
+    "mainTitle": "منصة خدمات الغرف لفندقك",
+    "subtitle": "حلول رقمية متطورة لخدمات الضيوف",
+    "accessService": "دخول إلى الخدمة",
+    "phoneTitle": "منصة خدمات الفنادق",
+    "phoneSubtitle": "حلول رقمية متطورة لتجربة الضيوف",
+    "serviceLogin": "دخول إلى الخدمة",
+    "createAccount": "إنشاء حساب جديد",
+    "footer": "© 2024 Qickroom. جميع الحقوق محفوظة"
   },
   "landingPage": {
     "nav": {

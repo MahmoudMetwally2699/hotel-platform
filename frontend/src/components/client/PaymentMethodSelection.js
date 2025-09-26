@@ -19,47 +19,68 @@ const PaymentMethodSelection = ({
   totalAmount,
   currency = 'EGP',
   className = '',
-  showPricing = true
+  showPricing = true,
+  hotelPaymentSettings = null
 }) => {
   const { t } = useTranslation();
   const [hoveredMethod, setHoveredMethod] = useState(null);
 
-  const paymentMethods = [
-    {
-      id: 'online',
-      title: t('payment.methods.online.title', 'Pay Online'),
-      subtitle: t('payment.methods.online.subtitle', 'Visa/MasterCard/Credit Card'),
-      description: t('payment.methods.online.description', 'Secure online payment with instant confirmation'),
-      icon: FaCreditCard,
-      iconColor: 'text-blue-600',
-      borderColor: 'border-blue-200',
-      bgColor: 'bg-blue-50',
-      hoverBg: 'hover:bg-blue-100',
-      selectedBg: 'bg-blue-100',
-      selectedBorder: 'border-blue-500',
-      features: [
-        t('payment.methods.online.feature1', 'Instant confirmation'),
-        t('payment.methods.online.feature2', 'Secure encryption')
-      ]
-    },
-    {
-      id: 'cash',
-      title: t('payment.methods.cash.title', 'Pay at Hotel'),
-      subtitle: t('payment.methods.cash.subtitle', 'Cash Payment'),
-      description: t('payment.methods.cash.description', 'Pay with cash when service is provided'),
-      icon: FaMoneyBillWave,
-      iconColor: 'text-green-600',
-      borderColor: 'border-green-200',
-      bgColor: 'bg-green-50',
-      hoverBg: 'hover:bg-green-100',
-      selectedBg: 'bg-green-100',
-      selectedBorder: 'border-green-500',
-      features: [
-        t('payment.methods.cash.feature1', 'Pay on service delivery'),
-        t('payment.methods.cash.feature2', 'No card required')
-      ]
+  // Filter payment methods based on hotel settings
+  const paymentMethods = React.useMemo(() => {
+    const allMethods = [
+      {
+        id: 'online',
+        title: t('payment.methods.online.title', 'Pay Online'),
+        subtitle: t('payment.methods.online.subtitle', 'Visa/MasterCard/Credit Card'),
+        description: t('payment.methods.online.description', 'Secure online payment with instant confirmation'),
+        icon: FaCreditCard,
+        iconColor: 'text-blue-600',
+        borderColor: 'border-blue-200',
+        bgColor: 'bg-blue-50',
+        hoverBg: 'hover:bg-blue-100',
+        selectedBg: 'bg-blue-100',
+        selectedBorder: 'border-blue-500',
+        features: [
+          t('payment.methods.online.feature1', 'Instant confirmation'),
+          t('payment.methods.online.feature2', 'Secure encryption')
+        ]
+      },
+      {
+        id: 'cash',
+        title: t('payment.methods.cash.title', 'Pay at Hotel'),
+        subtitle: t('payment.methods.cash.subtitle', 'Cash Payment'),
+        description: t('payment.methods.cash.description', 'Pay with cash when service is provided'),
+        icon: FaMoneyBillWave,
+        iconColor: 'text-green-600',
+        borderColor: 'border-green-200',
+        bgColor: 'bg-green-50',
+        hoverBg: 'hover:bg-green-100',
+        selectedBg: 'bg-green-100',
+        selectedBorder: 'border-green-500',
+        features: [
+          t('payment.methods.cash.feature1', 'Pay on service delivery'),
+          t('payment.methods.cash.feature2', 'No card required')
+        ]
+      }
+    ];
+
+    if (!hotelPaymentSettings) {
+      // If no hotel payment settings, show all methods (backward compatibility)
+      return allMethods;
     }
-  ];
+
+    const availableMethods = [];
+
+    // Always show cash payment
+    availableMethods.push(allMethods.find(method => method.id === 'cash'));
+
+    // Show online payment only if enabled by hotel
+    if (hotelPaymentSettings.enableOnlinePayment) {
+      availableMethods.push(allMethods.find(method => method.id === 'online'));
+    }
+
+    return availableMethods.filter(Boolean);
+  }, [hotelPaymentSettings, t]);
 
   const formatAmount = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -185,6 +206,23 @@ const PaymentMethodSelection = ({
           );
         })}
       </div>
+
+      {/* Notice when online payments are disabled */}
+      {hotelPaymentSettings && !hotelPaymentSettings.enableOnlinePayment && (
+        <div className="mt-3 sm:mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-start">
+            <FaHotel className="w-4 h-4 text-yellow-600 mr-2 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-yellow-800">
+                {t('payment.cashOnlyNotice.title', 'Cash Payment Only')}
+              </p>
+              <p className="text-xs text-yellow-700 mt-1">
+                {t('payment.cashOnlyNotice.message', 'This hotel currently accepts cash payments only. Online payment options are not available at this time.')}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Security notice - More compact */}
       <div className="mt-3 sm:mt-4 lg:mt-6 p-3 sm:p-3 lg:p-4 bg-blue-50 border border-blue-200 rounded-lg">

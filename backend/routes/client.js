@@ -103,6 +103,38 @@ router.get('/hotels/:id', async (req, res) => {
 });
 
 /**
+ * @desc    Get hotel payment settings
+ * @route   GET /api/client/hotels/:id/payment-settings
+ * @access  Public
+ */
+router.get('/hotels/:id/payment-settings', async (req, res) => {
+  try {
+    const hotel = await Hotel.findById(req.params.id)
+      .select('paymentSettings isActive isPublished');
+
+    if (!hotel || !hotel.isActive || !hotel.isPublished) {
+      return res.status(404).json({
+        success: false,
+        message: 'Hotel not found or not available'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        paymentSettings: hotel.paymentSettings
+      }
+    });
+  } catch (error) {
+    logger.error('Get hotel payment settings error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+/**
  * @desc    Get services for a hotel
  * @route   GET /api/client/hotels/:id/services
  * @access  Public

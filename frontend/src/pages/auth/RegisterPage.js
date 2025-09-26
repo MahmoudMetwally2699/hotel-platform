@@ -15,7 +15,7 @@ import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import * as Yup from 'yup';
 import { HiUser, HiMail, HiLockClosed, HiQrcode } from 'react-icons/hi';
-import { register, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole } from '../../redux/slices/authSlice';
+import { register, selectAuthError, selectIsAuthenticated, selectAuthLoading, selectAuthRole, selectCurrentUser } from '../../redux/slices/authSlice';
 import hotelService from '../../services/hotel.service';
 import authService from '../../services/auth.service';
 import { toast } from 'react-hot-toast';
@@ -29,6 +29,7 @@ const RegisterPage = () => {
   const authError = useSelector(selectAuthError);
   const isLoading = useSelector(selectAuthLoading);
   const role = useSelector(selectAuthRole);
+  const user = useSelector(selectCurrentUser);
 
   const [showError, setShowError] = useState(false);
 
@@ -69,7 +70,23 @@ const RegisterPage = () => {
   // Handle redirection after successful registration
   useEffect(() => {
     if (isAuthenticated && role === 'guest') {
-      navigate('/');
+      console.log('Redirecting guest to categories page');
+      // Get user data to extract hotelId
+      const userData = user;
+      let hotelId = userData?.selectedHotelId;
+
+      // If hotelId is an object, extract the ID
+      if (hotelId && typeof hotelId === 'object') {
+        hotelId = hotelId._id || hotelId.id || hotelId.toString();
+      }
+
+      if (hotelId && typeof hotelId === 'string' && hotelId !== '[object Object]') {
+        navigate(`/hotels/${hotelId}/categories`, { replace: true });
+      } else {
+        // Fallback to homepage if no valid hotel ID
+        console.log('No valid hotel ID found, redirecting to homepage');
+        navigate('/', { replace: true });
+      }
     } else if (isAuthenticated && role !== 'guest') {
       // If registered but not as guest, redirect to appropriate dashboard
       switch (role) {
@@ -87,7 +104,7 @@ const RegisterPage = () => {
           break;
       }
     }
-  }, [isAuthenticated, role, navigate]);
+  }, [isAuthenticated, role, navigate, user]);
 
   // Display error for 5 seconds
   useEffect(() => {
