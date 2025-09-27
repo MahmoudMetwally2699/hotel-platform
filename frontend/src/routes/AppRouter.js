@@ -46,6 +46,7 @@ const SuperAdminDashboard = lazy(() => import('../pages/superadmin/DashboardPage
 const SuperAdminHotelsPage = lazy(() => import('../pages/superadmin/HotelsPage'));
 const SuperAdminHotelAdminsPage = lazy(() => import('../pages/superadmin/HotelAdminsPage'));
 const SuperAdminAnalyticsPage = lazy(() => import('../pages/superadmin/AnalyticsPage'));
+const SuperAdminPaymentManagementPage = lazy(() => import('../pages/superadmin/PaymentManagementPage'));
 const SuperAdminPlatformMetricsPage = lazy(() => import('../pages/superadmin/PlatformMetricsPage'));
 const SuperAdminSettingsPage = lazy(() => import('../pages/superadmin/SettingsPage'));
 const SuperHotelsPage = lazy(() => import('../pages/superadmin/SuperHotelsPage'));
@@ -261,6 +262,16 @@ const AppRouter = () => {
             <ProtectedRoute allowedRoles="superadmin">
               <TailwindLayout>
                 <SuperAdminAnalyticsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/superadmin/payment-management"
+          element={
+            <ProtectedRoute allowedRoles="superadmin">
+              <TailwindLayout>
+                <SuperAdminPaymentManagementPage />
               </TailwindLayout>
             </ProtectedRoute>
           }

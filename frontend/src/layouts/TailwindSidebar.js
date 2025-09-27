@@ -78,12 +78,9 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         return [
           { name: t('navigation.dashboard'), path: '/superadmin/dashboard', icon: 'home' },
           { name: t('navigation.hotels'), path: '/superadmin/hotels', icon: 'building' },
-          { name: t('navigation.hotelAdmins'), path: '/superadmin/hotel-admins', icon: 'users' },
           { name: t('navigation.superHotels'), path: '/superadmin/super-hotels', icon: 'star' },
           { name: t('navigation.feedback'), path: '/superadmin/feedback', icon: 'feedback' },
-          { name: t('navigation.platformAnalytics'), path: '/superadmin/analytics', icon: 'chart-bar' },
-          { name: t('navigation.platformMetrics'), path: '/superadmin/platform-metrics', icon: 'presentation-chart-line' },
-          { name: t('navigation.settings'), path: '/superadmin/settings', icon: 'cog' }
+          { name: 'Payment Management', path: '/superadmin/payment-management', icon: 'credit-card' }
         ];
       case 'hotel':
         return [

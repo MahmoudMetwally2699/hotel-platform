@@ -46,12 +46,9 @@ const getNavigationItems = (t) => ({
   super_admin: [
     { text: t('navigation.dashboard'), icon: <DashboardIcon />, path: '/superadmin/dashboard' },
     { text: t('navigation.hotels'), icon: <HotelIcon />, path: '/superadmin/hotels' },
-    { text: t('navigation.hotelAdmins'), icon: <PeopleIcon />, path: '/superadmin/hotel-admins' },
     { text: t('navigation.serviceProviders'), icon: <CategoryIcon />, path: '/superadmin/service-providers' },
     { text: t('navigation.users'), icon: <PersonIcon />, path: '/superadmin/users' },
     { text: t('navigation.feedback'), icon: <FeedbackIcon />, path: '/superadmin/feedback' },
-    { text: t('navigation.analytics'), icon: <BarChartIcon />, path: '/superadmin/analytics' },
-    { text: t('navigation.settings'), icon: <SettingsIcon />, path: '/superadmin/settings' },
   ],
   hotel_admin: [
     { text: t('navigation.dashboard'), icon: <DashboardIcon />, path: '/hotel/dashboard' },

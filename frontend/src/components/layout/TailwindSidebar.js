@@ -121,11 +121,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
     superadmin: [
       { text: t('navigation.dashboard'), icon: <HomeIcon />, path: '/superadmin/dashboard' },
       { text: t('navigation.hotels'), icon: <OfficeBuildingIcon />, path: '/superadmin/hotels' },
-      { text: t('navigation.superHotels'), icon: <StarIcon />, path: '/superadmin/super-hotels' },
-      { text: t('navigation.hotelAdmins'), icon: <UserGroupIcon />, path: '/superadmin/hotel-admins' },
-      { text: t('navigation.platformMetrics'), icon: <ChartBarIcon />, path: '/superadmin/platform-metrics' },
-      { text: t('navigation.analytics'), icon: <ChartBarIcon />, path: '/superadmin/analytics' },
-      { text: t('navigation.settings'), icon: <CogIcon />, path: '/superadmin/settings' }
+      { text: t('navigation.superHotels'), icon: <StarIcon />, path: '/superadmin/super-hotels' }
     ],
     hotel: [
       { text: t('navigation.dashboard'), icon: <HomeIcon />, path: '/hotel/dashboard' },

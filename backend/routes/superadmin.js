@@ -15,6 +15,8 @@ const SuperHotel = require('../models/SuperHotel');
 const ServiceProvider = require('../models/ServiceProvider');
 const Service = require('../models/Service');
 const Booking = require('../models/Booking');
+const TransportationBooking = require('../models/TransportationBooking');
+const HotelPayment = require('../models/HotelPayment');
 const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
 const crypto = require('crypto');
@@ -1032,6 +1034,936 @@ router.get('/superhotels/stats', catchAsync(async (req, res) => {
       totalAssignedHotels: totalAssignedHotels[0]?.count || 0,
       recentSuperHotels
     }
+  });
+}));
+
+/**
+ * @route   GET /api/superadmin/payment-analytics
+ * @desc    Get payment analytics for all hotels or specific hotel
+ * @access  Private/SuperAdmin
+ */
+router.get('/payment-analytics', catchAsync(async (req, res) => {
+  const { hotelId, startDate, endDate, timeRange = '30' } = req.query;
+
+  // Calculate date range
+  let start, end;
+  if (startDate && endDate) {
+    start = new Date(startDate);
+    end = new Date(endDate);
+  } else {
+    const days = parseInt(timeRange);
+    end = new Date();
+    start = new Date(Date.now() - (days * 24 * 60 * 60 * 1000));
+  }
+
+  const HotelPayment = require('../models/HotelPayment');
+
+  // Get all hotels first to ensure we show all hotels even with zero payments
+  const allHotelsFilter = hotelId && hotelId !== 'all'
+    ? { _id: new mongoose.Types.ObjectId(hotelId) }
+    : {};
+
+  const allHotels = await Hotel.find(allHotelsFilter).select('_id name');
+
+  let matchFilter = {
+    createdAt: { $gte: start, $lte: end }
+    // No payment status filter - include ALL bookings regardless of completion status
+  };
+
+  if (hotelId && hotelId !== 'all') {
+    matchFilter.hotelId = new mongoose.Types.ObjectId(hotelId);
+  }
+
+  console.log('Debug - Match filter for all bookings:', matchFilter);
+
+  // Helper function to get unified payment analytics from both regular bookings and transportation bookings
+  const getUnifiedPaymentAnalytics = async (matchFilter) => {
+    // Get regular bookings analytics
+    const regularBookingsAnalytics = await Booking.aggregate([
+      { $match: matchFilter },
+      {
+        $addFields: {
+          serviceType: 'regular',
+          paymentMethod: '$payment.paymentMethod',
+          totalAmount: '$pricing.totalAmount',
+          hotelEarnings: '$pricing.hotelEarnings',
+          guestName: '$fullGuestName',
+          bookingReference: '$bookingNumber'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            hotelId: '$hotelId',
+            paymentMethod: '$paymentMethod'
+          },
+          totalAmount: { $sum: '$totalAmount' },
+          hotelEarnings: { $sum: '$hotelEarnings' },
+          count: { $sum: 1 },
+          paidCount: {
+            $sum: {
+              $cond: [{ $eq: ['$payment.status', 'paid'] }, 1, 0]
+            }
+          },
+          paidAmount: {
+            $sum: {
+              $cond: [{ $eq: ['$payment.status', 'paid'] }, '$totalAmount', 0]
+            }
+          },
+          paidHotelEarnings: {
+            $sum: {
+              $cond: [{ $eq: ['$payment.status', 'paid'] }, '$hotelEarnings', 0]
+            }
+          },
+          bookings: {
+            $push: {
+              id: '$_id',
+              serviceType: '$serviceType',
+              guestName: '$guestName',
+              bookingReference: '$bookingReference',
+              totalAmount: '$totalAmount'
+            }
+          }
+        }
+      }
+    ]);
+
+    // Get transportation bookings analytics
+    const transportationBookingsAnalytics = await TransportationBooking.aggregate([
+      { $match: matchFilter },
+      {
+        $addFields: {
+          serviceType: 'transportation',
+          paymentMethod: '$payment.paymentMethod',
+          totalAmount: '$quote.finalPrice',
+          hotelEarnings: '$hotelMarkup.amount',
+          guestName: '$guestDetails.firstName',
+          bookingReference: '$bookingReference'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            hotelId: '$hotelId',
+            paymentMethod: '$paymentMethod'
+          },
+          totalAmount: { $sum: '$totalAmount' },
+          hotelEarnings: { $sum: '$hotelEarnings' },
+          count: { $sum: 1 },
+          paidCount: {
+            $sum: {
+              $cond: [{ $eq: ['$payment.status', 'paid'] }, 1, 0]
+            }
+          },
+          paidAmount: {
+            $sum: {
+              $cond: [{ $eq: ['$payment.status', 'paid'] }, '$totalAmount', 0]
+            }
+          },
+          paidHotelEarnings: {
+            $sum: {
+              $cond: [{ $eq: ['$payment.status', 'paid'] }, '$hotelEarnings', 0]
+            }
+          },
+          bookings: {
+            $push: {
+              id: '$_id',
+              serviceType: '$serviceType',
+              guestName: '$guestName',
+              bookingReference: '$bookingReference',
+              totalAmount: '$totalAmount'
+            }
+          }
+        }
+      }
+    ]);
+
+    // Combine the results from both collections
+    const combined = [...regularBookingsAnalytics, ...transportationBookingsAnalytics];
+
+    // Group by hotel and payment method, combining data from both collections
+    const grouped = combined.reduce((acc, item) => {
+      const key = `${item._id.hotelId}-${item._id.paymentMethod}`;
+
+      if (acc[key]) {
+        // Combine the data
+        acc[key].totalAmount += item.totalAmount;
+        acc[key].hotelEarnings += item.hotelEarnings;
+        acc[key].count += item.count;
+        acc[key].paidCount += item.paidCount;
+        acc[key].paidAmount += item.paidAmount;
+        acc[key].paidHotelEarnings += item.paidHotelEarnings;
+        acc[key].bookings.push(...item.bookings);
+      } else {
+        acc[key] = item;
+      }
+
+      return acc;
+    }, {});
+
+    // Convert back to array format similar to original aggregation
+    return Object.values(grouped);
+  };
+
+  // Helper function to get unified payment analytics with proper payment filtering per hotel
+  const getUnifiedPaymentAnalyticsWithPaymentFiltering = async (baseMatchFilter, hotelId) => {
+    if (hotelId && hotelId !== 'all') {
+      // For specific hotel: apply payment filtering as before
+      let bookingMatchFilter = { ...baseMatchFilter };
+
+      const lastPayment = await HotelPayment.findOne({
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        paymentStatus: 'completed'
+      }).sort({ 'paymentDetails.paymentDate': -1 });
+
+      console.log('Debug - Last payment date for specific hotel:', lastPayment?.paymentDetails?.paymentDate);
+
+      if (lastPayment && lastPayment.paymentDetails?.paymentDate) {
+        bookingMatchFilter.createdAt = {
+          ...baseMatchFilter.createdAt,
+          $gte: new Date(lastPayment.paymentDetails.paymentDate)
+        };
+      }
+
+      return await getUnifiedPaymentAnalytics(bookingMatchFilter);
+    } else {
+      // For all hotels: get last payment for each hotel and filter accordingly
+      console.log('Debug - Using all hotels mode: checking each hotel\'s last payment individually');
+
+      const allHotelsFilter = {};
+      const allHotels = await Hotel.find(allHotelsFilter).select('_id name');
+
+      let allResults = [];
+
+      for (const hotel of allHotels) {
+        // Get last payment for this specific hotel
+        const lastPayment = await HotelPayment.findOne({
+          hotelId: hotel._id,
+          paymentStatus: 'completed'
+        }).sort({ 'paymentDetails.paymentDate': -1 });
+
+        // Create hotel-specific match filter
+        let hotelBookingMatchFilter = {
+          ...baseMatchFilter,
+          hotelId: hotel._id
+        };
+
+        if (lastPayment && lastPayment.paymentDetails?.paymentDate) {
+          hotelBookingMatchFilter.createdAt = {
+            ...baseMatchFilter.createdAt,
+            $gte: new Date(lastPayment.paymentDetails.paymentDate)
+          };
+        }
+
+        console.log(`Debug - Hotel ${hotel.name}: last payment ${lastPayment?.paymentDetails?.paymentDate}`);
+
+        // Get analytics for this hotel
+        const hotelResults = await getUnifiedPaymentAnalytics(hotelBookingMatchFilter);
+        allResults.push(...hotelResults);
+      }
+
+      return allResults;
+    }
+  };
+
+  // Get payment analytics using the new filtering approach
+  const paymentAnalyticsRaw = await getUnifiedPaymentAnalyticsWithPaymentFiltering(matchFilter, hotelId);
+
+  console.log('Debug - Payment analytics raw results:', paymentAnalyticsRaw.length, 'groups');
+
+  // Group by hotel (similar to the original second grouping stage)
+  const paymentAnalytics = paymentAnalyticsRaw.reduce((acc, item) => {
+    const hotelId = item._id.hotelId.toString();
+
+    if (!acc[hotelId]) {
+      acc[hotelId] = {
+        _id: item._id.hotelId,
+        payments: [],
+        totalEarnings: 0,
+        totalTransactions: 0
+      };
+    }
+
+    acc[hotelId].payments.push({
+      paymentMethod: item._id.paymentMethod,
+      totalAmount: item.totalAmount,
+      hotelEarnings: item.hotelEarnings,
+      count: item.count,
+      paidCount: item.paidCount,
+      paidAmount: item.paidAmount,
+      paidHotelEarnings: item.paidHotelEarnings,
+      bookings: item.bookings
+    });
+
+    acc[hotelId].totalEarnings += item.hotelEarnings;
+    acc[hotelId].totalTransactions += item.count;
+
+    return acc;
+  }, {});
+
+  // Convert to array and add hotel information
+  const analyticsArray = await Promise.all(
+    Object.values(paymentAnalytics).map(async (hotelData) => {
+      const hotel = await Hotel.findById(hotelData._id).select('name');
+      return {
+        hotelId: hotelData._id,
+        hotelName: hotel ? hotel.name : 'Unknown Hotel',
+        payments: hotelData.payments,
+        totalEarnings: hotelData.totalEarnings,
+        totalTransactions: hotelData.totalTransactions
+      };
+    })
+  );
+
+  console.log('Debug - Combined payment analytics (regular + transportation):', JSON.stringify(analyticsArray.slice(0, 1), null, 2));
+
+  // Ensure all hotels are represented with both online and cash payment methods
+  const completeAnalytics = allHotels.map(hotel => {
+    const existingHotel = analyticsArray.find(p => p.hotelId.toString() === hotel._id.toString());
+
+    if (!existingHotel) {
+      return {
+        hotelId: hotel._id,
+        hotelName: hotel.name,
+        payments: [
+          {
+            paymentMethod: 'online',
+            totalAmount: 0,
+            hotelEarnings: 0,
+            count: 0,
+            paidCount: 0,
+            paidAmount: 0,
+            paidHotelEarnings: 0,
+            bookings: []
+          },
+          {
+            paymentMethod: 'cash',
+            totalAmount: 0,
+            hotelEarnings: 0,
+            count: 0,
+            paidCount: 0,
+            paidAmount: 0,
+            paidHotelEarnings: 0,
+            bookings: []
+          }
+        ],
+        totalEarnings: 0,
+        totalTransactions: 0
+      };
+    }
+
+    // Ensure both online and cash methods are present
+    const onlinePayment = existingHotel.payments.find(p => p.paymentMethod === 'online') ||
+      {
+        paymentMethod: 'online',
+        totalAmount: 0,
+        hotelEarnings: 0,
+        count: 0,
+        paidCount: 0,
+        paidAmount: 0,
+        paidHotelEarnings: 0,
+        bookings: []
+      };
+
+    const cashPayment = existingHotel.payments.find(p => p.paymentMethod === 'cash') ||
+      {
+        paymentMethod: 'cash',
+        totalAmount: 0,
+        hotelEarnings: 0,
+        count: 0,
+        paidCount: 0,
+        paidAmount: 0,
+        paidHotelEarnings: 0,
+        bookings: []
+      };
+
+    return {
+      ...existingHotel,
+      payments: [onlinePayment, cashPayment]
+    };
+  });
+
+  // Get outstanding payments (not needed for display but kept for API compatibility)
+  const outstandingPayments = await HotelPayment.find({
+    paymentStatus: 'pending',
+    ...(hotelId && hotelId !== 'all' ? { hotelId: new mongoose.Types.ObjectId(hotelId) } : {})
+  }).populate('hotelId', 'name');
+
+  // Get completed payments for the same time period as the booking analytics
+  // Use overlapping date ranges to catch payments made for this period
+  const completedPayments = await HotelPayment.find({
+    paymentStatus: 'completed',
+    // Find payments where the payment period overlaps with our analytics period
+    $or: [
+      {
+        // Payment period overlaps with analytics period
+        'paymentPeriod.startDate': { $lte: end },
+        'paymentPeriod.endDate': { $gte: start }
+      },
+      {
+        // Or recent payments (within last 24 hours) to catch immediate payments
+        'paymentDetails.paymentDate': { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+      }
+    ],
+    ...(hotelId && hotelId !== 'all' ? { hotelId: new mongoose.Types.ObjectId(hotelId) } : {})
+  }).populate('hotelId', 'name');
+
+  // Calculate raw totals from bookings (no reductions)
+  const rawTotals = completeAnalytics.reduce((acc, hotel) => {
+    hotel.payments.forEach(payment => {
+      const method = payment.paymentMethod === 'online' ? 'online' : 'cash';
+      if (!acc[method]) {
+        acc[method] = { totalAmount: 0, hotelEarnings: 0, count: 0 };
+      }
+      acc[method].totalAmount += payment.totalAmount || 0;
+      acc[method].hotelEarnings += payment.hotelEarnings || 0;
+      acc[method].count += payment.count || 0;
+    });
+    return acc;
+  }, { online: { totalAmount: 0, hotelEarnings: 0, count: 0 }, cash: { totalAmount: 0, hotelEarnings: 0, count: 0 } });
+
+  console.log('Debug - Found completed payments:', completedPayments.length);
+  console.log('Debug - Completed payment amounts:', completedPayments.map(p => p.paymentDetails?.paidAmount));
+  console.log('Debug - Payment periods:', completedPayments.map(p => ({
+    start: p.paymentPeriod?.startDate,
+    end: p.paymentPeriod?.endDate,
+    hotel: p.hotelId?.name
+  })));
+  console.log('Debug - Analytics date range:', { start, end });
+
+  // Calculate total amount paid to reduce from Online Total Amount
+  const totalPaidAmount = completedPayments.reduce((sum, payment) => {
+    return sum + (payment.paymentDetails?.paidAmount || 0);
+  }, 0);
+
+  // Since we're only showing bookings since the last payment, no need to reduce by paid amounts
+  const totals = {
+    online: {
+      totalAmount: rawTotals.online.totalAmount, // Show actual unpaid booking amounts
+      hotelEarnings: rawTotals.online.hotelEarnings,
+      count: rawTotals.online.count
+    },
+    cash: {
+      totalAmount: rawTotals.cash.totalAmount, // Show actual unpaid booking amounts
+      hotelEarnings: rawTotals.cash.hotelEarnings,
+      count: rawTotals.cash.count
+    }
+  };
+
+  console.log('Debug - Raw Online Total Amount:', rawTotals.online.totalAmount);
+  console.log('Debug - Raw Cash Total Amount:', rawTotals.cash.totalAmount);
+  console.log('Debug - Total Paid Amount:', totalPaidAmount);
+  console.log('Debug - Final Online Total Amount (after reduction):', totals.online.totalAmount);
+  console.log('Debug - Final Cash Total Amount:', totals.cash.totalAmount);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      analytics: completeAnalytics,
+      outstandingPayments,
+      completedPayments,
+      totals,
+      period: { start, end }
+    }
+  });
+}));
+
+/**
+ * @route   POST /api/superadmin/mark-hotel-payment
+ * @desc    Mark hotel payment as completed
+ * @access  Private/SuperAdmin
+ */
+router.post('/mark-hotel-payment', catchAsync(async (req, res) => {
+  const {
+    hotelId,
+    amount,
+    paymentMethod,
+    transactionReference,
+    notes,
+    startDate,
+    endDate
+  } = req.body;
+
+  if (!hotelId || !amount) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Hotel ID and amount are required'
+    });
+  }
+
+  const HotelPayment = require('../models/HotelPayment');
+
+  // Calculate date range
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  // Get the most recent completed payment for this hotel to determine what has been paid
+  const lastPayment = await HotelPayment.findOne({
+    hotelId: new mongoose.Types.ObjectId(hotelId),
+    paymentStatus: 'completed'
+  }).sort({ 'paymentDetails.paymentDate': -1 });
+
+  // Only include bookings created AFTER the last payment
+  let bookingMatchFilter = {
+    hotelId: new mongoose.Types.ObjectId(hotelId),
+    createdAt: { $gte: start, $lte: end }
+  };
+
+  if (lastPayment && lastPayment.paymentDetails?.paymentDate) {
+    bookingMatchFilter.createdAt = {
+      ...bookingMatchFilter.createdAt,
+      $gte: new Date(lastPayment.paymentDetails.paymentDate) // Only bookings since last payment
+    };
+  }
+
+  console.log('Debug - Payment recording booking filter:', bookingMatchFilter);
+
+  // Helper function to get unified booking analytics for payment recording
+  const getUnifiedBookingAnalyticsForPayment = async (matchFilter) => {
+    // Get regular bookings analytics
+    const regularBookingsAnalytics = await Booking.aggregate([
+      { $match: matchFilter },
+      {
+        $group: {
+          _id: '$payment.paymentMethod',
+          totalAmount: { $sum: '$pricing.totalAmount' },
+          hotelEarnings: { $sum: '$pricing.hotelEarnings' },
+          count: { $sum: 1 },
+          bookingIds: { $push: '$_id' },
+          bookingNumbers: { $push: '$bookingNumber' },
+          serviceTypes: { $push: '$serviceType' },
+          bookingDetails: {
+            $push: {
+              bookingId: '$_id',
+              bookingNumber: '$bookingNumber',
+              serviceType: '$serviceType',
+              totalAmount: '$pricing.totalAmount',
+              hotelEarnings: '$pricing.hotelEarnings',
+              createdAt: '$createdAt',
+              guestName: {
+                $ifNull: [
+                  { $concat: ['$guestDetails.firstName', ' ', '$guestDetails.lastName'] },
+                  '$fullGuestName'
+                ]
+              }
+            }
+          }
+        }
+      }
+    ]);
+
+    // Get transportation bookings analytics
+    const transportationBookingsAnalytics = await TransportationBooking.aggregate([
+      { $match: matchFilter },
+      {
+        $group: {
+          _id: '$payment.paymentMethod',
+          totalAmount: { $sum: '$quote.finalPrice' },
+          hotelEarnings: { $sum: '$hotelMarkup.amount' },
+          count: { $sum: 1 },
+          bookingIds: { $push: '$_id' },
+          bookingNumbers: { $push: '$bookingReference' },
+          serviceTypes: { $push: 'transportation' },
+          bookingDetails: {
+            $push: {
+              bookingId: '$_id',
+              bookingNumber: '$bookingReference',
+              serviceType: 'transportation',
+              totalAmount: '$quote.finalPrice',
+              hotelEarnings: '$hotelMarkup.amount',
+              createdAt: '$createdAt',
+              guestName: '$guestDetails.firstName'
+            }
+          }
+        }
+      }
+    ]);
+
+    // Combine the results from both collections
+    const combined = [...regularBookingsAnalytics, ...transportationBookingsAnalytics];
+
+    // Group by payment method, combining data from both collections
+    const grouped = combined.reduce((acc, item) => {
+      const key = item._id; // payment method (online/cash)
+
+      if (acc[key]) {
+        // Combine the data
+        acc[key].totalAmount += item.totalAmount;
+        acc[key].hotelEarnings += item.hotelEarnings;
+        acc[key].count += item.count;
+        acc[key].bookingIds.push(...item.bookingIds);
+        acc[key].bookingNumbers.push(...item.bookingNumbers);
+        acc[key].serviceTypes.push(...item.serviceTypes);
+        acc[key].bookingDetails.push(...item.bookingDetails);
+      } else {
+        acc[key] = item;
+      }
+
+      return acc;
+    }, {});
+
+    // Convert back to array format similar to original aggregation
+    return Object.values(grouped);
+  };
+
+  // Get current booking analytics for unpaid bookings from both collections
+  const bookingAnalytics = await getUnifiedBookingAnalyticsForPayment(bookingMatchFilter);
+
+  console.log('Debug - Booking Analytics Result:', JSON.stringify(bookingAnalytics, null, 2));
+
+  // Create payment breakdown
+  const paymentBreakdown = {
+    onlinePayments: { count: 0, totalAmount: 0, hotelEarnings: 0, bookingDetails: [] },
+    cashPayments: { count: 0, totalAmount: 0, hotelEarnings: 0, bookingDetails: [] }
+  };
+
+  let totalEarnings = 0;
+  let totalTransactions = 0;
+  const allBookingIds = [];
+
+  bookingAnalytics.forEach(group => {
+    const method = group._id === 'online' ? 'onlinePayments' : 'cashPayments';
+    paymentBreakdown[method] = {
+      count: group.count,
+      totalAmount: group.totalAmount,
+      hotelEarnings: group.hotelEarnings,
+      bookingDetails: group.bookingDetails
+    };
+    totalEarnings += group.hotelEarnings;
+    totalTransactions += group.count;
+    allBookingIds.push(...group.bookingIds);
+  });
+
+  console.log('Debug - Payment Breakdown for new payment:', JSON.stringify(paymentBreakdown.onlinePayments.bookingDetails?.slice(0, 2), null, 2));
+
+  console.log('Debug - Final payment breakdown before saving:', {
+    onlineCount: paymentBreakdown.onlinePayments.count,
+    onlineAmount: paymentBreakdown.onlinePayments.totalAmount,
+    onlineBookingsCount: paymentBreakdown.onlinePayments.bookingDetails?.length,
+    cashCount: paymentBreakdown.cashPayments.count,
+    cashAmount: paymentBreakdown.cashPayments.totalAmount,
+    cashBookingsCount: paymentBreakdown.cashPayments.bookingDetails?.length
+  });
+
+  // Create or update hotel payment record
+  const paymentRecord = await HotelPayment.findOneAndUpdate(
+    {
+      hotelId: new mongoose.Types.ObjectId(hotelId),
+      paymentStatus: 'pending',
+      'paymentPeriod.startDate': new Date(startDate),
+      'paymentPeriod.endDate': new Date(endDate)
+    },
+    {
+      $set: {
+        paymentStatus: 'completed',
+        paymentBreakdown: paymentBreakdown,
+        totalEarnings: totalEarnings,
+        totalTransactions: totalTransactions,
+        'paymentDetails.paidAmount': amount,
+        'paymentDetails.paymentDate': new Date(),
+        'paymentDetails.paymentMethod': paymentMethod,
+        'paymentDetails.transactionReference': transactionReference,
+        'paymentDetails.notes': notes,
+        'paymentDetails.processedBy': req.user._id,
+        'invoice.generatedAt': new Date(),
+        'invoice.generatedBy': req.user._id,
+        'invoice.invoiceNumber': 'INV-' + Date.now().toString().slice(-8).toUpperCase(),
+        'metadata.bookingIds': allBookingIds,
+        'metadata.totalBookings': totalTransactions,
+        'metadata.lastCalculatedAt': new Date()
+      }
+    },
+    {
+      new: true,
+      upsert: true,
+      setDefaultsOnInsert: true
+    }
+  ).populate('hotelId', 'name');
+
+  // Log the payment action
+  logger.info(`Hotel payment marked as completed`, {
+    hotelId,
+    amount,
+    processedBy: req.user._id,
+    transactionReference
+  });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Payment marked as completed successfully',
+    data: { paymentRecord }
+  });
+}));
+
+/**
+ * @route   GET /api/superadmin/payment-history
+ * @desc    Get payment history for all hotels
+ * @access  Private/SuperAdmin
+ */
+router.get('/payment-history', catchAsync(async (req, res) => {
+  const { page = 1, limit = 10, hotelId, status } = req.query;
+
+  const HotelPayment = require('../models/HotelPayment');
+
+  let filter = {};
+  if (hotelId && hotelId !== 'all') {
+    filter.hotelId = new mongoose.Types.ObjectId(hotelId);
+  }
+  if (status) {
+    filter.paymentStatus = status;
+  }
+
+  const payments = await HotelPayment.find(filter)
+    .populate('hotelId', 'name email')
+    .populate('paymentDetails.processedBy', 'name email')
+    .sort({ createdAt: -1 })
+    .limit(limit * 1)
+    .skip((page - 1) * limit);
+
+  const total = await HotelPayment.countDocuments(filter);
+
+  res.status(200).json({
+    status: 'success',
+    results: payments.length,
+    data: {
+      payments,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalRecords: total,
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPrevPage: page > 1
+      }
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/superadmin/generate-invoice/:paymentId
+ * @desc    Generate and download invoice for hotel payment
+ * @access  Private/SuperAdmin
+ */
+router.get('/generate-invoice/:paymentId', catchAsync(async (req, res) => {
+  const { paymentId } = req.params;
+  const { format = 'pdf' } = req.query;
+
+  const HotelPayment = require('../models/HotelPayment');
+
+  const payment = await HotelPayment.findById(paymentId)
+    .populate('hotelId', 'name email address phone')
+    .populate('paymentDetails.processedBy', 'name email');
+
+  if (!payment) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Payment record not found'
+    });
+  }
+
+  // Update download count
+  payment.invoice.downloadCount += 1;
+  await payment.save();
+
+  if (format === 'csv') {
+    // Generate CSV format
+    const csvData = [
+      ['Invoice Number', payment.invoice.invoiceNumber],
+      ['Hotel Name', payment.hotelId.name],
+      ['Payment Period', `${payment.paymentPeriod.startDate.toDateString()} - ${payment.paymentPeriod.endDate.toDateString()}`],
+      ['Total Earnings', payment.totalEarnings],
+      ['Payment Date', payment.paymentDetails.paymentDate?.toDateString() || 'N/A'],
+      ['Transaction Reference', payment.paymentDetails.transactionReference || 'N/A'],
+      ['Online Payments Count', payment.paymentBreakdown.onlinePayments.count],
+      ['Online Payments Amount', payment.paymentBreakdown.onlinePayments.totalAmount],
+      ['Cash Payments Count', payment.paymentBreakdown.cashPayments.count],
+      ['Cash Payments Amount', payment.paymentBreakdown.cashPayments.totalAmount]
+    ];
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=invoice-${payment.invoice.invoiceNumber}.csv`);
+
+    const csvContent = csvData.map(row => row.join(',')).join('\n');
+    return res.send(csvContent);
+  } else {
+    // Return PDF data (will be handled by frontend)
+    res.status(200).json({
+      status: 'success',
+      data: {
+        invoice: {
+          invoiceNumber: payment.invoice.invoiceNumber,
+          generatedAt: payment.invoice.generatedAt,
+          hotel: payment.hotelId,
+          paymentPeriod: payment.paymentPeriod,
+          paymentBreakdown: payment.paymentBreakdown,
+          totalEarnings: payment.totalEarnings,
+          totalTransactions: payment.totalTransactions,
+          paymentDetails: payment.paymentDetails,
+          currency: payment.currency
+        }
+      }
+    });
+  }
+}));
+
+/**
+ * @route   POST /api/superadmin/generate-invoice
+ * @desc    Generate and download invoice for hotel payment (POST version)
+ * @access  Private/SuperAdmin
+ */
+router.post('/generate-invoice', catchAsync(async (req, res) => {
+  const { paymentId, format = 'pdf' } = req.body;
+
+  const HotelPayment = require('../models/HotelPayment');
+
+  const payment = await HotelPayment.findById(paymentId)
+    .populate('hotelId', 'name email address phone')
+    .populate('paymentDetails.processedBy', 'name email');
+
+  console.log('Debug - CSV Payment ID:', paymentId);
+  console.log('Debug - CSV Payment Amount:', payment?.paymentDetails?.paidAmount);
+  console.log('Debug - Full Payment Record:', JSON.stringify({
+    paymentBreakdown: payment?.paymentBreakdown,
+    totalEarnings: payment?.totalEarnings,
+    totalTransactions: payment?.totalTransactions
+  }, null, 2));
+  console.log('Debug - CSV Payment Breakdown:', {
+    online: payment?.paymentBreakdown?.onlinePayments?.totalAmount,
+    cash: payment?.paymentBreakdown?.cashPayments?.totalAmount,
+    onlineBookingDetails: payment?.paymentBreakdown?.onlinePayments?.bookingDetails?.length,
+    cashBookingDetails: payment?.paymentBreakdown?.cashPayments?.bookingDetails?.length
+  });
+
+  if (!payment) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Payment record not found'
+    });
+  }
+
+  // Update download count
+  payment.invoice.downloadCount += 1;
+  await payment.save();
+
+  if (format === 'csv') {
+    // Generate CSV format with booking details
+    const csvData = [
+      ['Invoice Number', payment.invoice.invoiceNumber || 'INV-' + payment._id.toString().slice(-8).toUpperCase()],
+      ['Hotel Name', payment.hotelId.name],
+      ['Payment Period', `${payment.paymentPeriod.startDate.toDateString()} - ${payment.paymentPeriod.endDate.toDateString()}`],
+      ['Total Earnings', payment.totalEarnings || 0],
+      ['Payment Date', payment.paymentDetails.paymentDate?.toDateString() || 'N/A'],
+      ['Transaction Reference', payment.paymentDetails.transactionReference || 'N/A'],
+      ['Online Payments Count', payment.paymentBreakdown?.onlinePayments?.count || 0],
+      ['Online Payments Amount', payment.paymentBreakdown?.onlinePayments?.totalAmount || 0],
+      ['Cash Payments Count', payment.paymentBreakdown?.cashPayments?.count || 0],
+      ['Cash Payments Amount', payment.paymentBreakdown?.cashPayments?.totalAmount || 0],
+      [''], // Empty row
+      ['BOOKING DETAILS'], // Section header
+      ['Booking Number', 'Service Type', 'Guest Name', 'Total Amount', 'Hotel Earnings', 'Payment Method', 'Date']
+    ];
+
+    // Add online booking details
+    if (payment.paymentBreakdown?.onlinePayments?.bookingDetails?.length > 0) {
+      csvData.push(['ONLINE PAYMENTS:']);
+      payment.paymentBreakdown.onlinePayments.bookingDetails.forEach(booking => {
+        csvData.push([
+          booking.bookingNumber || booking.bookingId,
+          booking.serviceType || 'N/A',
+          booking.guestName || 'N/A',
+          booking.totalAmount || 0,
+          booking.hotelEarnings || 0,
+          'online',
+          booking.createdAt ? new Date(booking.createdAt).toDateString() : 'N/A'
+        ]);
+      });
+    }
+
+    // Add cash booking details
+    if (payment.paymentBreakdown?.cashPayments?.bookingDetails?.length > 0) {
+      csvData.push(['CASH PAYMENTS:']);
+      payment.paymentBreakdown.cashPayments.bookingDetails.forEach(booking => {
+        csvData.push([
+          booking.bookingNumber || booking.bookingId,
+          booking.serviceType || 'N/A',
+          booking.guestName || 'N/A',
+          booking.totalAmount || 0,
+          booking.hotelEarnings || 0,
+          'cash',
+          booking.createdAt ? new Date(booking.createdAt).toDateString() : 'N/A'
+        ]);
+      });
+    }
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=invoice-${payment.invoice.invoiceNumber || payment._id}.csv`);
+
+    const csvContent = csvData.map(row => row.join(',')).join('\n');
+    return res.send(csvContent);
+  } else {
+    // Generate PDF content as JSON (frontend will handle PDF generation)
+    const invoiceData = {
+      invoiceNumber: payment.invoice.invoiceNumber || 'INV-' + payment._id.toString().slice(-8).toUpperCase(),
+      generatedAt: payment.invoice.generatedAt || new Date(),
+      hotel: payment.hotelId,
+      paymentPeriod: payment.paymentPeriod,
+      paymentBreakdown: payment.paymentBreakdown,
+      totalEarnings: payment.totalEarnings,
+      totalTransactions: payment.totalTransactions,
+      paymentDetails: payment.paymentDetails,
+      currency: payment.currency
+    };
+
+    // For PDF, we return the data and let the frontend handle PDF generation
+    res.status(200).json({
+      status: 'success',
+      data: { invoice: invoiceData }
+    });
+  }
+}));
+
+/**
+ * @route   POST /api/superadmin/reset-outstanding-payments
+ * @desc    Reset outstanding payments counter for a hotel
+ * @access  Private/SuperAdmin
+ */
+router.post('/reset-outstanding-payments', catchAsync(async (req, res) => {
+  const { hotelId } = req.body;
+
+  if (!hotelId) {
+    return res.status(400).json({
+      status: 'error',
+      message: 'Hotel ID is required'
+    });
+  }
+
+  const HotelPayment = require('../models/HotelPayment');
+
+  // Mark all pending payments for this hotel as completed
+  const result = await HotelPayment.updateMany(
+    {
+      hotelId: new mongoose.Types.ObjectId(hotelId),
+      paymentStatus: 'pending'
+    },
+    {
+      $set: {
+        paymentStatus: 'completed',
+        'paymentDetails.paymentDate': new Date(),
+        'paymentDetails.processedBy': req.user._id,
+        'paymentDetails.notes': 'Reset by Super Admin'
+      }
+    }
+  );
+
+  logger.info(`Outstanding payments reset for hotel`, {
+    hotelId,
+    resetBy: req.user._id,
+    affectedRecords: result.modifiedCount
+  });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Outstanding payments reset successfully',
+    data: { affectedRecords: result.modifiedCount }
   });
 }));
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { API_BASE_URL } from '../../config/api.config';
+import PaymentAnalytics from '../../components/superadmin/PaymentAnalytics';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -139,7 +140,7 @@ const SuperHotelAnalytics = () => {
 
   useEffect(() => {
     fetchAvailableHotels();
-  }, []); // Only run once on mount
+  }, [fetchAvailableHotels]); // Include fetchAvailableHotels in dependency array
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -359,7 +360,8 @@ const SuperHotelAnalytics = () => {
     { id: 'processing', label: 'Processing Times', icon: '⏱️' },
     { id: 'housekeeping', label: 'Housekeeping Issues', icon: '🧹' },
     { id: 'revenue', label: 'Revenue Trends', icon: '💰' },
-    { id: 'providers', label: 'Service Providers', icon: '👥' }
+    { id: 'providers', label: 'Service Providers', icon: '👥' },
+    { id: 'payments', label: 'Payment Management', icon: '💳' }
   ];
 
   return (
@@ -944,6 +946,9 @@ const SuperHotelAnalytics = () => {
               </div>
             </div>
           )}
+
+          {/* Payment Management Tab - Shows payment analytics and hotel payment management */}
+          {activeTab === 'payments' && <PaymentAnalytics />}
         </div>
       </div>
     </div>
