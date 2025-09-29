@@ -2227,6 +2227,8 @@
     "noServices": "No Services Available",
     "noServicesDescription": "Housekeeping services are currently not available.",
     "asap": "As soon as possible",
+    "customTime": "Choose specific time",
+    "selectYourPreferredTime": "Select your preferred time",
     "quickIssues": {
       "maintenance": {
         "electrical": {

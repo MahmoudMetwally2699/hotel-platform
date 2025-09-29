@@ -2282,6 +2282,8 @@
     "noServices": "لا توجد خدمات متاحة",
     "noServicesDescription": "خدمات التنظيف غير متاحة حالياً.",
     "asap": "في أقرب وقت ممكن",
+    "customTime": "اختيار وقت محدد",
+    "selectYourPreferredTime": "اختر الوقت المفضل لديك",
     "quickIssues": {
       "maintenance": {
         "electrical": {

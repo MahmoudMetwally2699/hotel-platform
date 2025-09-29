@@ -61,6 +61,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const [showQuickHints, setShowQuickHints] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [issueCategoryDropdownOpen, setIssueCategoryDropdownOpen] = useState(false);
+  const [timeOption, setTimeOption] = useState('asap'); // 'asap' or 'custom'
   const dropdownRef = useRef(null);
 
   // Handle click outside to close dropdown
@@ -76,6 +77,15 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Set initial time option based on preferred time
+  useEffect(() => {
+    if (bookingDetails.preferredTime === 'asap') {
+      setTimeOption('asap');
+    } else if (bookingDetails.preferredTime && bookingDetails.preferredTime !== '') {
+      setTimeOption('custom');
+    }
+  }, [bookingDetails.preferredTime]);
 
   // Get quick hint categories based on service type
   const getQuickHintCategories = () => {
@@ -289,23 +299,47 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       return quickHintCategories;
     }
 
+    // Map selected dropdown categories to quick hint categories
+    const categoryMapping = {
+      'electrical_issues': ['electrical'],
+      'plumbing_issues': ['plumbing'],
+      'ac_heating': ['acHeating', 'ac', 'heating'],
+      'furniture_repair': ['furniture'],
+      'electronics_issues': ['electronics'],
+      'general_cleaning': ['roomCleaning', 'room cleaning'],
+      'deep_cleaning': ['deepCleaning', 'deep cleaning'],
+      'stain_removal': ['stains'],
+      'bathroom_amenities': ['bathroom'],
+      'room_supplies': ['room'],
+      'cleaning_supplies': ['cleaning']
+    };
+
+    const allowedCategoryTypes = [];
+    bookingDetails.specificCategory.forEach(selectedCat => {
+      if (categoryMapping[selectedCat]) {
+        allowedCategoryTypes.push(...categoryMapping[selectedCat]);
+      }
+    });
+
+    if (allowedCategoryTypes.length === 0) {
+      return quickHintCategories; // If no mapping found, show all categories
+    }
+
     return quickHintCategories.filter(category => {
+      // Extract category type from translation key or title
       const categoryTitle = category.title.toLowerCase();
-      return bookingDetails.specificCategory.some(selectedCat => {
-        const selectedCategory = selectedCat.toLowerCase();
-        // Map selected categories to quick hint categories
-        if (selectedCategory.includes('electrical') && categoryTitle.includes('electrical')) return true;
-        if (selectedCategory.includes('plumbing') && categoryTitle.includes('plumbing')) return true;
-        if (selectedCategory.includes('ac_heating') && (categoryTitle.includes('ac') || categoryTitle.includes('heating'))) return true;
-        if (selectedCategory.includes('furniture') && categoryTitle.includes('furniture')) return true;
-        if (selectedCategory.includes('electronics') && categoryTitle.includes('electronics')) return true;
-        if (selectedCategory.includes('general_cleaning') && categoryTitle.includes('room cleaning')) return true;
-        if (selectedCategory.includes('deep_cleaning') && categoryTitle.includes('deep cleaning')) return true;
-        if (selectedCategory.includes('stain_removal') && categoryTitle.includes('stains')) return true;
-        if (selectedCategory.includes('bathroom_amenities') && categoryTitle.includes('bathroom')) return true;
-        if (selectedCategory.includes('room_supplies') && categoryTitle.includes('room')) return true;
-        if (selectedCategory.includes('cleaning_supplies') && categoryTitle.includes('cleaning')) return true;
-        return false;
+      return allowedCategoryTypes.some(allowedType => {
+        const type = allowedType.toLowerCase();
+        return (categoryTitle.includes(type) ||
+               (categoryTitle.includes('كهربائية') && type === 'electrical') ||
+               (categoryTitle.includes('سباكة') && type === 'plumbing') ||
+               (categoryTitle.includes('تكييف') && (type === 'ac' || type === 'acheating')) ||
+               (categoryTitle.includes('أثاث') && type === 'furniture') ||
+               (categoryTitle.includes('إلكترونية') && type === 'electronics') ||
+               (categoryTitle.includes('تنظيف الغرفة') && type === 'room cleaning') ||
+               (categoryTitle.includes('تنظيف عميق') && type === 'deep cleaning') ||
+               (categoryTitle.includes('البقع') && type === 'stains') ||
+               (categoryTitle.includes('الحمام') && type === 'bathroom'));
       });
     });
   };
@@ -399,7 +433,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
         guestEmail: currentUser.email || ''
       }));
     }
-  }, [isAuthenticated, currentUser]);
+  }, [isAuthenticated, currentUser]); // Removed i18n from dependencies
 
   const fetchAvailableServices = useCallback(async () => {
     try {
@@ -847,40 +881,64 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
               {/* Time Selection */}
               <div>
                 <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">{t('housekeeping.preferredTime')}</label>
-                <div className="relative">
-                  <FaClock className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-[#3B5787] text-xs sm:text-sm" />
-                  <select
-                    value={bookingDetails.preferredTime}
-                    onChange={(e) => setBookingDetails(prev => ({ ...prev, preferredTime: e.target.value }))}
-                    className="w-full pl-10 sm:pl-12 pr-8 sm:pr-10 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] appearance-none bg-white/80 backdrop-blur-sm text-xs sm:text-sm cursor-pointer transition-all duration-200 hover:border-[#67BAE0]/50"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23${encodeURIComponent('3B5787')}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: 'right 1rem center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: '1.2em 1.2em',
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'none'
-                    }}
-                  >
-                    {selectedService && (selectedService.category === 'maintenance' ||
-                      selectedService.category === 'cleaning' ||
-                      selectedService.category === 'amenities' ||
-                      (selectedService.name && (selectedService.name.includes('maintenance') ||
-                        selectedService.name.includes('cleaning') ||
-                        selectedService.name.includes('amenities') ||
-                        selectedService.name.includes('housekeeping')))) && (
-                      <option value="asap">{t('housekeeping.asap', 'As soon as possible')}</option>
-                    )}
-                    <option value="09:00">09:00</option>
-                    <option value="10:00">10:00</option>
-                    <option value="11:00">11:00</option>
-                    <option value="12:00">12:00</option>
-                    <option value="13:00">13:00</option>
-                    <option value="14:00">14:00</option>
-                    <option value="15:00">15:00</option>
-                    <option value="16:00">16:00</option>
-                    <option value="17:00">17:00</option>
-                  </select>
+
+                {/* Time Option Selection */}
+                <div className="space-y-3">
+                  {/* ASAP Option */}
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="asap"
+                      name="timeOption"
+                      value="asap"
+                      checked={timeOption === 'asap'}
+                      onChange={(e) => {
+                        setTimeOption(e.target.value);
+                        if (e.target.value === 'asap') {
+                          setBookingDetails(prev => ({ ...prev, preferredTime: 'asap' }));
+                        }
+                      }}
+                      className="h-4 w-4 text-[#3B5787] focus:ring-[#67BAE0] border-[#67BAE0]/30"
+                    />
+                    <label htmlFor="asap" className="ml-3 text-xs sm:text-sm text-[#3B5787] font-medium">
+                      {t('housekeeping.asap', 'As soon as possible')}
+                    </label>
+                  </div>
+
+                  {/* Custom Time Option */}
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="custom"
+                      name="timeOption"
+                      value="custom"
+                      checked={timeOption === 'custom'}
+                      onChange={(e) => setTimeOption(e.target.value)}
+                      className="h-4 w-4 text-[#3B5787] focus:ring-[#67BAE0] border-[#67BAE0]/30"
+                    />
+                    <label htmlFor="custom" className="ml-3 text-xs sm:text-sm text-[#3B5787] font-medium">
+                      {t('housekeeping.customTime', 'Choose specific time')}
+                    </label>
+                  </div>
+
+                  {/* Custom Time Input */}
+                  {timeOption === 'custom' && (
+                    <div className="ml-7 mt-3">
+                      <div className="relative">
+                        <FaClock className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-[#3B5787] text-xs sm:text-sm" />
+                        <input
+                          type="time"
+                          value={timeOption === 'custom' ? (bookingDetails.preferredTime !== 'asap' ? bookingDetails.preferredTime : '') : ''}
+                          onChange={(e) => setBookingDetails(prev => ({ ...prev, preferredTime: e.target.value }))}
+                          className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] text-xs sm:text-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:border-[#67BAE0]/50"
+                          required={timeOption === 'custom'}
+                        />
+                      </div>
+                      <p className="text-xs text-[#3B5787]/70 mt-1.5 ml-1">
+                        {t('housekeeping.selectYourPreferredTime', 'Select your preferred time')}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -904,9 +962,9 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                   <button
                     type="button"
                     onClick={() => setIssueCategoryDropdownOpen(!issueCategoryDropdownOpen)}
-                    className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] text-xs sm:text-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:border-[#67BAE0]/50 flex items-center justify-between"
+                    className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] text-xs sm:text-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:border-[#67BAE0]/50 flex items-start justify-between min-h-[48px]"
                   >
-                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 flex-1">
                       {Array.isArray(bookingDetails.specificCategory) && bookingDetails.specificCategory.length > 0 ? (
                         bookingDetails.specificCategory.map(categoryValue => {
                           const category = getSpecificCategories(selectedService.category).find(cat => cat.value === categoryValue);
@@ -920,7 +978,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                               <div className="w-3 h-3 flex items-center justify-center">
                                 <IconComponent className="text-xs" />
                               </div>
-                              <span className="truncate max-w-20">{category.label}</span>
+                              <span className="whitespace-nowrap">{category.label}</span>
                             </div>
                           );
                         })
@@ -928,7 +986,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                         <span className="text-[#3B5787]/60">Select issue categories...</span>
                       )}
                     </div>
-                    <div className={`transform transition-all duration-300 ${issueCategoryDropdownOpen ? 'rotate-180' : ''}`}>
+                    <div className={`transform transition-all duration-300 ml-2 flex-shrink-0 mt-1 ${issueCategoryDropdownOpen ? 'rotate-180' : ''}`}>
                       <svg className="w-4 h-4 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
