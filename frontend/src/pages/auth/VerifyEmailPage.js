@@ -47,7 +47,7 @@ const VerifyEmailPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-2 sm:px-3 lg:px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
         {isVerified ? (
           <>

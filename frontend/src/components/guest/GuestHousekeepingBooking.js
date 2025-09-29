@@ -612,7 +612,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
             <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">Loading housekeeping services...</p>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="w-full px-2 sm:px-3 lg:px-4">
           <div className="flex justify-center items-center h-96">
             <div className="relative">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
@@ -634,7 +634,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
           <div className="absolute inset-0 bg-gradient-to-r from-[#3B5787] via-[#4a6694] to-[#3B5787] opacity-5"></div>
 
           {/* Header Content */}
-          <div className="relative max-w-4xl mx-auto px-4 pt-6 pb-8">
+          <div className="relative w-full px-4 pt-6 pb-8">
             {/* Back Button - Modern Style */}
             <button
               onClick={onBack}
@@ -695,7 +695,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 pb-6">
+        <div className="w-full px-4 pb-6">
 
           {/* Guest Services Section */}
           <div className="bg-white rounded-2xl shadow-sm p-6">

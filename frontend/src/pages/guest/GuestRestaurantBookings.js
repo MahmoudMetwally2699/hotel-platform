@@ -323,7 +323,7 @@ const GuestRestaurantBookings = () => {
             <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">{t('restaurant.labels.processing', 'Loading...')}</p>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="w-full px-2 sm:px-3 lg:px-4">
           <div className="flex justify-center items-center h-96">
             <div className="relative">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
@@ -337,7 +337,7 @@ const GuestRestaurantBookings = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#3B5787]/5 via-white to-[#67BAE0]/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="w-full px-2 sm:px-3 lg:px-4 py-6">
         {/* Modern Header */}
         <div className="mb-8">
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/20">

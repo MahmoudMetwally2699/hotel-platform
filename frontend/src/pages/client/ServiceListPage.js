@@ -75,7 +75,7 @@ const ServiceListPage = () => {
   // Get unique service types
   const serviceTypes = [...new Set(services.map(service => service.type))];
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">      <div className={`flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 sm:mb-8 ${isRTL ? 'text-right' : 'text-left'} gap-4`}>
+    <div className="container mx-auto px-2 sm:px-3 lg:px-4 py-4 sm:py-6 lg:py-8">      <div className={`flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 sm:mb-8 ${isRTL ? 'text-right' : 'text-left'} gap-4`}>
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{categoryName}</h1>
           <p className="mt-1 text-sm sm:text-base text-gray-500">

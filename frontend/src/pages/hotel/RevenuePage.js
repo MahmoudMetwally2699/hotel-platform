@@ -70,7 +70,7 @@ const RevenuePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#67BAE0]/10 via-white to-[#3B5787]/10">
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="p-6 w-full">
         {/* Modern Header Section */}
         <div className="mb-8">
           <div className="bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-2xl p-6 shadow-xl">

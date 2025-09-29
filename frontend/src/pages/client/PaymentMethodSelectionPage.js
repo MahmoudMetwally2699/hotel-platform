@@ -329,7 +329,7 @@ const PaymentMethodSelectionPage = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header - More compact on mobile */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+        <div className="w-full px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <button
@@ -357,7 +357,7 @@ const PaymentMethodSelectionPage = () => {
       </div>
 
       {/* Main Content - More compact layout on mobile */}
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-8">
+      <div className="w-full px-3 sm:px-4 py-3 sm:py-8">
         <div className="flex flex-col space-y-3 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
           {/* Order Summary - Show first on mobile, compact */}
           <div className="lg:col-span-1 lg:order-2">

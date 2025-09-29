@@ -132,7 +132,7 @@ const SettingsPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#67BAE0]/10 via-white to-[#3B5787]/10">
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="w-full p-6">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-2xl shadow-xl p-8 mb-8">
           <div className="flex items-center justify-between">

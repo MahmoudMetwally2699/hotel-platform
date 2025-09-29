@@ -57,7 +57,7 @@ function MyHotelServicesPage() {
   };  if (!hasValidHotelId()) {
     return (
       <div className="min-h-screen bg-gray-50 py-4 sm:py-6 lg:py-8 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-2 sm:px-3 lg:px-4">
           <div className="text-center py-8 sm:py-12">
             <div className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">

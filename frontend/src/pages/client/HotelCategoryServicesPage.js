@@ -164,7 +164,7 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
             </p>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="w-full px-2 sm:px-3 lg:px-4">
           <div className="flex justify-center items-center h-96">
             <div className="relative">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
@@ -183,7 +183,7 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="w-full px-2 sm:px-3 lg:px-4 py-4 sm:py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center">
               <button
@@ -226,7 +226,7 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
       </div>
 
       {/* Filters and Sorting */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+      <div className="w-full px-2 sm:px-3 lg:px-4 py-4 sm:py-6">
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex flex-wrap items-center justify-between gap-4">            <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">

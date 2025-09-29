@@ -197,7 +197,7 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+      <div className="w-full px-2 sm:px-3 lg:px-4">
         {/* Modern Header Section - Mobile Responsive */}
         <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden">
           {/* Background Pattern */}

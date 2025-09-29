@@ -10,7 +10,7 @@ const ForbiddenPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-2 sm:px-3 lg:px-4">
       <div className="max-w-md w-full space-y-8 text-center">
         <div>
           <h1 className="text-9xl font-extrabold text-red-600">403</h1>

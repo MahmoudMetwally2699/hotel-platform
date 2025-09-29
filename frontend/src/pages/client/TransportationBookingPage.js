@@ -390,7 +390,7 @@ const TransportationBookingPage = () => {
             <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">{t('transportationBooking.loadingService')}</p>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="w-full px-2 sm:px-3 lg:px-4">
           <div className="flex justify-center items-center h-96">
             <div className="relative">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
@@ -410,7 +410,7 @@ const TransportationBookingPage = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-[#3B5787] via-[#4a6694] to-[#3B5787] opacity-5"></div>
 
         {/* Header Content */}
-        <div className="relative max-w-4xl mx-auto px-4 pt-6 pb-8">
+        <div className="relative w-full px-4 pt-6 pb-8">
           {/* Back Button - Modern Style */}
           <button
             onClick={handleBack}
@@ -476,7 +476,7 @@ const TransportationBookingPage = () => {
       </div>
 
       {/* Modern Compact Progress Bar */}
-      <div className="max-w-6xl mx-auto px-4 py-4">
+      <div className="w-full px-4 py-4">
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 px-4 py-3 mb-6">
           <div className="relative">
             {/* Progress Track */}
@@ -529,7 +529,7 @@ const TransportationBookingPage = () => {
       </div>
 
       {/* Main Content Container - Modern Layout */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-32 lg:pb-8">
+      <div className="w-full px-2 sm:px-3 lg:px-4 pb-32 lg:pb-8">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-8">
           {/* Main Content Area - Takes 3 columns on XL screens */}
           <div className="xl:col-span-3">

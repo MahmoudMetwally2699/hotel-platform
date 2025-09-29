@@ -55,7 +55,7 @@ const DashboardPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-modern-gray to-white">
       {/* Modern Header Section */}
       <div className="bg-white shadow-lg border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="w-full px-6 py-8">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-modern-blue">{t('hotelAdmin.dashboard.title')}</h1>
@@ -75,7 +75,7 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <div className="w-full px-6 py-8 space-y-8">
         {isLoading ? (
           <div className="flex justify-center items-center h-96">
             <div className="relative">

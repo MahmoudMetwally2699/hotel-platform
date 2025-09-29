@@ -128,7 +128,7 @@ const LaundryPaymentFailed = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-2 sm:px-3 lg:px-4">
         <div className="text-center mb-8">
           <div className="text-red-500 mb-4">
             <FaTimesCircle className="text-8xl mx-auto animate-pulse" />

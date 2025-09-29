@@ -240,7 +240,7 @@ const RestaurantBookingPage = () => {
             <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">Loading restaurant menu and services...</p>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="w-full px-2 sm:px-3 lg:px-4">
           <div className="flex justify-center items-center h-96">
             <div className="relative">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
@@ -279,7 +279,7 @@ const RestaurantBookingPage = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-[#3B5787] via-[#4a6694] to-[#3B5787] opacity-5"></div>
 
         {/* Header Content */}
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-8">
+        <div className="relative w-full px-2 sm:px-3 lg:px-4 pt-6 pb-8">
           {/* Back Button - Modern Style */}
           <button
             onClick={() => navigate(`/hotels/${hotelId}/categories`)}
@@ -346,7 +346,7 @@ const RestaurantBookingPage = () => {
 
       {/* Sticky top bar with stepper */}
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="w-full px-2 sm:px-3 lg:px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[#3B5787] to-[#61B6DE] grid place-items-center text-white">
               <FaUtensils />
@@ -377,7 +377,7 @@ const RestaurantBookingPage = () => {
       </header>
 
       {/* Content */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <main className="w-full px-2 sm:px-3 lg:px-4 py-6 sm:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Left / Main */}
           <section className="lg:col-span-2 space-y-6">
@@ -712,7 +712,7 @@ const RestaurantBookingPage = () => {
       {/* Mobile sticky cart bar */}
       {selectedItems.length > 0 && (
         <div className="lg:hidden sticky bottom-0 z-30 border-t border-gray-200 bg-white/90 backdrop-blur-md">
-          <div className={`max-w-6xl mx-auto px-4 py-3 flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`w-full px-4 py-3 flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
             <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="h-9 w-9 rounded-full bg-[#3B5787] grid place-items-center text-white">
                 <FaShoppingCart />

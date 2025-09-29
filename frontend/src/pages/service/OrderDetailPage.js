@@ -114,7 +114,7 @@ const OrderDetailPage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="w-full px-2 sm:px-3 lg:px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Order #{order.orderId}</h1>

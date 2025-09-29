@@ -197,7 +197,7 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
           </div>
         </div>
         {/* Beautiful Loading Animation */}
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="w-full px-2 sm:px-3 lg:px-4">
           <div className="flex justify-center items-center h-96">
             <div className="relative">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
@@ -211,7 +211,7 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="w-full p-6">
         {/* Modern Header Section */}
         <div className="bg-gradient-to-r from-[#67BAE0] to-[#3B5787] rounded-2xl shadow-2xl p-8 mb-8 text-white relative overflow-hidden">
           {/* Background Pattern */}

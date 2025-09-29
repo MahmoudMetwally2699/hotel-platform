@@ -22,7 +22,7 @@ const TailwindLayout = ({ children }) => {
         {/* Header */}
         <TailwindHeader onOpenSidebar={toggleSidebar} />        {/* Main Content Scrollable Area */}
         <main className="flex-1 overflow-y-auto p-6 pt-4 md:ml-0 pb-20 lg:pb-6">
-          <div className="max-w-7xl mx-auto">
+          <div className="w-full">
             {children}
           </div>
         </main>

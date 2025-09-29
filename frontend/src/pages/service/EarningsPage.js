@@ -239,7 +239,7 @@ const EarningsPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Header Section */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-2 sm:px-3 lg:px-4">
           <div className="py-6">
             <div className="flex items-center justify-between">
               <div>
@@ -261,7 +261,7 @@ const EarningsPage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full px-2 sm:px-3 lg:px-4 py-8">
         {error && (
           <div className="mb-6 bg-gray-50 border-l-4 border-[#3B5787] p-4 rounded-lg">
             <div className="flex">

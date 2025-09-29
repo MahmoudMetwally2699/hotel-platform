@@ -79,7 +79,7 @@ const HotelServiceProviderAnalytics = ({ onViewClients }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="w-full p-6">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <div className="flex items-center justify-between">

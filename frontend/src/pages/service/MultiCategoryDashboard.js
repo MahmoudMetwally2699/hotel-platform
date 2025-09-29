@@ -93,7 +93,7 @@ const MultiCategoryDashboard = () => {
 
         // Fallback for other categories
         return (
-          <div className="max-w-4xl mx-auto p-6">
+          <div className="w-full p-6">
             <div className="bg-white rounded-lg shadow-lg p-8 text-center">
               <FaPlus className="mx-auto text-4xl text-gray-400 mb-4" />
               <h2 className="text-2xl font-bold text-gray-800 mb-2">
@@ -121,7 +121,7 @@ const MultiCategoryDashboard = () => {
 
       default:
         return (
-          <div className="max-w-4xl mx-auto p-6">
+          <div className="w-full p-6">
             <div className="bg-white rounded-lg shadow-lg p-8 text-center">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Service Dashboard</h2>
               <p className="text-gray-600">Welcome to your service provider dashboard!</p>
@@ -137,7 +137,7 @@ const MultiCategoryDashboard = () => {
       <div className="min-h-screen bg-gray-50">
         {/* Navigation Skeleton */}
         <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-6">
+          <div className="w-full px-6">
             <nav className="flex space-x-8">
               {[1, 2, 3, 4].map((index) => (
                 <div key={index} className="flex items-center py-4 px-1">
@@ -155,7 +155,7 @@ const MultiCategoryDashboard = () => {
 
         {/* Beautiful Loading Animation */}
         <div className="py-6">
-          <div className="max-w-7xl mx-auto px-6">
+          <div className="w-full px-6">
             <div className="flex justify-center items-center h-96">
               <div className="relative">
                 <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-400 border-t-transparent"></div>
@@ -172,7 +172,7 @@ const MultiCategoryDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation Tabs */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="w-full px-6">
           <nav className="flex space-x-8">
             {tabs.map((tab) => {
               const IconComponent = tab.icon;
@@ -212,7 +212,7 @@ const MultiCategoryDashboard = () => {
       {/* Tab Content */}
       <div className="py-6">
         {isTabSwitching ? (
-          <div className="max-w-7xl mx-auto px-6">
+          <div className="w-full px-6">
             <div className="flex justify-center items-center h-64">
               <div className="relative">
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-400 border-t-transparent"></div>

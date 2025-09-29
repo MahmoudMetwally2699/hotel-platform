@@ -69,7 +69,7 @@ const HomePage = () => {
 
       {/* Main Content */}
       <div className="flex items-center justify-center min-h-[calc(100vh-160px)] sm:min-h-[calc(100vh-180px)] lg:min-h-[calc(100vh-200px)] px-3 sm:px-4 lg:px-4">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center">
 
           {/* Left side - Text Content */}
           <div className="text-center lg:text-right space-y-4 sm:space-y-5 lg:space-y-6 order-2 lg:order-1">

@@ -398,7 +398,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
             <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">{t('laundryBooking.loadingService')}</p>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="w-full px-2 sm:px-3 lg:px-4">
           <div className="flex justify-center items-center h-96">
             <div className="relative">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
@@ -417,7 +417,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
         <div className="absolute inset-0 bg-gradient-to-r from-[#3B5787] via-[#4a6694] to-[#3B5787] opacity-5"></div>
 
         {/* Header Content */}
-        <div className="relative max-w-4xl mx-auto px-4 pt-6 pb-8">
+        <div className="relative w-full px-4 pt-6 pb-8">
           {/* Back Button - Modern Style */}
           <button
             onClick={handleBack}
@@ -484,10 +484,10 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 pb-20 lg:pb-6">
+      <div className="w-full px-4 pb-20 lg:pb-6">
 
       {/* Compact Progress Indicator */}
-      <div className="max-w-4xl mx-auto px-4 py-3">
+      <div className="w-full px-4 py-3">
         {/* Minimal Progress Container */}
         <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 px-3 py-2 sm:px-4 sm:py-3">
           {/* Compact Progress Track */}
@@ -543,7 +543,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-20 lg:pb-6">
+      <div className="w-full px-3 sm:px-4 py-4 sm:py-6 pb-20 lg:pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">            {step === 1 && (

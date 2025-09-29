@@ -101,7 +101,7 @@ const CategoryOrdersManager = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="w-full p-6">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Orders by Category</h1>

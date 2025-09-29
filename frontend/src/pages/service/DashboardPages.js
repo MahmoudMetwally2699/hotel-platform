@@ -101,8 +101,8 @@ const DashboardPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
         {/* Header Section with Gradient Background */}
-        <div className="bg-gradient-to-r from-modern-blue via-primary-main to-modern-lightBlue text-white py-8 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
+        <div className="bg-gradient-to-r from-modern-blue via-primary-main to-modern-lightBlue text-white py-8 px-2 sm:px-3 lg:px-4">
+          <div className="w-full">
             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
               <div>
                 <h1 className="text-3xl font-bold">Service Provider Dashboard</h1>
@@ -113,7 +113,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Beautiful Loading Animation */}
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="w-full px-6 py-8">
           <div className="flex justify-center items-center h-96">
             <div className="relative">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-modern-lightBlue border-t-transparent"></div>
@@ -127,8 +127,8 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       {/* Header Section with Gradient Background */}
-      <div className="bg-gradient-to-r from-modern-blue via-primary-main to-modern-lightBlue text-white py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="bg-gradient-to-r from-modern-blue via-primary-main to-modern-lightBlue text-white py-8 px-2 sm:px-3 lg:px-4">
+        <div className="w-full">
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
             <div>
               <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">{t('dashboard.title')}</h1>
@@ -144,7 +144,7 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 relative z-10">
+      <div className="w-full px-2 sm:px-3 lg:px-4 -mt-4 relative z-10">
         {/* Time Range Selector - Modern Card Style */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">

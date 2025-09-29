@@ -26,7 +26,7 @@ const I18nTestPage = () => {
 
   return (
     <div className={`min-h-screen bg-gray-100 p-8 ${direction}`}>
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full">
         {/* Header with Language Switcher */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <div className="flex justify-between items-center">

@@ -220,7 +220,7 @@ const RegisterPage = () => {
     dispatch(register({ userData, role: values.role }));
   };
   return (
-    <div className={`min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className={`min-h-screen flex items-center justify-center bg-gray-100 py-12 px-2 sm:px-3 lg:px-4 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         {/* Logo */}
         <div className="text-center mb-6">

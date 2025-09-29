@@ -80,7 +80,7 @@ const ServicesPage = () => {
               <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">Loading available hotel service categories...</p>
             </div>
           </div>
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="w-full px-2 sm:px-3 lg:px-4">
             <div className="flex justify-center items-center h-96">
               <div className="relative">
                 <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>

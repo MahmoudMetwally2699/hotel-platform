@@ -232,7 +232,7 @@ const GuestCategorySelection = () => {
 
       {/* Header with Centered Hotel Info */}
       <header className="bg-white border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="w-full px-2 sm:px-3 lg:px-4 py-4">
           {/* Centered Hotel Information */}
           <div className="text-center">
             {/* Hotel Logo */}
@@ -280,7 +280,7 @@ const GuestCategorySelection = () => {
 
       {/* Modern User Greeting Section */}
       <section className="bg-gradient-to-r from-[#3B5787] to-[#61B6DE] text-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="w-full px-2 sm:px-3 lg:px-4 py-4 sm:py-8">
           <div className="text-center">
             {/* User Greeting Card */}
             <div className="inline-block">
@@ -308,7 +308,7 @@ const GuestCategorySelection = () => {
       </section>
 
       {/* Categories */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+      <main className="w-full px-2 sm:px-3 lg:px-4 py-10 sm:py-14">
         {categories.length === 0 ? (
           <div className="max-w-md mx-auto">
             <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-8 text-center">
