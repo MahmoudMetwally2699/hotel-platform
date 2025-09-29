@@ -21,7 +21,7 @@ const logger = require('./logger');
  */
 const sanitizeWhatsAppText = (text) => {
   if (!text || typeof text !== 'string') return text;
-  
+
   return text
     .replace(/[\n\r\t]/g, ' ')  // Replace newlines and tabs with single space
     .replace(/\s{5,}/g, '    ') // Replace 5+ consecutive spaces with exactly 4 spaces
