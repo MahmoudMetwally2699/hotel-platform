@@ -9,6 +9,37 @@ const axios = require('axios');
 const logger = require('./logger');
 
 /** =========================
+ *  Utility Functions
+ *  ========================= */
+
+/**
+ * Sanitize text for WhatsApp template parameters
+ * WhatsApp templates cannot have:
+ * - Newline characters (\n, \r)
+ * - Tab characters (\t)
+ * - More than 4 consecutive spaces
+ */
+const sanitizeWhatsAppText = (text) => {
+  if (!text || typeof text !== 'string') return text;
+  
+  return text
+    .replace(/[\n\r\t]/g, ' ')  // Replace newlines and tabs with single space
+    .replace(/\s{5,}/g, '    ') // Replace 5+ consecutive spaces with exactly 4 spaces
+    .trim();
+};
+
+/**
+ * Sanitize all parameters in a named params object for WhatsApp templates
+ */
+const sanitizeWhatsAppParams = (namedParams) => {
+  const sanitized = {};
+  for (const [key, value] of Object.entries(namedParams)) {
+    sanitized[key] = sanitizeWhatsAppText(value);
+  }
+  return sanitized;
+};
+
+/** =========================
  *  Configuration
  *  ========================= */
 const WHATSAPP_CONFIG = {
@@ -103,6 +134,9 @@ const sendTemplateMessage = async (
   const formattedPhone = toE164(to);
   if (!formattedPhone) throw new Error('Invalid phone number');
 
+  // Sanitize all parameters before sending
+  const sanitizedParams = sanitizeWhatsAppParams(namedParams);
+
   const payload = {
     messaging_product: 'whatsapp',
     to: formattedPhone,
@@ -110,7 +144,7 @@ const sendTemplateMessage = async (
     template: {
       name: templateName,
       language: { code: languageCode },
-      components: buildNamedBodyComponent(namedParams)
+      components: buildNamedBodyComponent(sanitizedParams)
     }
   };
 
@@ -118,7 +152,7 @@ const sendTemplateMessage = async (
     to: formattedPhone,
     templateName,
     languageCode,
-    keys: Object.keys(namedParams)
+    keys: Object.keys(sanitizedParams)
   });
 
   try {

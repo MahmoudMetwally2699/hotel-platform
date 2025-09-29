@@ -2785,13 +2785,22 @@ router.post('/bookings/housekeeping', async (req, res) => {
     // Send WhatsApp confirmation to guest if phone number provided
     if (phoneNumber) {
       try {
+        // Format scheduled time safely for WhatsApp (no newlines/special chars)
+        let formattedPreferredTime = 'حسب الوقت المحدد';
+        if (preferredTime === 'now') {
+          formattedPreferredTime = 'في أقرب وقت ممكن';
+        } else if (scheduledDateTime) {
+          const date = new Date(scheduledDateTime);
+          formattedPreferredTime = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+        }
+
         await sendHousekeepingBookingConfirmation({
           guestName,
           guestPhone: phoneNumber,
           bookingNumber: booking._id.toString(),
           hotelName: hotel.name,
           serviceType: serviceName,
-          preferredTime: preferredTime === 'now' ? 'في أقرب وقت ممكن' : (scheduledDateTime ? new Date(scheduledDateTime).toLocaleString('ar-SA') : 'حسب الوقت المحدد'),
+          preferredTime: formattedPreferredTime,
           roomNumber,
           specialRequests: specialRequests || 'لا توجد ملاحظات خاصة'
         });
@@ -2898,6 +2907,13 @@ router.post('/bookings/housekeeping', async (req, res) => {
         }
         console.log('🔧 Final provider phone for WhatsApp:', providerPhone);
 
+        // Format scheduled time safely for WhatsApp (no newlines/special chars)
+        let formattedScheduledTime = null;
+        if (scheduledDateTime) {
+          const date = new Date(scheduledDateTime);
+          formattedScheduledTime = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+        }
+
         await sendNewHousekeepingOrderToProvider({
           providerPhone: providerPhone,
           bookingNumber: booking._id.toString(),
@@ -2907,7 +2923,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
           guestPhone: phoneNumber,
           serviceType: serviceName,
           preferredTime: preferredTime === 'now' ? 'في أقرب وقت ممكن' : 'حسب الموعد المحدد',
-          scheduledTime: scheduledDateTime ? new Date(scheduledDateTime).toLocaleString('ar-SA') : null,
+          scheduledTime: formattedScheduledTime || 'حسب الوقت المفضل',
           estimatedDuration: estimatedDuration || 30,
           specialRequests: specialRequests || 'لا توجد ملاحظات خاصة'
         });
