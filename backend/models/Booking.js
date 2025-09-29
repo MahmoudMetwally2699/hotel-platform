@@ -88,26 +88,32 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     description: String,
     // Specific category for housekeeping services (required for analysis)
     specificCategory: {
-      type: String,
+      type: [String], // Changed to array of strings to support multiple category selection
       required: function() {
         return this.serviceType === 'housekeeping';
       },
-      enum: [
-        // Maintenance categories
-        'electrical_issues',
-        'plumbing_issues',
-        'ac_heating',
-        'furniture_repair',
-        'electronics_issues',
-        // Room cleaning categories
-        'general_cleaning',
-        'deep_cleaning',
-        'stain_removal',
-        // Amenities categories
-        'bathroom_amenities',
-        'room_supplies',
-        'cleaning_supplies'
-      ]
+      validate: {
+        validator: function(categories) {
+          const allowedCategories = [
+            // Maintenance categories
+            'electrical_issues',
+            'plumbing_issues',
+            'ac_heating',
+            'furniture_repair',
+            'electronics_issues',
+            // Room cleaning categories
+            'general_cleaning',
+            'deep_cleaning',
+            'stain_removal',
+            // Amenities categories
+            'bathroom_amenities',
+            'room_supplies',
+            'cleaning_supplies'
+          ];
+          return categories.every(category => allowedCategories.includes(category));
+        },
+        message: 'Invalid specific category provided'
+      }
     }
   },
   // Booking Configuration

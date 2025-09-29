@@ -101,42 +101,16 @@ const HomePage = () => {
               <div className="relative bg-black rounded-[2rem] sm:rounded-[2.5rem] lg:rounded-[3rem] p-1.5 sm:p-2 shadow-2xl">
                 <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] overflow-hidden w-[200px] h-[400px] sm:w-[240px] sm:h-[480px] lg:w-[280px] lg:h-[580px]">
                   {/* Phone Screen Content */}
-                  <div className="h-full bg-gray-50 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
+                  <div className="h-full bg-white flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
 
-                    {/* Qickroom Logo in Phone */}
-                    <div className="mb-6 sm:mb-7 lg:mb-8">
-                      <div className="bg-qickroom-blue/10 rounded-full w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                        <img
-                          src="/qickroom.png"
-                          alt="Qickroom"
-                          className="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10"
-                        />
-                      </div>
-                      <h2 className="text-qickroom-blue text-lg sm:text-xl font-bold text-center">
-                        Qickroom
-                      </h2>
-                    </div>
-
-                    {/* Service Title in Phone */}
-                    <div className="text-center mb-6 sm:mb-7 lg:mb-8">
-                      <h3 className="text-gray-800 text-base sm:text-lg font-semibold mb-2">
-                        {t('homepage.phoneTitle', 'Hotel Services Platform')}
-                      </h3>
-                      <p className="text-gray-600 text-xs sm:text-sm leading-relaxed px-1">
-                        {t('homepage.phoneSubtitle', 'خدمات رقمية متطورة لتجربة الضيوف')}
-                      </p>
-                    </div>
-
-                    {/* Service Access Button in Phone */}
-                    <div className="w-full px-3 sm:px-4">
-                      <div className="bg-qickroom-blue text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg sm:rounded-xl font-medium text-center mb-3 text-sm sm:text-base">
-                        <span>{t('homepage.serviceLogin', 'دخول إلى الخدمة')}</span>
-                      </div>
-
+                    {/* Centered Logo in Phone */}
+                    <div className="flex items-center justify-center h-full">
                       <div className="text-center">
-                        <span className="text-gray-500 text-xs sm:text-sm">
-                          {t('homepage.createAccount', 'إنشاء حساب جديد')}
-                        </span>
+                        <img
+                          src="/logo-no-background.svg"
+                          alt="Qickroom"
+                          className="h-48 w-48 sm:h-56 sm:w-56 lg:h-64 lg:w-64 mx-auto"
+                        />
                       </div>
                     </div>
                   </div>

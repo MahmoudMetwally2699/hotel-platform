@@ -3,7 +3,7 @@
  * Allows guests to book housekeeping services without any pricing
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../redux/slices/authSlice';
 import {
@@ -54,12 +54,28 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     scheduledDateTime: '',
     specialRequests: '',
     guestEmail: '',
-    specificCategory: '' // New field for specific category selection
+    specificCategory: [] // Changed to array for multiple category selection
   });
 
   // Quick hints state
   const [showQuickHints, setShowQuickHints] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState(null);
+  const [issueCategoryDropdownOpen, setIssueCategoryDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIssueCategoryDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Get quick hint categories based on service type
   const getQuickHintCategories = () => {
@@ -247,6 +263,77 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
   const quickHintCategories = getQuickHintCategories();
 
+  // Handler for category checkbox selection
+  const handleCategoryToggle = (categoryValue) => {
+    setBookingDetails(prev => {
+      const currentCategories = Array.isArray(prev.specificCategory) ? prev.specificCategory : [];
+      const isSelected = currentCategories.includes(categoryValue);
+
+      if (isSelected) {
+        return {
+          ...prev,
+          specificCategory: currentCategories.filter(cat => cat !== categoryValue)
+        };
+      } else {
+        return {
+          ...prev,
+          specificCategory: [...currentCategories, categoryValue]
+        };
+      }
+    });
+  };
+
+  // Get filtered quick hint categories based on selected issue categories
+  const getFilteredQuickHintCategories = () => {
+    if (!Array.isArray(bookingDetails.specificCategory) || bookingDetails.specificCategory.length === 0) {
+      return quickHintCategories;
+    }
+
+    return quickHintCategories.filter(category => {
+      const categoryTitle = category.title.toLowerCase();
+      return bookingDetails.specificCategory.some(selectedCat => {
+        const selectedCategory = selectedCat.toLowerCase();
+        // Map selected categories to quick hint categories
+        if (selectedCategory.includes('electrical') && categoryTitle.includes('electrical')) return true;
+        if (selectedCategory.includes('plumbing') && categoryTitle.includes('plumbing')) return true;
+        if (selectedCategory.includes('ac_heating') && (categoryTitle.includes('ac') || categoryTitle.includes('heating'))) return true;
+        if (selectedCategory.includes('furniture') && categoryTitle.includes('furniture')) return true;
+        if (selectedCategory.includes('electronics') && categoryTitle.includes('electronics')) return true;
+        if (selectedCategory.includes('general_cleaning') && categoryTitle.includes('room cleaning')) return true;
+        if (selectedCategory.includes('deep_cleaning') && categoryTitle.includes('deep cleaning')) return true;
+        if (selectedCategory.includes('stain_removal') && categoryTitle.includes('stains')) return true;
+        if (selectedCategory.includes('bathroom_amenities') && categoryTitle.includes('bathroom')) return true;
+        if (selectedCategory.includes('room_supplies') && categoryTitle.includes('room')) return true;
+        if (selectedCategory.includes('cleaning_supplies') && categoryTitle.includes('cleaning')) return true;
+        return false;
+      });
+    });
+  };
+
+  // Get flattened list of issues for selected categories
+  const getFilteredIssuesList = () => {
+    const filteredCategories = getFilteredQuickHintCategories();
+
+    if (!Array.isArray(bookingDetails.specificCategory) || bookingDetails.specificCategory.length === 0) {
+      return []; // Show categories with expandable sections when no specific category is selected
+    }
+
+    // Flatten all items from filtered categories
+    const allItems = [];
+    filteredCategories.forEach(category => {
+      category.items.forEach(item => {
+        allItems.push({
+          text: item,
+          category: category.title,
+          icon: category.icon,
+          color: category.color
+        });
+      });
+    });
+
+    return allItems;
+  };
+
   // Handle quick hint selection
   const handleQuickHintSelect = (hint) => {
     const currentText = bookingDetails.specialRequests;
@@ -279,21 +366,21 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const getSpecificCategories = (serviceCategory) => {
     const categories = {
       maintenance: [
-        { value: 'electrical_issues', label: 'Electrical Issues', icon: '⚡' },
-        { value: 'plumbing_issues', label: 'Plumbing Issues', icon: '🔧' },
-        { value: 'ac_heating', label: 'AC & Heating', icon: '❄️' },
-        { value: 'furniture_repair', label: 'Furniture Repair', icon: '🪑' },
-        { value: 'electronics_issues', label: 'Electronics Issues', icon: '📺' }
+        { value: 'electrical_issues', label: 'Electrical Issues', icon: FaBolt, color: "bg-gradient-to-r from-yellow-500 to-orange-500" },
+        { value: 'plumbing_issues', label: 'Plumbing Issues', icon: FaWrench, color: "bg-gradient-to-r from-blue-500 to-cyan-500" },
+        { value: 'ac_heating', label: 'AC & Heating', icon: FaSnowflake, color: "bg-gradient-to-r from-cyan-500 to-blue-500" },
+        { value: 'furniture_repair', label: 'Furniture Repair', icon: FaCouch, color: "bg-gradient-to-r from-amber-600 to-orange-600" },
+        { value: 'electronics_issues', label: 'Electronics Issues', icon: FaTv, color: "bg-gradient-to-r from-indigo-500 to-purple-500" }
       ],
       cleaning: [
-        { value: 'general_cleaning', label: 'General Room Cleaning', icon: '🧹' },
-        { value: 'deep_cleaning', label: 'Deep Cleaning', icon: '🧽' },
-        { value: 'stain_removal', label: 'Stain Removal', icon: '🧴' }
+        { value: 'general_cleaning', label: 'General Room Cleaning', icon: FaBroom, color: "bg-gradient-to-r from-[#3B5787] to-[#67BAE0]" },
+        { value: 'deep_cleaning', label: 'Deep Cleaning', icon: FaSprayCan, color: "bg-gradient-to-r from-green-500 to-emerald-500" },
+        { value: 'stain_removal', label: 'Stain Removal', icon: FaSprayCan, color: "bg-gradient-to-r from-red-500 to-pink-500" }
       ],
       amenities: [
-        { value: 'bathroom_amenities', label: 'Bathroom Amenities', icon: '🛁' },
-        { value: 'room_supplies', label: 'Room Supplies', icon: '🛏️' },
-        { value: 'cleaning_supplies', label: 'Cleaning Supplies', icon: '🧴' }
+        { value: 'bathroom_amenities', label: 'Bathroom Amenities', icon: FaSprayCan, color: "bg-gradient-to-r from-blue-400 to-cyan-400" },
+        { value: 'room_supplies', label: 'Room Supplies', icon: FaBroom, color: "bg-gradient-to-r from-purple-500 to-indigo-500" },
+        { value: 'cleaning_supplies', label: 'Cleaning Supplies', icon: FaSprayCan, color: "bg-gradient-to-r from-green-400 to-teal-400" }
       ]
     };
     return categories[serviceCategory] || [];
@@ -384,8 +471,8 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     setSubmitting(true);
 
     // Validate required fields
-    if (!bookingDetails.specificCategory) {
-      toast.error('Please select an issue category');
+    if (!Array.isArray(bookingDetails.specificCategory) || bookingDetails.specificCategory.length === 0) {
+      toast.error('Please select at least one issue category');
       setSubmitting(false);
       return;
     }
@@ -809,40 +896,99 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
               </div>
 
               {/* Issue Category Selection - Required Field */}
-              <div>
+              <div ref={dropdownRef}>
                 <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">
                   Issue Category <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <select
-                    value={bookingDetails.specificCategory}
-                    onChange={(e) => setBookingDetails(prev => ({ ...prev, specificCategory: e.target.value }))}
-                    className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] text-xs sm:text-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:border-[#67BAE0]/50 appearance-none"
-                    required
+                  <button
+                    type="button"
+                    onClick={() => setIssueCategoryDropdownOpen(!issueCategoryDropdownOpen)}
+                    className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] text-xs sm:text-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:border-[#67BAE0]/50 flex items-center justify-between"
                   >
-                    <option value="" disabled>Select issue category...</option>
-                    {getSpecificCategories(selectedService.category).map(category => (
-                      <option key={category.value} value={category.value}>
-                        {category.icon} {category.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                    <svg className="w-4 h-4 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      {Array.isArray(bookingDetails.specificCategory) && bookingDetails.specificCategory.length > 0 ? (
+                        bookingDetails.specificCategory.map(categoryValue => {
+                          const category = getSpecificCategories(selectedService.category).find(cat => cat.value === categoryValue);
+                          if (!category) return null;
+                          const IconComponent = category.icon;
+                          return (
+                            <div
+                              key={categoryValue}
+                              className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white rounded-lg text-xs font-medium"
+                            >
+                              <div className="w-3 h-3 flex items-center justify-center">
+                                <IconComponent className="text-xs" />
+                              </div>
+                              <span className="truncate max-w-20">{category.label}</span>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <span className="text-[#3B5787]/60">Select issue categories...</span>
+                      )}
+                    </div>
+                    <div className={`transform transition-all duration-300 ${issueCategoryDropdownOpen ? 'rotate-180' : ''}`}>
+                      <svg className="w-4 h-4 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </button>
+
+                  {/* Modern Dropdown Menu */}
+                  {issueCategoryDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl shadow-xl z-50 max-h-64 overflow-y-auto custom-scrollbar">
+                      <div className="p-2 sm:p-3 space-y-1 sm:space-y-2">
+                        {getSpecificCategories(selectedService.category).map(category => {
+                          const IconComponent = category.icon;
+                          const isSelected = Array.isArray(bookingDetails.specificCategory) && bookingDetails.specificCategory.includes(category.value);
+                          return (
+                            <label
+                              key={category.value}
+                              className="flex items-center gap-3 p-2.5 sm:p-3 hover:bg-gradient-to-r hover:from-[#3B5787]/10 hover:to-[#67BAE0]/10 rounded-lg sm:rounded-xl cursor-pointer transition-all duration-200 group"
+                            >
+                              <div className="relative flex items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => handleCategoryToggle(category.value)}
+                                  className="sr-only"
+                                />
+                                <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
+                                  isSelected
+                                    ? 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] border-[#67BAE0] shadow-md'
+                                    : 'border-[#67BAE0]/40 bg-white group-hover:border-[#67BAE0]/70'
+                                }`}>
+                                  {isSelected && (
+                                    <FaCheck className="text-white text-xs" />
+                                  )}
+                                </div>
+                              </div>
+                              <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center ${category.color} shadow-sm`}>
+                                <IconComponent className="text-white text-xs sm:text-sm" />
+                              </div>
+                              <span className={`font-medium text-xs sm:text-sm transition-colors duration-200 ${
+                                isSelected ? 'text-[#3B5787]' : 'text-[#3B5787]/80 group-hover:text-[#3B5787]'
+                              }`}>
+                                {category.label}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                {!bookingDetails.specificCategory && (
-                  <p className="text-xs text-red-500 mt-1">Please select a category for your request</p>
+                {(!Array.isArray(bookingDetails.specificCategory) || bookingDetails.specificCategory.length === 0) && (
+                  <p className="text-xs text-red-500 mt-1">Please select at least one category for your request</p>
                 )}
               </div>
 
               {/* Additional Notes with Quick Hints */}
               <div>
                 <div className="space-y-2 sm:space-y-3">
-                  {/* Quick Hints Section - Show for all service types */}
-                  {quickHintCategories && quickHintCategories.length > 0 && (
+                  {/* Quick Hints Section - Show filtered categories based on selection */}
+                  {getFilteredQuickHintCategories() && getFilteredQuickHintCategories().length > 0 && (
                     <div className="bg-gradient-to-r from-[#3B5787]/10 to-[#67BAE0]/10 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#67BAE0]/20 backdrop-blur-sm">
                       <button
                         type="button"
@@ -854,8 +1000,15 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                             <FaLightbulb className="text-white text-xs sm:text-sm" />
                           </div>
                           <div>
-                            <span className="font-semibold text-[#3B5787] text-xs sm:text-sm">{t('housekeeping.quickIssueCategories')}</span>
-                            <p className="text-xs text-[#3B5787]/70 hidden sm:block">{t('housekeeping.tapToViewCommonIssues')}</p>
+                            <span className="font-semibold text-[#3B5787] text-xs sm:text-sm">
+                              {t('housekeeping.quickIssueCategories')}
+                            </span>
+                            <p className="text-xs text-[#3B5787]/70 hidden sm:block">
+                              {Array.isArray(bookingDetails.specificCategory) && bookingDetails.specificCategory.length > 0
+                                ? 'Common issues for your selected categories'
+                                : t('housekeeping.tapToViewCommonIssues')
+                              }
+                            </p>
                           </div>
                         </div>
                         <div className={`transform transition-all duration-300 ${showQuickHints ? 'rotate-180' : ''}`}>
@@ -868,45 +1021,66 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                       {showQuickHints && (
                         <div className="mt-3 sm:mt-4 space-y-2 sm:space-y-3 animate-fadeIn">
                           <div className="grid grid-cols-1 gap-2 sm:gap-3 max-h-48 sm:max-h-64 overflow-y-auto custom-scrollbar">
-                            {quickHintCategories.map((category, index) => (
-                              <div key={index} className="bg-white/80 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 border border-[#67BAE0]/20 shadow-sm hover:shadow-md transition-all duration-200">
+                            {/* Show flattened issues list when categories are selected, otherwise show expandable categories */}
+                            {Array.isArray(bookingDetails.specificCategory) && bookingDetails.specificCategory.length > 0 ? (
+                              /* Flattened issues list */
+                              getFilteredIssuesList().map((issue, index) => (
                                 <button
+                                  key={index}
                                   type="button"
-                                  onClick={() => setExpandedCategory(expandedCategory === index ? null : index)}
-                                  className="flex items-center justify-between w-full text-left hover:bg-[#67BAE0]/10 rounded-md p-1.5 sm:p-2 -m-1.5 sm:-m-2 transition-all duration-200"
+                                  onClick={() => handleQuickHintSelect(issue.text)}
+                                  className="w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 text-xs text-[#3B5787]/80 hover:bg-gradient-to-r hover:from-[#3B5787]/10 hover:to-[#67BAE0]/10 hover:text-[#3B5787] rounded-lg sm:rounded-xl transition-all duration-200 border border-[#67BAE0]/20 hover:border-[#67BAE0]/40 hover:shadow-sm backdrop-blur-sm bg-white/80"
                                 >
-                                  <div className="flex items-center gap-2 sm:gap-3">
-                                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center ${category.color} shadow-sm`}>
-                                      <category.icon className="text-white text-xs sm:text-sm" />
+                                  <span className="flex items-start gap-2 sm:gap-3">
+                                    <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-md flex items-center justify-center ${issue.color} shadow-sm flex-shrink-0 mt-0.5`}>
+                                      <issue.icon className="text-white text-xs" />
                                     </div>
-                                    <span className="font-semibold text-[#3B5787] text-xs sm:text-sm">{category.title}</span>
-                                  </div>
-                                  <div className={`transform transition-transform duration-200 ${expandedCategory === index ? 'rotate-180' : ''}`}>
-                                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-[#3B5787]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                  </div>
+                                    <span className="text-xs leading-tight flex-1">{issue.text}</span>
+                                  </span>
                                 </button>
+                              ))
+                            ) : (
+                              /* Expandable categories view */
+                              getFilteredQuickHintCategories().map((category, index) => (
+                                <div key={index} className="bg-white/80 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 border border-[#67BAE0]/20 shadow-sm hover:shadow-md transition-all duration-200">
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedCategory(expandedCategory === index ? null : index)}
+                                    className="flex items-center justify-between w-full text-left hover:bg-[#67BAE0]/10 rounded-md p-1.5 sm:p-2 -m-1.5 sm:-m-2 transition-all duration-200"
+                                  >
+                                    <div className="flex items-center gap-2 sm:gap-3">
+                                      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center ${category.color} shadow-sm`}>
+                                        <category.icon className="text-white text-xs sm:text-sm" />
+                                      </div>
+                                      <span className="font-semibold text-[#3B5787] text-xs sm:text-sm">{category.title}</span>
+                                    </div>
+                                    <div className={`transform transition-transform duration-200 ${expandedCategory === index ? 'rotate-180' : ''}`}>
+                                      <svg className="w-3 h-3 sm:w-4 sm:h-4 text-[#3B5787]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                      </svg>
+                                    </div>
+                                  </button>
 
-                                {expandedCategory === index && (
-                                  <div className="mt-2 sm:mt-3 space-y-1 sm:space-y-2 animate-fadeIn">
-                                    {category.items.map((item, itemIndex) => (
-                                      <button
-                                        key={itemIndex}
-                                        type="button"
-                                        onClick={() => handleQuickHintSelect(item)}
-                                        className="w-full text-left px-3 sm:px-4 py-2 sm:py-2.5 text-xs text-[#3B5787]/80 hover:bg-gradient-to-r hover:from-[#3B5787]/10 hover:to-[#67BAE0]/10 hover:text-[#3B5787] rounded-lg sm:rounded-xl transition-all duration-200 border border-[#67BAE0]/20 hover:border-[#67BAE0]/40 hover:shadow-sm backdrop-blur-sm"
-                                      >
-                                        <span className="flex items-start gap-2">
-                                          <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-[#67BAE0] rounded-full mt-1.5 sm:mt-1 flex-shrink-0"></span>
-                                          <span className="text-xs leading-tight">{item}</span>
-                                        </span>
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
+                                  {expandedCategory === index && (
+                                    <div className="mt-2 sm:mt-3 space-y-1 sm:space-y-2 animate-fadeIn">
+                                      {category.items.map((item, itemIndex) => (
+                                        <button
+                                          key={itemIndex}
+                                          type="button"
+                                          onClick={() => handleQuickHintSelect(item)}
+                                          className="w-full text-left px-3 sm:px-4 py-2 sm:py-2.5 text-xs text-[#3B5787]/80 hover:bg-gradient-to-r hover:from-[#3B5787]/10 hover:to-[#67BAE0]/10 hover:text-[#3B5787] rounded-lg sm:rounded-xl transition-all duration-200 border border-[#67BAE0]/20 hover:border-[#67BAE0]/40 hover:shadow-sm backdrop-blur-sm"
+                                        >
+                                          <span className="flex items-start gap-2">
+                                            <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-[#67BAE0] rounded-full mt-1.5 sm:mt-1 flex-shrink-0"></span>
+                                            <span className="text-xs leading-tight">{item}</span>
+                                          </span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))
+                            )}
                           </div>
                         </div>
                       )}

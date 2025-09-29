@@ -2441,7 +2441,7 @@ router.get('/bookings', catchAsync(async (req, res) => {
             populate: { path: 'providerId', select: 'businessName contactInfo' }
           })
           .populate({ path: 'serviceProviderId', select: 'businessName contactInfo categories' })
-          .populate({ path: 'guestId', select: 'firstName lastName email phone' })
+          .populate({ path: 'guestId', select: 'firstName lastName email phone roomNumber' })
           .sort({ createdAt: -1 });
         regularBookings = docs.map(b => ({
           ...b.toObject(),
@@ -2465,7 +2465,7 @@ router.get('/bookings', catchAsync(async (req, res) => {
       transportationBookings = await TransportationBooking.find(transportMatch)
         .populate({ path: 'serviceId', select: 'name category description pricing images', populate: { path: 'providerId', select: 'businessName contactInfo' } })
         .populate({ path: 'serviceProviderId', select: 'businessName contactInfo categories' })
-        .populate({ path: 'guestId', select: 'firstName lastName email phone' })
+        .populate({ path: 'guestId', select: 'firstName lastName email phone roomNumber' })
         .sort({ createdAt: -1 })
         .lean();
 

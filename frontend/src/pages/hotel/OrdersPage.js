@@ -6,7 +6,17 @@ import apiClient from '../../services/api.service';
 
 /**
  * Modern Hotel Admin Orders                                    : t('hotelAdmin.dashboard.recentOrders.unknownGuest')}Management Page with Category Filtering and Pagination
- * @returns {JSX.Element} Orders management page
+                         </div>
+                        <div className="text-xs text-modern-darkGray">
+                          {order.guestId?.email || order.guestDetails?.email || order.guest?.email || t('hotelAdmin.dashboard.recentOrders.noEmail')}
+                        </div>
+                        <div className="text-xs text-blue-600 mt-1 flex items-center">
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          Room: {order.roomNumber || order.guestDetails?.roomNumber || order.guestInfo?.roomNumber || order.guestId?.roomNumber || 'N/A'}
+                        </div>
+                      </div>turns {JSX.Element} Orders management page
  */
 const OrdersPage = () => {
   const { t } = useTranslation();
@@ -258,8 +268,8 @@ const OrdersPage = () => {
                       <tr>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">{t('hotelAdmin.orders.table.orderId')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[200px]">{t('hotelAdmin.orders.table.guest')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">Room Number</th>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[180px]">{t('hotelAdmin.orders.table.service')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[150px]">{t('hotelAdmin.orders.table.provider')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.orders.table.date')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.orders.table.amount')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">Payment Method</th>
@@ -312,6 +322,20 @@ const OrdersPage = () => {
                               </div>
                             </div>
                           </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                              </div>
+                              <div className="ml-3">
+                                <div className="text-sm font-semibold text-gray-900">
+                                  {order.roomNumber || order.guestDetails?.roomNumber || order.guestInfo?.roomNumber || order.guestId?.roomNumber || 'N/A'}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
                           <td className="px-4 py-4">
                             <div className="flex flex-col">
                               <span className="text-sm font-medium text-gray-900 truncate max-w-[150px]">
@@ -325,18 +349,6 @@ const OrdersPage = () => {
                                 )}
                               </div>
                             </div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="flex flex-col">
-                          <span className="text-sm text-modern-darkGray">
-                            {order.serviceProviderId?.businessName || order.serviceProvider?.businessName || t('hotelAdmin.dashboard.recentOrders.unknownProvider')}
-                          </span>
-                          {(order.serviceProviderId?.businessName || order.serviceProvider?.businessName)?.includes('Internal Services') && (
-                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded mt-1">
-                              {t('hotelAdmin.dashboard.recentOrders.hotelManaged')}
-                            </span>
-                          )}
-                        </div>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
                             <span className="text-sm text-modern-darkGray">
@@ -448,9 +460,6 @@ const OrdersPage = () => {
                       <div>
                         <div className="text-sm font-medium text-gray-900">
                           {order.serviceId?.name || order.service?.name || order.serviceName || t('hotelAdmin.dashboard.recentOrders.unknownService')}
-                        </div>
-                        <div className="text-xs text-modern-darkGray">
-                          {order.serviceProviderId?.businessName || order.serviceProvider?.businessName || t('hotelAdmin.dashboard.recentOrders.unknownProvider')}
                         </div>
                       </div>
 
