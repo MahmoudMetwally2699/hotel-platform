@@ -366,9 +366,9 @@ const sendNewLaundryOrderToProvider = async ({
 };
 
 /**
- * Template: new_transportation_order_provider_ar (language: ar)
+ * Template: new_transportation_order_provider_ar (language: en)
  * Body placeholders:
- *  {{booking_number}}, {{guest_name}}, {{hotel_name}}, {{guest_phone}},
+ *  {{booking_number}}, {{guest_name}}, {{guest_phone}}, {{hotel_name}}, {{room_number}},
  *  {{trip_date}}, {{departure_time}}, {{pickup_location}}, {{destination_location}},
  *  {{vehicle_type}}, {{passenger_count}}, {{base_amount}}
  */
@@ -376,8 +376,9 @@ const sendNewTransportationOrderToProvider = async ({
   providerPhone,
   bookingNumber,
   guestName,
-  hotelName,
   guestPhone,
+  hotelName,
+  roomNumber,
   tripDate,
   departureTime,
   pickupLocation,
@@ -387,12 +388,13 @@ const sendNewTransportationOrderToProvider = async ({
   baseAmount
 }) => {
   return sendTemplateMessage(providerPhone, 'new_transportation_order_provider_ar', {
-    languageCode: 'ar',
+    languageCode: 'en',
     namedParams: {
       booking_number: bookingNumber,
       guest_name: guestName,
-      hotel_name: hotelName,
       guest_phone: guestPhone,
+      hotel_name: hotelName,
+      room_number: roomNumber,
       trip_date: tripDate,
       departure_time: departureTime,
       pickup_location: pickupLocation,
@@ -462,11 +464,10 @@ const sendHousekeepingBookingConfirmation = async ({
 };
 
 /**
- * Template: new_housekeeping_order_provider_ar (language: ar)
+ * Template: new_housekeeping_order_provider_ar (language: en)
  * Body placeholders:
  *  {{booking_number}}, {{guest_name}}, {{hotel_name}}, {{room_number}},
- *  {{guest_phone}}, {{service_type}}, {{preferred_time}}, {{scheduled_time}},
- *  {{estimated_duration}}, {{special_requests}}
+ *  {{service_type}}, {{scheduled_time}}, {{preferred_time}}, {{special_requests}}
  */
 const sendNewHousekeepingOrderToProvider = async ({
   providerPhone,
@@ -474,27 +475,23 @@ const sendNewHousekeepingOrderToProvider = async ({
   guestName,
   hotelName,
   roomNumber,
-  guestPhone,
   serviceType,
-  preferredTime,
   scheduledTime,
-  estimatedDuration,
+  preferredTime,
   specialRequests
 }) => {
   console.log('🔧 Sending housekeeping order to provider phone:', providerPhone);
   return sendTemplateMessage(providerPhone, 'new_housekeeping_order_provider_ar', {
-    languageCode: 'ar',
+    languageCode: 'en',
     namedParams: {
       booking_number: bookingNumber,
       guest_name: guestName,
       hotel_name: hotelName,
       room_number: roomNumber,
-      guest_phone: guestPhone,
       service_type: serviceType,
-      preferred_time: preferredTime,
-      scheduled_time: scheduledTime || 'حسب الوقت المفضل',
-      estimated_duration: estimatedDuration || '30',
-      special_requests: specialRequests || 'لا توجد ملاحظات خاصة'
+      scheduled_time: scheduledTime || 'As per preferred time',
+      preferred_time: preferredTime || 'Not specified',
+      special_requests: specialRequests || 'No special requests'
     }
   });
 };

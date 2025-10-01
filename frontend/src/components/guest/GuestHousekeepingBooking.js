@@ -1237,7 +1237,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Room:</span>
-                <span className="font-medium">{bookingDetails.roomNumber}</span>
+                <span className="font-medium">{bookingDetails.roomNumber || currentUserFromRedux?.roomNumber || currentUser?.roomNumber || 'N/A'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Phone:</span>
@@ -1254,16 +1254,10 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
           <div className="flex gap-3">
             <button
-              onClick={resetBooking}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-medium transition-colors"
-            >
-              {t('housekeeping.bookAnother', 'Book Another Service')}
-            </button>
-            <button
               onClick={onBack}
-              className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+              className="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg font-medium transition-colors"
             >
-              {t('common.back', 'Back to Services')}
+              {t('common.back', 'Back')}
             </button>
           </div>
           </div>
