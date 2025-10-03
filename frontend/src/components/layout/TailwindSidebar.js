@@ -166,7 +166,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
           <img
             src="/qickroom.png"
-            alt="QuickRoom"
+            alt="Qickroom"
             className="h-10 w-auto object-contain"
           />
           <button

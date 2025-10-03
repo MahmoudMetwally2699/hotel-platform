@@ -395,13 +395,13 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 <div className="absolute inset-0 bg-white/10 rounded-full blur-sm"></div>
                 <img
                   src="/qickroom.png"
-                  alt="QuickRoom"
+                  alt="Qickroom"
                   className="relative h-11 w-auto object-contain rounded-lg p-1 bg-white/5 backdrop-blur-sm"
                 />
               </div>
               <div className={`flex flex-col ${isRTL ? 'mr-5 items-end' : 'ml-5 items-start'}`}>
                 <span className={`text-lg font-bold text-white leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
-                  QuickRoom
+                  Qickroom
                 </span>
                 <span className={`text-sm font-medium text-white/75 leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
                   {role === 'service' ? t('platform.servicePlatform') : t('platform.hotelPlatform')}
@@ -414,7 +414,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
               <div className="absolute inset-0 bg-white/10 rounded-full blur-sm"></div>
               <img
                 src="/qickroom.png"
-                alt="QuickRoom"
+                alt="Qickroom"
                 className="relative h-10 w-auto object-contain rounded-lg p-1 bg-white/5 backdrop-blur-sm"
               />
             </div>

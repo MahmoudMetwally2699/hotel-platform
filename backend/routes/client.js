@@ -173,7 +173,7 @@ router.get('/hotels/:id/services', async (req, res) => {
     const skip = (page - 1) * limit;
 
     const services = await Service.find(query)
-      .populate('providerId', 'businessName rating')
+      .populate('providerId', 'businessName rating markup')
       .sort({ 'performance.totalBookings': -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -195,6 +195,11 @@ router.get('/hotels/:id/services', async (req, res) => {
       if (hotel.markupSettings?.categories &&
           hotel.markupSettings.categories[service.category] !== undefined) {
         markup = hotel.markupSettings.categories[service.category];
+      }
+
+      // Check for service provider specific markup (highest priority)
+      if (service.providerId?.markup?.percentage !== undefined) {
+        markup = service.providerId.markup.percentage;
       }
 
       serviceObj.pricing.finalPrice = serviceObj.pricing.basePrice * (1 + markup / 100);
@@ -231,7 +236,7 @@ router.get('/services/:id', async (req, res) => {
       _id: req.params.id,
       isActive: true
     })
-    .populate('providerId', 'businessName description contactEmail contactPhone rating createdAt logo')
+    .populate('providerId', 'businessName description contactEmail contactPhone rating createdAt logo markup')
     .populate('hotelId', 'name address contactPhone contactEmail');    console.log('🔍 Backend: Service found:', !!service);
     if (service) {
       console.log('🔍 Backend: Service details:', {
@@ -272,6 +277,11 @@ router.get('/services/:id', async (req, res) => {
     if (hotel.markupSettings?.categories &&
         hotel.markupSettings.categories[service.category] !== undefined) {
       markup = hotel.markupSettings.categories[service.category];
+    }
+
+    // Check for service provider specific markup (highest priority)
+    if (service.providerId?.markup?.percentage !== undefined) {
+      markup = service.providerId.markup.percentage;
     }
 
     serviceObj.pricing.finalPrice = serviceObj.pricing.basePrice * (1 + markup / 100);
@@ -512,7 +522,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
     const service = await Service.findOne({
       _id: serviceId,
       isActive: true
-    }).populate('providerId', 'businessName email');
+    }).populate('providerId', 'businessName email markup');
 
     if (!service) {
       return res.status(404).json({
@@ -529,6 +539,11 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
     if (hotel.markupSettings?.categories &&
         hotel.markupSettings.categories[service.category] !== undefined) {
       markup = hotel.markupSettings.categories[service.category];
+    }
+
+    // Check for service provider specific markup (highest priority)
+    if (service.providerId?.markup?.percentage !== undefined) {
+      markup = service.providerId.markup.percentage;
     }
 
     // Determine base price - use service combination price if available, or calculate from menu items
@@ -1292,7 +1307,7 @@ router.get('/services', async (req, res) => {
         match: { isActive: true, isPublished: true },
         select: 'name address markupSettings images'
       })
-      .populate('providerId', 'businessName rating')
+      .populate('providerId', 'businessName rating markup')
       .sort({ 'performance.totalBookings': -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -1309,6 +1324,11 @@ router.get('/services', async (req, res) => {
       if (service.hotelId.markupSettings?.categories &&
           service.hotelId.markupSettings.categories[service.category] !== undefined) {
         markup = service.hotelId.markupSettings.categories[service.category];
+      }
+
+      // Check for service provider specific markup (highest priority)
+      if (service.providerId?.markup?.percentage !== undefined) {
+        markup = service.providerId.markup.percentage;
       }
 
       serviceObj.pricing.finalPrice = serviceObj.pricing.basePrice * (1 + markup / 100);
@@ -1377,7 +1397,7 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
       category: 'laundry',
       isActive: true
     })
-    .populate('providerId', 'businessName rating contactEmail contactPhone')
+    .populate('providerId', 'businessName rating contactEmail contactPhone markup')
     .sort({ 'performance.totalBookings': -1 });    console.log('🔍 Laundry services query for hotel:', {
       hotelId,
       query: { hotelId, category: 'laundry', isActive: true },
@@ -1398,6 +1418,11 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
       if (hotel.markupSettings?.categories &&
           hotel.markupSettings.categories['laundry'] !== undefined) {
         markup = hotel.markupSettings.categories['laundry'];
+      }
+
+      // Check for service provider specific markup (highest priority)
+      if (service.providerId?.markup?.percentage !== undefined) {
+        markup = service.providerId.markup.percentage;
       }      // Skip template fallback - only show services with actual configured items
       console.log(`🔍 Service "${serviceObj.name}" laundryItems:`, {
         hasItems: !!(serviceObj.laundryItems && serviceObj.laundryItems.length > 0),
@@ -1515,7 +1540,7 @@ router.get('/hotels/:hotelId/services/dining/items', async (req, res) => {
       category: 'dining',
       isActive: true
     })
-    .populate('providerId', 'businessName rating contactEmail contactPhone')
+    .populate('providerId', 'businessName rating contactEmail contactPhone markup')
     .sort({ 'performance.totalBookings': -1 });
 
     console.log('🍽️ Restaurant services query for hotel:', {
@@ -1539,6 +1564,11 @@ router.get('/hotels/:hotelId/services/dining/items', async (req, res) => {
       if (hotel.markupSettings?.categories &&
           hotel.markupSettings.categories['dining'] !== undefined) {
         markup = hotel.markupSettings.categories['dining'];
+      }
+
+      // Check for service provider specific markup (highest priority)
+      if (service.providerId?.markup?.percentage !== undefined) {
+        markup = service.providerId.markup.percentage;
       }
 
       console.log(`🔍 Service "${serviceObj.name}" menuItems:`, {
@@ -1682,7 +1712,7 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
       _id: serviceId,      hotelId: hotelId,
       category: 'laundry',
       isActive: true
-    }).populate('providerId', 'businessName email');
+    }).populate('providerId', 'businessName email markup');
 
     if (!service) {
       return res.status(404).json({
@@ -1698,6 +1728,14 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
     if (hotel.markupSettings?.categories &&
         hotel.markupSettings.categories['laundry'] !== undefined) {
       markup = hotel.markupSettings.categories['laundry'];
+    }
+
+    // Check for service provider specific markup (highest priority)
+    const ServiceProvider = require('../models/ServiceProvider');
+    const serviceProvider = await ServiceProvider.findById(service.providerId._id).select('markup');
+
+    if (serviceProvider?.markup?.percentage !== undefined) {
+      markup = serviceProvider.markup.percentage;
     }
 
     // Calculate pricing
@@ -2158,7 +2196,7 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
       hotelId: hotelId,
       category: 'transportation',
       isActive: true
-    }).populate('providerId', 'businessName email');
+    }).populate('providerId', 'businessName email markup');
 
     if (!service) {
       return res.status(404).json({
@@ -2174,6 +2212,14 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
     if (hotel.markupSettings?.categories &&
         hotel.markupSettings.categories['transportation'] !== undefined) {
       markup = hotel.markupSettings.categories['transportation'];
+    }
+
+    // Check for service provider specific markup (highest priority)
+    const ServiceProvider = require('../models/ServiceProvider');
+    const serviceProvider = await ServiceProvider.findById(service.providerId._id).select('markup');
+
+    if (serviceProvider?.markup?.percentage !== undefined) {
+      markup = serviceProvider.markup.percentage;
     }
 
     // Calculate pricing

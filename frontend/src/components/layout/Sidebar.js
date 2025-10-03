@@ -95,7 +95,7 @@ const Sidebar = ({ open, onClose }) => {
         <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
           <img
             src="/qickroom.png"
-            alt="QuickRoom"
+            alt="Qickroom"
             style={{
               height: '40px',
               width: 'auto',

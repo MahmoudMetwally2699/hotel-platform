@@ -1034,18 +1034,18 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
               subtotal: parseFloat(paymentData.amount) || 0,
               expressSurcharge: 0,
               markup: {
-                percentage: 15, // Default markup
-                amount: (parseFloat(paymentData.amount) * 0.15) || 0
+                percentage: 0, // Will be calculated from hotel settings
+                amount: 0 // Will be calculated from hotel settings
               },
               tax: {
                 rate: 0,
                 amount: 0
               },
-              totalBeforeMarkup: (parseFloat(paymentData.amount) / 1.15) || 0,
+              totalBeforeMarkup: parseFloat(paymentData.amount) || 0, // Will be recalculated
               totalAmount: parseFloat(paymentData.amount) || 0,
               currency: 'EGP', // Use valid enum value instead of EGP
-              providerEarnings: (parseFloat(paymentData.amount) / 1.15) || 0,
-              hotelEarnings: (parseFloat(paymentData.amount) * 0.15 / 1.15) || 0
+              providerEarnings: parseFloat(paymentData.amount) || 0, // Will be recalculated
+              hotelEarnings: 0 // Will be recalculated
             },
 
             status: 'confirmed',
@@ -1306,18 +1306,18 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
               subtotal: parseFloat(paymentData.amount) || 0,
               expressSurcharge: 0,
               markup: {
-                percentage: 15, // Default markup
-                amount: (parseFloat(paymentData.amount) * 0.15) || 0
+                percentage: 0, // Will be calculated from hotel settings
+                amount: 0 // Will be calculated from hotel settings
               },
               tax: {
                 rate: 0,
                 amount: 0
               },
-              totalBeforeMarkup: (parseFloat(paymentData.amount) / 1.15) || 0,
+              totalBeforeMarkup: parseFloat(paymentData.amount) || 0, // Will be recalculated
               totalAmount: parseFloat(paymentData.amount) || 0,
               currency: 'EGP',
-              providerEarnings: (parseFloat(paymentData.amount) / 1.15) || 0,
-              hotelEarnings: (parseFloat(paymentData.amount) * 0.15 / 1.15) || 0
+              providerEarnings: parseFloat(paymentData.amount) || 0, // Will be recalculated
+              hotelEarnings: 0 // Will be recalculated
             },
 
             status: 'confirmed',

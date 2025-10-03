@@ -256,9 +256,20 @@ const TransportationBookingManagement = () => {
 
           {booking.bookingStatus === 'pending_quote' && (
             <button
-              onClick={() => {
-                setSelectedBooking(booking);
-                setQuoteForm({ basePrice: '', notes: '', expirationHours: 24 });
+              onClick={async () => {
+                // Fetch fresh booking data to ensure latest markup
+                try {
+                  const response = await apiClient.get(`/transportation-bookings/${booking._id}`);
+                  if (response.data.success) {
+                    setSelectedBooking(response.data.data.booking);
+                    setQuoteForm({ basePrice: '', notes: '', expirationHours: 24 });
+                  }
+                } catch (error) {
+                  console.error('Error fetching fresh booking data:', error);
+                  // Fallback to cached data if API call fails
+                  setSelectedBooking(booking);
+                  setQuoteForm({ basePrice: '', notes: '', expirationHours: 24 });
+                }
               }}
               className={BTN.primary + " flex-1 sm:flex-none"}
             >

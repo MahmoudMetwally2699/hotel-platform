@@ -954,26 +954,13 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                         <FaClock className="inline mr-2" />
                         {t('laundryBooking.preferredTime')}
                       </label>
-                      <select
+                      <input
+                        type="time"
                         value={bookingDetails.preferredTime}
                         onChange={(e) => setBookingDetails(prev => ({ ...prev, preferredTime: e.target.value }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">{t('laundryBooking.timeSlots.selectTime')}</option>
-                        <option value="08:00">08:00 - {t('laundryBooking.timeSlots.morning')}</option>
-                        <option value="09:00">09:00 - {t('laundryBooking.timeSlots.morning')}</option>
-                        <option value="10:00">10:00 - {t('laundryBooking.timeSlots.morning')}</option>
-                        <option value="11:00">11:00 - {t('laundryBooking.timeSlots.morning')}</option>
-                        <option value="12:00">12:00 - {t('laundryBooking.timeSlots.noon')}</option>
-                        <option value="13:00">13:00 - {t('laundryBooking.timeSlots.afternoon')}</option>
-                        <option value="14:00">14:00 - {t('laundryBooking.timeSlots.afternoon')}</option>
-                        <option value="15:00">15:00 - {t('laundryBooking.timeSlots.afternoon')}</option>
-                        <option value="16:00">16:00 - {t('laundryBooking.timeSlots.afternoon')}</option>
-                        <option value="17:00">17:00 - {t('laundryBooking.timeSlots.evening')}</option>
-                        <option value="18:00">18:00 - {t('laundryBooking.timeSlots.evening')}</option>
-                        <option value="19:00">19:00 - {t('laundryBooking.timeSlots.evening')}</option>
-                        <option value="20:00">20:00 - {t('laundryBooking.timeSlots.evening')}</option>
-                      </select>
+                        placeholder="Select your preferred time"
+                      />
                     </div>
                   </div>
 

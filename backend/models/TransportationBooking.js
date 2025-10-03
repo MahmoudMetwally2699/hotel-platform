@@ -496,9 +496,10 @@ transportationBookingSchema.methods.createQuote = function(basePrice, notes = ''
     quoteNotes: notes
   };
 
-  // Calculate hotel markup
-  this.hotelMarkup.percentage = this.hotelMarkup.percentage || 15; // Default 15%
-  this.hotelMarkup.amount = (basePrice * this.hotelMarkup.percentage) / 100;
+  // Use the hotel markup percentage that was set when the booking was created
+  // No fallback to 15% - this should already be correctly set from hotel settings
+  const markupPercentage = this.hotelMarkup.percentage;
+  this.hotelMarkup.amount = (basePrice * markupPercentage) / 100;
   this.quote.finalPrice = basePrice + this.hotelMarkup.amount;
 
   // Set payment amount for the new simplified workflow
@@ -710,6 +711,49 @@ transportationBookingSchema.statics.getRevenueStats = function(filter = {}) {
     }
   ]);
 };
+
+// Post-find middleware to sync hotel markup with current service provider settings
+transportationBookingSchema.post(['find', 'findOne', 'findOneAndUpdate'], async function(docs) {
+  if (!docs) return;
+
+  const bookings = Array.isArray(docs) ? docs : [docs];
+  const ServiceProvider = require('./ServiceProvider');
+
+  for (const booking of bookings) {
+    if (booking && booking.serviceProviderId && booking.hotelMarkup) {
+      try {
+        // Get current service provider markup
+        const serviceProvider = await ServiceProvider.findById(booking.serviceProviderId).select('markup');
+
+        if (serviceProvider?.markup?.percentage !== undefined &&
+            serviceProvider.markup.percentage !== booking.hotelMarkup.percentage) {
+
+          // Update the booking's markup to match current service provider settings
+          booking.hotelMarkup.percentage = serviceProvider.markup.percentage;
+
+          // If there's a quote, recalculate the final price
+          if (booking.quote?.basePrice) {
+            const newMarkupAmount = (booking.quote.basePrice * serviceProvider.markup.percentage) / 100;
+            booking.hotelMarkup.amount = newMarkupAmount;
+            booking.quote.finalPrice = booking.quote.basePrice + newMarkupAmount;
+          }
+
+          // Save the updated booking (without triggering middleware loops)
+          await booking.constructor.updateOne(
+            { _id: booking._id },
+            {
+              hotelMarkup: booking.hotelMarkup,
+              ...(booking.quote && { quote: booking.quote })
+            }
+          );
+        }
+      } catch (error) {
+        // Silent fail - don't break the query if markup sync fails
+        console.warn('Failed to sync markup for booking:', booking._id, error.message);
+      }
+    }
+  }
+});
 
 const TransportationBooking = mongoose.model('TransportationBooking', transportationBookingSchema);
 

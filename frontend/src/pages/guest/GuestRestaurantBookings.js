@@ -13,7 +13,6 @@ import {
   FaTimes,
   FaReceipt,
   FaMapMarkerAlt,
-  FaSpinner,
   FaChevronLeft,
   FaChevronRight,
   FaCalendarAlt,
@@ -45,6 +44,11 @@ const GuestRestaurantBookings = () => {
     { id: 'confirmed', label: t('restaurant.labels.confirmed', 'Confirmed'), icon: FaCheck },
     { id: 'completed', label: t('restaurant.labels.completed', 'Completed'), icon: FaCheck }
   ];
+
+  // Initial data fetch on component mount
+  useEffect(() => {
+    fetchBookings();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setCurrentPage(1); // Reset to page 1 when tab changes

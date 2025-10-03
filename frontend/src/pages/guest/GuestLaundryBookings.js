@@ -17,8 +17,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaCalendarAlt,
-  FaCheck,
-  FaClock
+  FaCheck
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { formatPriceByLanguage } from '../../utils/currency';
@@ -32,7 +31,7 @@ const GuestLaundryBookings = () => {
   // Debug timestamp
   console.log('🔄 GuestLaundryBookings component loaded/updated at:', new Date().toISOString());
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [selectedTab, setSelectedTab] = useState('pending');
+  const [selectedTab, setSelectedTab] = useState('confirmed');
 
   // Debug selectedBooking changes
   useEffect(() => {
@@ -71,10 +70,14 @@ const GuestLaundryBookings = () => {
   const itemsPerPage = 10;
 
   const tabs = [
-    { id: 'pending', label: t('serviceProvider.laundry.labels.pending', 'Pending'), icon: FaClock },
     { id: 'confirmed', label: t('serviceProvider.laundry.labels.confirmed', 'Confirmed'), icon: FaCheck },
     { id: 'completed', label: t('serviceProvider.laundry.labels.completed', 'Completed'), icon: FaCheck }
   ];
+
+  // Initial data fetch on component mount
+  useEffect(() => {
+    fetchBookings();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setCurrentPage(1); // Reset to page 1 when tab changes
@@ -777,20 +780,20 @@ const GuestLaundryBookings = () => {
                                   else if (item.basePrice) {
                                     // Calculate base price with markup applied
                                     const basePrice = item.basePrice * (item.quantity || 1);
-                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
                                     itemPrice = basePrice * (1 + markupPercentage / 100);
                                     console.log(`✅ USING MARKUP PRICE: ${item.itemName} = ${item.basePrice} × ${item.quantity || 1} × (1 + ${markupPercentage}%) = ${itemPrice}`);
                                   }
                                   else if (item.price && item.quantity && item.price !== bookingTotal) {
                                     // Calculate price with markup applied
                                     const basePrice = item.price * item.quantity;
-                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
                                     itemPrice = basePrice * (1 + markupPercentage / 100);
                                     console.log(`✅ USING MARKUP ITEM PRICE: ${item.itemName} = ${item.price} × ${item.quantity} × (1 + ${markupPercentage}%) = ${itemPrice}`);
                                   }
                                   else if (item.price && item.price !== bookingTotal) {
                                     // Calculate single price with markup applied
-                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
                                     itemPrice = item.price * (1 + markupPercentage / 100);
                                     console.log(`✅ USING MARKUP SINGLE PRICE: ${item.itemName} = ${item.price} × (1 + ${markupPercentage}%) = ${itemPrice}`);
                                   }
@@ -804,24 +807,24 @@ const GuestLaundryBookings = () => {
                                     if (allItemsSamePrice) {
                                       // All items showing total price - definitely incorrect, divide evenly and apply markup
                                       const baseItemPrice = bookingTotal / allItems.length;
-                                      const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                      const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
                                       itemPrice = baseItemPrice * (1 + markupPercentage / 100);
                                       console.log(`🔧 FALLBACK MARKUP FIXED: All ${allItems.length} items had same price as total (${bookingTotal}), divided evenly and applied ${markupPercentage}% markup: ${itemPrice}`);
                                     } else {
                                       // Apply markup to the item's totalPrice
-                                      const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                      const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
                                       itemPrice = (item.totalPrice || bookingTotal / allItems.length) * (1 + markupPercentage / 100);
                                     }
                                   }
                                   // Single item - use its own pricing with markup
                                   else {
-                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
                                     itemPrice = (item.totalPrice || bookingTotal) * (1 + markupPercentage / 100);
                                   }
 
                                   // Final fallback
                                   if (!itemPrice && bookingTotal) {
-                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 15;
+                                    const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
                                     itemPrice = bookingTotal * (1 + markupPercentage / 100);
                                   }
 

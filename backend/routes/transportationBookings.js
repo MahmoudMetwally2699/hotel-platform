@@ -43,7 +43,7 @@ router.post('/guest', protect, restrictTo('guest'), async (req, res) => {
 
     // Verify service exists and is active
     const service = await Service.findById(serviceId)
-      .populate('providerId', 'businessName email phone')
+      .populate('providerId', 'businessName email phone markup')
       .populate('hotelId', 'name email');
 
     if (!service || !service.isActive) {
@@ -62,10 +62,22 @@ router.post('/guest', protect, restrictTo('guest'), async (req, res) => {
       });
     }
 
+    // Get service provider details to check for specific markup
+    const ServiceProvider = require('../models/ServiceProvider');
+    const serviceProvider = await ServiceProvider.findById(service.providerId._id).select('markup');
+
     let hotelMarkupPercentage = 15; // Default 15%
-    if (hotel.markupSettings?.categories?.transportation !== undefined) {
+
+    // First priority: Service provider specific markup set by hotel
+    if (serviceProvider?.markup?.percentage !== undefined) {
+      hotelMarkupPercentage = serviceProvider.markup.percentage;
+    }
+    // Second priority: Hotel's category-specific markup
+    else if (hotel.markupSettings?.categories?.transportation !== undefined) {
       hotelMarkupPercentage = hotel.markupSettings.categories.transportation;
-    } else if (hotel.markupSettings?.default !== undefined) {
+    }
+    // Third priority: Hotel's default markup
+    else if (hotel.markupSettings?.default !== undefined) {
       hotelMarkupPercentage = hotel.markupSettings.default;
     }
 
@@ -267,7 +279,7 @@ router.post('/', protect, restrictTo('guest'), async (req, res) => {
 
     // Verify service exists and is active
     const service = await Service.findById(serviceId)
-      .populate('providerId', 'businessName email phone')
+      .populate('providerId', 'businessName email phone markup')
       .populate('hotelId', 'name email');
 
     if (!service || !service.isActive) {

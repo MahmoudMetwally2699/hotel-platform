@@ -868,17 +868,43 @@ router.get('/earnings', catchAsync(async (req, res) => {
     createdAt: { $gte: startDate, $lte: endDate }
   }).populate('serviceId', 'name category');
 
-  // Calculate total earnings
-  const totalEarnings = completedBookings.reduce((sum, booking) => {return sum + (booking.pricing?.providerEarnings || 0);
+  // Get completed transportation bookings
+  const completedTransportationBookings = await TransportationBooking.find({
+    serviceProviderId: providerId,
+    bookingStatus: 'completed',
+    createdAt: { $gte: startDate, $lte: endDate }
+  });
+
+  // Calculate total earnings from regular bookings
+  const regularEarnings = completedBookings.reduce((sum, booking) => {
+    return sum + (booking.pricing?.providerEarnings || 0);
   }, 0);
+
+  // Calculate total earnings from transportation bookings
+  const transportationEarnings = completedTransportationBookings.reduce((sum, booking) => {
+    return sum + (booking.quote?.basePrice || 0);
+  }, 0);
+
+  // Total earnings combining both sources
+  const totalEarnings = regularEarnings + transportationEarnings;
 
   // Calculate earnings by service category with counts and averages
   const earningsByCategory = {};
   const ordersByCategory = {};
 
+  // Process regular bookings
   completedBookings.forEach(booking => {
     const category = booking.serviceId?.category || 'other';
     const earnings = booking.pricing?.providerEarnings || 0;
+
+    earningsByCategory[category] = (earningsByCategory[category] || 0) + earnings;
+    ordersByCategory[category] = (ordersByCategory[category] || 0) + 1;
+  });
+
+  // Process transportation bookings
+  completedTransportationBookings.forEach(booking => {
+    const category = 'transportation';
+    const earnings = booking.quote?.basePrice || 0;
 
     earningsByCategory[category] = (earningsByCategory[category] || 0) + earnings;
     ordersByCategory[category] = (ordersByCategory[category] || 0) + 1;
@@ -894,8 +920,8 @@ router.get('/earnings', catchAsync(async (req, res) => {
       : 0
   }));
 
-  // Get monthly earnings breakdown
-  const monthlyEarnings = await Booking.aggregate([
+  // Get monthly earnings breakdown - Regular bookings
+  const monthlyRegularEarnings = await Booking.aggregate([
     {
       $match: {
         serviceProviderId: new mongoose.Types.ObjectId(providerId),
@@ -916,8 +942,60 @@ router.get('/earnings', catchAsync(async (req, res) => {
     { $sort: { '_id.year': 1, '_id.month': 1 } }
   ]);
 
-  // Get all-time stats
-  const allTimeStats = await Booking.aggregate([
+  // Get monthly earnings breakdown - Transportation bookings
+  const monthlyTransportationEarnings = await TransportationBooking.aggregate([
+    {
+      $match: {
+        serviceProviderId: new mongoose.Types.ObjectId(providerId),
+        bookingStatus: 'completed',
+        createdAt: { $gte: startDate, $lte: endDate }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
+        },
+        earnings: { $sum: '$quote.basePrice' },
+        bookings: { $sum: 1 }
+      }
+    },
+    { $sort: { '_id.year': 1, '_id.month': 1 } }
+  ]);
+
+  // Combine monthly earnings from both sources
+  const monthlyEarningsMap = new Map();
+
+  // Add regular bookings earnings
+  monthlyRegularEarnings.forEach(month => {
+    const key = `${month._id.year}-${month._id.month}`;
+    monthlyEarningsMap.set(key, {
+      _id: month._id,
+      earnings: month.earnings || 0,
+      bookings: month.bookings || 0
+    });
+  });
+
+  // Add transportation bookings earnings
+  monthlyTransportationEarnings.forEach(month => {
+    const key = `${month._id.year}-${month._id.month}`;
+    const existing = monthlyEarningsMap.get(key) || { _id: month._id, earnings: 0, bookings: 0 };
+    monthlyEarningsMap.set(key, {
+      _id: month._id,
+      earnings: existing.earnings + (month.earnings || 0),
+      bookings: existing.bookings + (month.bookings || 0)
+    });
+  });
+
+  const monthlyEarnings = Array.from(monthlyEarningsMap.values())
+    .sort((a, b) => {
+      if (a._id.year !== b._id.year) return a._id.year - b._id.year;
+      return a._id.month - b._id.month;
+    });
+
+  // Get all-time stats - Regular bookings
+  const allTimeRegularStats = await Booking.aggregate([
     {
       $match: {
         serviceProviderId: new mongoose.Types.ObjectId(providerId),
@@ -933,14 +1011,51 @@ router.get('/earnings', catchAsync(async (req, res) => {
     }
   ]);
 
+  // Get all-time stats - Transportation bookings
+  const allTimeTransportationStats = await TransportationBooking.aggregate([
+    {
+      $match: {
+        serviceProviderId: new mongoose.Types.ObjectId(providerId),
+        bookingStatus: 'completed'
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalEarnings: { $sum: '$quote.basePrice' },
+        totalBookings: { $sum: 1 }
+      }
+    }
+  ]);
+
+  // Combine all-time stats
+  const regularStats = allTimeRegularStats.length > 0 ? allTimeRegularStats[0] : { totalEarnings: 0, totalBookings: 0 };
+  const transportationStats = allTimeTransportationStats.length > 0 ? allTimeTransportationStats[0] : { totalEarnings: 0, totalBookings: 0 };
+
+  const allTimeStats = [{
+    totalEarnings: (regularStats.totalEarnings || 0) + (transportationStats.totalEarnings || 0),
+    totalBookings: (regularStats.totalBookings || 0) + (transportationStats.totalBookings || 0)
+  }];
+
   // Get pending earnings (confirmed but not completed)
   const pendingBookings = await Booking.find({
     serviceProviderId: providerId,
     status: { $in: ['confirmed', 'in-progress'] }
   });
-  const pendingEarnings = pendingBookings.reduce((sum, booking) => {
+  const pendingRegularEarnings = pendingBookings.reduce((sum, booking) => {
     return sum + (booking.pricing?.providerEarnings || 0);
   }, 0);
+
+  // Get pending transportation earnings
+  const pendingTransportationBookings = await TransportationBooking.find({
+    serviceProviderId: providerId,
+    bookingStatus: { $in: ['confirmed', 'payment_pending', 'payment_completed', 'service_active'] }
+  });
+  const pendingTransportationEarnings = pendingTransportationBookings.reduce((sum, booking) => {
+    return sum + (booking.quote?.basePrice || 0);
+  }, 0);
+
+  const pendingEarnings = pendingRegularEarnings + pendingTransportationEarnings;
   res.status(200).json({
     success: true,
     data: {
@@ -958,8 +1073,8 @@ router.get('/earnings', catchAsync(async (req, res) => {
       },
       currentPeriod: {
         totalEarnings: Math.round(totalEarnings * 100) / 100,
-        totalBookings: completedBookings.length,
-        averagePerBooking: completedBookings.length > 0 ? Math.round((totalEarnings / completedBookings.length) * 100) / 100 : 0
+        totalBookings: completedBookings.length + completedTransportationBookings.length,
+        averagePerBooking: (completedBookings.length + completedTransportationBookings.length) > 0 ? Math.round((totalEarnings / (completedBookings.length + completedTransportationBookings.length)) * 100) / 100 : 0
       },
       allTime: {
         totalEarnings: allTimeStats.length > 0 ? Math.round(allTimeStats[0].totalEarnings * 100) / 100 : 0,
@@ -967,7 +1082,7 @@ router.get('/earnings', catchAsync(async (req, res) => {
       },
       pending: {
         pendingEarnings: Math.round(pendingEarnings * 100) / 100,
-        pendingBookings: pendingBookings.length
+        pendingBookings: pendingBookings.length + pendingTransportationBookings.length
       },
       breakdown: {
         byCategory: categoryBreakdown,
@@ -1089,13 +1204,21 @@ router.get('/analytics/categories', catchAsync(async (req, res) => {
     {
       $match: {
         serviceProviderId: new mongoose.Types.ObjectId(providerId),
-        bookingStatus: 'payment_completed' // Use the correct status for completed transportation bookings
+        bookingStatus: 'completed' // Use the correct status for completed transportation bookings
+      }
+    },
+    {
+      $addFields: {
+        // Calculate provider earnings: basePrice from quote (provider keeps the base price)
+        providerEarnings: {
+          $ifNull: ['$quote.basePrice', 0]
+        }
       }
     },
     {
       $group: {
         _id: 'transportation',
-        allTimeEarnings: { $sum: '$payment.breakdown.serviceProviderAmount' },
+        allTimeEarnings: { $sum: '$providerEarnings' },
         allTimeOrders: { $sum: 1 },
         currentPeriodEarnings: {
           $sum: {
@@ -1106,7 +1229,7 @@ router.get('/analytics/categories', catchAsync(async (req, res) => {
                   { $lte: ['$createdAt', endDate] }
                 ]
               },
-              '$payment.breakdown.serviceProviderAmount',
+              '$providerEarnings',
               0
             ]
           }

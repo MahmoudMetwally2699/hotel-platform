@@ -62,7 +62,6 @@ const SuperAdminHotelsPage = () => {
     paymentSettings: {
       enableOnlinePayment: false,
       currency: 'USD',
-      taxRate: 0,
       acceptedMethods: ['cash']
     },
     // Hotel Admin credentials
@@ -182,14 +181,40 @@ const SuperAdminHotelsPage = () => {
   };
 
   const handleUpdateHotel = async (e) => {
-    e.preventDefault();    try {
-      await dispatch(updateHotel({ id: selectedHotel._id, ...formData })).unwrap();
+    e.preventDefault();
+
+    try {
+      // Upload logo if a new one was selected
+      let logoUrl = selectedHotel.images?.logo; // Keep existing logo by default
+      if (logoFile) {
+        console.log('📤 Uploading new hotel logo...');
+        console.log('📁 Logo file:', logoFile);
+        logoUrl = await uploadLogo(logoFile);
+        console.log('✅ New logo uploaded successfully:', logoUrl);
+      } else {
+        console.log('📝 No new logo file selected, keeping existing logo:', logoUrl);
+      }
+
+      // Prepare updated hotel data
+      const updatedHotelData = {
+        ...formData,
+        images: {
+          ...formData.images,
+          logo: logoUrl
+        }
+      };
+
+      console.log('📊 Sending hotel update data:', JSON.stringify(updatedHotelData, null, 2));
+      console.log('🏨 Hotel ID being updated:', selectedHotel._id);
+
+      await dispatch(updateHotel({ id: selectedHotel._id, ...updatedHotelData })).unwrap();
       // toast.success('Hotel updated successfully');
       alert('Hotel updated successfully'); // Temporary replacement
       setShowEditModal(false);
       resetForm();
       dispatch(fetchAllHotels());
     } catch (error) {
+      console.error('❌ Error updating hotel:', error);
       // toast.error(`Error updating hotel: ${error.message || error}`);
       alert(`Error updating hotel: ${error.message || error}`); // Temporary replacement
     }
@@ -213,15 +238,24 @@ const SuperAdminHotelsPage = () => {
   // Handle logo file selection
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
+    console.log('🖼️ Logo file selected:', file);
     if (file) {
+      console.log('📁 File details:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
       setLogoFile(file);
 
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
+        console.log('🖼️ Logo preview created');
         setLogoPreview(reader.result);
       };
       reader.readAsDataURL(file);
+    } else {
+      console.log('❌ No file selected');
     }
   };
 
@@ -395,6 +429,11 @@ const SuperAdminHotelsPage = () => {
         acceptedMethods: hotel.paymentSettings?.acceptedMethods || ['cash']
       }
     });
+
+    // Set the existing logo preview if available
+    setLogoPreview(hotel.images?.logo || null);
+    setLogoFile(null); // Clear any previously selected file
+
     setShowEditModal(true);
   };  const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -894,22 +933,6 @@ const SuperAdminHotelsPage = () => {
                       </select>
                     </div>
                   </div>
-                  <div className="mt-4">
-                    <div className="w-full md:w-1/2">
-                      <label className="block text-sm font-medium text-gray-700">Tax Rate (%)</label>
-                      <input
-                        type="number"
-                        name="paymentSettings.taxRate"
-                        value={formData.paymentSettings.taxRate}
-                        onChange={handleInputChange}
-                        min="0"
-                        max="50"
-                        step="0.1"
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Enter tax rate as a percentage (0-50%)</p>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Hotel Admin Credentials Section */}
@@ -1150,6 +1173,34 @@ const SuperAdminHotelsPage = () => {
                   />
                 </div>
 
+                {/* Hotel Logo Upload Section */}
+                <div className="border-t pt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Hotel Logo</label>
+                  <div className="space-y-3">
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoChange}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Upload a new logo for the hotel (PNG, JPG, or GIF). Leave empty to keep current logo.</p>
+                    </div>
+                    {logoPreview && (
+                      <div className="mt-3">
+                        <img
+                          src={logoPreview}
+                          alt="Logo preview"
+                          className="h-20 w-auto object-contain border border-gray-300 rounded-md p-2 bg-gray-50"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {logoFile ? 'New logo preview' : 'Current hotel logo'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Payment Settings Section */}
                 <div className="border-t pt-4">
                   <h4 className="text-md font-medium text-gray-900 mb-3">Payment Settings</h4>
@@ -1182,22 +1233,6 @@ const SuperAdminHotelsPage = () => {
                         <option value="AUD">AUD - Australian Dollar</option>
                         <option value="EGP">EGP - Egyptian Pound</option>
                       </select>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <div className="w-full md:w-1/2">
-                      <label className="block text-sm font-medium text-gray-700">Tax Rate (%)</label>
-                      <input
-                        type="number"
-                        name="paymentSettings.taxRate"
-                        value={formData.paymentSettings?.taxRate || 0}
-                        onChange={handleInputChange}
-                        min="0"
-                        max="50"
-                        step="0.1"
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Enter tax rate as a percentage (0-50%)</p>
                     </div>
                   </div>
                 </div>

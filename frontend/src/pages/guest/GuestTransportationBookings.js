@@ -15,7 +15,6 @@ import {
   FaTimes,
   FaEye,
   FaMoneyBillWave,
-  FaSpinner,
   FaChevronLeft,
   FaChevronRight
 } from 'react-icons/fa';
@@ -58,6 +57,11 @@ const GuestTransportationBookings = () => {
     { id: 'payment_pending', label: t('transportation.labels.readyForPayment'), icon: FaMoneyBillWave },
     { id: 'completed', label: t('transportation.labels.completed'), icon: FaCheck }
   ];
+
+  // Initial data fetch on component mount
+  useEffect(() => {
+    fetchBookings();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setCurrentPage(1); // Reset to page 1 when tab changes
@@ -287,7 +291,7 @@ const GuestTransportationBookings = () => {
                     const urlMapping = {
                       'pending_quote': 'waitingForQuote',
                       'payment_pending': 'readyForPayment',
-                      'payment_completed': 'confirmed'
+                      'completed': 'completed'
                     };
                     const urlTab = urlMapping[tab.id] || 'readyForPayment';
                     navigate(`/my-transportation-bookings?tab=${urlTab}`, { replace: true });

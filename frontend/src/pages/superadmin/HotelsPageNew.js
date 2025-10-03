@@ -45,7 +45,6 @@ const SuperAdminHotelsPage = () => {
     paymentSettings: {
       enableOnlinePayment: false,
       currency: 'USD',
-      taxRate: 0,
       acceptedMethods: ['cash']
     }
   });
@@ -119,7 +118,6 @@ const SuperAdminHotelsPage = () => {
       paymentSettings: {
         enableOnlinePayment: false,
         currency: 'USD',
-        taxRate: 0,
         acceptedMethods: ['cash']
       }
     });
@@ -147,7 +145,6 @@ const SuperAdminHotelsPage = () => {
       paymentSettings: {
         enableOnlinePayment: hotel.paymentSettings?.enableOnlinePayment || false,
         currency: hotel.paymentSettings?.currency || 'USD',
-        taxRate: hotel.paymentSettings?.taxRate || 0,
         acceptedMethods: hotel.paymentSettings?.acceptedMethods || ['cash']
       }
     });

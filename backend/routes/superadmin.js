@@ -262,7 +262,6 @@ router.post('/hotels', catchAsync(async (req, res, next) => {
       paymentSettings: {
         enableOnlinePayment: hotelData.paymentSettings?.enableOnlinePayment || false,
         currency: hotelData.paymentSettings?.currency || 'USD',
-        taxRate: hotelData.paymentSettings?.taxRate || 0,
         acceptedMethods: hotelData.paymentSettings?.acceptedMethods || ['cash']
       },
       metadata: {

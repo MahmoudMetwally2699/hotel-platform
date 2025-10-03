@@ -942,30 +942,13 @@ const TransportationBookingPage = () => {
                           <FaClock className="inline mr-2 text-[#3B5787]" />
                           {t('transportationBooking.pickupTime')}
                         </label>
-                        <select
+                        <input
+                          type="time"
                           value={bookingDetails.pickupTime}
                           onChange={(e) => setBookingDetails(prev => ({ ...prev, pickupTime: e.target.value }))}
                           className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3B5787] focus:border-[#3B5787] transition-all duration-200 bg-white/90 backdrop-blur-sm"
-                        >
-                          <option value="">{t('transportationBooking.timeSlots.selectTime')}</option>
-                          <option value="06:00">06:00 - {t('transportationBooking.timeSlots.earlyMorning')}</option>
-                          <option value="07:00">07:00 - {t('transportationBooking.timeSlots.earlyMorning')}</option>
-                          <option value="08:00">08:00 - {t('transportationBooking.timeSlots.morning')}</option>
-                          <option value="09:00">09:00 - {t('transportationBooking.timeSlots.morning')}</option>
-                          <option value="10:00">10:00 - {t('transportationBooking.timeSlots.morning')}</option>
-                          <option value="11:00">11:00 - {t('transportationBooking.timeSlots.morning')}</option>
-                          <option value="12:00">12:00 - {t('transportationBooking.timeSlots.noon')}</option>
-                          <option value="13:00">13:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
-                          <option value="14:00">14:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
-                          <option value="15:00">15:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
-                          <option value="16:00">16:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
-                          <option value="17:00">17:00 - {t('transportationBooking.timeSlots.evening')}</option>
-                          <option value="18:00">18:00 - {t('transportationBooking.timeSlots.evening')}</option>
-                          <option value="19:00">19:00 - {t('transportationBooking.timeSlots.evening')}</option>
-                          <option value="20:00">20:00 - {t('transportationBooking.timeSlots.evening')}</option>
-                          <option value="21:00">21:00 - {t('transportationBooking.timeSlots.night')}</option>
-                          <option value="22:00">22:00 - {t('transportationBooking.timeSlots.night')}</option>
-                        </select>
+                          placeholder="Select your preferred pickup time"
+                        />
                       </div>
                     </div>
                   </div>
@@ -1028,30 +1011,13 @@ const TransportationBookingPage = () => {
                             <FaClock className="inline mr-2 text-purple-600" />
                             {t('transportationBooking.returnTime')}
                           </label>
-                          <select
+                          <input
+                            type="time"
                             value={bookingDetails.returnTime}
                             onChange={(e) => setBookingDetails(prev => ({ ...prev, returnTime: e.target.value }))}
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white/90 backdrop-blur-sm"
-                          >
-                            <option value="">{t('transportationBooking.timeSlots.selectTime')}</option>
-                            <option value="06:00">06:00 - {t('transportationBooking.timeSlots.earlyMorning')}</option>
-                            <option value="07:00">07:00 - {t('transportationBooking.timeSlots.earlyMorning')}</option>
-                            <option value="08:00">08:00 - {t('transportationBooking.timeSlots.morning')}</option>
-                            <option value="09:00">09:00 - {t('transportationBooking.timeSlots.morning')}</option>
-                            <option value="10:00">10:00 - {t('transportationBooking.timeSlots.morning')}</option>
-                            <option value="11:00">11:00 - {t('transportationBooking.timeSlots.morning')}</option>
-                            <option value="12:00">12:00 - {t('transportationBooking.timeSlots.noon')}</option>
-                            <option value="13:00">13:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
-                            <option value="14:00">14:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
-                            <option value="15:00">15:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
-                            <option value="16:00">16:00 - {t('transportationBooking.timeSlots.afternoon')}</option>
-                            <option value="17:00">17:00 - {t('transportationBooking.timeSlots.evening')}</option>
-                            <option value="18:00">18:00 - {t('transportationBooking.timeSlots.evening')}</option>
-                            <option value="19:00">19:00 - {t('transportationBooking.timeSlots.evening')}</option>
-                            <option value="20:00">20:00 - {t('transportationBooking.timeSlots.evening')}</option>
-                            <option value="21:00">21:00 - {t('transportationBooking.timeSlots.night')}</option>
-                            <option value="22:00">22:00 - {t('transportationBooking.timeSlots.night')}</option>
-                          </select>
+                            placeholder="Select your preferred return time"
+                          />
                         </div>
                       </div>
                     </div>

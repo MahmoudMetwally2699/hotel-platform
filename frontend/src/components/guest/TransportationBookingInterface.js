@@ -563,20 +563,13 @@ const TransportationBookingInterface = () => {
                       <FaClock className="inline mr-2" />
                       {t('guest.transportation.pickupTime')}
                     </label>
-                    <select
+                    <input
+                      type="time"
                       value={scheduling.pickupTime}
                       onChange={(e) => setScheduling(prev => ({ ...prev, pickupTime: e.target.value }))}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">{t('guest.transportation.selectTime')}</option>
-                      <option value="06:00">06:00 AM</option>
-                      <option value="08:00">08:00 AM</option>
-                      <option value="10:00">10:00 AM</option>
-                      <option value="12:00">12:00 PM</option>
-                      <option value="14:00">02:00 PM</option>
-                      <option value="16:00">04:00 PM</option>
-                      <option value="18:00">06:00 PM</option>
-                    </select>
+                      placeholder="Select your preferred pickup time"
+                    />
                   </div>
 
                   <div>

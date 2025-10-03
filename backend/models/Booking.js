@@ -1086,6 +1086,51 @@ bookingSchema.statics.getRevenueStats = function(filter = {}) {
   ]);
 };
 
+// Post-find middleware to sync hotel markup with current service provider settings
+bookingSchema.post(['find', 'findOne', 'findOneAndUpdate'], async function(docs) {
+  if (!docs) return;
+
+  const bookings = Array.isArray(docs) ? docs : [docs];
+  const ServiceProvider = require('./ServiceProvider');
+
+  for (const booking of bookings) {
+    if (booking && booking.serviceProviderId && booking.markupPercentage !== undefined) {
+      try {
+        // Get current service provider markup
+        const serviceProvider = await ServiceProvider.findById(booking.serviceProviderId).select('markup');
+
+        if (serviceProvider?.markup?.percentage !== undefined &&
+            serviceProvider.markup.percentage !== booking.markupPercentage) {
+
+          // Recalculate pricing with new markup
+          const baseAmount = booking.providerEarnings || 0;
+          const newMarkupPercentage = serviceProvider.markup.percentage;
+          const newHotelEarnings = (baseAmount * newMarkupPercentage) / 100;
+          const newTotalAmount = baseAmount + newHotelEarnings;
+
+          // Update the booking with new pricing
+          await booking.constructor.updateOne(
+            { _id: booking._id },
+            {
+              markupPercentage: newMarkupPercentage,
+              hotelEarnings: newHotelEarnings,
+              totalAmount: newTotalAmount
+            }
+          );
+
+          // Update the in-memory object for immediate use
+          booking.markupPercentage = newMarkupPercentage;
+          booking.hotelEarnings = newHotelEarnings;
+          booking.totalAmount = newTotalAmount;
+        }
+      } catch (error) {
+        // Silent fail - don't break the query if markup sync fails
+        console.warn('Failed to sync markup for booking:', booking._id, error.message);
+      }
+    }
+  }
+});
+
 const Booking = mongoose.model('Booking', bookingSchema);
 
 module.exports = Booking;

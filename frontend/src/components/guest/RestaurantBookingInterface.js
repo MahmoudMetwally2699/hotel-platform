@@ -476,17 +476,13 @@ const RestaurantBookingInterface = () => {
                       <FaClock className="inline mr-2" />
                       Preferred Time
                     </label>
-                    <select
+                    <input
+                      type="time"
                       value={scheduling.preferredTime}
                       onChange={(e) => setScheduling(prev => ({ ...prev, preferredTime: e.target.value }))}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">{t('guest.restaurant.selectTime')}</option>
-                      <option value="breakfast">{t('guest.restaurant.breakfast')}</option>
-                      <option value="lunch">{t('guest.restaurant.lunch')}</option>
-                      <option value="dinner">{t('guest.restaurant.dinner')}</option>
-                      <option value="anytime">{t('guest.restaurant.anytime')}</option>
-                    </select>
+                      placeholder="Select your preferred time"
+                    />
                   </div>
                 </div>
 

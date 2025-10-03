@@ -22,6 +22,11 @@ const GuestHousekeepingBookings = () => {
   const [totalBookings, setTotalBookings] = useState(0);
   const itemsPerPage = 10;
 
+  // Initial data fetch on component mount
+  useEffect(() => {
+    fetchBookings();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     setCurrentPage(1); // Reset to page 1 when tab changes
     fetchBookings();

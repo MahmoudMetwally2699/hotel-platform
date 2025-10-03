@@ -508,17 +508,13 @@ const RestaurantBookingPage = () => {
                       <FaClock className="inline mr-2" />
                       {t('guest.restaurant.preferredTime')}
                     </label>
-                    <select
+                    <input
+                      type="time"
                       value={bookingDetails.preferredTime}
                       onChange={(e) => setBookingDetails(prev => ({ ...prev, preferredTime: e.target.value }))}
                       className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#61B6DE] focus:border-[#61B6DE]"
-                    >
-                      <option value="">{t('guest.restaurant.selectTime')}</option>
-                      <option value="breakfast">Breakfast (7:00 - 10:00)</option>
-                      <option value="lunch">Lunch (12:00 - 15:00)</option>
-                      <option value="dinner">Dinner (18:00 - 22:00)</option>
-                      <option value="anytime">Anytime (11:00 - 23:00)</option>
-                    </select>
+                      placeholder="Select your preferred time"
+                    />
                   </div>
                 </div>
 

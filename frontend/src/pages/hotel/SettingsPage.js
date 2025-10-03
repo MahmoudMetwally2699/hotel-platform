@@ -32,7 +32,6 @@ const SettingsPage = () => {
     contactPhone: '',
     website: '',
     defaultMarkupPercentage: 0,
-    defaultCurrency: 'USD',
     checkInTime: '14:00',
     checkOutTime: '12:00',
     acceptsBookingsCutoff: 2, // hours before service
@@ -40,6 +39,8 @@ const SettingsPage = () => {
   });
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
 
   useEffect(() => {
     // Fetch hotel profile data when user is available
@@ -69,7 +70,6 @@ const SettingsPage = () => {
         contactPhone: hotelData.phone || '',
         website: hotelData.website || '',
         defaultMarkupPercentage: hotelData.markupSettings?.global?.defaultPercentage || 0,
-        defaultCurrency: hotelData.paymentSettings?.currency || 'USD',
         checkInTime: hotelData.operatingHours?.checkIn || '14:00',
         checkOutTime: hotelData.operatingHours?.checkOut || '12:00',
         acceptsBookingsCutoff: hotelData.acceptsBookingsCutoff || 2,
@@ -77,6 +77,10 @@ const SettingsPage = () => {
       };
       console.log('🔍 New form data:', newFormData);
       setFormData(newFormData);
+
+      // Set the existing logo preview if available
+      setLogoPreview(hotelData.images?.logo || null);
+      setLogoFile(null); // Clear any previously selected file
     } else {
       console.log('⚠️ No hotel data available');
     }
@@ -101,6 +105,97 @@ const SettingsPage = () => {
     }
   };
 
+  // Handle logo file selection
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    console.log('🖼️ Hotel admin logo file selected:', file);
+    if (file) {
+      console.log('📁 File details:', {
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+      setLogoFile(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        console.log('🖼️ Hotel admin logo preview created');
+        setLogoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      console.log('❌ No file selected');
+    }
+  };
+
+  // Upload logo to Cloudinary
+  const uploadLogo = async (file) => {
+    console.log('🏨 Starting hotel admin logo upload to Cloudinary');
+    console.log('🏨 logoFile:', file);
+
+    try {
+      // Check if Cloudinary is properly configured
+      const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+      const apiKey = process.env.REACT_APP_CLOUDINARY_API_KEY;
+
+      console.log('🏨 Environment variables:', {
+        cloudName,
+        uploadPreset,
+        hasApiKey: !!apiKey
+      });
+
+      if (!cloudName || cloudName === 'hotel-platform-demo' || cloudName === 'your_cloud_name_here') {
+        console.warn('🏨 Cloudinary not configured properly. Using local preview for testing.');
+        alert('Cloudinary not configured, using local preview');
+
+        // Create a local blob URL for testing
+        const localUrl = URL.createObjectURL(file);
+        console.log('🏨 Created local URL:', localUrl);
+        return localUrl;
+      }
+
+      // Create FormData for Cloudinary upload
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+      uploadFormData.append('upload_preset', uploadPreset);
+      uploadFormData.append('folder', 'hotel-platform/hotel-logos');
+      uploadFormData.append('resource_type', 'image');
+
+      console.log('🏨 Uploading to Cloudinary...');
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+
+      const response = await fetch(cloudinaryUrl, {
+        method: 'POST',
+        body: uploadFormData
+      });
+
+      console.log('🏨 Upload response status:', response.status);
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('🏨 Cloudinary upload success:', result.secure_url);
+
+      alert('Hotel logo uploaded successfully to Cloudinary!');
+      return result.secure_url;
+    } catch (error) {
+      console.error('🏨 Error uploading hotel logo:', error);
+
+      // Try to extract meaningful error message
+      let errorMessage = 'Unknown upload error';
+      if (error.message) {
+        errorMessage = error.message;
+      }
+
+      alert(`Failed to upload hotel logo: ${errorMessage}`);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -109,8 +204,46 @@ const SettingsPage = () => {
 
       // For hotel admin, update their own profile (no hotelId needed)
       if (user?.role === 'hotel') {
+        // Upload logo if a new one was selected
+        let logoUrl = hotel?.images?.logo; // Keep existing logo by default
+        if (logoFile) {
+          console.log('📤 Uploading new hotel logo...');
+          console.log('📁 Logo file:', logoFile);
+          logoUrl = await uploadLogo(logoFile);
+          console.log('✅ New logo uploaded successfully:', logoUrl);
+        } else {
+          console.log('📝 No new logo file selected, keeping existing logo:', logoUrl);
+        }
+
+        // Structure the data to match the Hotel model
+        const updateData = {
+          name: formData.name,
+          description: formData.description,
+          address: formData.address,
+          email: formData.contactEmail,
+          phone: formData.contactPhone,
+          website: formData.website,
+          images: {
+            ...hotel?.images,
+            logo: logoUrl
+          },
+          markupSettings: {
+            global: {
+              defaultPercentage: formData.defaultMarkupPercentage
+            }
+          },
+          operatingHours: {
+            checkIn: formData.checkInTime,
+            checkOut: formData.checkOutTime
+          },
+          acceptsBookingsCutoff: formData.acceptsBookingsCutoff,
+          cancellationPolicy: formData.cancellationPolicy
+        };
+
+        console.log('📊 Sending hotel profile update data:', JSON.stringify(updateData, null, 2));
+
         await dispatch(updateHotelProfile({
-          hotelData: formData
+          hotelData: updateData
         })).unwrap();
 
         setSuccessMessage(t('hotelAdmin.settings.updateSuccess'));
@@ -261,6 +394,49 @@ const SettingsPage = () => {
                           placeholder={t('hotelAdmin.settings.placeholders.description')}
                         />
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hotel Logo Section */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+                  <div className="bg-gradient-to-r from-[#67BAE0]/20 to-[#3B5787]/20 px-6 py-4 border-b border-gray-200">
+                    <h2 className="text-xl font-semibold text-gray-800 flex items-center space-x-2">
+                      <svg className="w-6 h-6 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Hotel Logo</span>
+                    </h2>
+                  </div>
+                  <div className="p-8">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Upload Logo</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoChange}
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#67BAE0]/20 file:text-[#3B5787] hover:file:bg-[#67BAE0]/30 transition-all duration-200 file:cursor-pointer cursor-pointer"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">Upload a new logo for your hotel (PNG, JPG, or GIF). Leave empty to keep current logo.</p>
+                      </div>
+                      {logoPreview && (
+                        <div className="mt-4">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            {logoFile ? 'New Logo Preview' : 'Current Hotel Logo'}
+                          </label>
+                          <div className="relative inline-block">
+                            <img
+                              src={logoPreview}
+                              alt="Logo preview"
+                              className="h-24 w-auto object-contain border-2 border-gray-200 rounded-xl p-3 bg-gray-50 shadow-sm"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {logoFile ? 'This is how your new logo will look' : 'This is your current hotel logo'}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
