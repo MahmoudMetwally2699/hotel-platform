@@ -155,12 +155,17 @@ class AuthService {
 
   /**
    * Initiate password reset
-   * @param {string} email - User's email
+   * @param {string|Object} emailOrData - User's email string or object with email, hotelId, qrToken
    * @returns {Promise} - Response from API
    */
-  async forgotPassword(email) {
+  async forgotPassword(emailOrData) {
     try {
-      const response = await apiClient.post(AUTH_API.FORGOT_PASSWORD, { email });
+      // Support both old string format and new object format for hotel-scoped reset
+      const requestData = typeof emailOrData === 'string'
+        ? { email: emailOrData }
+        : emailOrData;
+
+      const response = await apiClient.post(AUTH_API.FORGOT_PASSWORD, requestData);
       return response.data;
     } catch (error) {
       throw error;
@@ -170,15 +175,17 @@ class AuthService {
   /**
    * Reset password with token
    * @param {string} token - Reset token from email
-   * @param {string} password - New password
+   * @param {string|Object} passwordOrData - New password string or object with password and hotel context
    * @returns {Promise} - Response from API
    */
-  async resetPassword(token, password) {
+  async resetPassword(token, passwordOrData) {
     try {
-      const response = await apiClient.post(AUTH_API.RESET_PASSWORD, {
-        token,
-        password,
-      });
+      // Support both old string format and new object format
+      const requestData = typeof passwordOrData === 'string'
+        ? { password: passwordOrData, passwordConfirm: passwordOrData }
+        : passwordOrData;
+
+      const response = await apiClient.patch(`/auth/reset-password/${token}`, requestData);
       return response.data;
     } catch (error) {
       throw error;

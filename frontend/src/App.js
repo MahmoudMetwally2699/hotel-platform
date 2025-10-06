@@ -18,6 +18,8 @@ const PUBLIC_ROUTES = [
   '/admin',
   '/superadmin/login',
   '/hotel/login',
+  '/hotel/forgot-password',
+  '/hotel/reset-password',
   '/serviceprovider/login',
   '/',
   '/hotels',

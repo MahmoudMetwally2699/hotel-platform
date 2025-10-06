@@ -34,6 +34,10 @@ const LoginPage = () => {
   const [qrHotelInfo, setQrHotelInfo] = useState(null);
   const [validatingQR, setValidatingQR] = useState(false);
 
+  // Forgot password functionality
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [sendingResetEmail, setSendingResetEmail] = useState(false);
+
   // Validation schema with translations
   const validationSchema = Yup.object({
     email: Yup.string().email(t('errors.invalidEmail')).required(t('errors.requiredField')),
@@ -129,7 +133,10 @@ const LoginPage = () => {
       const response = await authService.validateQRToken(qrToken, 'login');
 
       if (response.data && response.data.hotelId) {
-        setQrHotelInfo(response.data);
+        setQrHotelInfo({
+          ...response.data,
+          qrToken: qrToken // Store the original QR token for password reset
+        });
         toast.success(`Ready to login to "${response.data.hotelName}"!`);
 
         // Clear QR parameter from URL
@@ -170,6 +177,33 @@ const LoginPage = () => {
   const clearQRSelection = () => {
     setQrHotelInfo(null);
     toast.info('QR hotel selection cleared. You can now login manually.');
+  };
+
+  /**
+   * Handle forgot password with hotel-scoped QR token
+   */
+  const handleForgotPassword = async (email) => {
+    if (!qrHotelInfo) {
+      toast.error('Please scan QR code first to reset password for your hotel.');
+      return;
+    }
+
+    setSendingResetEmail(true);
+    try {
+      await authService.forgotPassword({
+        email,
+        hotelId: qrHotelInfo.hotelId,
+        qrToken: qrHotelInfo.qrToken // Include QR token for additional security
+      });
+
+      toast.success(`Password reset email sent for ${qrHotelInfo.hotelName}!`);
+      setShowForgotPassword(false);
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      toast.error(error.response?.data?.message || 'Failed to send password reset email. Please try again.');
+    } finally {
+      setSendingResetEmail(false);
+    }
   };
 
   // Check for QR token in URL parameters on component mount
@@ -384,12 +418,16 @@ const LoginPage = () => {
 
                 <div className="text-sm">
                   {qrHotelInfo ? (
-                    <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                      {t('login.forgotYourPassword')}
-                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="font-medium text-blue-600 hover:text-blue-500"
+                    >
+                      Forgot your password?
+                    </button>
                   ) : (
                     <span className="font-medium text-gray-400 cursor-not-allowed">
-                      {t('login.forgotYourPassword')}
+                      Forgot your password?
                     </span>
                   )}
                 </div>
@@ -438,6 +476,77 @@ const LoginPage = () => {
           )}
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && qrHotelInfo && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Reset Password</h3>
+              <p className="text-sm text-gray-600 mb-1">
+                Reset password for <span className="font-medium">{qrHotelInfo.hotelName}</span>
+              </p>
+              <p className="text-xs text-gray-500">
+                A reset link will be sent to your email for this hotel only.
+              </p>
+            </div>
+
+            <Formik
+              initialValues={{ email: '' }}
+              validationSchema={Yup.object({
+                email: Yup.string().email('Invalid email').required('Email is required'),
+              })}
+              onSubmit={(values) => handleForgotPassword(values.email)}
+            >
+              {({ isSubmitting }) => (
+                <Form className="space-y-4">
+                  <div>
+                    <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Email Address
+                    </label>
+                    <Field
+                      type="email"
+                      name="email"
+                      id="reset-email"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter your email address"
+                    />
+                    <ErrorMessage name="email" component="div" className="mt-1 text-sm text-red-600" />
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(false)}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                      disabled={sendingResetEmail}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={sendingResetEmail || isSubmitting}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {sendingResetEmail ? (
+                        <div className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Sending...
+                        </div>
+                      ) : (
+                        'Send Reset Email'
+                      )}
+                    </button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
+          </div>
+        </div>
+      )}
 
       {/* QR Scanner Modal */}
       {showQRScanner && (

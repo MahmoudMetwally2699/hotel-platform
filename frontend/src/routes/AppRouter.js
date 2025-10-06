@@ -14,6 +14,8 @@ import LoadingScreen from '../components/common/LoadingScreen';
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
 const SuperAdminLoginPage = lazy(() => import('../pages/auth/SuperAdminLoginPage'));
 const HotelAdminLoginPage = lazy(() => import('../pages/auth/HotelAdminLoginPage'));
+const HotelForgotPasswordPage = lazy(() => import('../pages/auth/HotelForgotPasswordPage'));
+const HotelResetPasswordPage = lazy(() => import('../pages/auth/HotelResetPasswordPage'));
 const ServiceProviderLoginPage = lazy(() => import('../pages/auth/ServiceProviderLoginPage'));
 const RegisterPage = lazy(() => import('../pages/auth/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('../pages/auth/ForgotPasswordPage'));
@@ -112,6 +114,8 @@ const AppRouter = () => {
         <Route path="/admin" element={<AdminAccessPage />} />
         <Route path="/superadmin/login" element={<SuperAdminLoginPage />} />
         <Route path="/hotel/login" element={<HotelAdminLoginPage />} />
+        <Route path="/hotel/forgot-password" element={<HotelForgotPasswordPage />} />
+        <Route path="/hotel/reset-password/:token" element={<HotelResetPasswordPage />} />
         <Route path="/serviceprovider/login" element={<ServiceProviderLoginPage />} />        <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />

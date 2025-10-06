@@ -4,19 +4,16 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import authService from '../../services/auth.service';
+import { toast } from 'react-hot-toast';
+import apiClient from '../../services/api.service';
 
-// Validation schema
+// Validation schema - relaxed for guest users
 const validationSchema = Yup.object({
   password: Yup.string()
-    .min(8, 'Password must be at least 8 characters')
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
-    )
+    .min(4, 'Password must be at least 4 characters')
     .required('Password is required'),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password'), null], 'Passwords must match')
@@ -26,21 +23,27 @@ const validationSchema = Yup.object({
 const ResetPasswordPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [tokenValid, setTokenValid] = useState(true);
-  // Verify token on component mount
-  useEffect(() => {
-    const verifyToken = async () => {
-      try {
-        await authService.verifyResetToken(token);
-      } catch (error) {
-        setTokenValid(false);
-        setError('Reset token is invalid or has expired. Please request a new password reset.');
-      }
-    };
+  const [hotelContext, setHotelContext] = useState(null);
 
-    verifyToken();
+  // Check for hotel context from URL parameters
+  useEffect(() => {
+    const hotelId = searchParams.get('hotelId');
+    if (hotelId) {
+      setHotelContext({ hotelId });
+    }
+  }, [searchParams]);
+  // Verify token on component mount (simplified for now)
+  useEffect(() => {
+    // For now, we'll assume the token is valid until we try to reset
+    // The backend will validate the token during the reset attempt
+    if (!token) {
+      setTokenValid(false);
+      setError('Reset token is missing. Please request a new password reset.');
+    }
   }, [token]);
 
   // Initial form values
@@ -54,11 +57,41 @@ const ResetPasswordPage = () => {
     if (!tokenValid) return;
 
     setIsLoading(true);
-    setError(null);    try {
-      await authService.resetPassword(token, values.password);
-      navigate('/login', { state: { message: 'Password successfully reset. You can now log in with your new password.' } });
+    setError(null);
+
+    try {
+      // Prepare reset data
+      const resetData = {
+        password: values.password,
+        passwordConfirm: values.confirmPassword
+      };
+
+      // Include hotel context if available (for hotel-scoped password reset)
+      if (hotelContext?.hotelId) {
+        resetData.hotelId = hotelContext.hotelId;
+      }
+
+      // Make API call to reset password endpoint using the API client
+      const response = await apiClient.patch(`/auth/reset-password/${token}`, resetData);
+
+      // Success message
+      const successMessage = hotelContext
+        ? 'Password successfully reset for your hotel account. You can now log in with your new password.'
+        : 'Password successfully reset. You can now log in with your new password.';
+
+      toast.success(response.data.message || 'Password reset successful!');
+
+      navigate('/login', {
+        state: {
+          message: successMessage,
+          hotelContext: hotelContext
+        }
+      });
+
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to reset password. Please try again.');
+      console.error('Password reset error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to reset password. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -90,6 +123,11 @@ const ResetPasswordPage = () => {
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-800">Reset Password</h2>
           <p className="text-gray-600 mt-2">Enter your new password</p>
+          {hotelContext && (
+            <p className="text-blue-600 text-sm mt-1 font-medium">
+              Hotel-specific password reset
+            </p>
+          )}
         </div>
 
         {error && (

@@ -232,10 +232,9 @@ router.post('/login', catchAsync(async (req, res, next) => {
     return next(new AppError('Hotel identification required. Please scan QR code at hotel reception.', 400));
   }
 
-  // Build user query with hotel context if provided
+  // Build user query with hotel context if provided (don't filter by isActive yet)
   let userQuery = {
-    email: email.toLowerCase(),
-    isActive: true
+    email: email.toLowerCase()
   };
 
   // If hotelId is provided, scope the search to that hotel
@@ -248,7 +247,7 @@ router.post('/login', catchAsync(async (req, res, next) => {
     .select('+password')
     .populate('selectedHotelId', 'name address');
 
-  // Check if user exists and password is correct
+  // Check if user exists first
   if (!user) {
     const logData = { email, hotelId };
     if (hotelId) {
@@ -258,6 +257,35 @@ router.post('/login', catchAsync(async (req, res, next) => {
       logger.logSecurity('LOGIN_ATTEMPT_INVALID_CREDENTIALS_NO_USER', req, logData);
       return next(new AppError('Incorrect email or password', 401));
     }
+  }
+
+  // Check if account is active and handle deactivation reasons
+  if (!user.isActive) {
+    const logData = { email, hotelId, deactivationReason: user.deactivationReason };
+    logger.logSecurity('LOGIN_ATTEMPT_INACTIVE_ACCOUNT', req, logData);
+
+    let errorMessage = 'Your account has been deactivated. Please contact the hotel reception to reactivate your account.';
+
+    if (user.deactivationReason === 'checkout_expired') {
+      errorMessage = 'Your account has been deactivated because your checkout time has passed. Please contact hotel reception to reactivate your account.';
+    } else if (user.deactivationReason === 'admin_action') {
+      errorMessage = 'Your account has been deactivated by hotel administration. Please contact hotel reception for assistance.';
+    } else if (user.deactivationReason === 'manual') {
+      errorMessage = 'Your account has been manually deactivated. Please contact hotel reception for assistance.';
+    }
+
+    return next(new AppError(errorMessage, 403));
+  }
+
+  // Check if checkout has expired for guest users and auto-deactivate
+  if (user.role === 'guest' && user.isCheckoutExpired()) {
+    await user.deactivateAccount('checkout_expired');
+    logger.logSecurity('LOGIN_ATTEMPT_CHECKOUT_EXPIRED', req, {
+      email,
+      hotelId,
+      checkoutTime: user.checkoutTime
+    });
+    return next(new AppError('Your checkout time has passed and your account has been automatically deactivated. Please contact hotel reception to extend your stay.', 403));
   }
 
   // Check password
@@ -373,29 +401,78 @@ router.post('/refresh-token', catchAsync(async (req, res, next) => {
 
 /**
  * @route   POST /api/auth/forgot-password
- * @desc    Send password reset email
+ * @desc    Send password reset email (supports hotel-scoped reset for guests)
  * @access  Public
  */
 router.post('/forgot-password', catchAsync(async (req, res, next) => {
-  const { email } = req.body;
+  const { email, hotelId, qrToken } = req.body;
 
   if (!email) {
     return next(new AppError('Email is required', 400));
   }
 
-  // Get user based on email
-  const user = await User.findOne({
+  // For guest users, require either hotelId or qrToken for hotel-scoped reset
+  let validatedHotelId = hotelId;
+  let hotelName = '';
+
+  if (qrToken) {
+    try {
+      // Validate QR token and extract hotel information
+      const hotelInfo = await qrUtils.processQRRegistration(qrToken);
+      validatedHotelId = hotelInfo.hotelId;
+      hotelName = hotelInfo.hotelName;
+
+      logger.info('QR token validated for password reset', {
+        hotelId: validatedHotelId,
+        hotelName: hotelName,
+        email: email.toLowerCase()
+      });
+    } catch (error) {
+      logger.logSecurity('PASSWORD_RESET_INVALID_QR_TOKEN', req, { email, qrTokenError: error.message });
+      return next(new AppError('Invalid QR code. Please scan a valid hotel QR code.', 400));
+    }
+  }
+
+  // Build user query - include hotel scope if provided
+  let userQuery = {
     email: email.toLowerCase(),
     isActive: true
-  });
+  };
+
+  // If hotel context is provided, scope the search to that hotel (for guests)
+  // Hotel admins can also use this without hotel context
+  if (validatedHotelId) {
+    userQuery.selectedHotelId = validatedHotelId;
+    userQuery.role = 'guest'; // Ensure we're only looking for guest users when hotel-scoped
+  } else {
+    // For non-hotel-scoped requests, allow hotel admin password reset
+    // Don't add role restriction - this allows hotel admins, service providers, etc.
+  }
+
+  // Get user based on email and hotel context
+  const user = await User.findOne(userQuery);
 
   if (!user) {
-    // Don't reveal if user exists or not
-    logger.logSecurity('PASSWORD_RESET_ATTEMPT_NONEXISTENT_USER', req, { email });
+    // Don't reveal if user exists or not, but log the attempt with context
+    const logContext = { email, hotelId: validatedHotelId, hotelScoped: !!validatedHotelId };
+    logger.logSecurity('PASSWORD_RESET_ATTEMPT_NONEXISTENT_USER', req, logContext);
+
     return res.status(200).json({
       success: true,
-      message: 'If an account with that email exists, a password reset email has been sent.'
+      message: validatedHotelId
+        ? 'If an account with that email exists for this hotel, a password reset email has been sent.'
+        : 'If an account with that email exists, a password reset email has been sent.'
     });
+  }
+
+  // Get hotel information if not already available
+  if (user.role === 'guest' && user.selectedHotelId && !hotelName) {
+    const hotel = await Hotel.findById(user.selectedHotelId);
+    hotelName = hotel ? hotel.name : 'Your Hotel';
+  } else if (user.role === 'hotel' && user.hotelId && !hotelName) {
+    // For hotel admin users, get hotel name from their hotelId
+    const hotel = await Hotel.findById(user.hotelId);
+    hotelName = hotel ? hotel.name : 'Your Hotel';
   }
 
   // Generate the random reset token
@@ -404,24 +481,69 @@ router.post('/forgot-password', catchAsync(async (req, res, next) => {
 
   // Send it to user's email
   try {
-    const resetURL = `${req.protocol}://${req.get('host')}/api/auth/reset-password/${resetToken}`;
+    // Create reset URL with hotel context for guests
+    let resetURL;
+    if (user.role === 'guest' && validatedHotelId) {
+      resetURL = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}?hotelId=${validatedHotelId}`;
+    } else if (user.role === 'hotel') {
+      resetURL = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/hotel/reset-password/${resetToken}`;
+    } else {
+      resetURL = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
+    }
+
+    // Customize email content based on user role and hotel context
+    const emailData = {
+      firstName: user.firstName,
+      resetURL,
+      expiryTime: '10 minutes'
+    };
+
+    // Add hotel context for guest users
+    if (user.role === 'guest' && hotelName) {
+      emailData.hotelName = hotelName;
+      emailData.isHotelGuest = true;
+    } else if (user.role === 'hotel' && hotelName) {
+      emailData.hotelName = hotelName;
+      emailData.isHotelAdmin = true;
+    }
+
+    // Choose appropriate email template and subject
+    let emailSubject = 'Password Reset Request';
+    let emailTemplate = 'password-reset';
+
+    if (user.role === 'guest' && hotelName) {
+      emailSubject = `Password Reset Request - ${hotelName}`;
+    } else if (user.role === 'hotel' && hotelName) {
+      emailSubject = `Hotel Admin Password Reset - ${hotelName}`;
+      emailTemplate = 'hotel-admin-password-reset';
+    }
 
     await sendEmail({
       email: user.email,
-      subject: 'Password Reset Request',
-      template: 'password-reset',
-      data: {
-        firstName: user.firstName,
-        resetURL,
-        expiryTime: '10 minutes'
-      }
+      subject: emailSubject,
+      template: emailTemplate,
+      data: emailData
     });
 
-    logger.logAuth('PASSWORD_RESET_REQUESTED', user, req);
+    // Log with hotel context
+    const logData = {
+      hotelId: validatedHotelId || (user.role === 'hotel' ? user.hotelId : null),
+      hotelName: hotelName,
+      hotelScoped: !!validatedHotelId,
+      userRole: user.role
+    };
+    logger.logAuth('PASSWORD_RESET_REQUESTED', user, req, logData);
+
+    let successMessage = 'Password reset email sent successfully.';
+    if (validatedHotelId) {
+      successMessage = `Password reset email sent successfully for ${hotelName}.`;
+    } else if (user.role === 'hotel' && hotelName) {
+      successMessage = `Hotel admin password reset email sent successfully for ${hotelName}.`;
+    }
 
     res.status(200).json({
       success: true,
-      message: 'Password reset email sent successfully'
+      message: successMessage
     });
 
   } catch (err) {
@@ -436,11 +558,11 @@ router.post('/forgot-password', catchAsync(async (req, res, next) => {
 
 /**
  * @route   PATCH /api/auth/reset-password/:token
- * @desc    Reset password with token
+ * @desc    Reset password with token (supports hotel-scoped reset for guests)
  * @access  Public
  */
 router.patch('/reset-password/:token', catchAsync(async (req, res, next) => {
-  const { password, passwordConfirm } = req.body;
+  const { password, passwordConfirm, hotelId } = req.body;
 
   if (!password || !passwordConfirm) {
     return next(new AppError('Password and password confirmation are required', 400));
@@ -456,16 +578,59 @@ router.patch('/reset-password/:token', catchAsync(async (req, res, next) => {
     .update(req.params.token)
     .digest('hex');
 
-  const user = await User.findOne({
+  // Build query for finding user with hotel context if provided
+  let userQuery = {
     passwordResetToken: hashedToken,
     passwordResetExpires: { $gt: Date.now() },
     isActive: true
-  });
+  };
+
+  // If hotelId is provided, add hotel scope (for guest users)
+  if (hotelId) {
+    userQuery.selectedHotelId = hotelId;
+    userQuery.role = 'guest';
+  }
+
+  const user = await User.findOne(userQuery);
 
   // If token has not expired, and there is user, set the new password
   if (!user) {
-    logger.logSecurity('PASSWORD_RESET_INVALID_TOKEN', req);
-    return next(new AppError('Token is invalid or has expired', 400));
+    const logContext = {
+      token: req.params.token,
+      hotelId: hotelId,
+      hotelScoped: !!hotelId
+    };
+    logger.logSecurity('PASSWORD_RESET_INVALID_TOKEN', req, logContext);
+
+    return next(new AppError(
+      hotelId
+        ? 'Token is invalid, has expired, or user not found for this hotel'
+        : 'Token is invalid or has expired',
+      400
+    ));
+  }
+
+  // Additional validation for hotel-scoped reset
+  if (hotelId && user.role === 'guest') {
+    if (!user.selectedHotelId || user.selectedHotelId.toString() !== hotelId) {
+      logger.logSecurity('PASSWORD_RESET_HOTEL_MISMATCH', req, {
+        userId: user._id,
+        userHotelId: user.selectedHotelId,
+        requestedHotelId: hotelId
+      });
+      return next(new AppError('Invalid hotel context for password reset', 400));
+    }
+
+    // Get hotel name for logging
+    const hotel = await Hotel.findById(hotelId);
+    const hotelName = hotel ? hotel.name : 'Unknown Hotel';
+
+    logger.logAuth('PASSWORD_RESET_COMPLETED_HOTEL_SCOPED', user, req, {
+      hotelId: hotelId,
+      hotelName: hotelName
+    });
+  } else {
+    logger.logAuth('PASSWORD_RESET_COMPLETED', user, req);
   }
 
   user.password = password;
@@ -473,9 +638,11 @@ router.patch('/reset-password/:token', catchAsync(async (req, res, next) => {
   user.passwordResetExpires = undefined;
   await user.save();
 
-  logger.logAuth('PASSWORD_RESET_COMPLETED', user, req);
+  const successMessage = hotelId
+    ? 'Password reset successful for your hotel account'
+    : 'Password reset successful';
 
-  createSendToken(user, 200, res, 'Password reset successful');
+  createSendToken(user, 200, res, successMessage);
 }));
 
 /**

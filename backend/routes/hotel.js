@@ -1345,6 +1345,74 @@ router.put('/service-providers/:id/categories', restrictProviderToHotelAdmin, ca
 }));
 
 /**
+ * @route   POST /api/hotel/service-providers/:id/reset-password
+ * @desc    Reset password for a service provider (Hotel Admin only)
+ * @access  Private/HotelAdmin
+ */
+router.post('/service-providers/:id/reset-password', restrictProviderToHotelAdmin, catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const providerId = req.params.id;
+  const { newPassword } = req.body;
+
+  // Validate password input
+  if (!newPassword || typeof newPassword !== 'string') {
+    return next(new AppError('New password is required', 400));
+  }
+
+  if (newPassword.length < 6) {
+    return next(new AppError('Password must be at least 6 characters long', 400));
+  }
+
+  // Find the service provider and ensure it belongs to this hotel
+  const serviceProvider = await ServiceProvider.findOne({
+    _id: providerId,
+    hotelId
+  });
+
+  if (!serviceProvider) {
+    return next(new AppError('No service provider found with that ID in your hotel', 404));
+  }
+
+  // Check if the service provider has a user account
+  const userAccount = await User.findById(serviceProvider.adminId);
+  if (!userAccount) {
+    return next(new AppError('Service provider user account not found', 404));
+  }
+
+  if (!userAccount.isActive) {
+    return next(new AppError('Service provider account is deactivated', 400));
+  }
+
+  // Update the user's password directly
+  userAccount.password = newPassword;
+  userAccount.passwordResetToken = undefined;
+  userAccount.passwordResetExpires = undefined;
+  await userAccount.save();
+
+  // Get hotel information for logging
+  const hotel = await Hotel.findById(hotelId);
+  const hotelName = hotel ? hotel.name : 'Hotel';
+
+  logger.logAuth('SERVICE_PROVIDER_PASSWORD_RESET_BY_ADMIN', userAccount, req, {
+    hotelId,
+    hotelName,
+    serviceProviderId: serviceProvider._id,
+    businessName: serviceProvider.businessName,
+    adminId: req.user._id,
+    resetMethod: 'manual_by_admin'
+  });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Password reset successfully. The service provider can now use the new password to log in.',
+    data: {
+      businessName: serviceProvider.businessName,
+      email: userAccount.email
+    }
+  });
+}));
+
+/**
  * @route   DELETE /api/hotel/service-providers/:id
  * @desc    Deactivate a service provider (not delete)
  * @access  Private/HotelAdmin
@@ -1660,12 +1728,12 @@ router.patch('/guests/:guestId/status', catchAsync(async (req, res, next) => {
 
 /**
  * @route   PATCH /api/hotel/guests/:guestId
- * @desc    Update guest information (room number, check-in/out dates)
+ * @desc    Update guest information (room number, check-in/out dates) and reactivate if needed
  * @access  Private/HotelAdmin
  */
 router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
   const { guestId } = req.params;
-  const { roomNumber, checkInDate, checkOutDate } = req.body;
+  const { roomNumber, checkInDate, checkOutDate, isActive } = req.body;
   const hotelId = req.user.hotelId;
 
   // Find the guest
@@ -1704,12 +1772,35 @@ router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
   if (roomNumber !== undefined) updateData.roomNumber = roomNumber;
   if (checkInDate !== undefined) updateData.checkInDate = checkInDate;
   if (checkOutDate !== undefined) updateData.checkOutDate = checkOutDate;
+  if (isActive !== undefined) updateData.isActive = isActive;
 
   // Update checkout time if checkout date is changed
   if (checkOutDate) {
     const checkoutDateTime = new Date(checkOutDate);
     checkoutDateTime.setHours(16, 0, 0, 0); // Set to 4:00 PM
     updateData.checkoutTime = checkoutDateTime;
+
+    // Auto-reactivate account if extending checkout and account was deactivated due to checkout expiry
+    if (guest.deactivationReason === 'checkout_expired' && !guest.isActive) {
+      const now = new Date();
+      if (checkoutDateTime > now) {
+        updateData.isActive = true;
+        updateData.deactivationReason = null;
+        updateData.autoDeactivatedAt = null;
+        logger.info(`Auto-reactivating guest ${guest.email} due to checkout extension`);
+      }
+    }
+  }
+
+  // Manual activation/deactivation
+  if (isActive !== undefined) {
+    if (isActive) {
+      updateData.deactivationReason = null;
+      updateData.autoDeactivatedAt = null;
+    } else {
+      updateData.deactivationReason = 'admin_action';
+      updateData.autoDeactivatedAt = new Date();
+    }
   }
 
   // Update guest information
@@ -1720,13 +1811,25 @@ router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
   );
 
   // Log the action
-  logger.info(`Hotel admin ${req.user.email} updated guest ${guest.email} information`, {
-    updates: updateData
-  });
+  let actionMessage = `Hotel admin ${req.user.email} updated guest ${guest.email} information`;
+  let responseMessage = 'Guest information updated successfully';
+
+  if (updateData.isActive === true && guest.deactivationReason === 'checkout_expired') {
+    actionMessage += ' and reactivated account due to checkout extension';
+    responseMessage = 'Guest information updated and account reactivated successfully';
+  } else if (updateData.isActive === true && !guest.isActive) {
+    actionMessage += ' and manually reactivated account';
+    responseMessage = 'Guest account reactivated successfully';
+  } else if (updateData.isActive === false) {
+    actionMessage += ' and deactivated account';
+    responseMessage = 'Guest account deactivated successfully';
+  }
+
+  logger.info(actionMessage, { updates: updateData });
 
   res.status(200).json({
     status: 'success',
-    message: 'Guest information updated successfully',
+    message: responseMessage,
     data: {
       guest: updatedGuest
     }

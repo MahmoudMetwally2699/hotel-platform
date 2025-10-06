@@ -4,7 +4,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchServiceProviders, selectServiceProviders, selectServiceProviderLoading, setServiceProviderMarkup } from '../../redux/slices/serviceSlice';
 import AddServiceProviderModal from '../../components/hotel/AddServiceProviderModal';
 import apiClient from '../../services/api.service';
+import hotelService from '../../services/hotel.service';
 import { HOTEL_ADMIN_API } from '../../config/api.config';
+import { toast } from 'react-toastify';
 
 /**
  * Hotel Admin Service Providers Management Page
@@ -19,11 +21,15 @@ const ServiceProvidersPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [markupValue, setMarkupValue] = useState('');
   const [markupNotes, setMarkupNotes] = useState('');
   const [isSavingMarkup, setIsSavingMarkup] = useState(false);
   const [isSavingCategories, setIsSavingCategories] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Available service categories (only the specified ones)
   const serviceCategories = [
@@ -56,6 +62,55 @@ const ServiceProvidersPage = () => {
     setSelectedProvider(provider);
     setSelectedCategories(provider.categories || []);
     setIsCategoriesModalOpen(true);
+  };
+
+  // Handle opening reset password modal
+  const handleResetPassword = (provider) => {
+    setSelectedProvider(provider);
+    setNewPassword('');
+    setConfirmPassword('');
+    setIsResetPasswordModalOpen(true);
+  };
+
+  // Handle password reset confirmation
+  const handleConfirmPasswordReset = async () => {
+    if (!selectedProvider) return;
+
+    // Validate password inputs
+    if (!newPassword.trim()) {
+      toast.error(t('hotelAdmin.serviceProviders.passwordReset.errors.passwordRequired'));
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error(t('hotelAdmin.serviceProviders.passwordReset.errors.passwordTooShort'));
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error(t('hotelAdmin.serviceProviders.passwordReset.errors.passwordMismatch'));
+      return;
+    }
+
+    setIsResettingPassword(true);
+    try {
+      await hotelService.resetServiceProviderPassword(selectedProvider._id, newPassword);
+
+      setIsResetPasswordModalOpen(false);
+      setSelectedProvider(null);
+      setNewPassword('');
+      setConfirmPassword('');
+
+      toast.success(t('hotelAdmin.serviceProviders.passwordReset.success', {
+        businessName: selectedProvider.businessName
+      }));
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      const errorMessage = error.response?.data?.message || t('hotelAdmin.serviceProviders.passwordReset.error');
+      toast.error(errorMessage);
+    } finally {
+      setIsResettingPassword(false);
+    }
   };
 
   // Handle category selection change
@@ -302,6 +357,13 @@ const ServiceProvidersPage = () => {
                               >
                                 {t('hotelAdmin.serviceProviders.actions.manageServices')}
                               </button>
+                              <button
+                                onClick={() => handleResetPassword(provider)}
+                                className="text-red-600 hover:text-red-800 font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-red-50 text-sm"
+                                title={t('hotelAdmin.serviceProviders.actions.resetPassword')}
+                              >
+                                {t('hotelAdmin.serviceProviders.actions.resetPassword')}
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -369,9 +431,16 @@ const ServiceProvidersPage = () => {
                       <div className="flex space-x-2 mt-4">
                         <button
                           onClick={() => handleSetMarkup(provider)}
-                          className="w-full text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 py-2 rounded hover:bg-blue-50 text-sm text-center border border-modern-blue"
+                          className="flex-1 text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 py-2 rounded hover:bg-blue-50 text-sm text-center border border-modern-blue"
                         >
                           {t('hotelAdmin.serviceProviders.actions.setMarkup')}
+                        </button>
+                        <button
+                          onClick={() => handleResetPassword(provider)}
+                          className="flex-1 text-red-600 hover:text-red-800 font-medium transition-colors duration-200 py-2 rounded hover:bg-red-50 text-sm text-center border border-red-600"
+                          title={t('hotelAdmin.serviceProviders.actions.resetPassword')}
+                        >
+                          {t('hotelAdmin.serviceProviders.actions.resetPassword')}
                         </button>
                       </div>
                     </div>
@@ -597,6 +666,137 @@ const ServiceProvidersPage = () => {
                       </span>
                     ) : (
                       t('hotelAdmin.serviceProviders.categoriesModal.saveChanges')
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Reset Password Confirmation Modal */}
+        {isResetPasswordModalOpen && selectedProvider && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+              {/* Modal Header */}
+              <div className="px-6 py-4 bg-gradient-to-r from-red-500 to-red-600 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white">{t('hotelAdmin.serviceProviders.passwordReset.modalTitle')}</h3>
+                  <button
+                    onClick={() => {
+                      setIsResetPasswordModalOpen(false);
+                      setSelectedProvider(null);
+                      setNewPassword('');
+                      setConfirmPassword('');
+                    }}
+                    className="text-white hover:text-gray-200 transition-colors duration-200"
+                    disabled={isResettingPassword}
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                      <h4 className="font-semibold text-blue-800">{t('hotelAdmin.serviceProviders.passwordReset.info')}</h4>
+                      <p className="text-sm text-blue-700 mt-1">
+                        {t('hotelAdmin.serviceProviders.passwordReset.infoMessage')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">{selectedProvider.businessName}</h4>
+                  <p className="text-sm text-gray-600">
+                    <strong>{t('hotelAdmin.serviceProviders.passwordReset.email')}:</strong> {selectedProvider.email || t('hotelAdmin.serviceProviders.notAvailable')}
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('hotelAdmin.serviceProviders.passwordReset.newPassword')}
+                    </label>
+                    <input
+                      type="password"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 transition-all duration-300"
+                      placeholder={t('hotelAdmin.serviceProviders.passwordReset.newPasswordPlaceholder')}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      disabled={isResettingPassword}
+                      minLength={6}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('hotelAdmin.serviceProviders.passwordReset.confirmPassword')}
+                    </label>
+                    <input
+                      type="password"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-opacity-20 transition-all duration-300"
+                      placeholder={t('hotelAdmin.serviceProviders.passwordReset.confirmPasswordPlaceholder')}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      disabled={isResettingPassword}
+                      minLength={6}
+                    />
+                  </div>
+
+                  {newPassword && confirmPassword && newPassword !== confirmPassword && (
+                    <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+                      {t('hotelAdmin.serviceProviders.passwordReset.errors.passwordMismatch')}
+                    </div>
+                  )}
+
+                  {newPassword && newPassword.length < 6 && (
+                    <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+                      {t('hotelAdmin.serviceProviders.passwordReset.errors.passwordTooShort')}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-4 bg-gray-50 rounded-b-2xl">
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setIsResetPasswordModalOpen(false);
+                      setSelectedProvider(null);
+                      setNewPassword('');
+                      setConfirmPassword('');
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+                    disabled={isResettingPassword}
+                  >
+                    {t('hotelAdmin.serviceProviders.passwordReset.cancel')}
+                  </button>
+                  <button
+                    onClick={handleConfirmPasswordReset}
+                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    disabled={isResettingPassword || !newPassword || !confirmPassword || newPassword !== confirmPassword || newPassword.length < 6}
+                  >
+                    {isResettingPassword ? (
+                      <span className="flex items-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                        </svg>
+                        {t('hotelAdmin.serviceProviders.passwordReset.resetting')}
+                      </span>
+                    ) : (
+                      t('hotelAdmin.serviceProviders.passwordReset.confirmReset')
                     )}
                   </button>
                 </div>

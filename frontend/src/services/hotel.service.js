@@ -171,6 +171,23 @@ class HotelService {
   }
 
   /**
+   * Reset service provider password (for hotel admin)
+   * @param {string} id - Service provider ID
+   * @param {string} newPassword - New password to set
+   * @returns {Promise} - Response from API
+   */
+  async resetServiceProviderPassword(id, newPassword) {
+    try {
+      const response = await apiClient.post(`${HOTEL_ADMIN_API.SERVICE_PROVIDERS}/${id}/reset-password`, {
+        newPassword
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Delete service provider (for hotel admin)
    * @param {string} id - Service provider ID
    * @returns {Promise} - Response from API

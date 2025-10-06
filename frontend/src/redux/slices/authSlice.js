@@ -333,14 +333,98 @@ const authSlice = createSlice({
       console.log('✅ Authentication state restored from localStorage');
     }
   },
+  /* eslint-disable */
   extraReducers: (builder) => {
-    builder
-      .addCase(login.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(login.fulfilled, (state, action) => {
-        state.isLoading = false;
+    builder.addCase(login.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
+
+    builder.addCase(login.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.isAuthenticated = true;
+
+      // Handle both data formats that might come from the API
+      const responseData = action.payload.data || action.payload;
+
+      // Extract the actual user object (it might be nested under 'user' property)
+      const userData = responseData.user || responseData;
+      state.user = userData;
+
+      // Extract role, ensuring it exists
+      state.role = userData.role || 'guest';
+
+      // Store user data in localStorage for persistence across tab refreshes
+      localStorage.setItem('user', JSON.stringify(userData));
+      console.log('✅ User data stored in localStorage for persistence');
+
+      // Debug the exact data we're getting
+      console.log('Login succeeded! Full payload:', action.payload);
+      console.log('Response data extracted:', responseData);
+      console.log('User data extracted:', userData);
+      console.log('Role set to:', state.role);
+
+      state.error = null;
+    });
+
+    builder.addCase(login.rejected, (state, action) => {
+      state.isLoading = false;
+      state.isAuthenticated = false;
+      state.user = null;
+      state.role = null;
+
+      // Handle specific error cases
+      const errorMessage = action.payload;
+
+      // Check for inactive account errors
+      if (errorMessage && (
+        errorMessage.includes('account is inactive') ||
+        errorMessage.includes('account has been deactivated') ||
+        errorMessage.includes('deactivated') ||
+        errorMessage.includes('checkout time has passed') ||
+        errorMessage.includes('contact hotel reception') ||
+        errorMessage.includes('contact the hotel reception')
+      )) {
+        // Import toast dynamically to avoid circular dependency
+        import('react-hot-toast').then(({ toast }) => {
+          if (errorMessage.includes('checkout time has passed')) {
+            toast.error('Your account has been deactivated because your checkout time has passed. Please contact hotel reception to reactivate your account.', {
+              duration: 8000,
+              position: 'top-center',
+            });
+          } else if (errorMessage.includes('deactivated')) {
+            // For any deactivation message, show the specific message from backend
+            toast.error(errorMessage, {
+              duration: 8000,
+              position: 'top-center',
+            });
+          } else {
+            toast.error('Your account is inactive. Please contact hotel reception to reactivate your account.', {
+              duration: 6000,
+              position: 'top-center',
+            });
+          }
+        });
+      }
+
+      state.error = errorMessage;
+      // Clear any stored tokens/session data on login failure
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    });
+
+    builder.addCase(register.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
+
+    builder.addCase(register.fulfilled, (state, action) => {
+      state.isLoading = false;
+
+      // Check for token in both possible locations
+      const token = action.payload.token || action.payload.data?.token;
+
+      if (token) {
         state.isAuthenticated = true;
 
         // Handle both data formats that might come from the API
@@ -349,113 +433,73 @@ const authSlice = createSlice({
         // Extract the actual user object (it might be nested under 'user' property)
         const userData = responseData.user || responseData;
         state.user = userData;
+        state.role = userData.role;
 
-        // Extract role, ensuring it exists
-        state.role = userData.role || 'guest';
-
-        // Store user data in localStorage for persistence across tab refreshes
+        // Store user data in localStorage for persistence
         localStorage.setItem('user', JSON.stringify(userData));
-        console.log('✅ User data stored in localStorage for persistence');
+        console.log('✅ User registered and logged in automatically');
+      }
+      state.error = null;
+    });
 
-        // Debug the exact data we're getting
-        console.log('Login succeeded! Full payload:', action.payload);
-        console.log('Response data extracted:', responseData);
-        console.log('User data extracted:', userData);
-        console.log('Role set to:', state.role);
+    builder.addCase(register.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.payload;
+    });
 
-        state.error = null;
-      })
-      .addCase(login.rejected, (state, action) => {
-        state.isLoading = false;
-        state.isAuthenticated = false;
-        state.user = null;
-        state.role = null;
-        state.error = action.payload;
-        // Clear any stored tokens/session data on login failure
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      })
+    // Logout cases
+    builder.addCase(logout.pending, (state) => {
+      state.isLoading = true;
+    });
 
-      // Register cases
-      .addCase(register.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(register.fulfilled, (state, action) => {
-        state.isLoading = false;
+    builder.addCase(logout.fulfilled, (state) => {
+      state.isLoading = false;
+      state.isAuthenticated = false;
+      state.user = null;
+      state.role = null;
+      state.error = null;
+    });
 
-        // Check for token in both possible locations
-        const token = action.payload.token || action.payload.data?.token;
+    builder.addCase(logout.rejected, (state) => {
+      state.isLoading = false;
+      state.isAuthenticated = false;
+      state.user = null;
+      state.role = null;
+    });
 
-        if (token) {
-          state.isAuthenticated = true;
+    // Fetch profile cases
+    builder.addCase(fetchProfile.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
 
-          // Handle both data formats that might come from the API
-          const responseData = action.payload.data || action.payload;
+    builder.addCase(fetchProfile.fulfilled, (state, action) => {
+      state.isLoading = false;
 
-          // Extract the actual user object (it might be nested under 'user' property)
-          const userData = responseData.user || responseData;
-          state.user = userData;
-          state.role = userData.role;
+      // DEBUG: Log the complete action payload
+      console.log('🐛 fetchProfile.fulfilled - Complete action:', action);
+      console.log('🐛 fetchProfile.fulfilled - action.payload:', action.payload);
+      console.log('🐛 fetchProfile.fulfilled - action.payload.data:', action.payload.data);
 
-          // Store user data in localStorage for persistence
-          localStorage.setItem('user', JSON.stringify(userData));
-          console.log('✅ User registered and logged in automatically');
-        }
-        state.error = null;
-      })
-      .addCase(register.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      })
+      // Handle both data formats that might come from the API
+      const responseData = action.payload.data || action.payload;
 
-      // Logout cases
-      .addCase(logout.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(logout.fulfilled, (state) => {
-        state.isLoading = false;
-        state.isAuthenticated = false;
-        state.user = null;
-        state.role = null;
-        state.error = null;
-      })
-      .addCase(logout.rejected, (state) => {
-        state.isLoading = false;
-        state.isAuthenticated = false;
-        state.user = null;
-        state.role = null;
-      })      // Fetch profile cases
-      .addCase(fetchProfile.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })      .addCase(fetchProfile.fulfilled, (state, action) => {
-        state.isLoading = false;
+      // DEBUG: Log the response data processing
+      console.log('🐛 fetchProfile.fulfilled - responseData:', responseData);
+      console.log('🐛 fetchProfile.fulfilled - responseData.user:', responseData.user);
+      console.log('🐛 fetchProfile.fulfilled - responseData.role:', responseData.role);
 
-        // DEBUG: Log the complete action payload
-        console.log('🐛 fetchProfile.fulfilled - Complete action:', action);
-        console.log('🐛 fetchProfile.fulfilled - action.payload:', action.payload);
-        console.log('🐛 fetchProfile.fulfilled - action.payload.data:', action.payload.data);
-
-        // Handle both data formats that might come from the API
-        const responseData = action.payload.data || action.payload;
-
-        // DEBUG: Log the response data processing
-        console.log('🐛 fetchProfile.fulfilled - responseData:', responseData);
-        console.log('🐛 fetchProfile.fulfilled - responseData.user:', responseData.user);
-        console.log('🐛 fetchProfile.fulfilled - responseData.role:', responseData.role);
-
-        // FIXED: Handle the nested response structure correctly
-        // The API returns { success: true, data: { user_object } }
-        // But sometimes the entire response gets stored as action.payload
-        let userData;
-        if (responseData.success && responseData.data) {
-          // Case 1: Full API response structure
-          userData = responseData.data;
-        } else if (responseData.user) {
-          // Case 2: Data is nested under 'user' property
-          userData = responseData.user;
-        } else {
+      // FIXED: Handle the nested response structure correctly
+      // The API returns { success: true, data: { user_object } }
+      // But sometimes the entire response gets stored as action.payload
+      let userData;
+      if (responseData.success && responseData.data) {
+        // Case 1: Full API response structure
+        userData = responseData.data;
+      } else if (responseData.user) {
+        // Case 2: Data is nested under 'user' property
+        userData = responseData.user;
+      } else {
           // Case 3: Data is the responseData itself
           userData = responseData;
         }        state.user = userData;

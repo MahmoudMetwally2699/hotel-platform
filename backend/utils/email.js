@@ -13,11 +13,12 @@ const logger = require('./logger');
  * @returns {Object} Nodemailer transporter
  */
 const createTransporter = () => {
-  if (process.env.NODE_ENV === 'production') {
-    // Production SMTP configuration
-    return nodemailer.createTransporter({
+  // Check if we have email configuration
+  if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    // Use configured SMTP settings
+    return nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
+      port: parseInt(process.env.EMAIL_PORT) || 587,
       secure: process.env.EMAIL_PORT == 465, // true for 465, false for other ports
       auth: {
         user: process.env.EMAIL_USER,
@@ -25,13 +26,15 @@ const createTransporter = () => {
       }
     });
   } else {
-    // Development - use Ethereal Email for testing
-    return nodemailer.createTransporter({
+    // Fallback to test account for development
+    logger.warn('No email configuration found, using test account');
+    return nodemailer.createTransport({
       host: 'smtp.ethereal.email',
       port: 587,
+      secure: false,
       auth: {
-        user: 'ethereal.user@ethereal.email',
-        pass: 'ethereal.pass'
+        user: 'test@example.com',
+        pass: 'test123'
       }
     });
   }
@@ -62,11 +65,17 @@ const templates = {
   }),
 
   'password-reset': (data) => ({
-    subject: 'Password Reset Request',
+    subject: data.hotelName ? `Password Reset Request - ${data.hotelName}` : 'Password Reset Request',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2c3e50;">Password Reset Request</h2>
         <p>Hello ${data.firstName},</p>
+        ${data.isHotelGuest ? `
+          <div style="background-color: #e8f4f8; padding: 15px; border-radius: 5px; border-left: 4px solid #3498db; margin: 20px 0;">
+            <p style="margin: 0; color: #2c3e50;"><strong>Hotel-Specific Password Reset</strong></p>
+            <p style="margin: 5px 0 0 0; color: #34495e;">This reset is for your account at <strong>${data.hotelName}</strong> only.</p>
+          </div>
+        ` : ''}
         <p>We received a request to reset your password. Click the button below to create a new password:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${data.resetURL}"
@@ -78,6 +87,11 @@ const templates = {
         <p style="word-break: break-all; color: #7f8c8d;">${data.resetURL}</p>
         <p><strong>This link will expire in ${data.expiryTime}.</strong></p>
         <p>If you didn't request a password reset, please ignore this email. Your password will remain unchanged.</p>
+        ${data.isHotelGuest ? `
+          <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 20px 0;">
+            <p style="margin: 0; color: #856404;"><strong>Security Note:</strong> This password reset only affects your access to services at ${data.hotelName}. If you have accounts with other hotels, those passwords remain unchanged.</p>
+          </div>
+        ` : ''}
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #ecf0f1;">
         <p style="color: #7f8c8d; font-size: 12px;">For security reasons, this link can only be used once.</p>
       </div>
@@ -158,6 +172,49 @@ const templates = {
     `
   }),
 
+  'service-provider-password-reset': (data) => ({
+    subject: `Password Reset - ${data.hotelName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2c3e50;">Password Reset by Hotel Administration</h2>
+        <p>Hello ${data.firstName},</p>
+        <p>Your password for <strong>${data.businessName}</strong> at <strong>${data.hotelName}</strong> has been reset by the hotel administration.</p>
+
+        <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 20px 0;">
+          <p style="margin: 0; color: #856404;"><strong>Security Notice:</strong> This password reset was initiated by ${data.resetByAdmin} from the hotel administration team.</p>
+        </div>
+
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #2c3e50;">New Login Credentials</h3>
+          <p><strong>Email:</strong> ${data.email || 'Your registered email'}</p>
+          <p><strong>Temporary Password:</strong> <code style="background-color: #e9ecef; padding: 2px 4px; border-radius: 3px; font-weight: bold;">${data.temporaryPassword}</code></p>
+          <p><strong>Login URL:</strong> <a href="${data.loginUrl}">${data.loginUrl}</a></p>
+        </div>
+
+        <div style="background-color: #f8d7da; padding: 15px; border-radius: 5px; border-left: 4px solid #dc3545; margin: 20px 0;">
+          <p style="margin: 0; color: #721c24;"><strong>Important Security Instructions:</strong></p>
+          <ul style="margin: 10px 0 0 0; color: #721c24;">
+            <li>Change this password immediately after logging in</li>
+            <li>Do not share this temporary password with anyone</li>
+            <li>Use a strong, unique password for your account</li>
+          </ul>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${data.loginUrl}"
+             style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            Login to Your Account
+          </a>
+        </div>
+
+        <p>If you have any questions about this password reset, please contact the hotel administration directly.</p>
+
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ecf0f1;">
+        <p style="color: #7f8c8d; font-size: 12px;">This email was sent because your password was reset by hotel administration. If you did not expect this, please contact the hotel immediately.</p>
+      </div>
+    `
+  }),
+
   'hotel-admin-credentials': (data) => ({
     subject: 'Your Hotel Admin Account has been Created',
     html: `
@@ -178,6 +235,44 @@ const templates = {
 
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #ecf0f1;">
         <p style="color: #7f8c8d; font-size: 12px;">Start managing your hotel services today!</p>
+      </div>
+    `
+  }),
+
+  'hotel-admin-password-reset': (data) => ({
+    subject: `Hotel Admin Password Reset - ${data.hotelName || 'Hotel Management'}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2c3e50;">Hotel Admin Password Reset</h2>
+        <p>Hello ${data.firstName},</p>
+
+        <div style="background-color: #e8f4f8; padding: 15px; border-radius: 5px; border-left: 4px solid #3498db; margin: 20px 0;">
+          <p style="margin: 0; color: #2c3e50;"><strong>Hotel Administrator Account</strong></p>
+          <p style="margin: 5px 0 0 0; color: #34495e;">Password reset for your ${data.hotelName || 'hotel'} administrator account.</p>
+        </div>
+
+        <p>We received a request to reset the password for your hotel administrator account. Click the button below to create a new password:</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${data.resetURL}"
+             style="background-color: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            Reset Administrator Password
+          </a>
+        </div>
+
+        <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; color: #7f8c8d;">${data.resetURL}</p>
+
+        <p><strong>This link will expire in ${data.expiryTime}.</strong></p>
+
+        <p>If you didn't request a password reset, please ignore this email. Your password will remain unchanged.</p>
+
+        <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin: 20px 0;">
+          <p style="margin: 0; color: #856404;"><strong>Security Note:</strong> This password reset is specifically for your hotel administrator account. Make sure you're logging in through the correct hotel admin portal.</p>
+        </div>
+
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ecf0f1;">
+        <p style="color: #7f8c8d; font-size: 12px;">For security reasons, this link can only be used once and expires automatically.</p>
       </div>
     `
   }),

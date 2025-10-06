@@ -127,9 +127,18 @@ const HotelAdminLoginPage = () => {
                 <ErrorMessage name="password" component="div" className="mt-1 text-sm text-red-600" />
               </div>
 
+              <div className="flex items-center justify-between mb-6">
+                <Link
+                  to="/hotel/forgot-password"
+                  className="text-sm text-blue-600 hover:text-blue-500"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+
               <button
                 type="submit"
-                disabled={isSubmitting || isLoading}
+                disabled={isLoading}
                 className="w-full bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (

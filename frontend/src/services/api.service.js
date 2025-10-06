@@ -272,7 +272,17 @@ apiClient.interceptors.response.use(
             suppressToast: true
           });
         case 403:
-          // Forbidden - redirect to forbidden page
+          // Check if this is an auth action (login, register, etc.)
+          const url403 = error.config?.url || '';
+          const isAuthAction403 = url403.includes('/auth/login') || url403.includes('/auth/register') || url403.includes('/auth/refresh-token') || url403.includes('/auth/forgot-password') || url403.includes('/auth/reset-password') || url403.includes('/auth/validate-qr');
+
+          if (isAuthAction403) {
+            // For auth actions (like login), let the component handle the 403 error
+            console.log('403 from auth action (login) - passing error to component for inactive account handling');
+            return Promise.reject(error);
+          }
+
+          // For non-auth actions, redirect to forbidden page
           console.log('403 Forbidden - Redirecting to forbidden page');
           window.location.href = '/forbidden';
           break;

@@ -329,11 +329,10 @@ const sendTransportationBookingConfirmation = async ({
 };
 
 /**
- * Template: new_laundry_order_provider_ar (language: ar)
+ * Template: new_laundry_order_provider_e (language: en)
  * Body placeholders:
- *  {{booking_number}}, {{guest_name}}, {{hotel_name}}, {{room_number}},
- *  {{guest_phone}}, {{pickup_date}}, {{pickup_time}}, {{service_type}},
- *  {{special_notes}}, {{base_amount}}
+ *  {{guest_name}}, {{room_number}}, {{service_type}},
+ *  {{scheduled_time}}, {{special_requests}}
  */
 const sendNewLaundryOrderToProvider = async ({
   providerPhone,
@@ -348,19 +347,28 @@ const sendNewLaundryOrderToProvider = async ({
   specialNotes,
   baseAmount
 }) => {
-  return sendTemplateMessage(providerPhone, 'new_laundry_order_provider_ar', {
-    languageCode: 'ar',
+  // Use the time the user actually chose
+  let userChosenTime = `${pickupDate} at ${pickupTime}`;
+
+  // Handle ASAP logic
+  if (pickupTime && (
+    pickupTime.toLowerCase().includes('as soon as possible') ||
+    pickupTime.toLowerCase().includes('asap') ||
+    pickupTime.toLowerCase().includes('في أقرب وقت')
+  )) {
+    userChosenTime = 'ASAP';
+  } else if (!pickupTime || !pickupDate) {
+    userChosenTime = 'ASAP';
+  }
+
+  return sendTemplateMessage(providerPhone, 'new_laundry_order_provider_e', {
+    languageCode: 'en',
     namedParams: {
-      booking_number: bookingNumber,
       guest_name: guestName,
-      hotel_name: hotelName,
       room_number: roomNumber,
-      guest_phone: guestPhone,
-      pickup_date: pickupDate,
-      pickup_time: pickupTime,
       service_type: serviceType,
-      special_notes: specialNotes || 'لا توجد ملاحظات',
-      base_amount: baseAmount
+      scheduled_time: userChosenTime,
+      special_requests: specialNotes || 'No special requests'
     }
   });
 };
@@ -368,9 +376,8 @@ const sendNewLaundryOrderToProvider = async ({
 /**
  * Template: new_transportation_order_provider_ar (language: en)
  * Body placeholders:
- *  {{booking_number}}, {{guest_name}}, {{guest_phone}}, {{hotel_name}}, {{room_number}},
- *  {{trip_date}}, {{departure_time}}, {{pickup_location}}, {{destination_location}},
- *  {{vehicle_type}}, {{passenger_count}}, {{base_amount}}
+ *  {{guest_name}}, {{room_number}}, {{trip_date}}, {{departure_time}},
+ *  {{pickup_location}}, {{destination_location}}, {{vehicle_type}}, {{passenger_count}}
  */
 const sendNewTransportationOrderToProvider = async ({
   providerPhone,
@@ -390,18 +397,14 @@ const sendNewTransportationOrderToProvider = async ({
   return sendTemplateMessage(providerPhone, 'new_transportation_order_provider_ar', {
     languageCode: 'en',
     namedParams: {
-      booking_number: bookingNumber,
       guest_name: guestName,
-      guest_phone: guestPhone,
-      hotel_name: hotelName,
       room_number: roomNumber,
       trip_date: tripDate,
       departure_time: departureTime,
       pickup_location: pickupLocation,
       destination_location: destinationLocation,
       vehicle_type: vehicleType,
-      passenger_count: passengerCount,
-      base_amount: baseAmount
+      passenger_count: passengerCount
     }
   });
 };
@@ -466,8 +469,7 @@ const sendHousekeepingBookingConfirmation = async ({
 /**
  * Template: new_housekeeping_order_provider_ar (language: en)
  * Body placeholders:
- *  {{booking_number}}, {{guest_name}}, {{hotel_name}}, {{room_number}},
- *  {{service_type}}, {{scheduled_time}}, {{preferred_time}}, {{special_requests}}
+ *  {{guest_name}}, {{room_number}}, {{service_type}}, {{scheduled_time}}, {{special_requests}}
  */
 const sendNewHousekeepingOrderToProvider = async ({
   providerPhone,
@@ -481,16 +483,28 @@ const sendNewHousekeepingOrderToProvider = async ({
   specialRequests
 }) => {
   console.log('🔧 Sending housekeeping order to provider phone:', providerPhone);
+
+  // Use the time the user actually chose (preferredTime or scheduledTime)
+  let userChosenTime = preferredTime || scheduledTime;
+
+  // Handle ASAP logic
+  if (userChosenTime && (
+    userChosenTime.toLowerCase().includes('as soon as possible') ||
+    userChosenTime.toLowerCase().includes('asap') ||
+    userChosenTime.toLowerCase().includes('في أقرب وقت')
+  )) {
+    userChosenTime = 'ASAP';
+  } else if (!userChosenTime) {
+    userChosenTime = 'ASAP';
+  }
+
   return sendTemplateMessage(providerPhone, 'new_housekeeping_order_provider_ar', {
     languageCode: 'en',
     namedParams: {
-      booking_number: bookingNumber,
       guest_name: guestName,
-      hotel_name: hotelName,
       room_number: roomNumber,
       service_type: serviceType,
-      scheduled_time: scheduledTime || 'As per preferred time',
-      preferred_time: preferredTime || 'Not specified',
+      scheduled_time: userChosenTime,
       special_requests: specialRequests || 'No special requests'
     }
   });

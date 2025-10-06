@@ -402,7 +402,8 @@
         "activate": "Activate",
         "delete": "Delete",
         "setMarkup": "Set Markup",
-        "manageServices": "Manage Services"
+        "manageServices": "Manage Services",
+        "resetPassword": "Reset Password"
       },
       "noProviders": "No providers found",
       "noProvidersSearch": "No providers match your search criteria.",
@@ -436,6 +437,26 @@
         "cancel": "Cancel",
         "saveChanges": "Save Changes",
         "saving": "Saving..."
+      },
+      "passwordReset": {
+        "modalTitle": "Reset Provider Password",
+        "info": "Set New Password",
+        "infoMessage": "Enter a new password for this service provider. They will be able to use this password to log in immediately.",
+        "email": "Email",
+        "newPassword": "New Password",
+        "newPasswordPlaceholder": "Enter new password (minimum 6 characters)",
+        "confirmPassword": "Confirm Password",
+        "confirmPasswordPlaceholder": "Confirm the new password",
+        "cancel": "Cancel",
+        "confirmReset": "Reset Password",
+        "resetting": "Resetting...",
+        "success": "Password reset successfully for {{businessName}}. They can now use the new password to log in.",
+        "error": "Failed to reset password. Please try again.",
+        "errors": {
+          "passwordRequired": "Password is required",
+          "passwordTooShort": "Password must be at least 6 characters long",
+          "passwordMismatch": "Passwords do not match"
+        }
       },
       "errors": {
         "markupSetFailed": "Failed to set markup. Please try again.",
