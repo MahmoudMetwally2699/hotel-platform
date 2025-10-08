@@ -44,7 +44,6 @@ const PlatformMetricsPage = () => {
         setError('Failed to load platform metrics');
         toast.error('Failed to load platform metrics');
         setLoading(false);
-        console.error('Error fetching platform metrics:', err);
       }
     };
 

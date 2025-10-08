@@ -36,31 +36,15 @@ const TailwindHeader = () => {
       const pathHotelId = getHotelIdFromPath();
       const hotelId = userHotelId || pathHotelId;
 
-      console.log('🔍 Checking hotel fetch conditions:', {
-        userLoaded: user !== undefined,
-        userRole: user?.role,
-        userHotelId,
-        pathHotelId,
-        finalHotelId: hotelId,
-        path: location.pathname
-      });
-
       // Only fetch if user is loaded and has the required data, or if we're on a hotel page
       if (hotelId && (user === undefined || user?.role === 'guest')) {
         try {
-          console.log('🏨 Fetching hotel details for ID:', hotelId);
           const response = await apiClient.get(`/client/hotels/${hotelId}`);
-          console.log('🏨 Hotel details response:', response.data);
           setHotel(response.data.data);
         } catch (error) {
-          console.error('❌ Error fetching hotel details:', error);
         }
       } else {
-        console.log('❌ Not fetching hotel details:', {
-          userExists: !!user,
-          hasHotelId: !!hotelId,
-          userRole: user?.role
-        });
+        // Not fetching hotel details
       }
     };
 
@@ -92,44 +76,15 @@ const TailwindHeader = () => {
 
   // Determine logo source with debugging
   const getLogoInfo = () => {
-    const userLoaded = user !== undefined;
-    const isGuest = user?.role === 'guest';
-    const hasSelectedHotel = !!user?.selectedHotelId;
     const hasHotelLogo = hotel?.logo;
     const hasHotelImagesLogo = hotel?.images?.logo;
 
-    console.log('🖼️ Logo determination:', {
-      userLoaded,
-      isGuest,
-      hasSelectedHotel,
-      selectedHotelId: user?.selectedHotelId,
-      hasHotelLogo,
-      hasHotelImagesLogo,
-      hotel: hotel,
-      userRole: user?.role,
-      user: user
-    });
-
     // Show hotel logo if we have hotel data and a logo, regardless of user state for testing
     if (hasHotelLogo) {
-      console.log('✅ Using hotel.logo:', hotel.logo);
       return { src: hotel.logo, alt: `${hotel.name} Logo` };
     } else if (hasHotelImagesLogo) {
-      console.log('✅ Using hotel.images.logo:', hotel.images.logo);
       return { src: hotel.images.logo, alt: `${hotel.name} Logo` };
     } else {
-      if (hotel) {
-        console.log('✅ Using platform logo - Hotel has no logo:', hotel.name);
-      } else if (userLoaded) {
-        console.log('✅ Using platform logo - Reason:', {
-          notGuest: !isGuest,
-          noSelectedHotel: !hasSelectedHotel,
-          noHotelLogo: !hasHotelLogo && !hasHotelImagesLogo,
-          userRole: user?.role
-        });
-      } else {
-        console.log('✅ Using platform logo - User not loaded yet');
-      }
       return { src: "/logo.svg", alt: t('homepage.platformName') };
     }
   };

@@ -1073,7 +1073,7 @@ router.get('/payment-analytics', catchAsync(async (req, res) => {
     matchFilter.hotelId = new mongoose.Types.ObjectId(hotelId);
   }
 
-  console.log('Debug - Match filter for all bookings:', matchFilter);
+  // ...existing code...
 
   // Helper function to get unified payment analytics from both regular bookings and transportation bookings
   const getUnifiedPaymentAnalytics = async (matchFilter) => {
@@ -1215,7 +1215,7 @@ router.get('/payment-analytics', catchAsync(async (req, res) => {
         paymentStatus: 'completed'
       }).sort({ 'paymentDetails.paymentDate': -1 });
 
-      console.log('Debug - Last payment date for specific hotel:', lastPayment?.paymentDetails?.paymentDate);
+  // ...existing code...
 
       if (lastPayment && lastPayment.paymentDetails?.paymentDate) {
         bookingMatchFilter.createdAt = {
@@ -1227,7 +1227,7 @@ router.get('/payment-analytics', catchAsync(async (req, res) => {
       return await getUnifiedPaymentAnalytics(bookingMatchFilter);
     } else {
       // For all hotels: get last payment for each hotel and filter accordingly
-      console.log('Debug - Using all hotels mode: checking each hotel\'s last payment individually');
+  // ...existing code...
 
       const allHotelsFilter = {};
       const allHotels = await Hotel.find(allHotelsFilter).select('_id name');
@@ -1254,7 +1254,7 @@ router.get('/payment-analytics', catchAsync(async (req, res) => {
           };
         }
 
-        console.log(`Debug - Hotel ${hotel.name}: last payment ${lastPayment?.paymentDetails?.paymentDate}`);
+          // ...existing code...
 
         // Get analytics for this hotel
         const hotelResults = await getUnifiedPaymentAnalytics(hotelBookingMatchFilter);
@@ -1268,7 +1268,7 @@ router.get('/payment-analytics', catchAsync(async (req, res) => {
   // Get payment analytics using the new filtering approach
   const paymentAnalyticsRaw = await getUnifiedPaymentAnalyticsWithPaymentFiltering(matchFilter, hotelId);
 
-  console.log('Debug - Payment analytics raw results:', paymentAnalyticsRaw.length, 'groups');
+  // ...existing code...
 
   // Group by hotel (similar to the original second grouping stage)
   const paymentAnalytics = paymentAnalyticsRaw.reduce((acc, item) => {
@@ -1314,7 +1314,7 @@ router.get('/payment-analytics', catchAsync(async (req, res) => {
     })
   );
 
-  console.log('Debug - Combined payment analytics (regular + transportation):', JSON.stringify(analyticsArray.slice(0, 1), null, 2));
+  // ...existing code...
 
   // Ensure all hotels are represented with both online and cash payment methods
   const completeAnalytics = allHotels.map(hotel => {
@@ -1421,14 +1421,7 @@ router.get('/payment-analytics', catchAsync(async (req, res) => {
     return acc;
   }, { online: { totalAmount: 0, hotelEarnings: 0, count: 0 }, cash: { totalAmount: 0, hotelEarnings: 0, count: 0 } });
 
-  console.log('Debug - Found completed payments:', completedPayments.length);
-  console.log('Debug - Completed payment amounts:', completedPayments.map(p => p.paymentDetails?.paidAmount));
-  console.log('Debug - Payment periods:', completedPayments.map(p => ({
-    start: p.paymentPeriod?.startDate,
-    end: p.paymentPeriod?.endDate,
-    hotel: p.hotelId?.name
-  })));
-  console.log('Debug - Analytics date range:', { start, end });
+  // ...existing code...
 
   // Calculate total amount paid to reduce from Online Total Amount
   const totalPaidAmount = completedPayments.reduce((sum, payment) => {
@@ -1449,11 +1442,7 @@ router.get('/payment-analytics', catchAsync(async (req, res) => {
     }
   };
 
-  console.log('Debug - Raw Online Total Amount:', rawTotals.online.totalAmount);
-  console.log('Debug - Raw Cash Total Amount:', rawTotals.cash.totalAmount);
-  console.log('Debug - Total Paid Amount:', totalPaidAmount);
-  console.log('Debug - Final Online Total Amount (after reduction):', totals.online.totalAmount);
-  console.log('Debug - Final Cash Total Amount:', totals.cash.totalAmount);
+  // ...existing code...
 
   res.status(200).json({
     status: 'success',
@@ -1515,7 +1504,7 @@ router.post('/mark-hotel-payment', catchAsync(async (req, res) => {
     };
   }
 
-  console.log('Debug - Payment recording booking filter:', bookingMatchFilter);
+  // ...existing code...
 
   // Helper function to get unified booking analytics for payment recording
   const getUnifiedBookingAnalyticsForPayment = async (matchFilter) => {
@@ -1608,7 +1597,7 @@ router.post('/mark-hotel-payment', catchAsync(async (req, res) => {
   // Get current booking analytics for unpaid bookings from both collections
   const bookingAnalytics = await getUnifiedBookingAnalyticsForPayment(bookingMatchFilter);
 
-  console.log('Debug - Booking Analytics Result:', JSON.stringify(bookingAnalytics, null, 2));
+  // ...existing code...
 
   // Create payment breakdown
   const paymentBreakdown = {
@@ -1633,16 +1622,9 @@ router.post('/mark-hotel-payment', catchAsync(async (req, res) => {
     allBookingIds.push(...group.bookingIds);
   });
 
-  console.log('Debug - Payment Breakdown for new payment:', JSON.stringify(paymentBreakdown.onlinePayments.bookingDetails?.slice(0, 2), null, 2));
+  // ...existing code...
 
-  console.log('Debug - Final payment breakdown before saving:', {
-    onlineCount: paymentBreakdown.onlinePayments.count,
-    onlineAmount: paymentBreakdown.onlinePayments.totalAmount,
-    onlineBookingsCount: paymentBreakdown.onlinePayments.bookingDetails?.length,
-    cashCount: paymentBreakdown.cashPayments.count,
-    cashAmount: paymentBreakdown.cashPayments.totalAmount,
-    cashBookingsCount: paymentBreakdown.cashPayments.bookingDetails?.length
-  });
+  // ...existing code...
 
   // Create or update hotel payment record
   const paymentRecord = await HotelPayment.findOneAndUpdate(
@@ -1818,19 +1800,7 @@ router.post('/generate-invoice', catchAsync(async (req, res) => {
     .populate('hotelId', 'name email address phone')
     .populate('paymentDetails.processedBy', 'name email');
 
-  console.log('Debug - CSV Payment ID:', paymentId);
-  console.log('Debug - CSV Payment Amount:', payment?.paymentDetails?.paidAmount);
-  console.log('Debug - Full Payment Record:', JSON.stringify({
-    paymentBreakdown: payment?.paymentBreakdown,
-    totalEarnings: payment?.totalEarnings,
-    totalTransactions: payment?.totalTransactions
-  }, null, 2));
-  console.log('Debug - CSV Payment Breakdown:', {
-    online: payment?.paymentBreakdown?.onlinePayments?.totalAmount,
-    cash: payment?.paymentBreakdown?.cashPayments?.totalAmount,
-    onlineBookingDetails: payment?.paymentBreakdown?.onlinePayments?.bookingDetails?.length,
-    cashBookingDetails: payment?.paymentBreakdown?.cashPayments?.bookingDetails?.length
-  });
+
 
   if (!payment) {
     return res.status(404).json({

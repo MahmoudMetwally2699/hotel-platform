@@ -20,7 +20,6 @@ const HomePage = () => {
   // Redirect authenticated guests to categories page
   useEffect(() => {
     if (isAuthenticated && role === 'guest' && user) {
-      console.log('Authenticated guest detected, redirecting to categories page');
 
       // Get user data to extract hotelId
       let hotelId = user?.selectedHotelId;
@@ -34,7 +33,7 @@ const HomePage = () => {
         navigate(`/hotels/${hotelId}/categories`, { replace: true });
         return;
       } else {
-        console.log('No valid hotel ID found for authenticated guest');
+        // No valid hotel ID found for authenticated guest
       }
     }
   }, [isAuthenticated, role, user, navigate]);

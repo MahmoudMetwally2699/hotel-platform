@@ -45,7 +45,6 @@ const MyOrdersPage = () => {
 
       // Construct the full API URL
       const apiUrl = `${API_BASE_URL}${CLIENT_API.BOOKINGS}${statusFilter}`;
-      console.log('🔍 MyOrdersPage: Making request to:', apiUrl);
 
       const response = await fetch(apiUrl, {
         headers: {
@@ -54,30 +53,20 @@ const MyOrdersPage = () => {
         }
       });
 
-      console.log('🔍 MyOrdersPage: Response status:', response.status);
       const data = await response.json();
-      console.log('🔍 MyOrdersPage: Response data:', data);
 
       if (data.success) {
         // Handle the new response structure with bookings array inside data
         const bookingsData = data.data.bookings || data.data;
         setBookings(Array.isArray(bookingsData) ? bookingsData : []);
-        console.log('🔍 MyOrdersPage: Bookings set:', bookingsData);
         // Log the structure of the first booking to understand the data format
         if (bookingsData && bookingsData.length > 0) {
-          console.log('🔍 MyOrdersPage: First booking structure:', bookingsData[0]);
-          console.log('🔍 MyOrdersPage: First booking keys:', Object.keys(bookingsData[0]));
-          console.log('🔍 MyOrdersPage: Schedule:', bookingsData[0].schedule);
-          console.log('🔍 MyOrdersPage: Pricing:', bookingsData[0].pricing);
-          console.log('🔍 MyOrdersPage: Service Details:', bookingsData[0].serviceDetails);
         }
       } else {
         setError(data.message);
-        console.error('🔍 MyOrdersPage: API error:', data.message);
       }
     } catch (err) {
       setError('Failed to fetch bookings');
-      console.error('🔍 MyOrdersPage: Fetch bookings error:', err);
     } finally {
       setIsLoading(false);
     }

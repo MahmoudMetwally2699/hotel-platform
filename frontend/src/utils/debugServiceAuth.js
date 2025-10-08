@@ -7,51 +7,35 @@ import cookieHelper from '../utils/cookieHelper';
 import jwt_decode from 'jwt-decode';
 
 const debugServiceAuth = () => {
-  console.log('=== Service Provider Auth Debug ===');
+  // ...existing code...
 
   // Check tokens
   const token = cookieHelper.getAuthToken();
   const refreshToken = cookieHelper.getRefreshToken();
 
-  console.log('Auth Token exists:', !!token);
-  console.log('Refresh Token exists:', !!refreshToken);
+  // ...existing code...
 
   if (token) {
     try {
       const decoded = jwt_decode(token);
-      console.log('Token decoded:', {
-        userId: decoded.userId,
-        role: decoded.role,
-        serviceProviderId: decoded.serviceProviderId,
-        hotelId: decoded.hotelId,
-        exp: decoded.exp,
-        isExpired: decoded.exp < Date.now() / 1000
-      });
+      // ...existing code...
     } catch (error) {
-      console.error('Error decoding token:', error);
+      // ...existing code...
     }
   }
 
   // Check localStorage as fallback
   const localToken = localStorage.getItem('token');
   if (localToken && localToken !== token) {
-    console.log('LocalStorage token differs from cookie token');
     try {
       const decoded = jwt_decode(localToken);
-      console.log('LocalStorage token decoded:', {
-        userId: decoded.userId,
-        role: decoded.role,
-        serviceProviderId: decoded.serviceProviderId,
-        hotelId: decoded.hotelId,
-        exp: decoded.exp,
-        isExpired: decoded.exp < Date.now() / 1000
-      });
+      // ...existing code...
     } catch (error) {
-      console.error('Error decoding localStorage token:', error);
+      // ...existing code...
     }
   }
 
-  console.log('=== End Debug ===');
+  // ...existing code...
 };
 
 export default debugServiceAuth;

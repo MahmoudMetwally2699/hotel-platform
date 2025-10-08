@@ -22,12 +22,8 @@ const AdminLayout = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      console.log('AdminLayout: Checking auth using cookies and token fallback');
-      console.log('AdminLayout: Current cookies:', document.cookie);
-
       // Get superHotel token from localStorage as fallback
       const superHotelToken = localStorage.getItem('superHotelToken');
-      console.log('AdminLayout: SuperHotel token in localStorage:', superHotelToken ? 'Present' : 'Missing');
 
       // Prepare headers - include Authorization header if token exists
       const headers = {
@@ -36,7 +32,6 @@ const AdminLayout = ({ children }) => {
 
       if (superHotelToken) {
         headers['Authorization'] = `Bearer ${superHotelToken}`;
-        console.log('AdminLayout: Added Authorization header with token');
       }
 
       const response = await fetch(`${API_BASE_URL}/admin/auth/me`, {
@@ -44,19 +39,14 @@ const AdminLayout = ({ children }) => {
         headers
       });
 
-      console.log('AdminLayout: Auth response status:', response.status);
-
       if (response.ok) {
         const data = await response.json();
-        console.log('AdminLayout: Auth successful, user data:', data.data.superHotel);
         setSuperHotel(data.data.superHotel);
       } else {
-        console.log('AdminLayout: Auth failed, clearing data and redirecting');
         clearSuperHotelAuthData();
         navigate('/super-hotel-admin/login');
       }
     } catch (error) {
-      console.error('AdminLayout: Auth check error:', error);
       clearSuperHotelAuthData();
       navigate('/super-hotel-admin/login');
     } finally {
@@ -74,7 +64,7 @@ const AdminLayout = ({ children }) => {
         }
       });
     } catch (error) {
-      console.error('Logout error:', error);
+      // Logout error handled silently
     }
 
     // Clear Super Hotel data only (cookies are cleared by server)

@@ -24,14 +24,6 @@ const PaymentSuccess = () => {
   const bookingId = searchParams.get('booking') || searchParams.get('bookingRef') || searchParams.get('merchantOrderId');
 
   useEffect(() => {
-    console.log('🔵 PaymentSuccess initialized with:', {
-      bookingId,
-      allParams: Object.fromEntries(searchParams.entries()),
-      paymentStatus: searchParams.get('paymentStatus'),
-      paymentMethod: searchParams.get('paymentMethod'),
-      serviceType: searchParams.get('serviceType'),
-      transactionId: searchParams.get('transactionId')
-    });
 
     if (bookingId && bookingId !== 'undefined' && bookingId !== 'null') {
       // Check if we have payment success parameters from Kashier
@@ -44,13 +36,11 @@ const PaymentSuccess = () => {
         updateBookingStatusFromPayment();
       } else if (paymentMethod === 'cash') {
         // For cash payments, directly fetch booking details
-        console.log('🔵 Cash payment detected, fetching booking details directly');
         fetchBookingDetails();
       } else {
         fetchBookingDetails();
       }
     } else {
-      console.error('🔴 PaymentSuccess: Invalid booking ID:', bookingId);
       setError(t('paymentSuccess.noBookingId'));
       setLoading(false);
     }
@@ -74,23 +64,18 @@ const PaymentSuccess = () => {
         signature: searchParams.get('signature')
       };
 
-      console.log('🔵 Updating booking status with payment data:', paymentData);
-
       // Call backend to update booking status with payment success
       const response = await apiClient.post(`/payments/kashier/confirm-payment-public/${bookingId}`, {
         paymentData
       });
 
       if (response.data.success) {
-        console.log('✅ Booking status updated successfully');
         // Now fetch the updated booking details
         await fetchBookingDetails();
       } else {
-        console.log('⚠️ Failed to update booking status, fetching current details');
         await fetchBookingDetails();
       }
     } catch (error) {
-      console.error('❌ Error updating booking status:', error);
       // Still try to fetch booking details even if update fails
       await fetchBookingDetails();
     }
@@ -113,14 +98,6 @@ const PaymentSuccess = () => {
         !bookingId.match(/^[0-9a-fA-F]{24}$/) // Not a valid ObjectId format
       );
 
-      console.log('🔍 Booking ID analysis:', {
-        bookingId,
-        isBookingNumber,
-        length: bookingId?.length,
-        startsWithLN: bookingId?.startsWith('LN'),
-        startsWithBK: bookingId?.startsWith('BK')
-      });
-
       // Check if this looks like a temporary merchant order ID (TEMP_ prefix or long alphanumeric)
       const isTempId = bookingId.startsWith('TEMP_') || (bookingId.length > 24 && !bookingId.match(/^[0-9a-fA-F]{24}$/));
 
@@ -138,7 +115,6 @@ const PaymentSuccess = () => {
             const urlServiceType = searchParams.get('serviceType');
             if (urlServiceType && ['laundry', 'transportation', 'restaurant', 'dining'].includes(urlServiceType)) {
               detectedType = urlServiceType === 'dining' ? 'restaurant' : urlServiceType;
-              console.log('🎯 Using URL serviceType:', urlServiceType, '-> detectedType:', detectedType);
             }
             // Priority 2: Check booking ID pattern
             else if (bookingId.includes('TEMP_LAUNDRY_')) {
@@ -174,17 +150,7 @@ const PaymentSuccess = () => {
               detectedType = 'transportation';
             }
 
-            bookingData.bookingType = detectedType;
-            console.log('🔍 Booking type detection:', {
-              bookingId,
-              detectedType,
-              hasLaundryItems: !!(bookingData.bookingConfig?.laundryItems?.length || bookingData.laundryItems?.length),
-              hasPickupLocation: !!bookingData.pickupLocation,
-              hasTripDetails: !!bookingData.tripDetails,
-              category: bookingData.category,
-              serviceCategory: bookingData.serviceId?.category,
-              serviceDetailsCategory: bookingData.serviceDetails?.category
-            });            setBooking(bookingData);
+            bookingData.bookingType = detectedType;            setBooking(bookingData);
             return;
           } else if (response.status === 202) {
             // Booking is still being processed
@@ -196,7 +162,6 @@ const PaymentSuccess = () => {
             setError(t('paymentSuccess.bookingProcessing'));
             return;
           }
-          console.log('Merchant order/booking number lookup failed:', err.message);
           // For temp IDs or booking numbers, don't fall back to standard endpoints - they will fail
           setError(t('paymentSuccess.unableRetrieve'));
           return;
@@ -221,7 +186,6 @@ const PaymentSuccess = () => {
             return;
           }
         } catch (err) {
-          console.log('Laundry booking not found, trying transportation...');
         }
       }
 
@@ -233,7 +197,6 @@ const PaymentSuccess = () => {
           return;
         }
       } catch (err) {
-        console.log('Transportation booking not found, trying laundry...');
       }
 
       // If transportation failed, try laundry booking
@@ -244,12 +207,10 @@ const PaymentSuccess = () => {
           return;
         }
       } catch (err) {
-        console.log('Laundry booking also not found');
       }
 
       setError(t('paymentSuccess.failedFetch'));
     } catch (error) {
-      console.error('Error fetching booking details:', error);
       setError(t('paymentSuccess.failedLoad'));
     } finally {
       setLoading(false);
@@ -266,7 +227,6 @@ const PaymentSuccess = () => {
 
   const handleFeedbackSubmitted = (feedbackData) => {
     setFeedbackSubmitted(true);
-    console.log('Feedback submitted:', feedbackData);
   };
 
   // Auto-show feedback modal after booking is loaded and payment is confirmed
@@ -281,18 +241,6 @@ const PaymentSuccess = () => {
         ['completed', 'confirmed'].includes(booking.status) ||
         ['paid', 'completed'].includes(booking.payment?.status) ||
         isCashPayment; // Cash payments should always show feedback
-
-      console.log('🔍 Feedback Modal Check:', {
-        bookingId: booking._id || booking.bookingNumber,
-        bookingStatus: booking.status,
-        paymentStatus: booking.payment?.status,
-        paymentMethod: booking.payment?.paymentMethod,
-        urlPaymentMethod: paymentMethod,
-        isCashPayment,
-        isPaymentCompleted,
-        showFeedbackModal,
-        feedbackSubmitted
-      });
 
       if (isPaymentCompleted) {
         // Show feedback modal after a short delay for better UX
@@ -318,7 +266,6 @@ const PaymentSuccess = () => {
   }
 
   if (error || !booking) {
-    console.log('❌ PaymentSuccess Error State:', { error, booking, bookingId });
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
@@ -348,40 +295,8 @@ const PaymentSuccess = () => {
     );
   }
 
-  // Debug log when booking is successfully loaded
-  console.log('✅ PaymentSuccess Rendering with booking:', {
-    bookingId,
-    bookingType: booking?.bookingType,
-    hasLaundryItems: !!(booking?.bookingConfig?.laundryItems?.length || booking?.laundryItems?.length),
-    laundryItemsCount: booking?.bookingConfig?.laundryItems?.length || booking?.laundryItems?.length || 0,
-    hasPickupLocation: !!booking?.pickupLocation,
-    hasTripDetails: !!booking?.tripDetails,
-    category: booking?.category,
-    serviceCategory: booking?.serviceId?.category,
-    serviceDetailsCategory: booking?.serviceDetails?.category,
-    bookingStructure: Object.keys(booking || {}),
-    bookingConfigStructure: booking?.bookingConfig ? Object.keys(booking.bookingConfig) : []
-  });
-
   // Additional debug for restaurant bookings
   if (booking?.bookingType === 'restaurant') {
-    console.log('🍽️ Restaurant booking debug:', {
-      fullBooking: booking,
-      reservationDetails: booking.reservationDetails,
-      bookingConfig: booking.bookingConfig,
-      guestDetails: booking.guestDetails,
-      serviceDetails: booking.serviceDetails,
-      schedule: booking.schedule,
-      pricing: booking.pricing,
-      bookingDate: booking.bookingDate,
-      bookingTime: booking.bookingTime,
-      guestCount: booking.guestCount,
-      numberOfGuests: booking.numberOfGuests,
-      partySize: booking.partySize,
-      tablePreference: booking.tablePreference,
-      scheduledDate: booking.scheduledDate,
-      scheduledTime: booking.scheduledTime
-    });
   }
 
   return (
@@ -447,15 +362,6 @@ const PaymentSuccess = () => {
                       <div>
                         <p className="font-medium text-gray-900">{t('paymentSuccess.items')}</p>
                         <div className="bg-gray-50 rounded-md p-3 mt-2">
-                          {/* Debug info - remove after fixing */}
-                          {console.log('🔍 Laundry items debug:', {
-                            laundryItems: booking.laundryItems,
-                            bookingConfigLaundryItems: booking.bookingConfig?.laundryItems,
-                            items: booking.items,
-                            allBookingKeys: Object.keys(booking),
-                            bookingConfig: booking.bookingConfig
-                          })}
-
                           {/* Try multiple possible field names for laundry items */}
                           {(() => {
                             const laundryItems = booking.bookingConfig?.laundryItems || booking.laundryItems || booking.items || [];

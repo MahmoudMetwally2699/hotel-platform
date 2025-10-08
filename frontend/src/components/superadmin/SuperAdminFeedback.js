@@ -50,7 +50,6 @@ const SuperAdminFeedback = () => {
         setTotalPages(response.data.data.pagination.totalPages);
       }
     } catch (error) {
-      console.error('Failed to fetch feedbacks:', error);
       setError('Failed to load feedback data');
     } finally {
       setLoading(false);

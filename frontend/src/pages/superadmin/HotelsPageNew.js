@@ -61,7 +61,6 @@ const SuperAdminHotelsPage = () => {
       resetForm();
       dispatch(fetchAllHotels());
     } catch (error) {
-      console.error('Hotel creation error:', error);
       // Display the specific error message from the backend
       const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to create hotel';
       toast.error(errorMessage);
@@ -76,7 +75,6 @@ const SuperAdminHotelsPage = () => {
       resetForm();
       dispatch(fetchAllHotels());
     } catch (error) {
-      console.error('Hotel update error:', error);
       // Display the specific error message from the backend
       const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to update hotel';
       toast.error(errorMessage);
@@ -91,7 +89,6 @@ const SuperAdminHotelsPage = () => {
           dispatch(fetchAllHotels());
         })
         .catch((error) => {
-          console.error('Hotel delete error:', error);
           const errorMessage = typeof error === 'string' ? error : error.message || 'Failed to delete hotel';
           toast.error(errorMessage);
         });

@@ -52,12 +52,10 @@ const LoginPage = () => {
 
       // Check if user is already authenticated when component mounts
       if (isAuthenticated) {
-        console.log('User already authenticated with role:', role);
 
         // Redirect based on role
         switch (role) {
           case 'guest':
-            console.log('Redirecting guest to categories page');
             // Get user data to extract hotelId
             const userData = user;
             let hotelId = userData?.selectedHotelId;
@@ -71,28 +69,22 @@ const LoginPage = () => {
               navigate(`/hotels/${hotelId}/categories`, { replace: true });
             } else {
               // Fallback to homepage if no valid hotel ID
-              console.log('No valid hotel ID found, redirecting to homepage');
               navigate('/', { replace: true });
             }
             break;
           case 'superadmin':
-            console.log('Redirecting superadmin to dashboard');
             navigate('/superadmin/dashboard', { replace: true });
             break;
           case 'superHotel':
-            console.log('Redirecting super hotel admin to dashboard');
             navigate('/super-hotel-admin/dashboard', { replace: true });
             break;
           case 'hotel':
-            console.log('Redirecting hotel admin to dashboard');
             navigate('/hotel/dashboard', { replace: true });
             break;
           case 'service':
-            console.log('Redirecting service provider to dashboard');
             navigate('/service/dashboard', { replace: true });
             break;
           default:
-            console.log('Unknown role, redirecting to homepage');
             navigate('/', { replace: true });
             break;
         }
@@ -127,7 +119,6 @@ const LoginPage = () => {
     try {
       // Clear any existing authentication session to prevent cookie interference
       // This ensures QR scanning works even if user has previous login cookies
-      console.log('Clearing existing session before QR validation...');
       authService.clearSession();
 
       const response = await authService.validateQRToken(qrToken, 'login');
@@ -148,7 +139,6 @@ const LoginPage = () => {
         }, { replace: true });
       }
     } catch (error) {
-      console.error('QR validation error:', error);
       toast.error(error.response?.data?.message || 'Invalid QR code. Please try again or login manually.');
     } finally {
       setValidatingQR(false);
@@ -167,7 +157,6 @@ const LoginPage = () => {
    * Handle QR scan error
    */
   const handleQRScanError = (error) => {
-    console.error('QR scan error:', error);
     toast.error('Failed to scan QR code. Please try again.');
   };
 
@@ -199,7 +188,6 @@ const LoginPage = () => {
       toast.success(`Password reset email sent for ${qrHotelInfo.hotelName}!`);
       setShowForgotPassword(false);
     } catch (error) {
-      console.error('Forgot password error:', error);
       toast.error(error.response?.data?.message || 'Failed to send password reset email. Please try again.');
     } finally {
       setSendingResetEmail(false);
@@ -227,8 +215,6 @@ const LoginPage = () => {
       hotelId: qrHotelInfo?.hotelId || null
     };
 
-    console.log('Submitting login form with values:', loginData);
-
     // Clear any previous errors
     dispatch(clearError());
 
@@ -237,7 +223,6 @@ const LoginPage = () => {
 
     // Set a timeout to clear loading state if login takes too long
     const timeoutId = setTimeout(() => {
-      console.warn('Login taking too long, clearing loading state');
       dispatch(clearLoading());
       dispatch(setError('Login request timed out. Please try again.'));
     }, 30000); // 30 second timeout

@@ -27,7 +27,6 @@ const SuperHotelLogin = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('SuperHotelLogin: Login response data:', data);
 
         // Store Super Hotel user data in localStorage
         localStorage.setItem('superHotelData', JSON.stringify(data.data.superHotel));
@@ -35,10 +34,7 @@ const SuperHotelLogin = () => {
         // Also store the token in localStorage as fallback for cross-origin cookie issues
         if (data.token) {
           localStorage.setItem('superHotelToken', data.token);
-          console.log('SuperHotelLogin: Token stored in localStorage as fallback');
         }
-
-        console.log('SuperHotelLogin: Super Hotel data stored (token in cookies + localStorage fallback)');
 
         toast.success('Login successful');
         navigate('/super-hotel-admin/dashboard');
@@ -47,7 +43,6 @@ const SuperHotelLogin = () => {
         toast.error(errorData.message || 'Login failed');
       }
     } catch (error) {
-      console.error('Login error:', error);
       toast.error('Login failed. Please try again.');
     } finally {
       setLoading(false);

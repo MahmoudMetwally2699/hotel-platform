@@ -9,9 +9,9 @@ const ServiceProvider = require('./models/ServiceProvider');
 
 async function fixExpiredInsurance() {
   try {
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('Connected to MongoDB');
+  // Connect to MongoDB
+  await mongoose.connect(process.env.MONGODB_URI);
+  // Connected to MongoDB (output removed)
 
     // Get current date
     const now = new Date();
@@ -21,10 +21,10 @@ async function fixExpiredInsurance() {
       'insurance.expiryDate': { $lte: now }
     });
 
-    console.log(`Found ${expiredProviders.length} providers with expired insurance:`);
+  // Found providers with expired insurance (output removed)
 
     for (const provider of expiredProviders) {
-      console.log(`- ${provider.name}: expires ${provider.insurance.expiryDate}`);
+      // Provider details and update (output removed)
 
       // Set new expiry date to one year from now
       const newExpiryDate = new Date();
@@ -37,13 +37,13 @@ async function fixExpiredInsurance() {
         { runValidators: false }
       );
 
-      console.log(`  -> Updated to expire on: ${newExpiryDate}`);
+      // Updated expiry date (output removed)
     }
 
-    console.log('\n✅ All expired insurance dates have been updated!');
+  // All expired insurance dates have been updated (output removed)
 
   } catch (error) {
-    console.error('❌ Error fixing expired insurance:', error);
+    // Error fixing expired insurance (output removed)
   } finally {
     await mongoose.disconnect();
   }

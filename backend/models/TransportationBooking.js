@@ -749,7 +749,7 @@ transportationBookingSchema.post(['find', 'findOne', 'findOneAndUpdate'], async 
         }
       } catch (error) {
         // Silent fail - don't break the query if markup sync fails
-        console.warn('Failed to sync markup for booking:', booking._id, error.message);
+        // Output removed
       }
     }
   }

@@ -34,13 +34,11 @@ const ServiceDetailsPage = () => {
   ];
   useEffect(() => {
     if (id) {
-      console.log('🔍 ServiceDetailsPage: Fetching service details for ID:', id);
       dispatch(fetchServiceDetails(id));
     }
   }, [dispatch, id]);  // Add effect to log service data when it changes
   useEffect(() => {
     if (service) {
-      console.log('🎯 ServiceDetailsPage: Service data received');
     }
   }, [service]);// Calculate total price
   const calculateTotal = () => {
@@ -56,12 +54,8 @@ const ServiceDetailsPage = () => {
     return Math.round((price * quantity) * 100) / 100;
   };// Handle booking
   const handleBooking = async () => {
-    console.log('🔥 handleBooking: Button clicked!');
-    console.log('🔥 handleBooking: isAuthenticated =', isAuthenticated);
-    console.log('🔥 handleBooking: selectedTime =', selectedTime);
 
     if (!isAuthenticated) {
-      console.log('🔥 handleBooking: User not authenticated, redirecting to login');
       navigate('/login', {
         state: {
           redirect: `/services/details/${id}`,
@@ -70,11 +64,9 @@ const ServiceDetailsPage = () => {
       });
       return;
     }    if (!selectedTime) {
-      console.log('🔥 handleBooking: No time selected, showing alert');
       alert('Please select a time for your booking');
       return;
     }    if (!service) {
-      console.log('🔥 handleBooking: No service data available');
       alert('Service information is not available. Please refresh the page.');
       return;
     }
@@ -97,12 +89,9 @@ const ServiceDetailsPage = () => {
     };
 
     const selectedTime24h = convertTo24Hour(selectedTime);
-    console.log('🔥 handleBooking: Converted time from', selectedTime, 'to', selectedTime24h);
 
     try {
-      console.log('🔥 handleBooking: Starting booking process...');
-      const token = localStorage.getItem('token');
-      console.log('🔥 handleBooking: Token exists =', !!token);      const bookingData = {
+      const token = localStorage.getItem('token');      const bookingData = {
         serviceId: id,
         bookingDate: selectedDate.toISOString(),
         selectedTime: selectedTime24h, // Use 24-hour format
@@ -110,11 +99,10 @@ const ServiceDetailsPage = () => {
         specialRequests: '', // You can add a field for this if needed
         options: [], // Add any selected options if needed
         serviceCombination: selectedCombination || null // Include selected combination for package services
-      };console.log('🔥 handleBooking: Booking data =', bookingData);
+      };
 
       // Construct the full API URL
       const apiUrl = `${API_BASE_URL}${CLIENT_API.BOOKINGS}`;
-      console.log('🔥 handleBooking: Making request to:', apiUrl);
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -125,14 +113,9 @@ const ServiceDetailsPage = () => {
         body: JSON.stringify(bookingData)
       });
 
-      console.log('🔥 handleBooking: Response status =', response.status);
-      console.log('🔥 handleBooking: Response ok =', response.ok);
-
       const data = await response.json();
-      console.log('🔥 handleBooking: Response data =', data);
 
       if (data.success) {
-        console.log('🔥 handleBooking: Booking successful, navigating to my-orders');
         // Navigate to My Orders page
         navigate('/my-orders', {
           state: {
@@ -141,11 +124,9 @@ const ServiceDetailsPage = () => {
           }
         });
       } else {
-        console.log('🔥 handleBooking: Booking failed with message:', data.message);
         alert(data.message || 'Failed to create booking');
       }
     } catch (error) {
-      console.error('🔥 handleBooking: Booking error:', error);
       alert('Failed to create booking. Please try again.');
     }
   };
@@ -278,16 +259,12 @@ const ServiceDetailsPage = () => {
                   </div>                  <div className="ml-4">
                     <h3 className="text-lg font-medium text-gray-800">
                       {(() => {
-                        console.log('🔥 RENDER: service exists:', !!service);
-                        console.log('🔥 RENDER: providerId exists:', !!service?.providerId);
-                        console.log('🔥 RENDER: businessName:', service?.providerId?.businessName);
                         return service?.providerId?.businessName || 'Unknown Provider';
                       })()}
                     </h3>
                     <p className="text-sm text-gray-500">
                       Member since {(() => {
                         const createdAt = service?.providerId?.createdAt;
-                        console.log('🔥 RENDER: createdAt value:', createdAt);
                         return createdAt ? format(new Date(createdAt), 'MMM yyyy') : 'Unknown';
                       })()}
                     </p>
@@ -425,9 +402,6 @@ const ServiceDetailsPage = () => {
             <button
               className="w-full btn-primary py-2 sm:py-3 font-medium text-sm sm:text-base"
               onClick={() => {
-                console.log('🔥 BUTTON CLICKED: Book Now button clicked!');
-                console.log('🔥 BUTTON CLICKED: selectedTime =', selectedTime);
-                console.log('🔥 BUTTON CLICKED: button disabled =', !selectedTime);
                 handleBooking();
               }}
             >

@@ -146,7 +146,6 @@ const GuestCategorySelection = () => {
         });
 
         // No need for separate housekeeping API call since it's included above
-        console.log('Service counts from Service collection:', serviceCounts);
 
         const categoryDescriptions = getCategoryDescriptions();
 
@@ -214,7 +213,7 @@ const GuestCategorySelection = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Add custom CSS for animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in {
           from {
             opacity: 0;

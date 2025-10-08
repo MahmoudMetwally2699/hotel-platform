@@ -37,7 +37,6 @@ const UserManagementPage = () => {
         setError('Failed to load users');
         toast.error('Failed to load users');
         setLoading(false);
-        console.error('Error fetching users:', err);
       }
     };
 
@@ -79,7 +78,6 @@ const UserManagementPage = () => {
       toast.success('User added successfully');
     } catch (err) {
       toast.error('Failed to add user');
-      console.error('Error adding user:', err);
     }
   };
 
@@ -95,7 +93,6 @@ const UserManagementPage = () => {
       toast.success('User updated successfully');
     } catch (err) {
       toast.error('Failed to update user');
-      console.error('Error updating user:', err);
     }
   };
 
@@ -111,7 +108,6 @@ const UserManagementPage = () => {
       toast.success(`User ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
     } catch (err) {
       toast.error('Failed to update user status');
-      console.error('Error toggling status:', err);
     }
   };
 

@@ -56,7 +56,6 @@ const GuestsPage = () => {
         totalPages: response.data.totalPages || 0
       }));
     } catch (error) {
-      console.error('Error fetching guests:', error);
       // Fallback to redux for now
       dispatch(fetchUsers({ role: 'GUEST' }));
       setGuests(users);
@@ -111,7 +110,6 @@ const GuestsPage = () => {
       ));
 
       // Show success message (you can implement toast notifications)
-      console.log(`Guest status updated successfully`);
     } catch (error) {
       console.error('Error updating guest status:', error);
       // Show error message
@@ -169,7 +167,6 @@ const GuestsPage = () => {
       ));
 
       closeEditModal();
-      console.log('Guest information updated successfully');
     } catch (error) {
       console.error('Error updating guest information:', error);
     } finally {

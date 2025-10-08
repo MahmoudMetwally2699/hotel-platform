@@ -46,23 +46,17 @@ const ToursServiceCreator = () => {
   }, []);
   const loadTemplates = async () => {
     try {
-      console.log('Loading tours templates...');
       const response = await api.get('/service/category-templates/tours');
-      console.log('Tours templates response:', response.data);
       setTemplates(response.data.data.template);
     } catch (error) {
-      console.error('Error loading templates:', error);
     }
   };
 
   const loadServices = async () => {
     try {
-      console.log('Loading tours services...');
       const response = await api.get('/service/services-by-category/tours');
-      console.log('Tours services response:', response.data);
       setServices(response.data.data.services || []);
     } catch (error) {
-      console.error('Error loading services:', error);
     }
   };
 
@@ -202,7 +196,6 @@ const ToursServiceCreator = () => {
       resetForm();
       alert('Tour service created successfully!');
     } catch (error) {
-      console.error('Error creating service:', error);
       alert('Error creating service. Please try again.');
     } finally {
       setIsLoading(false);
@@ -216,7 +209,6 @@ const ToursServiceCreator = () => {
       await api.delete(`/service/services/${serviceId}`);
       await loadServices();
     } catch (error) {
-      console.error('Error deleting service:', error);
       alert('Error deleting service. Please try again.');
     }
   };

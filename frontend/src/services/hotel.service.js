@@ -44,12 +44,12 @@ class HotelService {
    * @returns {Promise} - Response from API
    */  async getHotelServices(id, queryParams = {}) {
     try {
-      console.log('🔍 Fetching hotel services:', { hotelId: id, queryParams });
+  // ...existing code...
       const response = await apiClient.get(`${CLIENT_API.HOTELS}/${id}/services`, { params: queryParams });
-      console.log('📊 Hotel services response:', response.data);
+  // ...existing code...
       return response.data;
     } catch (error) {
-      console.error('❌ Hotel services error:', error.response?.data || error.message);
+  // ...existing code...
       throw error;
     }
   }
@@ -306,22 +306,18 @@ class HotelService {
   async createHotel(hotelData) {
     try {      // Authentication will be handled by the backend through the Authorization header
 
-      console.log('Creating hotel with data:', hotelData);
-      console.log('API endpoint:', SUPERADMIN_API.HOTELS);      // Add token manually to ensure it's included
+  // ...existing code...
       const token = cookieHelper.getAuthToken() || localStorage.getItem('token');
-      console.log('Token found:', !!token);
-      console.log('Token preview:', token ? token.substring(0, 30) + '...' : 'none');
+  // ...existing code...
       const headers = {
         'Authorization': `Bearer ${token}`
       };
 
       const response = await apiClient.post(SUPERADMIN_API.HOTELS, hotelData, { headers });
-      console.log('Hotel creation response:', response.data);
+  // ...existing code...
       return response.data;
     } catch (error) {
-      console.error('Error creating hotel:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
+  // ...existing code...
       throw error;
     }
   }
@@ -374,12 +370,12 @@ class HotelService {
    */
   async getAllHotelsForSuperAdmin() {
     try {
-      console.log('🏨 Service: Fetching all hotels for superadmin...');
+  // ...existing code...
       const response = await apiClient.get(SUPERADMIN_API.HOTELS);
-      console.log('🏨 Service: Hotels response:', response.data);
+  // ...existing code...
       return response.data;
     } catch (error) {
-      console.error('🏨 Service: Error fetching hotels:', error);
+  // ...existing code...
       throw error;
     }
   }
@@ -392,21 +388,14 @@ class HotelService {
     const refreshToken = cookieHelper.getRefreshToken();
     const userData = localStorage.getItem('user');
 
-    console.log('Authentication Check:');
-    console.log('Token exists:', !!token);
-    console.log('Refresh Token exists:', !!refreshToken);
-    console.log('User Data exists:', !!userData);
-    console.log('All cookies:', document.cookie);
+  // ...existing code...
 
     if (token) {
       try {
         const decoded = jwt_decode(token);
-        console.log('Token decoded:', decoded);
-        console.log('Token expires:', new Date(decoded.exp * 1000).toLocaleString());
-        console.log('Current time:', new Date().toLocaleString());
-        console.log('Is token expired:', decoded.exp < Date.now() / 1000);
+        // ...existing code...
       } catch (error) {
-        console.error('Error decoding token:', error);
+        // ...existing code...
       }
     }
 
@@ -483,12 +472,12 @@ class HotelService {
    */
   async validateQRToken(qrToken) {
     try {
-      console.log('Validating QR token:', { qrToken, length: qrToken?.length });
+  // ...existing code...
       const response = await apiClient.post('/auth/validate-qr', { qrToken });
-      console.log('QR validation successful:', response.data);
+  // ...existing code...
       return response.data;
     } catch (error) {
-      console.error('QR validation failed:', error);
+  // ...existing code...
       throw error;
     }
   }

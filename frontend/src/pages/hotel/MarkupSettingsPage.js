@@ -44,7 +44,6 @@ const MarkupSettingsPage = () => {
         setError('Failed to load markup settings');
         toast.error('Failed to load markup settings');
         setLoading(false);
-        console.error('Error fetching markup settings:', err);
       }
     };
 
@@ -103,7 +102,6 @@ const MarkupSettingsPage = () => {
       setSaving(false);
     } catch (err) {
       toast.error('Failed to save markup settings');
-      console.error('Error saving markup settings:', err);
       setSaving(false);
     }
   };

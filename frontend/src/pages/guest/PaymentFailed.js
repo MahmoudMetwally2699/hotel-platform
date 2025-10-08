@@ -35,7 +35,6 @@ const PaymentFailed = () => {
         setError(t('paymentFailed.failedFetch'));
       }
     } catch (err) {
-      console.error('Error fetching booking details:', err);
       setError(t('paymentFailed.failedLoad'));
     } finally {
       setLoading(false);

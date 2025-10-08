@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Booking = require('./models/Booking');
 
 mongoose.connect(process.env.MONGODB_URI).then(async () => {
-  console.log('Connected to MongoDB');
+  // Connected to MongoDB (output removed)
 
   const withHistory = await Booking.countDocuments({
     statusHistory: { $exists: true, $ne: [] }
@@ -18,9 +18,7 @@ mongoose.connect(process.env.MONGODB_URI).then(async () => {
 
   const total = await Booking.countDocuments();
 
-  console.log('Total bookings:', total);
-  console.log('With status history:', withHistory);
-  console.log('Without status history:', withoutHistory);
+  // Total bookings, with/without status history (output removed)
 
   const categories = await Booking.aggregate([
     {
@@ -40,10 +38,10 @@ mongoose.connect(process.env.MONGODB_URI).then(async () => {
     }
   ]);
 
-  console.log('By category:', categories);
+  // By category (output removed)
 
   process.exit();
 }).catch(err => {
-  console.error('Error:', err.message);
+  // Error occurred; exit with failure
   process.exit(1);
 });

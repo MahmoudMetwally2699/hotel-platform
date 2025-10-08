@@ -93,7 +93,6 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
           }
         });        setServices(servicesResponse.data.data || []);
       } catch (error) {
-        console.error('Error fetching category services:', error);
         toast.error(t('errors.loadServices'));
       } finally {
         setLoading(false);

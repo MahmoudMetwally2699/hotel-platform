@@ -47,21 +47,9 @@ const GuestHousekeepingBookings = () => {
         const allBookings = response.data.data.bookings || [];
 
         // Debug: Log all bookings to see what we're working with
-        console.log('🔍 All bookings received:', allBookings);
-        console.log('🔍 Total bookings count:', allBookings.length);
 
         // Debug: Log detailed structure of each booking
         allBookings.forEach((booking, index) => {
-          console.log(`🔍 Booking ${index + 1} structure:`, {
-            id: booking._id,
-            serviceName: booking.serviceName,
-            serviceType: booking.serviceType,
-            category: booking.category,
-            serviceDetails: booking.serviceDetails,
-            guestDetails: booking.guestDetails,
-            schedule: booking.schedule,
-            fullBooking: booking
-          });
         });
 
         const housekeepingBookings = allBookings.filter(booking => {
@@ -70,15 +58,6 @@ const GuestHousekeepingBookings = () => {
           const serviceType = booking.serviceType;
 
           // Debug: Log each booking's relevant fields
-          console.log('🔍 Checking booking:', {
-            id: booking._id,
-            serviceName: booking.serviceName,
-            serviceType: booking.serviceType,
-            category: booking.category,
-            serviceDetailsCategory: booking.serviceDetails?.category,
-            serviceName_lower: serviceName,
-            serviceCategory_lower: serviceCategory
-          });
 
           const isHousekeeping = (
             serviceType === 'housekeeping' ||
@@ -101,19 +80,14 @@ const GuestHousekeepingBookings = () => {
             serviceName.includes('technical support')
           );
 
-          console.log('🔍 Is housekeeping?', isHousekeeping);
           return isHousekeeping;
         });
-
-        console.log('🔍 Filtered housekeeping bookings:', housekeepingBookings);
-        console.log('🔍 Housekeeping bookings count:', housekeepingBookings.length);
 
         setBookings(housekeepingBookings);
         setTotalBookings(housekeepingBookings.length);
         setTotalPages(Math.ceil(housekeepingBookings.length / itemsPerPage));
       } else {
         // For demo purposes, create comprehensive sample bookings
-        console.log('🔍 No bookings from API, using sample data');
         setBookings([
           {
             id: 1,
@@ -192,7 +166,6 @@ const GuestHousekeepingBookings = () => {
         setTotalPages(1);
       }
     } catch (error) {
-      console.error('Error fetching housekeeping bookings:', error);
       // Set demo data on error
       const demoBookings = [
         {

@@ -27,32 +27,24 @@ const GuestLaundryBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Debug timestamp
-  console.log('🔄 GuestLaundryBookings component loaded/updated at:', new Date().toISOString());
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedTab, setSelectedTab] = useState('confirmed');
 
   // Debug selectedBooking changes
   useEffect(() => {
-    console.log('🎯 selectedBooking state changed:', selectedBooking);
     if (selectedBooking === null) {
-      console.log('🔴 selectedBooking was set to null - modal will close');
-      console.trace('Stack trace for selectedBooking null:');
     } else if (selectedBooking) {
-      console.log('🟢 selectedBooking was set to:', selectedBooking.bookingNumber);
     }
   }, [selectedBooking]);
 
   // Add error handler to catch any errors that might close the modal
   useEffect(() => {
     const handleError = (error) => {
-      console.error('🔥 Global error caught:', error);
       alert(`🔥 Global error caught: ${error.message || error}\nThis might cause the modal to close unexpectedly.`);
     };
 
     window.addEventListener('error', handleError);
     window.addEventListener('unhandledrejection', (event) => {
-      console.error('🔥 Unhandled promise rejection:', event.reason);
       alert(`🔥 Unhandled promise rejection: ${event.reason?.message || event.reason}\nThis might cause the modal to close unexpectedly.`);
     });
 
@@ -90,11 +82,8 @@ const GuestLaundryBookings = () => {
   // Debug effect to track selectedBooking changes
   useEffect(() => {
     if (selectedBooking) {
-      console.log('🔄 selectedBooking changed:', selectedBooking.bookingNumber);
     } else {
-      console.log('🔄 selectedBooking set to null - modal should close');
       // Log stack trace to see what caused this
-      console.trace('selectedBooking set to null');
     }
   }, [selectedBooking]);
 
@@ -103,11 +92,8 @@ const GuestLaundryBookings = () => {
       setLoading(true);
       const response = await apiClient.get(`/client/bookings?category=laundry&status=${selectedTab}&page=${currentPage}&limit=${itemsPerPage}`);
 
-      console.log('🔍 Raw laundry bookings response:', response.data);
-
       if (response.data.success) {
         const bookingsData = response.data.data.bookings || [];
-        console.log('📋 Bookings data:', bookingsData);
 
         // Filter out non-laundry bookings (client-side filter as backup)
         const laundryBookings = bookingsData.filter(booking => {
@@ -116,23 +102,13 @@ const GuestLaundryBookings = () => {
           const isLaundryBooking = serviceType === 'laundry' || serviceCategory === 'laundry';
 
           if (!isLaundryBooking) {
-            console.warn(`🚫 Filtering out non-laundry booking: ${booking.bookingNumber} (serviceType: ${serviceType}, category: ${serviceCategory})`);
           }
 
           return isLaundryBooking;
         });
 
-        console.log(`📋 Filtered laundry bookings: ${laundryBookings.length} out of ${bookingsData.length} total bookings`);
-
         // Log first booking to see structure
         if (laundryBookings.length > 0) {
-          console.log('🔍 First laundry booking structure:', laundryBookings[0]);
-          console.log('🔍 Items in first laundry booking:', {
-            laundryItems: laundryBookings[0].laundryItems,
-            items: laundryBookings[0].items,
-            selectedItems: laundryBookings[0].selectedItems,
-            bookingItems: laundryBookings[0].bookingItems
-          });
         }
 
         setBookings(laundryBookings);
@@ -153,7 +129,6 @@ const GuestLaundryBookings = () => {
         setTotalBookings(totalBookingsFromApi);
       }
     } catch (error) {
-      console.error('Error fetching laundry bookings:', error);
       toast.error('Failed to load bookings');
     } finally {
       setLoading(false);
@@ -162,15 +137,11 @@ const GuestLaundryBookings = () => {
 
   const handlePayNow = async (bookingId) => {
     try {
-      console.log('🔵 handlePayNow called with bookingId:', bookingId);
-
       // Create Kashier payment session
       const response = await apiClient.post('/payments/kashier/create-session', {
         bookingId: bookingId,
         bookingType: 'laundry'
       });
-
-      console.log('✅ Payment session response:', response.data);
 
       if (response.data.success) {
         const { paymentUrl } = response.data.data;
@@ -178,22 +149,17 @@ const GuestLaundryBookings = () => {
         window.location.href = paymentUrl;
       }
     } catch (error) {
-      console.error('❌ Error creating payment session:', error);
       toast.error(error.response?.data?.message || 'Failed to create payment session');
     }
   };
 
   const handleViewDetails = async (bookingId) => {
     try {
-      console.log('🔍 Fetching booking details for ID:', bookingId);
-
       // First, find the booking in the current bookings list to show something immediately
       const currentBooking = bookings.find(b => b._id === bookingId);
       if (currentBooking) {
-        console.log('📋 Setting current booking from list:', currentBooking);
         setSelectedBooking(currentBooking);
       } else {
-        console.error('❌ Booking not found in current list:', bookingId);
         toast.error('Booking not found');
         return;
       }
@@ -201,15 +167,11 @@ const GuestLaundryBookings = () => {
       // Then try to fetch detailed version from API (but don't clear the modal if it fails)
       try {
         const response = await apiClient.get(`/client/bookings/${bookingId}`);
-        console.log('📋 Booking details response:', response);
-        console.log('📋 Response data:', response.data);
 
         if (response.data && response.data.success) {
           // The API response might have the booking data directly in response.data.data
           // or the entire response.data might be the booking data
           let detailedBooking = response.data.data?.booking || response.data.data;
-
-          console.log('✅ API returned success, checking booking data:', detailedBooking);
 
           // If we have detailed booking data, merge it with current booking
           if (detailedBooking && typeof detailedBooking === 'object') {
@@ -225,10 +187,8 @@ const GuestLaundryBookings = () => {
               createdAt: currentBooking.createdAt
             };
 
-            console.log('✅ Merged booking data:', mergedBooking);
             setSelectedBooking(mergedBooking);
           } else {
-            console.log('⚠️ Keeping current booking due to invalid API data structure');
           }
         } else if (response.data && typeof response.data === 'object') {
           // Sometimes the API returns data directly without success wrapper
@@ -244,17 +204,13 @@ const GuestLaundryBookings = () => {
             createdAt: currentBooking.createdAt
           };
 
-          console.log('✅ API returned data directly, merged with current booking:', mergedBooking);
           setSelectedBooking(mergedBooking);
         } else {
-          console.log('⚠️ API response without proper data structure:', response.data);
         }
       } catch (apiError) {
-        console.log('⚠️ API call failed, keeping current booking from list:', apiError.message);
         // Don't show error toast for API failure, just keep the current booking
       }
     } catch (error) {
-      console.error('❌ Error in handleViewDetails:', error);
       toast.error('Failed to load booking information');
     }
   };
@@ -331,16 +287,6 @@ const GuestLaundryBookings = () => {
                                    booking.bookingConfig?.menuItems?.length || // From API response structure
                                    (booking.bookingConfig?.quantity > 0 ? booking.bookingConfig.quantity : 0) || // Fallback to quantity if available
                                    0;
-                  console.log('📊 Items count for booking:', booking._id, 'Count:', itemsCount, 'Sources:', {
-                    bookingConfigLaundryItems: booking.bookingConfig?.laundryItems?.length,
-                    bookingConfigMenuItems: booking.bookingConfig?.menuItems?.length,
-                    bookingConfigQuantity: booking.bookingConfig?.quantity,
-                    laundryItems: booking.laundryItems?.length,
-                    items: booking.items?.length,
-                    selectedItems: booking.selectedItems?.length,
-                    bookingDetailsLaundryItems: booking.bookingDetails?.laundryItems?.length,
-                    bookingDetailsItems: booking.bookingDetails?.items?.length
-                  });
                   return itemsCount;
                 })()} {t('common.items', 'items')}
               </span>
@@ -599,7 +545,6 @@ const GuestLaundryBookings = () => {
             onClick={(e) => {
               // Only close if clicking the backdrop, not the modal content
               if (e.target === e.currentTarget) {
-                console.log('🔒 Modal backdrop clicked, closing modal');
                 setSelectedBooking(null);
               }
             }}
@@ -614,7 +559,6 @@ const GuestLaundryBookings = () => {
               <div className="p-4 sm:p-6 lg:p-8">
                 {(() => {
                   try {
-                    console.log('🎨 Rendering modal content for booking:', selectedBooking?.bookingNumber);
                     return (
                       <>
                         <div className="flex justify-between items-center mb-4 sm:mb-6">
@@ -628,7 +572,6 @@ const GuestLaundryBookings = () => {
                           </div>
                           <button
                             onClick={() => {
-                              console.log('🔒 Close button clicked');
                               setSelectedBooking(null);
                             }}
                             className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 hover:bg-gray-200 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 flex-shrink-0 ml-2"
@@ -639,7 +582,6 @@ const GuestLaundryBookings = () => {
                       </>
                     );
                   } catch (error) {
-                    console.error('❌ Error rendering modal header:', error);
                     return (
                       <div className="p-4 bg-red-100 border border-red-300 rounded-lg">
                         <p className="text-red-700">Error rendering modal header: {error.message}</p>
@@ -682,16 +624,6 @@ const GuestLaundryBookings = () => {
                                          selectedBooking.payment?.amount ||
                                          selectedBooking.totalAmount ||
                                          selectedBooking.amount;
-
-                            console.log('💰 Total amount sources:', {
-                              pricingTotalAmount: selectedBooking.pricing?.totalAmount,
-                              pricingTotal: selectedBooking.pricing?.total,
-                              paymentPaidAmount: selectedBooking.payment?.paidAmount,
-                              paymentAmount: selectedBooking.payment?.amount,
-                              totalAmount: selectedBooking.totalAmount,
-                              amount: selectedBooking.amount,
-                              selectedTotal: total
-                            });
 
                             return total ? formatPriceByLanguage(total, i18n.language) : 'N/A';
                           })()}
@@ -747,15 +679,6 @@ const GuestLaundryBookings = () => {
                             }];
                           }
 
-                          console.log('🛍️ Modal laundry items:', laundryItems, 'Booking:', selectedBooking);
-                          console.log('🛍️ Items analysis:', laundryItems.map(item => ({
-                            name: item.itemName,
-                            totalPrice: item.totalPrice,
-                            price: item.price,
-                            amount: item.amount,
-                            isFallback: item.isFallback,
-                            quantity: item.quantity
-                          })));
                           return laundryItems;
                         })().map((item, index) => (
                           <div key={index} className="bg-white/70 backdrop-blur-sm rounded-lg p-4 flex justify-between items-center shadow-sm">
@@ -796,20 +719,17 @@ const GuestLaundryBookings = () => {
                                     const basePrice = item.basePrice * (item.quantity || 1);
                                     const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
                                     itemPrice = basePrice * (1 + markupPercentage / 100);
-                                    console.log(`✅ USING MARKUP PRICE: ${item.itemName} = ${item.basePrice} × ${item.quantity || 1} × (1 + ${markupPercentage}%) = ${itemPrice}`);
                                   }
                                   else if (item.price && item.quantity && item.price !== bookingTotal) {
                                     // Calculate price with markup applied
                                     const basePrice = item.price * item.quantity;
                                     const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
                                     itemPrice = basePrice * (1 + markupPercentage / 100);
-                                    console.log(`✅ USING MARKUP ITEM PRICE: ${item.itemName} = ${item.price} × ${item.quantity} × (1 + ${markupPercentage}%) = ${itemPrice}`);
                                   }
                                   else if (item.price && item.price !== bookingTotal) {
                                     // Calculate single price with markup applied
                                     const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
                                     itemPrice = item.price * (1 + markupPercentage / 100);
-                                    console.log(`✅ USING MARKUP SINGLE PRICE: ${item.itemName} = ${item.price} × (1 + ${markupPercentage}%) = ${itemPrice}`);
                                   }
                                   // FALLBACK: Check if multiple items all have the same price as the total (definitely wrong)
                                   else if (allItems.length > 1) {
@@ -823,7 +743,6 @@ const GuestLaundryBookings = () => {
                                       const baseItemPrice = bookingTotal / allItems.length;
                                       const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
                                       itemPrice = baseItemPrice * (1 + markupPercentage / 100);
-                                      console.log(`🔧 FALLBACK MARKUP FIXED: All ${allItems.length} items had same price as total (${bookingTotal}), divided evenly and applied ${markupPercentage}% markup: ${itemPrice}`);
                                     } else {
                                       // Apply markup to the item's totalPrice
                                       const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
@@ -841,18 +760,6 @@ const GuestLaundryBookings = () => {
                                     const markupPercentage = selectedBooking.pricing?.markup?.percentage || 0;
                                     itemPrice = bookingTotal * (1 + markupPercentage / 100);
                                   }
-
-                                  console.log('💰 Enhanced item price for', item.itemName, ':', {
-                                    itemTotalPrice: item.totalPrice,
-                                    itemPrice: item.price,
-                                    itemQuantity: item.quantity,
-                                    itemAmount: item.amount,
-                                    bookingTotal: bookingTotal,
-                                    allItemsCount: allItems.length,
-                                    selectedPrice: itemPrice,
-                                    isFallback: item.isFallback,
-                                    isSuspiciousPrice: item.totalPrice && Math.abs(item.totalPrice - bookingTotal) < 0.01
-                                  });
 
                                   return itemPrice ? formatPriceByLanguage(itemPrice, i18n.language) : 'N/A';
                                 })()}

@@ -71,19 +71,6 @@ const TransportationBookingInterface = () => {
 
       // Fetch transportation services
       const servicesResponse = await apiClient.get(`/client/hotels/${hotelId}/services/transportation/vehicles`);
-      console.log('🚗 Transportation services response:', servicesResponse.data);
-      console.log('🚗 Services count:', servicesResponse.data.data.services?.length);
-      console.log('🚗 Full response structure:', JSON.stringify(servicesResponse.data, null, 2));
-      console.log('🚗 Services details:', servicesResponse.data.data.services?.map(s => ({
-        id: s._id,
-        name: s.name,
-        transportationItemsCount: s.transportationItems?.length || 0,
-        hasTransportationItems: !!s.transportationItems && s.transportationItems.length > 0,
-        firstVehicle: s.transportationItems?.[0] ? {
-          vehicleType: s.transportationItems[0].vehicleType,
-          category: s.transportationItems[0].category
-        } : null
-      })));
 
       setTransportationServices(servicesResponse.data.data.services || []);
 
@@ -94,10 +81,8 @@ const TransportationBookingInterface = () => {
 
       if (serviceWithVehicles) {
         setSelectedService(serviceWithVehicles);
-        console.log('🎯 Selected service:', serviceWithVehicles.name, 'with', serviceWithVehicles.transportationItems.length, 'vehicles');
       } else if (servicesResponse.data.data.services?.length > 0) {
         setSelectedService(servicesResponse.data.data.services[0]);
-        console.log('⚠️ No services with vehicles found, selected first service:', servicesResponse.data.data.services[0].name);
       }
 
     } catch (error) {
@@ -340,7 +325,6 @@ const TransportationBookingInterface = () => {
                       onChange={(e) => {
                         const service = servicesWithVehicles.find(s => s._id === e.target.value);
                         setSelectedService(service);
-                        console.log('🔄 Selected service changed:', service?.name, 'Vehicles:', service?.transportationItems?.length || 0);
                       }}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     >
@@ -404,7 +388,6 @@ const TransportationBookingInterface = () => {
                         return grouped;
                       }, {})
                     ).map(([category, categoryVehicles]) => {
-                      console.log('🚗 Rendering category:', category, 'Vehicles:', categoryVehicles.length, 'Vehicles:', categoryVehicles.map(v => v.vehicleType));
 
                       return (
                         <div key={category} className="space-y-4">
@@ -413,15 +396,11 @@ const TransportationBookingInterface = () => {
                           </h3>
 
                           {categoryVehicles.map((vehicle, vehicleIndex) => {
-                            console.log(`🚗 Processing vehicle: ${vehicle.vehicleType} (${vehicle.category})`);
-                            console.log(`🚗 Vehicle serviceTypes:`, vehicle.serviceTypes);
 
                             // Check if vehicle has any valid service types
                             const validServiceTypes = vehicle.serviceTypes?.filter(st => st.isAvailable && st.price > 0) || [];
-                            console.log(`🚗 Valid serviceTypes for ${vehicle.vehicleType}:`, validServiceTypes.length);
 
                             if (validServiceTypes.length === 0) {
-                              console.log(`❌ No valid service types for vehicle: ${vehicle.vehicleType}`);
                               return (
                                 <div key={`${category}-${vehicleIndex}`} className="border border-red-200 rounded-lg p-4 bg-red-50">
                                   <p className="text-red-600">
@@ -446,10 +425,8 @@ const TransportationBookingInterface = () => {
                                 {/* Service Type Options */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   {vehicle.serviceTypes?.map((serviceType, serviceIndex) => {
-                                    console.log(`🚗 ServiceType for ${vehicle.vehicleType}:`, serviceType, 'Available:', serviceType.isAvailable, 'Price:', serviceType.price);
 
                                     if (!serviceType.isAvailable || serviceType.price <= 0) {
-                                      console.log(`❌ Filtering out service type for ${vehicle.vehicleType}:`, serviceType.serviceTypeId, 'Available:', serviceType.isAvailable, 'Price:', serviceType.price);
                                       return null;
                                     }
 

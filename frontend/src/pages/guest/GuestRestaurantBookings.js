@@ -28,9 +28,6 @@ const GuestRestaurantBookings = () => {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Debug timestamp
-  console.log('🔄 GuestRestaurantBookings component loaded/updated at:', new Date().toISOString());
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedTab, setSelectedTab] = useState('confirmed');
 
@@ -64,11 +61,8 @@ const GuestRestaurantBookings = () => {
       setLoading(true);
       const response = await apiClient.get(`/client/bookings?category=restaurant&status=${selectedTab}&page=${currentPage}&limit=${itemsPerPage}`);
 
-      console.log('🔍 Raw restaurant bookings response:', response.data);
-
       if (response.data.success) {
         const bookingsData = response.data.data.bookings || [];
-        console.log('📋 Restaurant bookings data:', bookingsData);
 
         setBookings(bookingsData);
 
@@ -87,7 +81,6 @@ const GuestRestaurantBookings = () => {
         setTotalBookings(totalBookingsFromApi);
       }
     } catch (error) {
-      console.error('Error fetching restaurant bookings:', error);
       toast.error('Failed to load restaurant bookings');
     } finally {
       setLoading(false);
@@ -134,15 +127,11 @@ const GuestRestaurantBookings = () => {
 
   const handleViewDetails = async (bookingId) => {
     try {
-      console.log('🔍 Fetching restaurant booking details for ID:', bookingId);
-
       // First, find the booking in the current bookings list to show something immediately
       const currentBooking = bookings.find(b => b._id === bookingId);
       if (currentBooking) {
-        console.log('📋 Setting current booking from list:', currentBooking);
         setSelectedBooking(currentBooking);
       } else {
-        console.error('❌ Booking not found in current list:', bookingId);
         toast.error('Booking not found');
         return;
       }
@@ -150,14 +139,10 @@ const GuestRestaurantBookings = () => {
       // Then try to fetch detailed version from API (but don't clear the modal if it fails)
       try {
         const response = await apiClient.get(`/client/bookings/${bookingId}`);
-        console.log('📋 Booking details response:', response);
-        console.log('📋 Response data:', response.data);
 
         if (response.data && response.data.success) {
           // The API response might have the booking data directly in response.data.data
           let detailedBooking = response.data.data?.booking || response.data.data;
-
-          console.log('✅ API returned success, checking booking data:', detailedBooking);
 
           // If we have detailed booking data, merge it with current booking
           if (detailedBooking && typeof detailedBooking === 'object') {
@@ -173,10 +158,8 @@ const GuestRestaurantBookings = () => {
               createdAt: currentBooking.createdAt
             };
 
-            console.log('✅ Merged booking data:', mergedBooking);
             setSelectedBooking(mergedBooking);
           } else {
-            console.log('⚠️ Keeping current booking due to invalid API data structure');
           }
         } else if (response.data && typeof response.data === 'object') {
           // Sometimes the API returns data directly without success wrapper
@@ -192,17 +175,13 @@ const GuestRestaurantBookings = () => {
             createdAt: currentBooking.createdAt
           };
 
-          console.log('✅ API returned data directly, merged with current booking:', mergedBooking);
           setSelectedBooking(mergedBooking);
         } else {
-          console.log('⚠️ API response without proper data structure:', response.data);
         }
       } catch (apiError) {
-        console.log('⚠️ API call failed, keeping current booking from list:', apiError.message);
         // Don't show error toast for API failure, just keep the current booking
       }
     } catch (error) {
-      console.error('❌ Error in handleViewDetails:', error);
       toast.error('Failed to load booking information');
     }
   };
@@ -492,7 +471,6 @@ const GuestRestaurantBookings = () => {
                onClick={(e) => {
                  // Only close if clicking the backdrop, not the modal content
                  if (e.target === e.currentTarget) {
-                   console.log('🔒 Modal backdrop clicked, closing modal');
                    setSelectedBooking(null);
                  }
                }}>
@@ -510,7 +488,6 @@ const GuestRestaurantBookings = () => {
                   </div>
                   <button
                     onClick={() => {
-                      console.log('🔒 Close button clicked');
                       setSelectedBooking(null);
                     }}
                     className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 hover:bg-gray-200 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 flex-shrink-0 touch-manipulation"

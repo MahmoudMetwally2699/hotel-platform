@@ -58,20 +58,11 @@ const OrdersPage = () => {
         ...(searchTerm && { search: searchTerm })
       });
 
-      console.log('🔍 HOTEL_API.BOOKINGS:', HOTEL_API.BOOKINGS);
-      console.log('🔍 Params:', params.toString());
       const url = `${HOTEL_API.BOOKINGS}?${params}`;
-      console.log('🔍 Full URL:', url);
-      console.log('🔍 User:', user);
-      console.log('🔍 User hotelId:', user?.hotelId);
 
       const response = await apiClient.get(url);
-      console.log('🔍 Raw response:', response);
-      console.log('🔍 Response data:', response.data);
 
       const data = response.data.data;
-      console.log('🔍 Parsed data:', data);
-      console.log('🔍 Bookings array:', data?.bookings);
 
       setBookings(data?.bookings || []);
       setPagination(prev => ({
@@ -80,9 +71,6 @@ const OrdersPage = () => {
         totalPages: data?.pagination?.pages || 0
       }));
     } catch (error) {
-      console.error('❌ Error fetching bookings:', error);
-      console.error('❌ Error response:', error.response);
-      console.error('❌ Error message:', error.message);
       setBookings([]);
     } finally {
       setIsLoading(false);
@@ -794,7 +782,6 @@ const OrdersPage = () => {
                 <button
                   onClick={() => {
                     // Add functionality to update order status if needed
-                    console.log('Update order:', selectedOrder._id);
                   }}
                   className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-modern-blue to-modern-lightBlue border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
                 >

@@ -61,19 +61,6 @@ const LaundryBookingInterface = () => {
       const hotelResponse = await apiClient.get(`/client/hotels/${hotelId}`);
       setHotel(hotelResponse.data.data);      // Fetch laundry services
       const servicesResponse = await apiClient.get(`/client/hotels/${hotelId}/services/laundry/items`);
-      console.log('🧺 Laundry services response:', servicesResponse.data);
-      console.log('🧺 Services count:', servicesResponse.data.data.services?.length);
-      console.log('🧺 Full response structure:', JSON.stringify(servicesResponse.data, null, 2));
-      console.log('🧺 Services details:', servicesResponse.data.data.services?.map(s => ({
-        id: s._id,
-        name: s.name,
-        laundryItemsCount: s.laundryItems?.length || 0,
-        hasLaundryItems: !!s.laundryItems && s.laundryItems.length > 0,
-        firstItem: s.laundryItems?.[0] ? {
-          name: s.laundryItems[0].name,
-          category: s.laundryItems[0].category
-        } : null
-      })));
 
       setLaundryServices(servicesResponse.data.data.services || []);
 
@@ -84,10 +71,8 @@ const LaundryBookingInterface = () => {
 
       if (serviceWithItems) {
         setSelectedService(serviceWithItems);
-        console.log('🎯 Selected service:', serviceWithItems.name, 'with', serviceWithItems.laundryItems.length, 'items');
       } else if (servicesResponse.data.data.services?.length > 0) {
         setSelectedService(servicesResponse.data.data.services[0]);
-        console.log('⚠️ No services with items found, selected first service:', servicesResponse.data.data.services[0].name);
       }
 
     } catch (error) {
@@ -212,8 +197,6 @@ const LaundryBookingInterface = () => {
         }
       };
 
-      console.log('🔵 Creating direct payment session for laundry booking');
-
       // Create payment session directly without creating booking first
       const paymentResponse = await apiClient.post('/payments/kashier/create-payment-session', {
         bookingData,
@@ -333,7 +316,6 @@ const LaundryBookingInterface = () => {
                       onChange={(e) => {
                         const service = servicesWithItems.find(s => s._id === e.target.value);
                         setSelectedService(service);
-                        console.log('🔄 Selected service changed:', service?.name, 'Items:', service?.laundryItems?.length || 0);
                       }}
                       className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                     >
@@ -392,22 +374,17 @@ const LaundryBookingInterface = () => {
                         return grouped;
                       }, {})
                     ).map(([category, categoryItems]) => {
-                      console.log('🔍 Rendering category:', category, 'Items:', categoryItems.length, 'Items:', categoryItems.map(i => i.name));
 
                       return (
                       <div key={category} className="space-y-4">
                         <h3 className="text-xl font-semibold capitalize text-gray-800 border-b border-gray-200 pb-2">
                           {t(`laundryBooking.itemCategories.${category}`, category.replace('_', ' '))}
                         </h3>                          {categoryItems.map((item, itemIndex) => {
-                            console.log(`🔍 Processing item: ${item.name} (${item.category})`);
-                            console.log(`🔍 Item serviceTypes:`, item.serviceTypes);
 
                             // Check if item has any valid service types
                             const validServiceTypes = item.serviceTypes?.filter(st => st.isAvailable && st.price > 0) || [];
-                            console.log(`🔍 Valid serviceTypes for ${item.name}:`, validServiceTypes.length);
 
                             if (validServiceTypes.length === 0) {
-                              console.log(`❌ No valid service types for item: ${item.name}`);
                               return (
                                 <div key={`${category}-${itemIndex}`} className="border border-red-200 rounded-lg p-4 bg-red-50">
                                   <p className="text-red-600">
@@ -428,10 +405,8 @@ const LaundryBookingInterface = () => {
                             </div>                            {/* Service Type Options */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {item.serviceTypes?.map((serviceType, serviceIndex) => {
-                                console.log(`🔍 ServiceType for ${item.name}:`, serviceType, 'Available:', serviceType.isAvailable, 'Price:', serviceType.price);
 
                                 if (!serviceType.isAvailable || serviceType.price <= 0) {
-                                  console.log(`❌ Filtering out service type for ${item.name}:`, serviceType.serviceTypeId, 'Available:', serviceType.isAvailable, 'Price:', serviceType.price);
                                   return null;
                                 }                                // Use the price directly from backend (markup already applied)
                                 const finalPrice = serviceType.price;

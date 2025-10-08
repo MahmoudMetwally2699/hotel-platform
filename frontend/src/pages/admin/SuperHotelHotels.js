@@ -15,7 +15,6 @@ const SuperHotelHotels = () => {
     try {
       // Get SuperHotel token from localStorage
       const superHotelToken = localStorage.getItem('superHotelToken');
-      console.log('🔍 SuperHotel token for hotels:', superHotelToken ? 'Present' : 'Missing');
 
       // Prepare headers
       const headers = {
@@ -25,7 +24,6 @@ const SuperHotelHotels = () => {
       // Add Authorization header if token exists
       if (superHotelToken) {
         headers['Authorization'] = `Bearer ${superHotelToken}`;
-        console.log('🔍 Added Authorization header to hotels request');
       }
 
       const response = await fetch(`${API_BASE_URL}/admin/hotels`, {

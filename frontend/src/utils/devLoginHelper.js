@@ -44,14 +44,13 @@ export const devLogin = async (role = 'superadmin') => {
         throw new Error('Invalid role');
     }
 
-    console.log(`Attempting to login as ${role} with email: ${credentials.email}`);
+  // ...existing code...
 
     // Call the login API
     const response = await axios.post(AUTH_API.LOGIN, credentials);    // No need to store tokens as they're now in cookies
     // Just log the response for debugging purposes
 
-    console.log(`Successfully logged in as ${role}`);
-    console.log('Login response:', response.data);
+  // ...existing code...
 
     return {
       success: true,
@@ -59,7 +58,7 @@ export const devLogin = async (role = 'superadmin') => {
       data: response.data
     };
   } catch (error) {
-    console.error('Development login failed:', error.response?.data || error.message);
+  // ...existing code...
     return {
       success: false,
       message: error.response?.data?.message || error.message,
@@ -88,7 +87,7 @@ export const getCurrentRole = () => {
     const decoded = JSON.parse(atob(token.split('.')[1]));
     return decoded.role;
   } catch (e) {
-    console.error('Error decoding token:', e);
+  // ...existing code...
     return null;
   }
 };

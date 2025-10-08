@@ -94,7 +94,6 @@ const TransportationBookingManagement = () => {
         setPagination(response.data.data.pagination);
       }
     } catch (error) {
-      console.error('Error fetching bookings:', error);
       toast.error(t('transportation.errors.fetchBookings'));
     } finally {
       setLoading(false);
@@ -125,7 +124,6 @@ const TransportationBookingManagement = () => {
         fetchBookings(); // Refresh the list
       }
     } catch (error) {
-      console.error('Error creating quote:', error);
       toast.error(error.response?.data?.message || t('transportation.errors.createQuote'));
     }
   };
@@ -137,7 +135,6 @@ const TransportationBookingManagement = () => {
         setSelectedBooking(response.data.data.booking);
       }
     } catch (error) {
-      console.error('Error fetching booking details:', error);
       toast.error(t('transportation.errors.fetchBookingDetails'));
     }
   };
@@ -153,7 +150,6 @@ const TransportationBookingManagement = () => {
         fetchBookings(); // Refresh the list
       }
     } catch (error) {
-      console.error('Error marking booking as completed:', error);
       toast.error(error.response?.data?.message || t('transportation.errors.markCompleted'));
     }
   };
@@ -265,7 +261,6 @@ const TransportationBookingManagement = () => {
                     setQuoteForm({ basePrice: '', notes: '', expirationHours: 24 });
                   }
                 } catch (error) {
-                  console.error('Error fetching fresh booking data:', error);
                   // Fallback to cached data if API call fails
                   setSelectedBooking(booking);
                   setQuoteForm({ basePrice: '', notes: '', expirationHours: 24 });

@@ -39,11 +39,8 @@ const SuperHotelDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      console.log('🔍 Fetching dashboard data with SuperHotel token');
-
       // Get SuperHotel token from localStorage
       const superHotelToken = localStorage.getItem('superHotelToken');
-      console.log('🔍 SuperHotel token:', superHotelToken ? 'Present' : 'Missing');
 
       // Prepare headers
       const headers = {
@@ -53,7 +50,6 @@ const SuperHotelDashboard = () => {
       // Add Authorization header if token exists
       if (superHotelToken) {
         headers['Authorization'] = `Bearer ${superHotelToken}`;
-        console.log('🔍 Added Authorization header to dashboard request');
       }
 
       const response = await fetch(`${API_BASE_URL}/admin/dashboard`, {
@@ -61,20 +57,14 @@ const SuperHotelDashboard = () => {
         headers
       });
 
-      console.log('🔍 Dashboard API response status:', response.status);
-      console.log('🔍 Dashboard API response OK:', response.ok);
-
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Dashboard data received:', data);
         setDashboardData(data.data);
       } else {
         const errorText = await response.text();
-        console.error('❌ Dashboard API error:', response.status, errorText);
         setError(`Failed to fetch dashboard data: ${response.status} ${errorText}`);
       }
     } catch (error) {
-      console.error('❌ Error fetching dashboard data:', error);
       setError('Error fetching dashboard data: ' + error.message);
     } finally {
       setLoading(false);
@@ -105,7 +95,6 @@ const SuperHotelDashboard = () => {
     );
   }
 
-  console.log('🔍 Dashboard data structure:', dashboardData);
   const { overview, recentBookings } = dashboardData || {};
 
   if (!overview) {

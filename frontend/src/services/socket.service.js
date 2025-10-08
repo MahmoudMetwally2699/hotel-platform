@@ -75,21 +75,21 @@ class SocketService {
    * Handle socket connect event
    */
   handleConnect = () => {
-    console.log('Socket connected');
+  // ...existing code...
   };
 
   /**
    * Handle socket disconnect event
    */
   handleDisconnect = (reason) => {
-    console.log('Socket disconnected:', reason);
+  // ...existing code...
   };
 
   /**
    * Handle socket connection error
    */
   handleConnectError = (error) => {
-    console.error('Socket connection error:', error);
+  // ...existing code...
   };
 
   /**

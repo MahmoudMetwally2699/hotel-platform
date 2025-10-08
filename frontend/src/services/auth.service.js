@@ -32,9 +32,7 @@ class AuthService {
         endpoint = CLIENT_API.LOGIN;
       }
 
-      console.log(`Making login request to ${endpoint} with role: ${role}${hotelId ? `, hotelId: ${hotelId}` : ''}`);
-      console.log('API Base URL:', apiClient.defaults.baseURL);
-      console.log('Full URL:', `${apiClient.defaults.baseURL}${endpoint}`);
+  // ...existing code...
 
       // Include hotelId in request if provided
       const loginData = { email, password, role };
@@ -43,19 +41,17 @@ class AuthService {
       }
 
       const response = await apiClient.post(endpoint, loginData);
-      console.log('Login response received:', response.data);
+  // ...existing code...
 
       // Store tokens and user data properly
       // The backend sends tokens in response.data.data.token and response.data.data.refreshToken
       if (response.data?.data?.token) {
         // Store token in localStorage as backup (since HTTP-only cookies can't be read by JS)
         localStorage.setItem('token', response.data.data.token);
-        console.log('✅ Token stored in localStorage:', response.data.data.token.substring(0, 20) + '...');
       }
 
       if (response.data?.data?.refreshToken) {
         localStorage.setItem('refreshToken', response.data.data.refreshToken);
-        console.log('✅ Refresh token stored in localStorage');
       }
 
       // Store user data and make sure role is included
@@ -63,28 +59,18 @@ class AuthService {
         const userData = response.data.data.user;
         userData.role = role; // Explicitly set role from login form
         this.setUserData(userData);
-        console.log('✅ User data stored:', userData);
       } else if (response.data?.data) {
         // Fallback if user data is at a different level
         response.data.data.role = role;
         this.setUserData(response.data.data);
-        console.log('✅ User data stored (fallback):', response.data.data);
       }
 
       return response.data;
     } catch (error) {
-      console.error('Login error details:', error.response?.data);
-      console.error('Login error message:', error.message);
-      console.error('Login error code:', error.code);
+  // ...existing code...
 
       // If it's a network error, provide helpful information
       if (error.isNetworkError || (!error.response && error.request)) {
-        console.error('❌ Network Error: Cannot connect to backend server');
-        console.error('Please ensure:');
-        console.error('1. Backend server is running on http://localhost:5000');
-        console.error('2. No firewall is blocking the connection');
-        console.error('3. CORS is properly configured on the backend');
-
         throw new Error('Cannot connect to server. Please check if the backend is running.');
       }
 
@@ -109,27 +95,23 @@ class AuthService {
 
       const response = await apiClient.post(endpoint, userData);
 
-      console.log('Registration response received:', response.data);
+  // ...existing code...
 
       // Store tokens and user data properly (same as login)
       if (response.data?.data?.token) {
         localStorage.setItem('token', response.data.data.token);
-        console.log('✅ Token stored in localStorage from registration:', response.data.data.token.substring(0, 20) + '...');
       }
 
       if (response.data?.data?.refreshToken) {
         localStorage.setItem('refreshToken', response.data.data.refreshToken);
-        console.log('✅ Refresh token stored in localStorage from registration');
       }
 
       // Store user data
       if (response.data?.data?.user) {
         const userData = response.data.data.user;
         this.setUserData(userData);
-        console.log('✅ User data stored from registration:', userData);
       } else if (response.data?.data) {
         this.setUserData(response.data.data);
-        console.log('✅ User data stored from registration (fallback):', response.data.data);
       }
 
       return response.data;
@@ -286,7 +268,7 @@ class AuthService {
 
       // Debounce checkAuth calls to prevent spam
       if (now - this.lastCheckAuthCall < this.checkAuthDebounceMs) {
-        console.log('🔍 checkAuth: Call debounced, returning pending promise');
+  // ...existing code...
         if (this.pendingCheckAuth) {
           return this.pendingCheckAuth;
         }
@@ -301,28 +283,27 @@ class AuthService {
 
       let endpoint = AUTH_API.CHECK; // Default to regular auth check
       if (isSupeHotelAuth) {
-        endpoint = '/api/admin/auth/me'; // Super Hotel auth check
-        console.log('🏨 checkAuth: Using Super Hotel authentication endpoint');
+  endpoint = '/api/admin/auth/me'; // Super Hotel auth check
+  // ...existing code...
       }
 
-      console.log(`🔍 checkAuth: Making request to ${endpoint}...`);
+  // ...existing code...
       // This will trigger the auth interceptor if the token is invalid
       this.pendingCheckAuth = apiClient.get(endpoint);
 
       const response = await this.pendingCheckAuth;
       this.pendingCheckAuth = null;
 
-      console.log('✅ checkAuth: Response received:', response.data);
+  // ...existing code...
 
       if (response.data.success || response.data.status === 'success') {
-        console.log('✅ checkAuth: Auth successful, user data:', response.data.data);
         // Don't store in localStorage since we're using cookies
         // The user data will be managed by Redux
       }
 
       return response.data;    } catch (error) {
       this.pendingCheckAuth = null;
-      console.log('❌ checkAuth: Auth check failed - this is normal for unauthenticated users');
+  // ...existing code...
 
       // Clear session on auth check failure
       this.clearSession();
@@ -349,7 +330,7 @@ class AuthService {
    * Store user data in localStorage
    * @param {Object} userData - User data object
    */  setUserData(userData) {
-    console.log('Setting user data in localStorage:', userData);
+  // ...existing code...
     localStorage.setItem('user', JSON.stringify(userData));
   }  /**
    * Get user data from localStorage

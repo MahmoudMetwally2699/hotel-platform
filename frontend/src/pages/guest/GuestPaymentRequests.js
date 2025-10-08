@@ -28,14 +28,10 @@ const GuestPaymentRequests = () => {
       setLoading(true);
       const response = await apiClient.get('/transportation-bookings/guest/payment-requests');
 
-      console.log('📋 Payment requests API response:', response.data);
-
       if (response.data.success) {
-        console.log('📋 Payment requests data:', response.data.data.paymentRequests);
         setPaymentRequests(response.data.data.paymentRequests);
       }
     } catch (error) {
-      console.error('Error fetching payment requests:', error);
       toast.error(t('paymentRequests.errors.fetchRequests'));
     } finally {
       setLoading(false);
@@ -44,15 +40,12 @@ const GuestPaymentRequests = () => {
 
   const handlePayNow = async (bookingId) => {
     try {
-      console.log('🔵 handlePayNow called with bookingId:', bookingId);
       setProcessingPayment(true);
 
       // Create Kashier payment session
       const response = await apiClient.post('/payments/kashier/create-session', {
         bookingId: bookingId
       });
-
-      console.log('✅ Payment session response:', response.data);
 
       if (response.data.success) {
         const { paymentUrl } = response.data.data;
@@ -61,12 +54,6 @@ const GuestPaymentRequests = () => {
         window.location.href = paymentUrl;
       }
     } catch (error) {
-      console.error('❌ Error creating payment session:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        config: error.config
-      });
       toast.error(error.response?.data?.message || t('paymentRequests.errors.paymentSession'));
     } finally {
       setProcessingPayment(false);

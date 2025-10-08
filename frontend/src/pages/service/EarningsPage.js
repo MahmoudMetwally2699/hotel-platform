@@ -54,8 +54,6 @@ const EarningsPage = () => {
 
   // Debug logging
   useEffect(() => {
-    console.log('🔍 Earnings data:', earnings);
-    console.log('🔍 Category analytics data:', categoryAnalytics);
   }, [earnings, categoryAnalytics]);
 
   const handleTimeRangeChange = (range) => {

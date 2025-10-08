@@ -38,7 +38,6 @@ const ProviderAnalyticsPage = () => {
         setError('Failed to load service providers');
         toast.error('Failed to load service providers');
         setLoading(false);
-        console.error('Error fetching providers:', err);
       }
     };
 
@@ -59,7 +58,6 @@ const ProviderAnalyticsPage = () => {
         setAnalyticsLoading(false);
       } catch (err) {
         toast.error('Failed to load provider analytics');
-        console.error('Error fetching analytics:', err);
         setAnalyticsLoading(false);
       }
     };

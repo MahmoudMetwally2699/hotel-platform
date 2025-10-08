@@ -8,7 +8,7 @@
  */
 export const cleanupClerkTokens = () => {
   try {
-    console.log('🧹 Cleaning up Clerk tokens...');
+  // ...existing code...
 
     // List of Clerk-related keys that might be in localStorage
     const clerkKeys = [
@@ -23,16 +23,16 @@ export const cleanupClerkTokens = () => {
     clerkKeys.forEach(key => {
       if (localStorage.getItem(key)) {
         localStorage.removeItem(key);
-        console.log(`🗑️ Removed ${key} from localStorage`);
+  // ...existing code...
       }
     });
 
     // Note: We can't remove HTTP-only cookies from JavaScript
     // But we can avoid reading them in our authentication logic
 
-    console.log('✅ Clerk tokens cleanup completed');
+  // ...existing code...
   } catch (error) {
-    console.warn('⚠️ Error during Clerk tokens cleanup:', error);
+    // ...existing code...
   }
 };
 

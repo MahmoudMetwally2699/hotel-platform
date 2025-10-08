@@ -7,7 +7,7 @@ const checkAndUpdateBookings = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
-    console.log('✅ Connected to database');
+  // Connected to database (output removed)
 
     const TransportationBooking = require('./models/TransportationBooking');
     const ServiceProvider = require('./models/ServiceProvider');
@@ -17,41 +17,33 @@ const checkAndUpdateBookings = async () => {
       .select('markup businessName hotelId');
 
     if (!serviceProvider) {
-      console.log('❌ Service provider not found');
+      // Service provider not found (output removed)
       return;
     }
 
-    console.log('🔧 Service Provider found:', {
-      businessName: serviceProvider.businessName,
-      markup: serviceProvider.markup,
-      hotelId: serviceProvider.hotelId
-    });
+    // Service Provider found (output removed)
 
     // Find transportation bookings for this service provider
     const bookings = await TransportationBooking.find({
       serviceProviderId: serviceProvider._id
     }).select('bookingReference hotelMarkup serviceProviderId hotelId');
 
-    console.log(`📋 Found ${bookings.length} bookings for this service provider:`);
+  // Found bookings for this service provider (output removed)
 
     for (const booking of bookings) {
-      console.log({
-        ref: booking.bookingReference,
-        currentMarkup: booking.hotelMarkup,
-        needsUpdate: booking.hotelMarkup?.percentage !== serviceProvider.markup?.percentage
-      });
+      // Booking details and update (output removed)
 
       // Update booking if markup is incorrect
       if (booking.hotelMarkup?.percentage !== serviceProvider.markup?.percentage) {
         booking.hotelMarkup.percentage = serviceProvider.markup.percentage;
         await booking.save();
-        console.log(`✅ Updated booking ${booking.bookingReference} markup to ${serviceProvider.markup.percentage}%`);
+        // Updated booking markup (output removed)
       }
     }
 
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error:', error);
+    // Error occurred; exit with failure
     process.exit(1);
   }
 };

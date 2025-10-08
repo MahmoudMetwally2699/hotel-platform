@@ -29,7 +29,7 @@ export const hasSuperHotelCookie = () => {
  * This should be called on logout or when authentication conflicts occur
  */
 export const clearAllAuthData = () => {
-  console.log('🧹 Clearing all authentication data...');
+  // ...existing code...
 
   // Regular authentication data
   localStorage.removeItem('user');
@@ -43,33 +43,33 @@ export const clearAllAuthData = () => {
   localStorage.removeItem('isAuthenticated');
   localStorage.removeItem('role');
 
-  console.log('✅ All authentication data cleared');
+  // ...existing code...
 };
 
 /**
  * Clear only regular user authentication data (keep Super Hotel if exists)
  */
 export const clearRegularAuthData = () => {
-  console.log('🧹 Clearing regular authentication data...');
+  // ...existing code...
 
   localStorage.removeItem('user');
   localStorage.removeItem('token');
   localStorage.removeItem('refreshToken');
 
-  console.log('✅ Regular authentication data cleared');
+  // ...existing code...
 };
 
 /**
  * Clear only Super Hotel authentication data (keep regular user if exists)
  */
 export const clearSuperHotelAuthData = () => {
-  console.log('🧹 Clearing Super Hotel authentication data...');
+  // ...existing code...
 
   // Clear localStorage data (cookies are handled by server)
   localStorage.removeItem('superHotelData');
   localStorage.removeItem('superHotelToken'); // Also clear token fallback
 
-  console.log('✅ Super Hotel authentication data cleared');
+  // ...existing code...
 };
 
 /**
@@ -104,12 +104,7 @@ export const detectAuthConflicts = () => {
 
   const conflict = hasRegularAuth && hasSuperHotelAuth;
 
-  if (conflict) {
-    console.warn('⚠️ Authentication conflict detected:', {
-      regular: status.regular,
-      superHotel: status.superHotel
-    });
-  }
+  // ...existing code...
 
   return {
     hasConflict: conflict,
@@ -126,21 +121,16 @@ export const resolveAuthConflicts = (currentPath = window.location.pathname) => 
   const conflicts = detectAuthConflicts();
 
   if (!conflicts.hasConflict) {
-    console.log('✅ No authentication conflicts detected');
     return false;
   }
 
-  console.log('🔧 Resolving authentication conflicts...');
-
   // If on Super Hotel route, clear regular auth and keep Super Hotel
   if (currentPath.startsWith('/super-hotel-admin')) {
-    console.log('📍 On Super Hotel route - clearing regular auth data');
     clearRegularAuthData();
     return true;
   }
 
   // If on any other route, clear Super Hotel auth and keep regular
-  console.log('📍 On regular route - clearing Super Hotel auth data');
   clearSuperHotelAuthData();
   return true;
 };

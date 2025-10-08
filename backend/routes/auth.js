@@ -117,15 +117,7 @@ router.post('/register', catchAsync(async (req, res, next) => {
     qrBased // Optional flag to indicate QR-based registration
   } = req.body;
 
-  console.log('Registration data received:', {
-    firstName,
-    email,
-    phone,
-    selectedHotelId,
-    roomNumber,
-    checkInDate,
-    checkOutDate
-  });
+  // Registration data received (output removed)
 
   // Validate required fields
   if (!firstName) {
@@ -336,7 +328,7 @@ router.post('/login', catchAsync(async (req, res, next) => {
     serviceProviderId: user.serviceProviderId
   };
 
-  console.log('🔍 Login response user data:', userForToken);
+  // Login response user data (output removed)
 
   const message = hotelId ? 'Hotel-scoped login successful' : 'Login successful';
   createSendToken(userForToken, 200, res, message);
@@ -761,14 +753,7 @@ router.get('/debug/me', protect, catchAsync(async (req, res) => {
   const user = await User.findById(req.user.id)
     .populate('selectedHotelId', 'name address')
     .populate('hotelId', 'name address');
-  console.log('🔍 Debug user data:', {
-    id: user._id,
-    email: user.email,
-    role: user.role,
-    selectedHotelId: user.selectedHotelId,
-    hotelId: user.hotelId,
-    isActive: user.isActive
-  });
+  // Debug user data (output removed)
 
   res.status(200).json({
     success: true,

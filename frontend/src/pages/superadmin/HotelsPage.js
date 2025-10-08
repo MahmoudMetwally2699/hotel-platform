@@ -16,16 +16,9 @@ import {
 // import { toast } from 'react-toastify'; // Temporarily commented out to debug
 
 const SuperAdminHotelsPage = () => {
-  console.log('🏨 SuperAdminHotelsPage component rendering...');
-
   const dispatch = useDispatch();
   const hotels = useSelector(selectHotels);
   const isLoading = useSelector(selectHotelsLoading);
-
-  // Debug logging for hotels data
-  console.log('🏨 Current hotels from Redux:', hotels);
-  console.log('🏨 Hotels count:', hotels?.length || 0);
-  console.log('🏨 Is loading:', isLoading);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -85,63 +78,32 @@ const SuperAdminHotelsPage = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
   useEffect(() => {
-    console.log('🏨 useEffect running - fetching hotels...');
-    dispatch(fetchAllHotels()).then((result) => {
-      console.log('🏨 fetchAllHotels result:', result);
-    }).catch((error) => {
-      console.error('🏨 fetchAllHotels error:', error);
-    });
+    dispatch(fetchAllHotels());
   }, [dispatch]);const handleCreateHotel = async (e) => {
-    console.log('🚀 handleCreateHotel started');
     e.preventDefault();
-    console.log('✅ preventDefault called');
 
-    // Debug authentication
-    const token = localStorage.getItem('token') || document.cookie.split(';').find(c => c.trim().startsWith('token='));
-    const user = localStorage.getItem('user');
-    console.log('� Auth Debug:', {
-      hasToken: !!token,
-      hasUser: !!user,
-      tokenPreview: token ? token.substring(0, 20) + '...' : 'none',
-      userRole: user ? JSON.parse(user).role : 'none'
-    });
-
-    console.log('�📋 Current formData:', JSON.stringify(formData, null, 2));// Validate admin credentials
-    console.log('🔍 Validating admin credentials...');
+    // Validate admin credentials
     if (!formData.adminData.firstName || !formData.adminData.lastName ||
-        !formData.adminData.email || !formData.adminData.password) {      console.log('❌ Admin credentials validation failed');
-      console.log('🍞 Showing toast error...');
-      // toast.error('Please fill in all hotel admin credentials');
+        !formData.adminData.email || !formData.adminData.password) {
       alert('Please fill in all hotel admin credentials'); // Temporary replacement
-      console.log('🔙 Returning early from validation failure');
       return;
     }
 
-    if (formData.adminData.password !== formData.adminData.confirmPassword) {      console.log('❌ Password confirmation failed');
-      console.log('🍞 Showing toast error...');
-      // toast.error('Admin passwords do not match');
+    if (formData.adminData.password !== formData.adminData.confirmPassword) {
       alert('Admin passwords do not match'); // Temporary replacement
-      console.log('🔙 Returning early from password mismatch');
       return;
     }
 
-    if (formData.adminData.password.length < 6) {      console.log('❌ Password length validation failed');
-      console.log('🍞 Showing toast error...');
-      // toast.error('Admin password must be at least 6 characters long');
+    if (formData.adminData.password.length < 6) {
       alert('Admin password must be at least 6 characters long'); // Temporary replacement
-      console.log('🔙 Returning early from password length');
       return;
     }
-
-    console.log('✅ All validations passed');
 
     try {
       // Upload logo if provided
       let logoUrl = '';
       if (logoFile) {
-        console.log('📤 Uploading hotel logo...');
         logoUrl = await uploadLogo(logoFile);
-        console.log('✅ Logo uploaded successfully:', logoUrl);
       }
 
       // Prepare final form data with logo
@@ -153,31 +115,14 @@ const SuperAdminHotelsPage = () => {
         }
       };
 
-      console.log('📤 Dispatching createHotel action...');
-      console.log('Form data being submitted:', finalFormData);
-
-      const result = await dispatch(createHotel(finalFormData)).unwrap();      console.log('✅ Hotel creation successful:', result);
-      console.log('🎉 Showing success toast...');
-      // toast.success('Hotel and admin account created successfully');
+      const result = await dispatch(createHotel(finalFormData)).unwrap();
       alert('Hotel and admin account created successfully!'); // Temporary replacement
-      console.log('🔒 Closing modal...');
       setShowCreateModal(false);
-      console.log('🔄 Resetting form...');
       resetForm();
-      console.log('🔄 Refreshing hotels list...');
       dispatch(fetchAllHotels());
-      console.log('✅ Hotel creation process completed successfully');
     } catch (error) {
-      console.error('❌ Error in handleCreateHotel:', error);      console.error('❌ Error details:', {
-        message: error.message,
-        stack: error.stack,
-        type: typeof error,
-        fullError: error
-      });
-      // toast.error(`Error creating hotel: ${error.message || JSON.stringify(error)}`);
       alert(`Error creating hotel: ${error.message || JSON.stringify(error)}`); // Temporary replacement
     }
-    console.log('🏁 handleCreateHotel function ended');
   };
 
   const handleUpdateHotel = async (e) => {
@@ -187,12 +132,8 @@ const SuperAdminHotelsPage = () => {
       // Upload logo if a new one was selected
       let logoUrl = selectedHotel.images?.logo; // Keep existing logo by default
       if (logoFile) {
-        console.log('📤 Uploading new hotel logo...');
-        console.log('📁 Logo file:', logoFile);
         logoUrl = await uploadLogo(logoFile);
-        console.log('✅ New logo uploaded successfully:', logoUrl);
       } else {
-        console.log('📝 No new logo file selected, keeping existing logo:', logoUrl);
       }
 
       // Prepare updated hotel data
@@ -204,18 +145,12 @@ const SuperAdminHotelsPage = () => {
         }
       };
 
-      console.log('📊 Sending hotel update data:', JSON.stringify(updatedHotelData, null, 2));
-      console.log('🏨 Hotel ID being updated:', selectedHotel._id);
-
       await dispatch(updateHotel({ id: selectedHotel._id, ...updatedHotelData })).unwrap();
-      // toast.success('Hotel updated successfully');
       alert('Hotel updated successfully'); // Temporary replacement
       setShowEditModal(false);
       resetForm();
       dispatch(fetchAllHotels());
     } catch (error) {
-      console.error('❌ Error updating hotel:', error);
-      // toast.error(`Error updating hotel: ${error.message || error}`);
       alert(`Error updating hotel: ${error.message || error}`); // Temporary replacement
     }
   };
@@ -238,51 +173,31 @@ const SuperAdminHotelsPage = () => {
   // Handle logo file selection
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    console.log('🖼️ Logo file selected:', file);
     if (file) {
-      console.log('📁 File details:', {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
       setLogoFile(file);
 
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        console.log('🖼️ Logo preview created');
         setLogoPreview(reader.result);
       };
       reader.readAsDataURL(file);
     } else {
-      console.log('❌ No file selected');
     }
   };
 
   // Upload logo to Cloudinary
   const uploadLogo = async (file) => {
-    console.log('🏨 Starting hotel logo upload to Cloudinary');
-    console.log('🏨 logoFile:', file);
-
     try {
       // Check if Cloudinary is properly configured
       const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
-      const apiKey = process.env.REACT_APP_CLOUDINARY_API_KEY;
-
-      console.log('🏨 Environment variables:', {
-        cloudName,
-        uploadPreset,
-        hasApiKey: !!apiKey
-      });
 
       if (!cloudName || cloudName === 'hotel-platform-demo' || cloudName === 'your_cloud_name_here') {
-        console.warn('🏨 Cloudinary not configured properly. Using local preview for testing.');
         alert('Cloudinary not configured, using local preview');
 
         // Create a local blob URL for testing
         const localUrl = URL.createObjectURL(file);
-        console.log('🏨 Created local URL:', localUrl);
         return localUrl;
       }
 
@@ -295,12 +210,9 @@ const SuperAdminHotelsPage = () => {
         uploadFormData.append('upload_preset', uploadPreset);
       } else {
         // If no upload preset, we'll need to use signed uploads
-        console.warn('🏨 No upload preset found, this might require backend support for signed uploads');
       }
 
       uploadFormData.append('folder', 'hotel-platform/hotel-logos');
-
-      console.log('🏨 Uploading to Cloudinary:', { cloudName, uploadPreset: uploadPreset || 'none' });
 
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
@@ -310,20 +222,15 @@ const SuperAdminHotelsPage = () => {
         }
       );
 
-      console.log('🏨 Upload response status:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('🏨 Cloudinary response error:', errorData);
 
         // If upload preset failed, provide helpful error and use local preview
         if (errorData.error?.message?.includes('Upload preset')) {
-          console.warn('🏨 Upload preset not found. Need to create it in Cloudinary dashboard.');
           alert(`Upload preset "${uploadPreset}" not found. Please create an unsigned upload preset named "${uploadPreset}" in your Cloudinary dashboard.\n\nSteps:\n1. Go to Settings > Upload\n2. Add upload preset\n3. Set it to "Unsigned"\n4. Enable "Use filename or externally defined Public ID"\n\nFor now, using local preview.`);
 
           // Create a local blob URL for testing
           const localUrl = URL.createObjectURL(file);
-          console.log('🏨 Created local URL for fallback:', localUrl);
           return localUrl;
         }
 
@@ -331,15 +238,11 @@ const SuperAdminHotelsPage = () => {
       }
 
       const data = await response.json();
-      console.log('🏨 Cloudinary upload success:', data.secure_url);
       alert('Hotel logo uploaded successfully to Cloudinary!');
       return data.secure_url;
     } catch (error) {
-      console.error('🏨 Error uploading hotel logo:', error);
-
       // As fallback, always provide local preview
       if (file) {
-        console.log('🏨 Creating local preview as fallback');
         alert('Upload failed, using local preview');
         const localUrl = URL.createObjectURL(file);
         return localUrl;

@@ -15,8 +15,6 @@ const TwoTierServiceDashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const handleCategoryTypeSelect = (categoryType) => {
-    console.log('TwoTierServiceDashboard: Category type selected:', categoryType);
-
     // categoryType is the full object with id, title, etc.
     if (categoryType.id === 'outside') {
       setCurrentView('outside');
@@ -33,7 +31,6 @@ const TwoTierServiceDashboard = () => {
       setCurrentView('housekeeping');
     } else {
       // For other inside services, you can add more specific components here
-      console.log('Selected inside service category:', categoryKey, categoryData);
     }
   };
 

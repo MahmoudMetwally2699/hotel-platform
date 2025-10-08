@@ -60,12 +60,9 @@ export const fetchServiceById = createAsyncThunk(
   'service/fetchServiceById',
   async (serviceId, { rejectWithValue }) => {
     try {
-      console.log('🔍 fetchServiceById: Fetching service details for ID:', serviceId);
       const response = await serviceProviderService.getServiceDetails(serviceId);
-      console.log('✅ fetchServiceById: Service details received:', response);
       return response;
     } catch (error) {
-      console.log('❌ fetchServiceById: Failed to fetch service details:', error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch service details');
     }
   }
@@ -102,9 +99,6 @@ export const createServiceProvider = createAsyncThunk(
       const response = await hotelService.createServiceProvider(providerData);
       return response;
     } catch (error) {
-      console.error('🔧 Redux createServiceProvider action failed:', error);
-      console.error('🔧 Error response:', error.response?.data);
-
       // Extract the most specific error message available
       const errorMessage = error.response?.data?.message ||
                            error.response?.data?.error ||
@@ -305,7 +299,6 @@ export const fetchServiceProviderStats = createAsyncThunk(
 
       return response.data;
     } catch (error) {
-      console.error('Error fetching stats:', error);
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch service provider statistics');
     }
   }
@@ -498,7 +491,6 @@ const serviceSlice = createSlice({
         // Handle both direct data and nested data structure
         const serviceData = action.payload?.data || action.payload;
         state.currentService = serviceData;
-        console.log('✅ Redux: Service details stored:', serviceData);
         state.error = null;
       })
       .addCase(fetchServiceById.rejected, (state, action) => {
@@ -694,16 +686,12 @@ const serviceSlice = createSlice({
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.isLoading = false;
-        console.log('🔧 Redux: updateOrderStatus.fulfilled payload:', action.payload);
 
         // Update the order in providerOrders array
         const updatedOrder = action.payload;
         const orderIndex = state.providerOrders.findIndex(order => order._id === updatedOrder._id);
         if (orderIndex !== -1) {
           state.providerOrders[orderIndex] = updatedOrder;
-          console.log('🔧 Redux: Updated order at index', orderIndex, 'new status:', updatedOrder.status);
-        } else {
-          console.log('🔧 Redux: Order not found in providerOrders array');
         }
 
         // Update current order if it matches

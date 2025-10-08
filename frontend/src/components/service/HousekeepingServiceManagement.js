@@ -135,21 +135,6 @@ const HousekeepingServiceManagement = ({ onBack }) => {
   const fetchServices = async () => {
     try {
       const response = await apiClient.get('/service/housekeeping-services');
-      console.log('Fetched services:', response.data);
-      console.log('Services structure:', response.data.data);
-
-      // Debug: Log each service's ID structure
-      if (response.data.data && response.data.data.length > 0) {
-        response.data.data.forEach((service, index) => {
-          console.log(`Service ${index + 1}:`, {
-            _id: service._id,
-            id: service.id,
-            name: service.name,
-            hasUnderscore: !!service._id,
-            hasRegularId: !!service.id
-          });
-        });
-      }
 
       setServices(response.data.data || []);
     } catch (error) {
@@ -166,7 +151,6 @@ const HousekeepingServiceManagement = ({ onBack }) => {
 
     try {
       const response = await apiClient.post('/service/housekeeping-services', newService);
-      console.log('Create service response:', response.data);
 
       // Use the actual service returned from the backend
       const createdService = response.data.data.service;
@@ -225,9 +209,7 @@ const HousekeepingServiceManagement = ({ onBack }) => {
     if (!window.confirm('Are you sure you want to delete this service?')) return;
 
     try {
-      console.log('Deleting housekeeping service:', serviceId);
-      const response = await apiClient.delete(`/service/housekeeping-services/${serviceId}`);
-      console.log('Delete response:', response.data);
+      await apiClient.delete(`/service/housekeeping-services/${serviceId}`);
 
       // Only update UI if backend deletion was successful
       setServices(prev => prev.filter(service => (service._id || service.id) !== serviceId));

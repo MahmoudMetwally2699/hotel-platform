@@ -34,7 +34,6 @@ export const fetchHotelBookingsForAdmin = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await bookingService.getHotelBookingsForAdmin();
-      console.log('🔍 fetchHotelBookingsForAdmin response:', response);
       // Extract the bookings array from the response
       return response?.data?.bookings || [];
     } catch (error) {

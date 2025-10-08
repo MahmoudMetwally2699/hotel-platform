@@ -32,7 +32,6 @@ const SuperAdminFeedbackView = () => {
         setHotels(response.data.data || []);
       }
     } catch (error) {
-      console.error('Error fetching hotels:', error);
     }
   }, []);
 
@@ -58,7 +57,6 @@ const SuperAdminFeedbackView = () => {
         setStatistics(response.data.data.statistics || {});
       }
     } catch (error) {
-      console.error('Error fetching feedback:', error);
       toast.error('Failed to load feedback');
       // Set empty defaults on error
       setFeedback([]);

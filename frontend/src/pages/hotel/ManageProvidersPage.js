@@ -36,7 +36,6 @@ const ManageProvidersPage = () => {
       } catch (err) {        setError('Failed to load service providers');
         alert('Failed to load service providers'); // Temporary replacement
         setLoading(false);
-        console.error('Error fetching providers:', err);
       }
     };
 
@@ -68,7 +67,6 @@ const ManageProvidersPage = () => {
       alert('Service provider added successfully'); // Temporary replacement
     } catch (err) {
       alert('Failed to add service provider'); // Temporary replacement
-      console.error('Error adding provider:', err);
     }
   };
 
@@ -83,7 +81,6 @@ const ManageProvidersPage = () => {
       alert('Service provider updated successfully'); // Temporary replacement
     } catch (err) {
       alert('Failed to update service provider'); // Temporary replacement
-      console.error('Error updating provider:', err);
     }
   };
 
@@ -98,7 +95,6 @@ const ManageProvidersPage = () => {
       alert(`Service provider ${!currentStatus ? 'activated' : 'deactivated'} successfully`); // Temporary replacement
     } catch (err) {
       alert('Failed to update provider status'); // Temporary replacement
-      console.error('Error toggling status:', err);
     }
   };
 

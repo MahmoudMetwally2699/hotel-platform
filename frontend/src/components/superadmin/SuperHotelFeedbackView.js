@@ -33,7 +33,6 @@ const SuperHotelFeedbackView = ({ managedHotelIds = [] }) => {
         }
       }
     } catch (error) {
-      console.error('Error fetching hotels:', error);
     }
   }, [managedHotelIds]);
 
@@ -61,7 +60,6 @@ const SuperHotelFeedbackView = ({ managedHotelIds = [] }) => {
         setStatistics(response.data.data.statistics || {});
       }
     } catch (error) {
-      console.error('Error fetching feedback:', error);
       toast.error('Failed to load feedback');
       // Set empty defaults on error
       setFeedback([]);

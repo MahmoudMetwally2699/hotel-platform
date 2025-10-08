@@ -44,18 +44,14 @@ const SettingsPage = () => {
 
   useEffect(() => {
     // Fetch hotel profile data when user is available
-    console.log('🔍 Initial effect - User:', { user: !!user, role: user?.role });
     if (user?.role === 'hotel') {
-      console.log('🔍 Fetching hotel profile...');
       dispatch(fetchHotelProfile());
     }
   }, [dispatch, user]);
 
   useEffect(() => {
-    console.log('🔍 Hotel data effect triggered:', { hotel, hasHotel: !!hotel });
     if (hotel?.data) {
       const hotelData = hotel.data;
-      console.log('🔍 Setting form data with hotel data:', hotelData);
       const newFormData = {
         name: hotelData.name || '',
         description: hotelData.description || '',
@@ -75,14 +71,11 @@ const SettingsPage = () => {
         acceptsBookingsCutoff: hotelData.acceptsBookingsCutoff || 2,
         cancellationPolicy: hotelData.cancellationPolicy || ''
       };
-      console.log('🔍 New form data:', newFormData);
       setFormData(newFormData);
 
       // Set the existing logo preview if available
       setLogoPreview(hotelData.images?.logo || null);
       setLogoFile(null); // Clear any previously selected file
-    } else {
-      console.log('⚠️ No hotel data available');
     }
   }, [hotel]);
 
@@ -108,51 +101,30 @@ const SettingsPage = () => {
   // Handle logo file selection
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
-    console.log('🖼️ Hotel admin logo file selected:', file);
     if (file) {
-      console.log('📁 File details:', {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
       setLogoFile(file);
 
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        console.log('🖼️ Hotel admin logo preview created');
         setLogoPreview(reader.result);
       };
       reader.readAsDataURL(file);
-    } else {
-      console.log('❌ No file selected');
     }
   };
 
   // Upload logo to Cloudinary
   const uploadLogo = async (file) => {
-    console.log('🏨 Starting hotel admin logo upload to Cloudinary');
-    console.log('🏨 logoFile:', file);
-
     try {
       // Check if Cloudinary is properly configured
       const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
-      const apiKey = process.env.REACT_APP_CLOUDINARY_API_KEY;
-
-      console.log('🏨 Environment variables:', {
-        cloudName,
-        uploadPreset,
-        hasApiKey: !!apiKey
-      });
 
       if (!cloudName || cloudName === 'hotel-platform-demo' || cloudName === 'your_cloud_name_here') {
-        console.warn('🏨 Cloudinary not configured properly. Using local preview for testing.');
         alert('Cloudinary not configured, using local preview');
 
         // Create a local blob URL for testing
         const localUrl = URL.createObjectURL(file);
-        console.log('🏨 Created local URL:', localUrl);
         return localUrl;
       }
 
@@ -163,7 +135,6 @@ const SettingsPage = () => {
       uploadFormData.append('folder', 'hotel-platform/hotel-logos');
       uploadFormData.append('resource_type', 'image');
 
-      console.log('🏨 Uploading to Cloudinary...');
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
       const response = await fetch(cloudinaryUrl, {
@@ -171,20 +142,15 @@ const SettingsPage = () => {
         body: uploadFormData
       });
 
-      console.log('🏨 Upload response status:', response.status);
-
       if (!response.ok) {
         throw new Error(`Upload failed with status: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log('🏨 Cloudinary upload success:', result.secure_url);
 
       alert('Hotel logo uploaded successfully to Cloudinary!');
       return result.secure_url;
     } catch (error) {
-      console.error('🏨 Error uploading hotel logo:', error);
-
       // Try to extract meaningful error message
       let errorMessage = 'Unknown upload error';
       if (error.message) {
@@ -207,12 +173,7 @@ const SettingsPage = () => {
         // Upload logo if a new one was selected
         let logoUrl = hotel?.images?.logo; // Keep existing logo by default
         if (logoFile) {
-          console.log('📤 Uploading new hotel logo...');
-          console.log('📁 Logo file:', logoFile);
           logoUrl = await uploadLogo(logoFile);
-          console.log('✅ New logo uploaded successfully:', logoUrl);
-        } else {
-          console.log('📝 No new logo file selected, keeping existing logo:', logoUrl);
         }
 
         // Structure the data to match the Hotel model
@@ -239,8 +200,6 @@ const SettingsPage = () => {
           acceptsBookingsCutoff: formData.acceptsBookingsCutoff,
           cancellationPolicy: formData.cancellationPolicy
         };
-
-        console.log('📊 Sending hotel profile update data:', JSON.stringify(updateData, null, 2));
 
         await dispatch(updateHotelProfile({
           hotelData: updateData

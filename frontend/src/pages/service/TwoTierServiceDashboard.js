@@ -15,7 +15,6 @@ const TwoTierServiceDashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const handleCategoryTypeSelect = (categoryType) => {
-    console.log('TwoTierServiceDashboard - handleCategoryTypeSelect called with:', categoryType);
     if (categoryType.id === 'outside') {
       setCurrentView('outside');
     } else if (categoryType.id === 'inside') {

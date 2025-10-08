@@ -59,7 +59,6 @@ const LaundryPaymentSuccess = () => {
 
       await fetchBookingDetails();
     } catch (err) {
-      console.error('Error confirming payment:', err);
       // still try to fetch booking details
       await fetchBookingDetails();
     }
@@ -76,7 +75,6 @@ const LaundryPaymentSuccess = () => {
         setError('Failed to fetch booking details');
       }
     } catch (error) {
-      console.error('Error fetching booking details:', error);
       setError('Failed to load booking information');
     } finally {
       setLoading(false);

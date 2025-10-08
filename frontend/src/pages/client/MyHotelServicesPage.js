@@ -37,7 +37,6 @@ function MyHotelServicesPage() {
     }
 
     // If no valid hotel ID, show the no hotel selected message
-    console.log('No valid hotel ID found for user:', user);
   }, [user, navigate]);
 
   if (!user) {

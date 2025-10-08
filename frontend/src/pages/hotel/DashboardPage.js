@@ -45,10 +45,7 @@ const DashboardPage = () => {
 
   // Debug logging to understand data structure
   useEffect(() => {
-    if (dashboardStats?.recentBookings?.length > 0) {
-      console.log('🔍 Recent Bookings Data:', dashboardStats.recentBookings);
-      console.log('🔍 First booking structure:', dashboardStats.recentBookings[0]);
-    }
+
   }, [dashboardStats]);
 
   return (

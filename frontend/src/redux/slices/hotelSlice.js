@@ -77,14 +77,9 @@ export const createHotel = createAsyncThunk(
   'hotel/createHotel',
   async (hotelData, { rejectWithValue }) => {
     try {
-      console.log('🏪 Redux createHotel action started with data:', hotelData);
       const response = await hotelService.createHotel(hotelData);
-      console.log('🏪 Redux createHotel action successful:', response);
       return response;
     } catch (error) {
-      console.error('🏪 Redux createHotel action failed:', error);
-      console.error('🏪 Error response:', error.response?.data);
-
       // Extract the most specific error message available
       const errorMessage = error.response?.data?.message ||
                            error.response?.data?.error ||
@@ -103,9 +98,6 @@ export const updateHotel = createAsyncThunk(
       const response = await hotelService.updateHotel(id, hotelData);
       return response;
     } catch (error) {
-      console.error('🏪 Redux updateHotel action failed:', error);
-      console.error('🏪 Error response:', error.response?.data);
-
       // Extract the most specific error message available
       const errorMessage = error.response?.data?.message ||
                            error.response?.data?.error ||
@@ -124,9 +116,6 @@ export const deleteHotel = createAsyncThunk(
       await hotelService.deleteHotel(hotelId);
       return hotelId;
     } catch (error) {
-      console.error('🏪 Redux deleteHotel action failed:', error);
-      console.error('🏪 Error response:', error.response?.data);
-
       // Extract the most specific error message available
       const errorMessage = error.response?.data?.message ||
                            error.response?.data?.error ||

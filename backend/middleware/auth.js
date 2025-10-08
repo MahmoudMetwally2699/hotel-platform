@@ -87,14 +87,7 @@ const protect = catchAsync(async (req, res, next) => {
       return next(new AppError('User recently changed password! Please log in again.', 401));
     }    // Grant access to protected route
     req.user = currentUser;
-    console.log('🔐 protect middleware - Set req.user:', {
-      userId: req.user._id,
-      role: req.user.role,
-      email: req.user.email,
-      hotelId: req.user.hotelId,
-      serviceProviderId: req.user.serviceProviderId,
-      selectedHotelId: req.user.selectedHotelId
-    });
+    // Debug output removed
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
@@ -147,18 +140,14 @@ const restrictTo = (...roles) => {
  * @param {Function} next - Express next function
  */
 const restrictToOwnHotel = catchAsync(async (req, res, next) => {
-  // Debug logging to understand the issue
-  console.log('🔐 restrictToOwnHotel - req.user:', req.user);
-  console.log('🔐 restrictToOwnHotel - req.user exists:', !!req.user);
-
+  // Debug output removed
   if (!req.user) {
-    console.log('❌ req.user is undefined in restrictToOwnHotel');
+    // req.user is undefined in restrictToOwnHotel (output removed)
     return next(new AppError('User not authenticated', 401));
   }
 
   if (req.user.role === 'superadmin') {
-    // Super admin can access any hotel
-    console.log('🔐 Superadmin access granted');
+    // Super admin can access any hotel (output removed)
     return next();
   }
 
@@ -285,15 +274,7 @@ const protectSuperHotel = catchAsync(async (req, res, next) => {
   // 1) Getting token and check if it's there
   let token;
 
-  console.log('🔐 protectSuperHotel - Checking token sources...');
-  console.log('🔐 Request URL:', req.originalUrl);
-  console.log('🔐 Request method:', req.method);
-  console.log('🔐 Authorization header:', req.headers.authorization);
-  console.log('🔐 Cookies object:', req.cookies);
-  console.log('🔐 Raw Cookie header:', req.headers.cookie);
-  console.log('🔐 Request origin:', req.headers.origin);
-  console.log('🔐 Request host:', req.headers.host);
-
+  // Debug output removed
   // Manual cookie parsing as fallback
   const parseCookies = (cookieHeader) => {
     const cookies = {};
@@ -309,24 +290,23 @@ const protectSuperHotel = catchAsync(async (req, res, next) => {
   };
 
   const parsedCookies = parseCookies(req.headers.cookie);
-  console.log('🔐 Manually parsed cookies:', parsedCookies);
 
   // Check Authorization header first (more reliable for cross-origin)
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
-    console.log('🔐 Token found in Authorization header');
+    // Token found in Authorization header (output removed)
   } else if (req.cookies && req.cookies.superHotelJwt) {
     token = req.cookies.superHotelJwt;
-    console.log('🔐 Token found in cookie');
+    // Token found in cookie (output removed)
   } else if (parsedCookies.superHotelJwt) {
     token = parsedCookies.superHotelJwt;
-    console.log('🔐 Token found in manually parsed cookies');
+    // Token found in manually parsed cookies (output removed)
   }
 
-  console.log('🔐 Final token:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
+  // Final token (output removed)
 
   if (!token) {
-    console.log('🔐 No token found, denying access');
+    // No token found, denying access (output removed)
     logger.logSecurity('SUPER_HOTEL_ACCESS_DENIED_NO_TOKEN', req);
     return next(new AppError('You are not logged in! Please log in to get access.', 401));
   }
@@ -358,12 +338,7 @@ const protectSuperHotel = catchAsync(async (req, res, next) => {
 
     // Grant access to protected route
     req.superHotel = currentSuperHotel;
-    console.log('🔐 protectSuperHotel middleware - Set req.superHotel:', {
-      superHotelId: req.superHotel._id,
-      name: req.superHotel.name,
-      email: req.superHotel.email,
-      assignedHotelsCount: req.superHotel.assignedHotels.length
-    });
+    // Debug output removed
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {

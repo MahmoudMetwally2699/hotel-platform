@@ -17,17 +17,17 @@ const connectDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    // MongoDB Connected (output removed)
   } catch (error) {
-    console.error('Database connection error:', error);
-    process.exit(1);
+  // Database connection error (output removed)
+  process.exit(1);
   }
 };
 
 // Create superadmin user
 const createSuperAdmin = async () => {
   try {
-    console.log('🔍 Checking if superadmin already exists...');
+  // Checking if superadmin already exists (output removed)
 
     // Check if superadmin already exists
     const existingUser = await User.findOne({
@@ -35,14 +35,11 @@ const createSuperAdmin = async () => {
     });
 
     if (existingUser) {
-      console.log('❌ User with this email already exists:', existingUser.email);      console.log('📋 User details:', {
-        id: existingUser._id,
-        email: existingUser.email,
-        role: existingUser.role,
-        createdAt: existingUser.createdAt
-      });
+      // User with this email already exists (output removed)
+      // User details (output removed)
       return;
-    }    console.log('✅ No existing user found. Creating new superadmin...');
+    }
+    // No existing user found. Creating new superadmin (output removed)
 
     // Create superadmin user object (password will be hashed by pre-save middleware)
     const superAdminData = {
@@ -71,46 +68,19 @@ const createSuperAdmin = async () => {
     const superAdmin = new User(superAdminData);
     await superAdmin.save();
 
-    console.log('🎉 SuperAdmin created successfully!');
-    console.log('📋 User details:', {
-      id: superAdmin._id,
-      email: superAdmin.email,
-      role: superAdmin.role,
-      firstName: superAdmin.firstName,      lastName: superAdmin.lastName,
-      isActive: superAdmin.isActive,
-      createdAt: superAdmin.createdAt
-    });
-
-    console.log('\n🔐 Login credentials:');
-    console.log('Email:', superAdmin.email);
-    console.log('Password: Mah@1234');
-    console.log('\n🌐 Access URLs:');
-    console.log('SuperAdmin Login: http://localhost:3000/superadmin/login');
-    console.log('SuperAdmin Dashboard: http://localhost:3000/superadmin/dashboard');
+    // SuperAdmin created successfully (output removed)
+    // User details (output removed)
+    // Login credentials and access URLs (output removed)
 
   } catch (error) {
-    console.error('❌ Error creating superadmin:', error);
-
-    if (error.code === 11000) {
-      console.log('🔍 Duplicate key error - user might already exist');
-      console.log('Duplicate field:', Object.keys(error.keyValue));
-    }
-
-    if (error.errors) {
-      console.log('📋 Validation errors:');
-      Object.keys(error.errors).forEach(field => {
-        console.log(`- ${field}: ${error.errors[field].message}`);
-      });
-    }
+    // Error creating superadmin (output removed)
+    // Duplicate key error and validation errors (output removed)
   }
 };
 
 // Main execution
 const main = async () => {
-  console.log('🚀 Starting SuperAdmin creation script...');
-  console.log('📧 Email: mahmetwally@gmail.com');
-  console.log('🔑 Password: Mah@1234');
-  console.log('👑 Role: superadmin\n');
+  // Starting SuperAdmin creation script (output removed)
 
   try {
     // Connect to database
@@ -120,25 +90,25 @@ const main = async () => {
     await createSuperAdmin();
 
   } catch (error) {
-    console.error('💥 Script execution failed:', error);
+  // Script execution failed (output removed)
   } finally {
     // Close database connection
-    console.log('\n🔌 Closing database connection...');
-    await mongoose.connection.close();
-    console.log('✅ Database connection closed.');
-    process.exit(0);
+  // Closing database connection (output removed)
+  await mongoose.connection.close();
+  // Database connection closed (output removed)
+  process.exit(0);
   }
 };
 
 // Handle process termination
 process.on('SIGINT', async () => {
-  console.log('\n⚠️  Process interrupted. Closing database connection...');
+  // Process interrupted. Closing database connection (output removed)
   await mongoose.connection.close();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.log('\n⚠️  Process terminated. Closing database connection...');
+  // Process terminated. Closing database connection (output removed)
   await mongoose.connection.close();
   process.exit(0);
 });

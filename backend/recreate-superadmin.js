@@ -11,27 +11,27 @@ const User = require('./models/User');
 // Database connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  const conn = await mongoose.connect(process.env.MONGODB_URI);
+  // MongoDB Connected (output removed)
   } catch (error) {
-    console.error('Database connection error:', error);
-    process.exit(1);
+  // Database connection error (output removed)
+  process.exit(1);
   }
 };
 
 // Delete and recreate superadmin user
 const recreateSuperAdmin = async () => {
   try {
-    console.log('🗑️  Deleting existing superadmin user...');
+  // Deleting existing superadmin user (output removed)
 
     // Delete existing user
     const deleteResult = await User.deleteOne({
       email: 'mahmetwally@gmail.com'
     });
 
-    console.log('Delete result:', deleteResult);
+  // Delete result (output removed)
 
-    console.log('✅ Creating new superadmin user...');
+  // Creating new superadmin user (output removed)
 
     // Create new superadmin user (password will be hashed by pre-save middleware)
     const superAdminData = {
@@ -59,46 +59,30 @@ const recreateSuperAdmin = async () => {
     const superAdmin = new User(superAdminData);
     await superAdmin.save();
 
-    console.log('🎉 SuperAdmin recreated successfully!');
-    console.log('📋 User details:', {
-      id: superAdmin._id,
-      email: superAdmin.email,
-      role: superAdmin.role,
-      firstName: superAdmin.firstName,
-      lastName: superAdmin.lastName,      isActive: superAdmin.isActive,
-      createdAt: superAdmin.createdAt
-    });
-
-    console.log('\n🔐 Login credentials:');
-    console.log('Email:', superAdmin.email);
-    console.log('Password: Mah@1234');
+    // SuperAdmin recreated successfully (output removed)
+    // User details (output removed)
+    // Login credentials (output removed)
 
   } catch (error) {
-    console.error('❌ Error recreating superadmin:', error);
-
-    if (error.errors) {
-      console.log('📋 Validation errors:');
-      Object.keys(error.errors).forEach(field => {
-        console.log(`- ${field}: ${error.errors[field].message}`);
-      });
-    }
+    // Error recreating superadmin (output removed)
+    // Validation errors (output removed)
   }
 };
 
 // Main execution
 const main = async () => {
-  console.log('🔄 Recreating SuperAdmin user...\n');
+  // Recreating SuperAdmin user (output removed)
 
   try {
     await connectDB();
     await recreateSuperAdmin();
   } catch (error) {
-    console.error('💥 Script execution failed:', error);
+  // Script execution failed (output removed)
   } finally {
-    console.log('\n🔌 Closing database connection...');
-    await mongoose.connection.close();
-    console.log('✅ Database connection closed.');
-    process.exit(0);
+  // Closing database connection (output removed)
+  await mongoose.connection.close();
+  // Database connection closed (output removed)
+  process.exit(0);
   }
 };
 

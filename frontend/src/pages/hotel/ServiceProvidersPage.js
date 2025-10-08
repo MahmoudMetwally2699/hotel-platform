@@ -105,7 +105,6 @@ const ServiceProvidersPage = () => {
         businessName: selectedProvider.businessName
       }));
     } catch (error) {
-      console.error('Error resetting password:', error);
       const errorMessage = error.response?.data?.message || t('hotelAdmin.serviceProviders.passwordReset.error');
       toast.error(errorMessage);
     } finally {
@@ -153,7 +152,6 @@ const ServiceProvidersPage = () => {
       setMarkupValue('');
       setMarkupNotes('');
     } catch (error) {
-      console.error('Error setting markup:', error);
       alert(t('hotelAdmin.serviceProviders.errors.markupSetFailed'));
     } finally {
       setIsSavingMarkup(false);
@@ -174,7 +172,6 @@ const ServiceProvidersPage = () => {
       setIsCategoriesModalOpen(false);
       dispatch(fetchServiceProviders({}));
     } catch (error) {
-      console.error('Error updating categories:', error);
       alert(t('hotelAdmin.serviceProviders.errors.categoriesUpdateFailed'));
     } finally {
       setIsSavingCategories(false);

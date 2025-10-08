@@ -14,13 +14,12 @@ async function fixEmailIndex() {
     const mongoURI = process.env.MONGODB_URI || process.env.MONGO_URI || process.env.DATABASE_URL;
 
     if (!mongoURI) {
-      console.error('❌ MongoDB URI not found in environment variables');
-      console.log('Available env vars:', Object.keys(process.env).filter(k => k.includes('MONGO') || k.includes('DB')));
+  // ...existing code...
       return;
     }
 
     await mongoose.connect(mongoURI);
-    console.log('✅ Connected to MongoDB');
+  // ...existing code...
 
     // Get the users collection
     const usersCollection = mongoose.connection.db.collection('users');
@@ -28,12 +27,12 @@ async function fixEmailIndex() {
     // Drop the existing unique email index
     try {
       await usersCollection.dropIndex('email_1');
-      console.log('✅ Dropped existing email_1 unique index');
+  // ...existing code...
     } catch (error) {
       if (error.code === 27) {
-        console.log('ℹ️  email_1 index doesn\'t exist, skipping drop');
+  // ...existing code...
       } else {
-        console.log('⚠️  Error dropping index:', error.message);
+  // ...existing code...
       }
     }
 
@@ -46,7 +45,7 @@ async function fixEmailIndex() {
         name: 'email_selectedHotelId_guest_unique'
       }
     );
-    console.log('✅ Created new compound unique index: email + selectedHotelId for guests');
+  // ...existing code...
 
     // Also ensure global email uniqueness for non-guest roles (admins, service providers)
     await usersCollection.createIndex(
@@ -57,31 +56,19 @@ async function fixEmailIndex() {
         name: 'email_non_guest_unique'
       }
     );
-    console.log('✅ Created global email unique index for non-guest roles');
+  // ...existing code...
 
     // List current indexes to verify
     const indexes = await usersCollection.indexes();
-    console.log('\n📋 Current indexes on users collection:');
-    indexes.forEach(index => {
-      console.log(`  - ${index.name}: ${JSON.stringify(index.key)}`);
-      if (index.unique) {
-        console.log(`    └─ Unique: ${index.unique}`);
-      }
-      if (index.partialFilterExpression) {
-        console.log(`    └─ Partial filter: ${JSON.stringify(index.partialFilterExpression)}`);
-      }
-    });
+  // ...existing code...
+    // ...existing code...
 
-    console.log('\n🎉 Email index fix completed successfully!');
-    console.log('✅ Same email can now be used across different hotels');
-    console.log('✅ Duplicate emails within same hotel are still prevented');
-    console.log('✅ Global email uniqueness maintained for admins/service providers');
+  // ...existing code...
 
   } catch (error) {
-    console.error('❌ Error fixing email index:', error);
   } finally {
     await mongoose.disconnect();
-    console.log('📤 Disconnected from MongoDB');
+  // ...existing code...
   }
 }
 

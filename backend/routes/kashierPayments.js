@@ -35,10 +35,10 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
   try {
     const { bookingId, bookingType = 'transportation' } = req.body;
 
-    console.log('🔵 Create Kashier session request:', { bookingId, bookingType, userId: req.user._id });
+  // ...removed console.log for production...
 
     if (!bookingId) {
-      console.log('❌ Booking ID missing');
+  // ...removed console.log for production...
       return res.status(400).json({
         success: false,
         message: 'Booking ID is required'
@@ -68,17 +68,10 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
         .populate('hotel', 'name');
     }
 
-    console.log('🔍 Booking lookup result:', {
-      found: !!booking,
-      bookingId: bookingId,
-      userId: req.user._id,
-      bookingStatus: booking?.bookingStatus || booking?.status,
-      hasQuote: !!booking?.quote,
-      hasPricing: !!booking?.pricing
-    });
+    // ...removed console.log for production...
 
     if (!booking) {
-      console.log('❌ Booking not found or not ready for payment');
+  // ...removed console.log for production...
       return res.status(404).json({
         success: false,
         message: 'Booking not found or not ready for payment'
@@ -89,10 +82,7 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
     let paymentAmount;
     if (bookingType === 'laundry') {
       if (!booking.pricing || !booking.pricing.total) {
-        console.log('❌ No valid pricing found for laundry booking:', {
-          hasPricing: !!booking.pricing,
-          total: booking.pricing?.total
-        });
+        // ...removed console.log for production...
         return res.status(400).json({
           success: false,
           message: 'No valid pricing found for this booking'
@@ -102,11 +92,7 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
     } else {
       // Transportation booking
       if (!booking.quote || (!booking.payment.totalAmount && !booking.quote.finalPrice)) {
-        console.log('❌ No valid quote or payment amount found:', {
-          hasQuote: !!booking.quote,
-          finalPrice: booking.quote?.finalPrice,
-          totalAmount: booking.payment?.totalAmount
-        });
+        // ...removed console.log for production...
         return res.status(400).json({
           success: false,
           message: 'No valid quote or payment amount found for this booking'
@@ -119,7 +105,7 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
     const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://hotel-platform-teud.vercel.app';
     const backendUrl = process.env.BACKEND_URL || frontendUrl; // Use same as frontend if backend URL not set
 
-    console.log('🌐 URLs being used:', { frontendUrl, backendUrl });
+  // ...removed console.log for production...
 
     const paymentData = {
       merchantId: KASHIER_CONFIG.merchantId,
@@ -132,28 +118,22 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
       serverWebhook: `${backendUrl}/api/payments/kashier/webhook`
     };
 
-    console.log('💰 Payment data prepared:', {
-      merchantId: paymentData.merchantId,
-      amount: paymentData.amount,
-      currency: paymentData.currency,
-      orderId: paymentData.orderId,
-      mode: paymentData.mode
-    });
+    // ...removed console.log for production...
 
     // Generate hash signature for Kashier.io
     const hash = generateKashierHash(paymentData);
     paymentData.hash = hash;
 
-    console.log('🔒 Hash generated:', { hash: hash ? 'Generated' : 'Failed' });
+  // ...removed console.log for production...
 
     // Create payment session with Kashier.io
-    console.log('🌐 Creating Kashier payment session');
+  // ...removed console.log for production...
 
     // Since Kashier API endpoints are not working, use hosted payment page approach
     // Generate payment URL directly
     const paymentUrl = `${KASHIER_CONFIG.apiUrl}?${new URLSearchParams(paymentData).toString()}`;
 
-    console.log('💳 Generated payment URL:', paymentUrl);
+  // ...removed console.log for production...
 
     // Update booking with Kashier session information
     await booking.createKashierPaymentSession(
@@ -187,16 +167,7 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
     });
 
   } catch (error) {
-    console.log('❌ Create Kashier payment session error:', {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-      config: {
-        url: error.config?.url,
-        method: error.config?.method,
-        data: error.config?.data
-      }
-    });
+    // ...removed console.log for production...
 
     logger.error('Create Kashier payment session error:', error);
 
@@ -228,10 +199,10 @@ router.post('/create-payment-session', protect, restrictTo('guest'), async (req,
   const { bookingData, bookingType = 'laundry', amount } = req.body;
   const currency = 'EGP';
 
-    console.log('🔵 Create direct payment session request:', { bookingType, amount, userId: req.user._id });
+  // ...removed console.log for production...
 
     if (!bookingData || !amount) {
-      console.log('❌ Booking data or amount missing');
+  // ...removed console.log for production...
       return res.status(400).json({
         success: false,
         message: 'Booking data and amount are required'
@@ -245,7 +216,7 @@ router.post('/create-payment-session', protect, restrictTo('guest'), async (req,
     const frontendUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://hotel-platform-teud.vercel.app';
     const backendUrl = process.env.BACKEND_URL || process.env.API_BASE_URL || frontendUrl;
 
-    console.log('🌐 URLs being used for payment session:', { frontendUrl, backendUrl });
+  // ...removed console.log for production...
 
     // Create Kashier payment payload (match EXACTLY the working transportation format)
     const paymentData = {
@@ -271,24 +242,18 @@ router.post('/create-payment-session', protect, restrictTo('guest'), async (req,
       tempBookingRef
     };
 
-    console.log('💰 Payment data prepared:', {
-      merchantId: paymentData.merchantId,
-      amount: paymentData.amount,
-      currency: paymentData.currency,
-      orderId: paymentData.orderId,
-      mode: paymentData.mode
-    });
+    // ...removed console.log for production...
 
     // Generate hash signature for Kashier.io
     const hash = generateKashierHash(paymentData);
     paymentData.hash = hash;
 
-    console.log('🔒 Hash generated:', { hash: hash ? 'Generated' : 'Failed' });
+  // ...removed console.log for production...
 
     // Try using the simple URL construction like the original working version
     const paymentUrl = `${KASHIER_CONFIG.apiUrl}?${new URLSearchParams(paymentData).toString()}`;
 
-    console.log('💳 Generated direct payment URL:', paymentUrl);
+  // ...removed console.log for production...
 
     logger.info('Kashier direct payment session created', {
       tempBookingRef,
@@ -311,7 +276,7 @@ router.post('/create-payment-session', protect, restrictTo('guest'), async (req,
     });
 
   } catch (error) {
-    console.log('❌ Create direct payment session error:', error);
+  // ...removed console.log for production...
     logger.error('Create direct payment session error:', error);
 
     res.status(500).json({
@@ -362,7 +327,7 @@ router.post('/webhook', async (req, res) => {
           const tempData = global.tempBookingData[data.merchantOrderId];
 
           if (tempData && tempData.bookingData && data.status === 'SUCCESS') {
-            console.log('🔵 Processing pay-first booking creation for:', data.merchantOrderId);
+            // ...removed console.log for production...
 
             const { bookingData, bookingType, guestId } = tempData;
             let newBooking;
@@ -687,7 +652,7 @@ router.post('/confirm-payment/:bookingId', protect, restrictTo('guest'), async (
     const { paymentData, bookingType = 'transportation' } = req.body;
     const { bookingId } = req.params;
 
-    console.log('🔵 Payment confirmation request:', { bookingId, bookingType, userId: req.user._id, paymentData });
+  // ...removed console.log for production...
 
     let booking;
 
@@ -780,7 +745,7 @@ router.post('/confirm-payment/:bookingId', protect, restrictTo('guest'), async (
     }
 
   } catch (error) {
-    console.error('❌ Payment confirmation error:', error);
+    // ...removed console.log for production...
     logger.error('Payment confirmation error:', error);
     res.status(500).json({
       success: false,
@@ -799,17 +764,14 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
     const { paymentData } = req.body;
     const { bookingId } = req.params;
 
-    console.log('🔵 Public payment confirmation request:', { bookingId, paymentData });
+  // ...removed console.log for production...
 
     // Prevent concurrent processing of the same transaction
     const lockKey = `payment_lock_${paymentData.transactionId}`;
     global.paymentLocks = global.paymentLocks || {};
 
     if (global.paymentLocks[lockKey]) {
-      console.log('🔒 Payment already being processed:', paymentData.transactionId);
-
-      // Wait a moment and try to find the completed booking
-      console.log('⏳ Waiting for booking to complete...');
+      // ...removed console.log for production...
       await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
 
       const completedBooking = await Booking.findOne({
@@ -817,14 +779,14 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
       });
 
       if (completedBooking) {
-        console.log('✅ Found completed booking:', completedBooking.bookingNumber);
+        // ...removed console.log for production...
         return res.json({
           success: true,
           message: 'Payment already confirmed',
           data: { booking: completedBooking }
         });
       } else {
-        console.log('⏳ Booking still processing, asking client to retry...');
+        // ...removed console.log for production...
         return res.status(202).json({
           success: false,
           message: 'Payment is being processed, please try again in a moment',
@@ -847,7 +809,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
       // For temporary laundry bookings, look in the Booking model by bookingNumber
       booking = await Booking.findOne({ bookingNumber: bookingId });
       bookingType = 'laundry';
-      console.log('🧺 Looking for laundry booking with temp ID:', bookingId);
+      // ...removed console.log for production...
 
       // If booking not found, check if we need to create it from temp data
       if (!booking) {
@@ -857,7 +819,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
         });
 
         if (existingBooking) {
-          console.log('✅ Booking already exists for transaction:', paymentData.transactionId);
+          // ...removed console.log for production...
           return res.json({
             success: true,
             message: 'Payment already confirmed',
@@ -866,40 +828,31 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
         }        global.tempBookingData = global.tempBookingData || {};
         const tempData = global.tempBookingData[bookingId];
 
-        console.log('🔍 Temp data lookup for:', bookingId);
-        console.log('📊 Available temp booking keys:', Object.keys(global.tempBookingData));
-        console.log('📋 Temp data found:', tempData ? 'Yes' : 'No');
+        // ...removed console.log for production...
 
         if (tempData && paymentData.paymentStatus === 'SUCCESS') {
-          console.log('🏗️ Creating laundry booking from temp data for:', bookingId);
-          console.log('📋 Available temp data:', tempData);
+          // ...removed console.log for production...
 
           // Debug location data from frontend
-          console.log('🔍 Location data debugging:', {
-            'tempData.bookingData.location': tempData.bookingData?.location,
-            'pickupLocation': tempData.bookingData?.location?.pickupLocation,
-            'deliveryLocation': tempData.bookingData?.location?.deliveryLocation,
-            'pickupInstructions': tempData.bookingData?.location?.pickupInstructions
-          });
+          // ...removed console.log for production...
 
           // Get the service to find the actual provider ID
           const service = await Service.findById(tempData.bookingData?.serviceId).populate('providerId');
           if (!service) {
-            console.log('❌ Service not found for laundry booking:', tempData.bookingData?.serviceId);
+            // ...removed console.log for production...
             return res.status(404).json({
               success: false,
               message: 'Service not found for booking'
             });
           }
 
-          console.log('🔍 Service found:', service.name);
-          console.log('🔍 Service provider:', service.providerId?.businessName);
+          // ...removed console.log for production...
 
           // Get user details for missing fields
           const user = await User.findById(tempData.guestId);
 
           if (!user) {
-            console.log('❌ User not found for temp booking:', tempData.guestId);
+            // ...removed console.log for production...
             return res.status(404).json({
               success: false,
               message: 'User not found for booking'
@@ -913,13 +866,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
           const bookingData = tempData.bookingData || {};
 
           // Debug: Check location data before saving
-          console.log('🔍 Location data before saving:', {
-            original: bookingData.location,
-            pickupLocation: bookingData.location?.pickupLocation,
-            deliveryLocation: bookingData.location?.deliveryLocation,
-            pickupInstructions: bookingData.location?.pickupInstructions,
-            userRoomNumber: user.roomNumber
-          });
+          // ...removed console.log for production...
 
           booking = new Booking({
             bookingNumber,
@@ -1071,19 +1018,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
           try {
             await booking.save();
 
-            console.log('🔍 Booking saved with location data:', {
-              bookingId: booking._id,
-              sessionId: booking.payment?.kashier?.sessionId,
-              transactionId: booking.payment?.kashier?.transactionId,
-              bookingNumber: booking.bookingNumber,
-              locationData: {
-                full: booking.location,
-                pickup: booking.location?.pickup,
-                delivery: booking.location?.delivery,
-                pickupAddress: booking.location?.pickup?.address,
-                deliveryAddress: booking.location?.delivery?.address
-              }
-            });
+            // ...removed console.log for production...
 
             logger.info('Laundry booking created from payment confirmation', {
               bookingId: booking._id,
@@ -1096,27 +1031,25 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
             // Clean up temporary booking data
             delete global.tempBookingData[bookingId];
 
-            console.log('✅ Laundry booking created successfully:', booking.bookingNumber);
+            // ...removed console.log for production...
           } catch (saveError) {
             // Check if this is a duplicate transaction error
             if (saveError.code === 11000 || saveError.message.includes('duplicate') || saveError.message.includes('transactionId')) {
-              console.log('🔍 Duplicate transaction detected, finding existing booking...');
+              // ...removed console.log for production...
               const existingBooking = await Booking.findOne({
                 'payment.transactionId': paymentData.transactionId
               });
 
               if (existingBooking) {
-                console.log('✅ Using existing booking for duplicate transaction:', existingBooking.bookingNumber);
+                // ...removed console.log for production...
                 booking = existingBooking;
               } else {
-                console.error('❌ Duplicate error but no existing booking found');
                 return res.status(500).json({
                   success: false,
                   message: 'Duplicate transaction error but no existing booking found'
                 });
               }
             } else {
-              console.error('❌ Error saving laundry booking:', saveError);
               return res.status(500).json({
                 success: false,
                 message: 'Failed to create booking after payment',
@@ -1130,7 +1063,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
       // For temporary restaurant bookings, look in the Booking model by bookingNumber
       booking = await Booking.findOne({ bookingNumber: bookingId });
       bookingType = 'restaurant';
-      console.log('🍽️ Looking for restaurant booking with temp ID:', bookingId);
+      // ...removed console.log for production...
 
       // If booking not found, check if we need to create it from temp data
       if (!booking) {
@@ -1146,21 +1079,13 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
           key.includes(bookingId.split('_')[2])
         );          if (restaurantKeys.length > 0) {
             tempData = global.tempBookingData[restaurantKeys[0]];
-            console.log(`🔄 Found similar restaurant booking key: ${restaurantKeys[0]} for ${bookingId}`);
+            // ...removed console.log for production...
           }
         }
 
-        console.log('🔍 Temp data lookup for restaurant:', bookingId);
-        console.log('📊 Available temp booking keys:', Object.keys(global.tempBookingData));
-        console.log('📋 Temp data found:', tempData ? 'Yes' : 'No');
+        // ...removed console.log for production...
 
-        if (tempData) {
-          console.log('📋 Temp data details:', {
-            bookingType: tempData.bookingType,
-            guestId: tempData.guestId,
-            hasBookingData: !!tempData.bookingData
-          });
-        }
+        // ...removed console.log for production...
 
         if (tempData && paymentData.paymentStatus === 'SUCCESS') {
           // Double-check for existing booking with this transaction ID
@@ -1169,33 +1094,32 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
           });
 
           if (existingBooking) {
-            console.log('✅ Restaurant booking already exists for transaction:', paymentData.transactionId);
+            // ...removed console.log for production...
             return res.json({
               success: true,
               message: 'Payment already confirmed',
               data: { booking: existingBooking }
             });
-          }          console.log('🏗️ Creating restaurant booking from temp data for:', bookingId);
-          console.log('📋 Available temp data:', tempData);
+          }
+          // ...removed console.log for production...
 
           // Get the service to find the actual provider ID
           const service = await Service.findById(tempData.bookingData?.serviceId).populate('providerId');
           if (!service) {
-            console.log('❌ Service not found for restaurant booking:', tempData.bookingData?.serviceId);
+            // ...removed console.log for production...
             return res.status(404).json({
               success: false,
               message: 'Service not found for booking'
             });
           }
 
-          console.log('🔍 Restaurant service found:', service.name);
-          console.log('🔍 Restaurant service provider:', service.providerId?.businessName);
+          // ...removed console.log for production...
 
           // Get user details for missing fields
           const user = await User.findById(tempData.guestId);
 
           if (!user) {
-            console.log('❌ User not found for temp booking:', tempData.guestId);
+            // ...removed console.log for production...
             return res.status(404).json({
               success: false,
               message: 'User not found for booking'
@@ -1343,11 +1267,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
           try {
             await booking.save();
 
-            console.log('🔍 Restaurant booking saved with kashier data:', {
-              sessionId: booking.payment?.kashier?.sessionId,
-              transactionId: booking.payment?.kashier?.transactionId,
-              bookingNumber: booking.bookingNumber
-            });
+            // ...removed console.log for production...
 
             logger.info('Restaurant booking created from payment confirmation', {
               bookingId: booking._id,
@@ -1360,27 +1280,25 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
             // Clean up temporary booking data
             delete global.tempBookingData[bookingId];
 
-            console.log('✅ Restaurant booking created successfully:', booking.bookingNumber);
+            // ...removed console.log for production...
           } catch (saveError) {
             // Check if this is a duplicate transaction error
             if (saveError.code === 11000 || saveError.message.includes('duplicate') || saveError.message.includes('transactionId')) {
-              console.log('🔍 Duplicate restaurant transaction detected, finding existing booking...');
+              // ...removed console.log for production...
               const existingBooking = await Booking.findOne({
                 'payment.transactionId': paymentData.transactionId
               });
 
               if (existingBooking) {
-                console.log('✅ Using existing restaurant booking for duplicate transaction:', existingBooking.bookingNumber);
+                // ...removed console.log for production...
                 booking = existingBooking;
               } else {
-                console.error('❌ Duplicate error but no existing restaurant booking found');
                 return res.status(500).json({
                   success: false,
                   message: 'Duplicate transaction error but no existing booking found'
                 });
               }
             } else {
-              console.error('❌ Error saving restaurant booking:', saveError);
               return res.status(500).json({
                 success: false,
                 message: 'Failed to create restaurant booking after payment',
@@ -1391,8 +1309,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
         } else if (paymentData.paymentStatus === 'SUCCESS') {
           // No temp data found, but payment was successful
           // This could happen if server restarted or temp data was cleared
-          console.log('⚠️ No temp data found for restaurant booking, but payment successful');
-          console.log('🔧 Attempting to create basic restaurant booking from payment data only');
+          // ...removed console.log for production...
 
           // Try to extract user ID from the booking ID if possible or use a fallback approach
           // For now, return an error asking user to contact support
@@ -1414,7 +1331,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
         booking = await TransportationBooking.findById(bookingId);
         bookingType = 'transportation';
       } catch (error) {
-        console.log('🚗 Not a valid transportation booking ID, trying laundry...');
+        // ...removed console.log for production...
         // If not found in transportation, try laundry bookings
         booking = await Booking.findById(bookingId);
         bookingType = 'laundry';
@@ -1428,7 +1345,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
       });
     }
 
-    console.log(`📋 Found ${bookingType} booking:`, booking._id);
+    // ...removed console.log for production...
 
     // Verify the merchantOrderId matches for security
     let expectedReference = bookingType === 'laundry' ? booking.bookingNumber : booking.bookingReference;
@@ -1440,13 +1357,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
     }
 
     if (paymentData.merchantOrderId !== expectedReference) {
-      console.log('❌ Merchant order ID mismatch:', {
-        provided: paymentData.merchantOrderId,
-        expected: expectedReference,
-        bookingType,
-        bookingNumber: booking.bookingNumber,
-        kashierSessionId: booking.payment?.kashier?.sessionId
-      });
+      // ...removed console.log for production...
       return res.status(400).json({
         success: false,
         message: 'Invalid payment data - merchant order ID mismatch',
@@ -1458,7 +1369,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
       });
     }
 
-    console.log('✅ Merchant order ID verified:', paymentData.merchantOrderId);
+    // ...removed console.log for production...
 
     // Check if payment is already completed (handle both booking types)
     const isPaymentCompleted = bookingType === 'laundry'
@@ -1531,8 +1442,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
                 paymentStatus: 'تم الدفع'
               };
 
-              // Debug WhatsApp parameters
-              console.log('🔍 WhatsApp params:', whatsappParams);
+              // ...removed console.log for production...
 
               await whatsapp.sendLaundryBookingConfirmation(whatsappParams);
               logger.info('WhatsApp booking confirmation sent to guest (public)', {
@@ -1620,7 +1530,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
     }
 
   } catch (error) {
-    console.error('❌ Public payment confirmation error:', error);
+    // ...removed console.log for production...
     logger.error('Public payment confirmation error:', error);
 
     // Ensure lock is released on error
@@ -1898,7 +1808,7 @@ router.get('/test-location/:bookingId', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Test location error:', error);
+    // ...removed console.log for production...
     res.status(500).json({ error: error.message });
   }
 });

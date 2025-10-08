@@ -108,14 +108,12 @@ const GuestTransportationBookings = () => {
   };
 
   const handlePayNow = async (booking) => {
-    console.log('🔵 handlePayNow called with booking:', booking);
 
     // For payment_pending status, redirect to payment method selection to complete payment
     const amount = booking.quote?.finalPrice || booking.totalAmount || 0;
     const currency = booking.pricing?.currency || 'EGP';
 
     const paymentUrl = `/payment-method?bookingId=${booking._id}&amount=${amount}&currency=${currency}&serviceType=transportation`;
-    console.log('🔄 GuestTransportationBookings - navigating to:', paymentUrl);
 
     // Navigate to payment method selection page with booking details
     navigate(paymentUrl);

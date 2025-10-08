@@ -15,16 +15,12 @@ const RevenuePage = () => {
   const [dateRange, setDateRange] = useState('month');
 
   useEffect(() => {
-    console.log('🔍 RevenuePage - Fetching hotel stats');
     dispatch(fetchHotelStats());
   }, [dispatch, dateRange]);
 
   useEffect(() => {
     if (dashboardStats) {
-      console.log('🔍 RevenuePage - Dashboard stats:', dashboardStats);
-      console.log('🔍 RevenuePage - Revenue stats:', dashboardStats.revenueStats);
-      console.log('🔍 RevenuePage - Category performance:', dashboardStats.categoryPerformance);
-      console.log('🔍 RevenuePage - Monthly trends:', dashboardStats.monthlyTrends);
+      // Data is available for processing
     }
   }, [dashboardStats]);
 
@@ -43,14 +39,6 @@ const RevenuePage = () => {
     booking.status?.toLowerCase() === 'completed'
   ).length;
   const avgBookingValue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
-
-  // Debug logging
-  console.log('🔍 Revenue Page Debug:');
-  console.log('- dashboardStats:', dashboardStats);
-  console.log('- recentBookings:', recentBookings);
-  console.log('- totalBookings:', totalBookings);
-  console.log('- completedBookings:', completedBookings);
-  console.log('- Booking statuses:', recentBookings.map(b => ({ id: b._id?.substring(0, 8), status: b.status })));
 
   // Calculate completion rate
   const completionRate = totalBookings > 0 ? (completedBookings / totalBookings) * 100 : 0;

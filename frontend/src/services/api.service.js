@@ -10,7 +10,7 @@ import cookieHelper from '../utils/cookieHelper';
 
 // Ensure API_BASE_URL is correct
 const baseURL = API_BASE_URL || 'http://localhost:5000/api';
-console.log('🔧 API Service initialized with base URL:', baseURL);
+// ...existing code...
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -25,12 +25,7 @@ const apiClient = axios.create({
 // Add request interceptor
 apiClient.interceptors.request.use(
   async (config) => {    // Log the request details (only in development)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('API Request:', {
-        url: config.url,
-        method: config.method
-      });
-    }
+    // ...existing code...
 
     // Skip authentication for public endpoints
     const isPublicEndpoint = config.url?.includes('/auth/login') ||
@@ -51,14 +46,14 @@ apiClient.interceptors.request.use(
     if (isOnSuperHotelRoute) {
       // For SuperHotel routes, use SuperHotel token from localStorage
       token = localStorage.getItem('superHotelToken');
-      console.log('API Request: Using SuperHotel token:', token ? 'Present' : 'Missing');
+  // ...existing code...
     } else {
       // For regular routes, get token from cookies or localStorage as fallback
       token = cookieHelper.getAuthToken() || localStorage.getItem('token');
 
       // Only log in development and when no token is found
       if (process.env.NODE_ENV === 'development' && !token) {
-        console.log('API Request Auth Debug: No regular token found');
+  // ...existing code...
       }
     }
 
@@ -69,9 +64,9 @@ apiClient.interceptors.request.use(
 
       // If token is expired, try to refresh
       if (decoded.exp < currentTime) {
-        try {          // Get refresh token from cookies
-          const refreshTokenValue = cookieHelper.getRefreshToken();          if (refreshTokenValue) {
-            // Call refresh token endpoint using a new axios instance to avoid infinite loop
+        try {
+          const refreshTokenValue = cookieHelper.getRefreshToken();
+          if (refreshTokenValue) {
             const refreshClient = axios.create({
               baseURL: baseURL,
               withCredentials: true,
@@ -84,18 +79,12 @@ apiClient.interceptors.request.use(
               refreshToken: refreshTokenValue,
             });
 
-            // No need to update tokens in localStorage as they should be set via cookies by backend
-            // The cookies will be automatically included in future requests
-
-            // Use new token for request
             token = response.data.token;
           } else {
-            // No refresh token, redirect to login
             window.location.href = '/login';
             return Promise.reject('Session expired. Please login again.');
           }
         } catch (error) {
-          // Refresh token failed, redirect to login
           window.location.href = '/login';
           return Promise.reject('Authentication failed. Please login again.');
         }
@@ -123,14 +112,14 @@ apiClient.interceptors.response.use(
 
     // Handle cash payment redirects globally
     if (response.data && response.data.redirectUrl && response.data.paymentMethod === 'cash') {
-      console.log('🎯 Cash payment redirect detected:', response.data.redirectUrl);
+  // ...existing code...
 
       // Use setTimeout to prevent navigation during current response handling
       setTimeout(() => {
         window.location.href = response.data.redirectUrl;
       }, 100);
     } else if (response.data && response.data.data && response.data.data.redirectUrl && response.data.data.paymentMethod === 'cash') {
-      console.log('🎯 Cash payment redirect detected (nested):', response.data.data.redirectUrl);
+  // ...existing code...
 
       // Use setTimeout to prevent navigation during current response handling
       setTimeout(() => {
@@ -142,23 +131,11 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     // Log the error details with more comprehensive information
-    console.error('API Error:', {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      message: error.message,
-      code: error.code,
-      isNetworkError: !error.response && error.request,
-      fullError: error
-    });
+    // ...existing code...
 
     // Handle network errors specifically
     if (!error.response && error.request) {
-      console.error('Network Error - Backend may not be running or CORS issue');
-      console.error('Request was made but no response received:', error.request);
-      console.error('Check if backend is running on the correct port and CORS is configured');
+  // ...existing code...
 
       // Return a more descriptive error for network issues
       return Promise.reject({
@@ -170,14 +147,14 @@ apiClient.interceptors.response.use(
 
     // Handle specific error codes
     if (error.response) {
-      switch (error.response.status) {        case 401:
+  switch (error.response.status) {        case 401:
           // If the 401 comes from login/register or related auth actions, don't override the message
           // or redirect — let the component handle the error so it can show e.g. "Incorrect email or password".
           const url = error.config?.url || '';
           const isAuthAction = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh-token') || url.includes('/auth/forgot-password') || url.includes('/auth/reset-password') || url.includes('/auth/validate-qr');
 
           if (is401HandlingInProgress) {
-            console.log('401 handling already in progress, skipping redirect');
+            // ...existing code...
             return Promise.reject({
               ...error,
               suppressToast: true,
@@ -195,13 +172,13 @@ apiClient.interceptors.response.use(
           // For login/register and other direct auth actions, return the original error
           // so UI can render the backend's specific message (e.g. invalid credentials).
           if (isAuthAction) {
-            console.log('401 from auth action (login/register) - passing error to component');
+            // ...existing code...
             return Promise.reject(error);
           }
 
           // Handle auth check failures differently from regular 401s
           if (error.config?.url?.includes('/auth/me')) {
-            console.log('401 from auth check - clearing session and redirecting');
+            // ...existing code...
 
             // Clear any stored session data
             localStorage.removeItem('token');
@@ -218,7 +195,7 @@ apiClient.interceptors.response.use(
             });
 
             if (isPublicRoute) {
-              console.log(`🌐 Staying on public route: ${currentPath}`);
+              // ...existing code...
             } else {
               // For auth check failures on protected routes, redirect
               setTimeout(() => {
@@ -245,7 +222,7 @@ apiClient.interceptors.response.use(
           is401HandlingInProgress = true;
 
           // Unauthorized - redirect to login for other protected endpoints
-          console.log('401 Unauthorized - Redirecting to login');
+          // ...existing code...
           // Clear any stored session data
           localStorage.removeItem('token');
           localStorage.removeItem('user');
@@ -278,21 +255,21 @@ apiClient.interceptors.response.use(
 
           if (isAuthAction403) {
             // For auth actions (like login), let the component handle the 403 error
-            console.log('403 from auth action (login) - passing error to component for inactive account handling');
+            // ...existing code...
             return Promise.reject(error);
           }
 
           // For non-auth actions, redirect to forbidden page
-          console.log('403 Forbidden - Redirecting to forbidden page');
+          // ...existing code...
           window.location.href = '/forbidden';
           break;
         case 404:
           // Not found - Just log it but DON'T redirect (let the component handle it)
-          console.log('404 Not Found - URL:', error.config?.url);
+          // ...existing code...
           break;
         default:
           // Other errors will be handled by the components
-          console.log(`${error.response.status} error - Will be handled by component`);
+          // ...existing code...
           break;
       }
     }

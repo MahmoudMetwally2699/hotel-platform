@@ -120,9 +120,7 @@ const TransportationServiceCreator = () => {
   const fetchExistingServices = async () => {
     try {
       setLoading(true);
-      console.log("Fetching existing transportation services...");
       const response = await apiClient.get("/service/services?category=transportation");
-      console.log("Fetch response:", response.data);
 
       let services = [];
       if (response.data?.data?.services) services = response.data.data.services;
@@ -130,12 +128,8 @@ const TransportationServiceCreator = () => {
       else if (Array.isArray(response.data?.data)) services = response.data.data;
       else if (Array.isArray(response.data)) services = response.data;
 
-      console.log("Parsed services:", services);
-      console.log("Services count:", services.length);
-
       setExistingServices(services || []);
     } catch (error) {
-      console.error("Fetch services error:", error);
       toast.error(t("serviceProvider.transportation.services.messages.loadFailed"));
     } finally {
       setLoading(false);
@@ -156,7 +150,6 @@ const TransportationServiceCreator = () => {
         )
       );
     } catch (error) {
-      console.error(error);
       toast.error(t("serviceProvider.transportation.services.messages.statusUpdateFailed"));
     }
   };
@@ -266,7 +259,6 @@ const TransportationServiceCreator = () => {
       setEditFormData(null);
       fetchExistingServices();
     } catch (error) {
-      console.error(error);
       toast.error(
         error?.response?.data?.message ||
           t("serviceProvider.transportation.services.messages.updateFailed")
@@ -283,7 +275,6 @@ const TransportationServiceCreator = () => {
       setExistingServices((prev) => prev.filter((s) => s._id !== serviceId));
       toast.success(t("serviceProvider.transportation.services.messages.serviceDeleted"));
     } catch (error) {
-      console.error(error);
       toast.error(t("serviceProvider.transportation.services.messages.deleteFailed"));
     }
   };
@@ -296,7 +287,6 @@ const TransportationServiceCreator = () => {
       setCategoryTemplate(template);
       setAvailableVehicles(template?.vehicleTypes || []);
     } catch (error) {
-      console.error(error);
       toast.error(t("serviceProvider.transportation.services.messages.templateLoadFailed"));
     } finally {
       setLoading(false);
@@ -414,15 +404,9 @@ const TransportationServiceCreator = () => {
         isActive: true,
       };
 
-      // Debug logging
-      console.log("Creating new transportation service:", serviceData);
-      console.log("Current existing services count:", existingServices.length);
-
       // Use the general services endpoint instead of transportation-specific endpoint
       // to allow multiple transportation services per provider
       const response = await apiClient.post("/service/services", serviceData);
-      console.log("Service creation response:", response.data);
-
       toast.success(
         t("serviceProvider.transportation.services.messages.quoteServiceCreatedSuccessfully")
       );
@@ -435,8 +419,6 @@ const TransportationServiceCreator = () => {
         await fetchExistingServices();
       }, 1000);
     } catch (error) {
-      console.error("Service creation error:", error);
-      console.error("Error response:", error?.response?.data);
       toast.error(
         error?.response?.data?.message ||
           t("serviceProvider.transportation.services.messages.failedToCreateService")

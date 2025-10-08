@@ -373,7 +373,6 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
 
   // Don't render sidebar content if role is not available
   if (!role) {
-    console.log('⚠️ TailwindSidebar - No role available, not rendering navigation');
     return null;
   }
 

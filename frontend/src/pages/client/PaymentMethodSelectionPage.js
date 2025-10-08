@@ -35,13 +35,6 @@ const PaymentMethodSelectionPage = () => {
   const serviceType = searchParams.get('serviceType') || 'regular';
   const hotelId = searchParams.get('hotelId');
 
-  console.log('🔄 PaymentMethodSelectionPage - URL params:', {
-    bookingId,
-    amount,
-    currency,
-    serviceType
-  });
-
   useEffect(() => {
     // Try to get booking data from localStorage if not in URL
     const savedBookingData = localStorage.getItem('pendingBookingData');
@@ -50,7 +43,6 @@ const PaymentMethodSelectionPage = () => {
         const data = JSON.parse(savedBookingData);
         setBookingData(data);
       } catch (error) {
-        console.error('Error parsing booking data:', error);
       }
     }
 
@@ -64,12 +56,10 @@ const PaymentMethodSelectionPage = () => {
           const data = JSON.parse(savedBookingData);
           targetHotelId = data.hotelId;
         } catch (error) {
-          console.error('Error parsing booking data for hotelId:', error);
         }
       }
 
       if (!targetHotelId) {
-        console.log('No hotelId found, defaulting to cash only');
         setLoadingPaymentSettings(false);
         return;
       }
@@ -89,7 +79,6 @@ const PaymentMethodSelectionPage = () => {
           }
         }
       } catch (error) {
-        console.error('Error fetching hotel payment settings:', error);
         // Default to cash only if error
         setPaymentMethod('cash');
       } finally {
@@ -121,7 +110,6 @@ const PaymentMethodSelectionPage = () => {
         await handleCashPayment();
       }
     } catch (error) {
-      console.error('Payment processing error:', error);
       toast.error(t('payment.processingError', 'Error processing payment. Please try again.'));
     } finally {
       setProcessingPayment(false);
@@ -159,7 +147,6 @@ const PaymentMethodSelectionPage = () => {
         throw new Error(paymentData.message || 'Failed to create payment session');
       }
     } catch (error) {
-      console.error('Online payment error:', error);
       throw new Error(error.response?.data?.message || 'Failed to process online payment');
     }
   };
@@ -169,12 +156,9 @@ const PaymentMethodSelectionPage = () => {
       if (bookingId) {
         // Update existing booking to cash payment
         const urlServiceType = searchParams.get('serviceType');
-        console.log('🔄 PaymentMethodSelectionPage - serviceType from URL:', urlServiceType);
         const endpoint = urlServiceType === 'transportation'
           ? `/transportation-bookings/${bookingId}/payment-method`
           : `/client/bookings/${bookingId}/payment-method`;
-
-        console.log('🔄 PaymentMethodSelectionPage - using endpoint:', endpoint);
 
         const response = await apiClient.put(endpoint, {
           paymentMethod: 'cash'
@@ -183,31 +167,14 @@ const PaymentMethodSelectionPage = () => {
         if (response.data.success) {
           toast.success(t('payment.cashBookingSuccess', 'Booking confirmed! Payment will be collected at the hotel.'));
 
-          console.log('💰 Cash payment response:', {
-            fullResponse: response.data,
-            data: response.data.data,
-            booking: response.data.booking,
-            originalBookingId: bookingId
-          });
-
           // Navigate to PaymentSuccess page to show feedback modal (backup to global interceptor)
           const updatedBooking = response.data.data?.booking || response.data.data || response.data.booking;
           const bookingReference = updatedBooking?.bookingNumber || updatedBooking?._id || updatedBooking?.id || bookingId;
 
-          console.log('💰 Extracted booking reference:', {
-            updatedBooking,
-            bookingReference,
-            bookingNumber: updatedBooking?.bookingNumber,
-            bookingId: updatedBooking?._id,
-            fallbackId: bookingId
-          });
-
           // Check if global interceptor will handle redirect
           if (!response.data.redirectUrl && !response.data.data?.redirectUrl) {
-            console.log('💰 No redirectUrl in response, using manual navigation as backup');
 
             if (!bookingReference || bookingReference === 'undefined') {
-              console.error('🔴 Unable to get booking reference for redirect');
               toast.error('Booking updated but unable to show confirmation. Please check your bookings.');
               // Fall back to bookings list if we can't get the booking reference
               const urlServiceType = searchParams.get('serviceType');
@@ -230,7 +197,6 @@ const PaymentMethodSelectionPage = () => {
             // Manual redirect as backup
             navigate(`/guest/payment-success?booking=${bookingReference}&paymentMethod=cash&serviceType=${searchParams.get('serviceType') || 'regular'}`);
           } else {
-            console.log('💰 Global interceptor should handle redirect, redirectUrl found:', response.data.redirectUrl || response.data.data?.redirectUrl);
           }
         }
       } else if (bookingData) {
@@ -258,29 +224,14 @@ const PaymentMethodSelectionPage = () => {
 
           toast.success(t('payment.cashBookingCreated', 'Booking created successfully! Payment will be collected at the hotel.'));
 
-          console.log('💰 New cash booking response:', {
-            fullResponse: response.data,
-            data: response.data.data,
-            booking: response.data.booking
-          });
-
           // Navigate to PaymentSuccess page to show feedback modal (backup to global interceptor)
           const newBooking = response.data.data?.booking || response.data.booking || response.data;
           const bookingReference = newBooking?.bookingNumber || newBooking?._id || newBooking?.id;
 
-          console.log('💰 New booking reference:', {
-            newBooking,
-            bookingReference,
-            bookingNumber: newBooking?.bookingNumber,
-            bookingId: newBooking?._id
-          });
-
           // Check if global interceptor will handle redirect
           if (!response.data.redirectUrl && !response.data.data?.redirectUrl) {
-            console.log('💰 No redirectUrl in response, using manual navigation as backup');
 
             if (!bookingReference || bookingReference === 'undefined') {
-              console.error('🔴 Unable to get booking reference for new booking redirect');
               toast.error('Booking created but unable to show confirmation. Please check your bookings.');
               // Fall back to bookings list if we can't get the booking reference
               switch (serviceType) {
@@ -302,14 +253,12 @@ const PaymentMethodSelectionPage = () => {
             // Manual redirect as backup
             navigate(`/guest/payment-success?booking=${bookingReference}&paymentMethod=cash&serviceType=${serviceType}`);
           } else {
-            console.log('💰 Global interceptor should handle redirect, redirectUrl found:', response.data.redirectUrl || response.data.data?.redirectUrl);
           }
         }
       } else {
         throw new Error('No booking data available');
       }
     } catch (error) {
-      console.error('Cash payment error:', error);
       throw new Error(error.response?.data?.message || 'Failed to process cash payment');
     }
   };

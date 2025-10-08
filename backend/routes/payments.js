@@ -6,7 +6,7 @@ let stripe = null;
 if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
   stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 } else {
-  console.warn('⚠️ Stripe not configured - payment routes will be disabled');
+//   console.warn('⚠️ Stripe not configured - payment routes will be disabled');
 }
 
 const Booking = require('../models/Booking');

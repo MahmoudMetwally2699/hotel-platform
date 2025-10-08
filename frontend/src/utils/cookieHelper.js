@@ -38,7 +38,6 @@ export const cookieTokenHasRole = (requiredRole) => {
 
     return false;
   } catch (error) {
-    console.error('Error checking cookie token role:', error);
     return false;
   }
 };
@@ -55,7 +54,6 @@ export const getRoleFromCookieToken = () => {
     const decoded = jwt_decode(token);
     return decoded.role;
   } catch (error) {
-    console.error('Error getting role from cookie token:', error);
     return null;
   }
 };

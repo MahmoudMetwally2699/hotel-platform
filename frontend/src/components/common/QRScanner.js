@@ -34,17 +34,13 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
 
       // Check if scanner already exists - avoid duplicate initialization
       if (scanner) {
-        console.log('Scanner already exists, skipping initialization');
         return;
       }
-
-      console.log('Initializing QR Scanner...');
 
       // Create new QrScanner instance
       const qrScanner = new QrScanner(
         videoRef.current,
         (result) => {
-          console.log('QR Code scanned - Raw data:', result.data);
 
           // Stop scanning
           qrScanner.stop();
@@ -55,21 +51,17 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
           if (result.data.includes('qr=')) {
             const urlParams = new URLSearchParams(result.data.split('?')[1]);
             qrToken = urlParams.get('qr');
-            console.log('Extracted QR token from URL parameter:', qrToken);
           } else {
-            console.log('Using raw QR data as token:', qrToken);
           }
 
           // Add additional validation to check if it looks like a refresh token
           if (qrToken && qrToken.includes('refreshToken')) {
-            console.error('WARNING: QR code contains refreshToken instead of qrToken!', qrToken);
             setError('Invalid QR code: This appears to be a refresh token instead of a hotel QR code.');
             onScanError?.('Invalid QR code format - contains refresh token');
             return;
           }
 
           if (qrToken) {
-            console.log('Calling onScanSuccess with qrToken:', qrToken);
             onScanSuccess(qrToken);
           } else {
             setError('Invalid QR code format. Please scan a valid hotel registration QR code.');
@@ -92,8 +84,6 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
       setError(null);
       setPermissions('granted');
 
-      console.log('QR Scanner started successfully');
-
     } catch (error) {
       console.error('Error initializing QR scanner:', error);
 
@@ -101,7 +91,6 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
 
       if (error.name === 'AbortError') {
         errorMessage += 'Camera initialization was interrupted. Please try again.';
-        console.log('AbortError detected, will retry initialization...');
         // Small delay before allowing retry
         setTimeout(() => {
           setError(null);
@@ -130,10 +119,8 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
   const stopScanning = React.useCallback(() => {
     if (scanner) {
       try {
-        console.log('Stopping scanner...');
         scanner.stop();
         scanner.destroy();
-        console.log('Scanner stopped and destroyed');
       } catch (error) {
         console.error('Error stopping scanner:', error);
       }
@@ -150,9 +137,7 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
     if (!file) return;
 
     try {
-      console.log('Scanning QR code from uploaded file...');
       const result = await QrScanner.scanImage(file);
-      console.log('QR Code from file:', result);
 
       // Extract QR token from URL or use directly
       let qrToken = result;
@@ -203,7 +188,6 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
       setError(null);
 
       // Don't initialize scanner here - wait for component to render
-      console.log('Camera permission granted');
 
     } catch (error) {
       console.error('Camera permission denied:', error);
@@ -246,7 +230,6 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
     let isMounted = true;
 
     if (permissions === 'granted' && videoRef.current && !isScanning && !scanner) {
-      console.log('Video element ready, initializing scanner...');
       // Small delay to ensure DOM is fully ready
       const timer = setTimeout(() => {
         if (isMounted && !scanner) { // Double-check before initializing

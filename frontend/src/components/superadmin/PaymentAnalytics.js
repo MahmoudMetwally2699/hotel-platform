@@ -67,7 +67,6 @@ const PaymentAnalytics = () => {
         setAvailableHotels(hotels);
       }
     } catch (error) {
-      console.error('Error fetching hotels:', error);
     }
   }, []);
 
@@ -97,13 +96,11 @@ const PaymentAnalytics = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Payment Analytics API Response:', data.data);
         setPaymentData(data.data);
       } else {
         toast.error('Failed to fetch payment analytics');
       }
     } catch (error) {
-      console.error('Error fetching payment analytics:', error);
       toast.error('Error loading payment analytics');
     } finally {
       setLoading(false);
@@ -138,7 +135,6 @@ const PaymentAnalytics = () => {
         setPaymentHistory(data.data.payments || []);
       }
     } catch (error) {
-      console.error('Error fetching payment history:', error);
     }
   }, [selectedHotel]);
 
@@ -200,7 +196,6 @@ const PaymentAnalytics = () => {
         toast.error('Failed to record payment');
       }
     } catch (error) {
-      console.error('Error recording payment:', error);
       toast.error('Error processing payment');
     }
   };
@@ -242,7 +237,6 @@ const PaymentAnalytics = () => {
         toast.error(`Failed to generate ${format.toUpperCase()} invoice`);
       }
     } catch (error) {
-      console.error('Error downloading invoice:', error);
       toast.error('Error generating invoice');
     }
   };

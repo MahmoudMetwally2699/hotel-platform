@@ -39,13 +39,8 @@ const createSendToken = (superHotel, statusCode, req, res) => {
     sameSite: 'lax' // Use lax instead of none to avoid cross-site cookie issues
   };
 
-  console.log('🍪 Setting superHotelJwt cookie with options:', cookieOptions);
-  console.log('🍪 Token being set:', token.substring(0, 20) + '...');
-  console.log('🍪 Request origin:', req.headers.origin);
-  console.log('🍪 Request host:', req.headers.host);
-
-  res.cookie('superHotelJwt', token, cookieOptions);  // Verify cookie was set by checking response headers
-  console.log('🍪 Response headers after setting cookie:', res.getHeaders());
+  // Debug output removed
+  res.cookie('superHotelJwt', token, cookieOptions);  // Cookie set
 
   // Remove password from output
   superHotel.password = undefined;

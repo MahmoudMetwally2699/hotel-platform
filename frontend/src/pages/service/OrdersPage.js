@@ -103,7 +103,6 @@ const OrdersPage = () => {
         }
       })
       .catch(err => {
-        console.error('Status update error:', err);
         alert('Failed to update order status');
       });
   };

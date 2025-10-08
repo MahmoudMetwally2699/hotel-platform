@@ -163,12 +163,7 @@ router.get('/hotels/:id/services', async (req, res) => {
       ];
     }
 
-    console.log('🔍 Client services query:', {
-      hotelId: req.params.id,
-      query,
-      page,
-      limit
-    });
+    // Client services query (output removed)
 
     const skip = (page - 1) * limit;
 
@@ -178,13 +173,9 @@ router.get('/hotels/:id/services', async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit));
 
-    const total = await Service.countDocuments(query);    console.log('📊 Services found for client:', {
-      totalInDB: total,
-      returnedCount: services.length,
-      hotelId: req.params.id,
-      serviceIds: services.map(s => s._id.toString()),
-      serviceNames: services.map(s => s.name)
-    });
+    const total = await Service.countDocuments(query);
+
+    // Services found for client (output removed)
 
     // Apply hotel markup to pricing
     const servicesWithMarkup = services.map(service => {
@@ -231,35 +222,19 @@ router.get('/hotels/:id/services', async (req, res) => {
  */
 router.get('/services/:id', async (req, res) => {
   try {
-    console.log('🔍 Backend: Fetching service details for ID:', req.params.id);
-    console.log('🔍 Backend: Request URL:', req.originalUrl);    const service = await Service.findOne({
+    // Backend: Fetching service details for ID (output removed)
+    // Backend: Request URL (output removed)
+    const service = await Service.findOne({
       _id: req.params.id,
       isActive: true
     })
     .populate('providerId', 'businessName description contactEmail contactPhone rating createdAt logo markup')
-    .populate('hotelId', 'name address contactPhone contactEmail');    console.log('🔍 Backend: Service found:', !!service);
-    if (service) {
-      console.log('🔍 Backend: Service details:', {
-        id: service._id,
-        name: service.name,
-        category: service.category,
-        isActive: service.isActive,
-        isApproved: service.isApproved,
-        providerId: service.providerId ? {
-          id: service.providerId._id,
-          businessName: service.providerId.businessName,
-          description: service.providerId.description,
-          createdAt: service.providerId.createdAt
-        } : null,
-        hotelId: service.hotelId ? {
-          id: service.hotelId._id,
-          name: service.hotelId.name
-        } : null
-      });
-    }
+    .populate('hotelId', 'name address contactPhone contactEmail');
+
+    // Backend: Service found and details (output removed)
 
     if (!service) {
-      console.log('❌ Backend: Service not found for ID:', req.params.id);
+      // Backend: Service not found for ID (output removed)
       return res.status(404).json({
         success: false,
         message: 'Service not found or not available'
@@ -285,16 +260,14 @@ router.get('/services/:id', async (req, res) => {
     }
 
     serviceObj.pricing.finalPrice = serviceObj.pricing.basePrice * (1 + markup / 100);
-    serviceObj.pricing.markupPercentage = markup;    res.json({
+    serviceObj.pricing.markupPercentage = markup;
+
+    res.json({
       success: true,
       data: serviceObj
     });
   } catch (error) {
-    console.log('❌ Backend: Error in service details:', {
-      error: error.message,
-      serviceId: req.params.id,
-      stack: error.stack
-    });
+    // Backend: Error in service details (output removed)
 
     logger.error('Get service details error:', error);
 
@@ -366,7 +339,7 @@ router.get('/my-hotel', protect, restrictTo('guest'), async (req, res) => {
  */
 router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
   try {
-    console.log('🔍 Booking request body:', JSON.stringify(req.body, null, 2));
+    // Booking request body (output removed)
 
     const {
       serviceId,
@@ -392,19 +365,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
     const extractedDeliveryTime = deliveryTime || schedule?.preferredTime;
     const extractedRoomNumber = requestRoomNumber || guestDetails?.deliveryLocation || location?.deliveryLocation;
 
-    console.log('🔍 Extracted fields:', {
-      serviceId,
-      bookingDate,
-      deliveryDate,
-      extractedDeliveryDate,
-      selectedTime,
-      deliveryTime,
-      extractedDeliveryTime,
-      extractedRoomNumber,
-      paymentMethod,
-      hasMenuItems: !!menuItems,
-      menuItemsCount: menuItems?.length
-    });
+    // Extracted fields (output removed)
 
     // Validate required fields
     if (!serviceId) {
@@ -444,10 +405,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           finalSelectedTime = '12:00'; // Default fallback
       }
 
-      console.log('🔍 Converted meal period to time:', {
-        originalTime: extractedDeliveryTime,
-        finalTime: finalSelectedTime
-      });
+      // Converted meal period to time (output removed)
     }
 
     if (!finalSelectedTime) {
@@ -469,10 +427,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
     // Validate time format (HH:MM) - make this more flexible for restaurant bookings
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(finalSelectedTime)) {
-      console.log('🔍 Time validation failed:', {
-        finalSelectedTime,
-        regex: timeRegex.toString()
-      });
+      // Time validation failed (output removed)
       return res.status(400).json({
         success: false,
         message: 'Invalid time format. Please use HH:MM format (e.g., 14:30)'
@@ -506,12 +461,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
     // Room number can be provided in the booking request if not in user profile
     const roomNumber = user.roomNumber || extractedRoomNumber || req.body.roomNumber;
 
-    console.log('🔍 Room number resolution:', {
-      userRoomNumber: user.roomNumber,
-      extractedRoomNumber,
-      bodyRoomNumber: req.body.roomNumber,
-      finalRoomNumber: roomNumber
-    });
+    // Room number resolution (output removed)
 
     if (!roomNumber) {
       return res.status(400).json({
@@ -559,17 +509,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       }, 0);
       finalQuantity = menuItems.reduce((total, item) => total + item.quantity, 0);
 
-      console.log('🔍 Restaurant pricing calculation:', {
-        menuItems: menuItems.map(item => ({
-          itemName: item.itemName,
-          price: item.price,
-          quantity: item.quantity,
-          totalPrice: item.totalPrice,
-          calculatedTotal: item.totalPrice || (item.price * item.quantity)
-        })),
-        basePrice,
-        finalQuantity
-      });
+      // Restaurant pricing calculation (output removed)
     } else if (serviceCombination && service.packagePricing?.isPackageService) {
       basePrice = serviceCombination.finalPrice || service.pricing.basePrice;
     } else {
@@ -578,12 +518,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
 
     // Ensure basePrice is a valid number
     if (isNaN(basePrice) || basePrice <= 0) {
-      console.error('🔍 Invalid basePrice calculated:', {
-        basePrice,
-        menuItems: menuItems?.length,
-        serviceCombination: !!serviceCombination,
-        servicePricing: service.pricing
-      });
+      // Invalid basePrice calculated (output removed)
       return res.status(400).json({
         success: false,
         message: 'Unable to calculate booking price. Please check menu items or service pricing.'
@@ -900,10 +835,7 @@ router.get('/bookings', protect, restrictTo('guest'), async (req, res) => {
         { serviceType: 'laundry' }
       ];
 
-      console.log('🔍 Laundry category filter applied:', {
-        laundryServiceIds: laundryServiceIds.map(id => id.toString()),
-        queryWithOr: query
-      });
+      // Laundry category filter applied (output removed)
     } else if (category === 'transportation') {
       // Find services with transportation category
       const transportServices = await Service.find({ category: 'transportation' }).select('_id');
@@ -938,19 +870,11 @@ router.get('/bookings', protect, restrictTo('guest'), async (req, res) => {
     // If status filter is provided, apply it to housekeeping query too
     if (status) housekeepingByEmailQuery.status = status;
 
-    console.log('🔍 Guest bookings - User ID:', req.user.id);
-    console.log('🔍 Guest bookings - User email:', req.user.email);
-    console.log('🔍 Guest bookings - Base query:', query);
-    console.log('🔍 Guest bookings - Regular query:', regularBookingsQuery);
-    console.log('🔍 Guest bookings - Housekeeping query:', housekeepingByEmailQuery);
+    // Guest bookings debug output removed
 
     // Debug: Check all housekeeping bookings to see what emails they have
     const allHousekeepingBookings = await Booking.find({ serviceType: 'housekeeping' }).lean();
-    // console.log('🔍 All housekeeping bookings emails:', allHousekeepingBookings.map(b => ({
-    //   id: b._id,
-    //   email: b.guestDetails?.email,
-    //   guestId: b.guestId
-    // })));
+
 
     // Get both regular bookings and housekeeping bookings by email
     const [regularBookings, housekeepingBookings] = await Promise.all([
@@ -969,22 +893,7 @@ router.get('/bookings', protect, restrictTo('guest'), async (req, res) => {
         .limit(parseInt(limit))
     ]);
 
-    console.log('🔍 Guest bookings - Regular bookings found:', regularBookings.length);
-    console.log('🔍 Guest bookings - Regular bookings details:', regularBookings.map(b => ({
-      id: b._id,
-      serviceType: b.serviceType,
-      serviceName: b.serviceId?.name,
-      serviceCategory: b.serviceId?.category,
-      status: b.status,
-      createdAt: b.createdAt
-    })));
-    console.log('🔍 Guest bookings - Housekeeping bookings found:', housekeepingBookings.length);
-    console.log('🔍 Guest bookings - Housekeeping bookings details:', housekeepingBookings.map(b => ({
-      id: b._id,
-      serviceName: b.serviceName,
-      email: b.guestDetails?.email,
-      serviceType: b.serviceType
-    })));
+    // Guest bookings found debug output removed
 
     // Combine and sort all bookings
     const allBookings = [...regularBookings, ...housekeepingBookings]
@@ -1060,7 +969,7 @@ router.get('/bookings/by-merchant-order/:merchantOrderId', async (req, res) => {
   try {
     const { merchantOrderId } = req.params;
 
-    console.log('🔍 Looking for booking by merchant order ID:', merchantOrderId);
+    // Looking for booking by merchant order ID (output removed)
 
     let booking = null;
 
@@ -1070,7 +979,7 @@ router.get('/bookings/by-merchant-order/:merchantOrderId', async (req, res) => {
       .populate('hotelId', 'name address contactPhone contactEmail')
       .populate('serviceProviderId', 'businessName contactPhone contactEmail');
 
-    console.log('🔍 Found booking by bookingNumber:', !!booking, booking?.bookingNumber);
+    // Found booking by bookingNumber (output removed)
 
     // If not found by bookingNumber, try to find by payment.kashier.sessionId for temp laundry bookings
     if (!booking) {
@@ -1078,8 +987,7 @@ router.get('/bookings/by-merchant-order/:merchantOrderId', async (req, res) => {
         .populate('serviceId', 'name description category images')
         .populate('hotelId', 'name address contactPhone contactEmail')
         .populate('serviceProviderId', 'businessName contactPhone contactEmail');
-
-      console.log('🔍 Found booking by sessionId:', !!booking, booking?.bookingNumber);
+      // Found booking by sessionId (output removed)
     }
 
     if (!booking) {
@@ -1104,7 +1012,7 @@ router.get('/bookings/by-merchant-order/:merchantOrderId', async (req, res) => {
 
       // Additional check: if this looks like a temp booking ID, wait a moment and try again
       if (merchantOrderId.startsWith('TEMP_')) {
-        console.log('⏳ Temp booking not found immediately, waiting and retrying...');
+        // Temp booking not found immediately, waiting and retrying (output removed)
         await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
 
         // Try to find the booking again after waiting
@@ -1119,7 +1027,7 @@ router.get('/bookings/by-merchant-order/:merchantOrderId', async (req, res) => {
         .populate('serviceProviderId', 'businessName contactPhone contactEmail');
 
         if (booking) {
-          console.log('✅ Found booking after retry:', booking.bookingNumber);
+          // Found booking after retry (output removed)
           return res.json({
             success: true,
             data: booking
@@ -1398,17 +1306,8 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
       isActive: true
     })
     .populate('providerId', 'businessName rating contactEmail contactPhone markup')
-    .sort({ 'performance.totalBookings': -1 });    console.log('🔍 Laundry services query for hotel:', {
-      hotelId,
-      query: { hotelId, category: 'laundry', isActive: true },
-      servicesFound: laundryServices.length,
-      serviceNames: laundryServices.map(s => s.name),
-      servicesWithItems: laundryServices.map(s => ({
-        name: s.name,
-        hasLaundryItems: !!(s.laundryItems && s.laundryItems.length > 0),
-        itemCount: s.laundryItems?.length || 0
-      }))
-    });// Apply hotel markup to pricing and provide fallback template items
+    .sort({ 'performance.totalBookings': -1 });
+    // Laundry services query for hotel (output removed)
     const categoryTemplates = require('../config/categoryTemplates');
     const servicesWithMarkup = laundryServices.map(service => {
       const serviceObj = service.toObject();
@@ -1424,11 +1323,7 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
       if (service.providerId?.markup?.percentage !== undefined) {
         markup = service.providerId.markup.percentage;
       }      // Skip template fallback - only show services with actual configured items
-      console.log(`🔍 Service "${serviceObj.name}" laundryItems:`, {
-        hasItems: !!(serviceObj.laundryItems && serviceObj.laundryItems.length > 0),
-        itemCount: serviceObj.laundryItems?.length || 0,
-        categories: serviceObj.laundryItems ? [...new Set(serviceObj.laundryItems.map(item => item.category))] : []
-      });
+      // Service laundryItems debug output removed
 
       // Apply markup to individual laundry items and their service types
       if (serviceObj.laundryItems && serviceObj.laundryItems.length > 0) {
@@ -1485,19 +1380,12 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
     });    // Filter out services without actual laundryItems
     const servicesWithActualItems = servicesWithMarkup.filter(service => {
       const hasItems = service.laundryItems && service.laundryItems.length > 0;
-      console.log(`🔍 Service "${service.name}" - hasItems: ${hasItems}, itemCount: ${service.laundryItems?.length || 0}`);
+      // Service hasItems debug output removed
       return hasItems;
     });
 
-    console.log('🔍 Final services with items:', {
-      totalServices: laundryServices.length,
-      servicesWithItems: servicesWithActualItems.length,
-      filteredServices: servicesWithActualItems.map(s => ({
-        name: s.name,
-        itemCount: s.laundryItems?.length || 0,
-        categories: [...new Set(s.laundryItems?.map(item => item.category) || [])]
-      }))
-    });    res.json({
+    // Final services with items debug output removed
+    res.json({
       success: true,
       data: {
         hotel: {
@@ -1543,17 +1431,7 @@ router.get('/hotels/:hotelId/services/dining/items', async (req, res) => {
     .populate('providerId', 'businessName rating contactEmail contactPhone markup')
     .sort({ 'performance.totalBookings': -1 });
 
-    console.log('🍽️ Restaurant services query for hotel:', {
-      hotelId,
-      query: { hotelId, category: 'dining', isActive: true },
-      servicesFound: restaurantServices.length,
-      serviceNames: restaurantServices.map(s => s.name),
-      servicesWithItems: restaurantServices.map(s => ({
-        name: s.name,
-        hasMenuItems: !!(s.menuItems && s.menuItems.length > 0),
-        itemCount: s.menuItems?.length || 0
-      }))
-    });
+    // Restaurant services query for hotel (output removed)
 
     // Apply hotel markup to pricing
     const servicesWithMarkup = restaurantServices.map(service => {
@@ -1571,11 +1449,7 @@ router.get('/hotels/:hotelId/services/dining/items', async (req, res) => {
         markup = service.providerId.markup.percentage;
       }
 
-      console.log(`🔍 Service "${serviceObj.name}" menuItems:`, {
-        hasItems: !!(serviceObj.menuItems && serviceObj.menuItems.length > 0),
-        itemCount: serviceObj.menuItems?.length || 0,
-        categories: serviceObj.menuItems ? [...new Set(serviceObj.menuItems.map(item => item.category))] : []
-      });
+      // Service menuItems debug output removed
 
       // Apply markup to individual menu items
       if (serviceObj.menuItems && serviceObj.menuItems.length > 0) {
@@ -1602,19 +1476,11 @@ router.get('/hotels/:hotelId/services/dining/items', async (req, res) => {
     // Filter out services without actual menuItems
     const servicesWithActualItems = servicesWithMarkup.filter(service => {
       const hasItems = service.menuItems && service.menuItems.length > 0;
-      console.log(`🔍 Service "${service.name}" - hasItems: ${hasItems}, itemCount: ${service.menuItems?.length || 0}`);
+      // Service hasItems debug output removed
       return hasItems;
     });
 
-    console.log('🔍 Final restaurant services with items:', {
-      totalServices: restaurantServices.length,
-      servicesWithItems: servicesWithActualItems.length,
-      filteredServices: servicesWithActualItems.map(s => ({
-        name: s.name,
-        itemCount: s.menuItems?.length || 0,
-        categories: [...new Set(s.menuItems?.map(item => item.category) || [])]
-      }))
-    });
+    // Final restaurant services with items debug output removed
 
     res.json({
       success: true,
@@ -1661,14 +1527,7 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
       });
     }
 
-    console.log('🔍 Booking data received:', {
-      serviceId,
-      hotelId,
-      laundryItemsCount: laundryItems?.length,
-      schedule: schedule,
-      preferredTime: schedule?.preferredTime,
-      timeType: typeof schedule?.preferredTime
-    });
+    // Booking data received (output removed)
 
     // Validate required fields
     if (!serviceId || !hotelId || !laundryItems || laundryItems.length === 0) {
@@ -1771,10 +1630,7 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
     };
 
     const normalizedTime = normalizeTime(schedule?.preferredTime);
-    console.log('⏰ Time normalization:', {
-      original: schedule?.preferredTime,
-      normalized: normalizedTime
-    });
+    // Time normalization (output removed)
 
     // Get user details
     const user = await User.findById(req.user.id);
@@ -1926,7 +1782,7 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
         }
       });
     } catch (emailError) {
-      console.error('Email sending failed:', emailError);
+      // Email sending failed (output removed)
       // Don't fail the booking if email fails
     }
 
@@ -1989,17 +1845,7 @@ router.get('/hotels/:hotelId/services/transportation/vehicles', async (req, res)
     .populate('providerId', 'businessName rating contactEmail contactPhone')
     .sort({ 'performance.totalBookings': -1 });
 
-    console.log('🚗 Transportation services query for hotel:', {
-      hotelId,
-      query: { hotelId, category: 'transportation', isActive: true },
-      servicesFound: transportationServices.length,
-      serviceNames: transportationServices.map(s => s.name),
-      servicesWithVehicles: transportationServices.map(s => ({
-        name: s.name,
-        hasTransportationItems: !!(s.transportationItems && s.transportationItems.length > 0),
-        vehicleCount: s.transportationItems?.length || 0
-      }))
-    });
+    // Transportation services query for hotel (output removed)
 
     // Apply hotel markup to pricing
     const categoryTemplates = require('../config/categoryTemplates');
@@ -2013,11 +1859,7 @@ router.get('/hotels/:hotelId/services/transportation/vehicles', async (req, res)
         markup = hotel.markupSettings.categories['transportation'];
       }
 
-      console.log(`🚗 Service "${serviceObj.name}" transportationItems:`, {
-        hasVehicles: !!(serviceObj.transportationItems && serviceObj.transportationItems.length > 0),
-        vehicleCount: serviceObj.transportationItems?.length || 0,
-        categories: serviceObj.transportationItems ? [...new Set(serviceObj.transportationItems.map(vehicle => vehicle.category))] : []
-      });
+      // Service transportationItems debug output removed
 
       // Apply markup to individual transportation vehicles and their service types
       if (serviceObj.transportationItems && serviceObj.transportationItems.length > 0) {
@@ -2076,19 +1918,11 @@ router.get('/hotels/:hotelId/services/transportation/vehicles', async (req, res)
     // Filter out services without actual transportationItems
     const servicesWithActualVehicles = servicesWithMarkup.filter(service => {
       const hasVehicles = service.transportationItems && service.transportationItems.length > 0;
-      console.log(`🚗 Service "${service.name}" - hasVehicles: ${hasVehicles}, vehicleCount: ${service.transportationItems?.length || 0}`);
+      // Service hasVehicles debug output removed
       return hasVehicles;
     });
 
-    console.log('🚗 Final services with vehicles:', {
-      totalServices: transportationServices.length,
-      servicesWithVehicles: servicesWithActualVehicles.length,
-      filteredServices: servicesWithActualVehicles.map(s => ({
-        name: s.name,
-        vehicleCount: s.transportationItems?.length || 0,
-        categories: [...new Set(s.transportationItems?.map(vehicle => vehicle.category) || [])]
-      }))
-    });
+    // Final services with vehicles debug output removed
 
     res.json({
       success: true,
@@ -2135,14 +1969,7 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
       });
     }
 
-    console.log('🚗 Transportation booking data received:', {
-      serviceId,
-      hotelId,
-      transportationItemsCount: transportationItems?.length,
-      schedule: schedule,
-      pickupDate: schedule?.pickupDate,
-      pickupTime: schedule?.pickupTime
-    });
+    // Transportation booking data received (output removed)
 
     // Validate required fields
     if (!serviceId || !hotelId || !transportationItems || transportationItems.length === 0) {
@@ -2297,11 +2124,7 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
 
     await booking.save();
 
-    console.log('🚗 Transportation booking created:', {
-      bookingId: booking.bookingId,
-      totalAmount: booking.totalAmount,
-      vehicleCount: transportationItems.length
-    });
+    // Transportation booking created (output removed)
 
     // Send email notifications
     try {
@@ -2348,7 +2171,7 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
       });
 
     } catch (emailError) {
-      console.error('Email notification error:', emailError);
+      // Email notification error (output removed)
       // Don't fail the booking if email fails
     }
 
@@ -2523,15 +2346,15 @@ router.post('/bookings/housekeeping', async (req, res) => {
         const user = await User.findById(decoded.id);
         if (user) {
           authenticatedUser = user;
-          console.log('🔧 Housekeeping booking - Authenticated user found:', user.email);
+          // Housekeeping booking - Authenticated user found (output removed)
         }
       } catch (error) {
         // Token is invalid, but that's okay - continue as non-authenticated
-        console.log('🔧 Housekeeping booking - No valid authentication, continuing as guest');
+        // Housekeeping booking - No valid authentication, continuing as guest (output removed)
       }
     }
 
-    console.log('🔧 Housekeeping booking creation - Request body:', req.body);
+    // Housekeeping booking creation - Request body (output removed)
 
     const {
       serviceId,
@@ -2587,22 +2410,20 @@ router.post('/bookings/housekeeping', async (req, res) => {
       }
     }
 
-    console.log('🔧 Housekeeping booking - Extracted data:', {
-      serviceId, serviceName, hotelId, guestName, roomNumber, phoneNumber
-    });
+    // Housekeeping booking - Extracted data (output removed)
 
     // Verify hotel exists
     const hotel = await Hotel.findOne({ _id: hotelId, isActive: true });
     if (!hotel) {
-      console.log('🔧 Housekeeping booking - Hotel not found:', hotelId);
+      // Housekeeping booking - Hotel not found (output removed)
       return res.status(404).json({
         success: false,
         message: 'Hotel not found'
       });
     }
 
-    console.log('🔧 Housekeeping booking - Hotel found:', hotel.name);
-    console.log('🔧 Housekeeping booking - Hotel phone:', hotel.phone);
+    // Housekeeping booking - Hotel found (output removed)
+    // Housekeeping booking - Hotel phone (output removed)
 
     // Handle both database services and generic/custom frontend services
     let service = null;
@@ -2612,7 +2433,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
       // Find service by ID
       service = await Service.findById(serviceId).populate('providerId');
       if (!service) {
-        console.log('🔧 Housekeeping booking - Service not found by ID:', serviceId);
+        // Housekeeping booking - Service not found by ID (output removed)
         return res.status(404).json({
           success: false,
           message: 'Service not found'
@@ -2620,11 +2441,11 @@ router.post('/bookings/housekeeping', async (req, res) => {
       }
 
       serviceProvider = service.providerId;
-      console.log('🔧 Housekeeping booking - Database service found by ID:', service.name);
-      console.log('🔧 Housekeeping booking - Service provider:', serviceProvider?.businessName);
+      // Housekeeping booking - Database service found by ID (output removed)
+      // Housekeeping booking - Service provider (output removed)
     } else {
       // No serviceId provided, find service by name and category
-      console.log('🔧 Housekeeping booking - Finding service by name and category:', { serviceName, serviceCategory });
+      // Housekeeping booking - Finding service by name and category (output removed)
 
       // Find service providers for this hotel that offer housekeeping services
       const serviceProviders = await ServiceProvider.find({
@@ -2633,7 +2454,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
       });
 
       if (serviceProviders.length === 0) {
-        console.log('🔧 Housekeeping booking - No housekeeping providers found for hotel');
+        // Housekeeping booking - No housekeeping providers found for hotel (output removed)
         return res.status(404).json({
           success: false,
           message: 'No housekeeping service providers available for this hotel'
@@ -2652,7 +2473,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
       };
 
       const mapping = categoryMapping[serviceCategory] || { category: serviceCategory, subcategory: null };
-      console.log('🔧 Housekeeping booking - Mapped category:', serviceCategory, '->', mapping);
+      // Housekeeping booking - Mapped category (output removed)
 
       // Build search criteria
       const searchCriteria = {
@@ -2674,10 +2495,10 @@ router.post('/bookings/housekeeping', async (req, res) => {
 
       service = await Service.findOne(searchCriteria).populate('providerId');
 
-      console.log('🔧 Housekeeping booking - Search criteria:', searchCriteria);
+      // Housekeeping booking - Search criteria (output removed)
 
       if (!service) {
-        console.log('🔧 Housekeeping booking - No matching service found:', { serviceName, serviceCategory });
+        // Housekeeping booking - No matching service found (output removed)
         return res.status(404).json({
           success: false,
           message: `No ${serviceName} service available for this hotel`
@@ -2685,8 +2506,8 @@ router.post('/bookings/housekeeping', async (req, res) => {
       }
 
       serviceProvider = service.providerId;
-      console.log('🔧 Housekeeping booking - Service found by name/category:', service.name);
-      console.log('🔧 Housekeeping booking - Service provider:', serviceProvider?.businessName);
+      // Housekeeping booking - Service found by name/category (output removed)
+      // Housekeeping booking - Service provider (output removed)
     }
 
     // Create booking with all required fields for housekeeping services
@@ -2776,13 +2597,13 @@ router.post('/bookings/housekeeping', async (req, res) => {
       paymentStatus: 'completed' // Since it's free, mark as completed
     };
 
-    console.log('🔧 Housekeeping booking - Creating booking with data:', bookingData);
+    // Housekeeping booking - Creating booking with data (output removed)
 
     const booking = new Booking(bookingData);
 
-    console.log('🔧 Housekeeping booking - Before save, booking object:', booking);
+    // Housekeeping booking - Before save, booking object (output removed)
     await booking.save();
-    console.log('🔧 Housekeeping booking - After save, booking ID:', booking._id);
+    // Housekeeping booking - After save, booking ID (output removed)
 
     // Log the booking
     logger.info('Housekeeping service booked:', {
@@ -2864,7 +2685,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
 
       // First, try to find the service provider who has this specific service
       if (serviceId && serviceId.startsWith('custom-')) {
-        console.log('🔧 Looking for service provider with specific serviceId:', serviceId);
+        // Looking for service provider with specific serviceId (output removed)
 
         const providers = await ServiceProvider.find({
           hotelId: hotelId,
@@ -2872,20 +2693,17 @@ router.post('/bookings/housekeeping', async (req, res) => {
           'housekeepingServices.id': serviceId
         });
 
-        console.log('🔧 Found providers with this service:', providers.length);
+        // Found providers with this service (output removed)
 
         if (providers.length > 0) {
           serviceProvider = providers[0]; // Take the first one
-          console.log('🔧 Using provider who created this service:', {
-            businessName: serviceProvider.businessName,
-            id: serviceProvider._id
-          });
+          // Using provider who created this service (output removed)
         }
       }
 
       // If no specific provider found by serviceId, fallback to laundry category providers
       if (!serviceProvider) {
-        console.log('🔧 Falling back to laundry category provider search');
+        // Falling back to laundry category provider search (output removed)
 
         serviceProvider = await ServiceProvider.findOne({
           hotelId: hotelId,
@@ -2899,16 +2717,12 @@ router.post('/bookings/housekeeping', async (req, res) => {
             hotelId: hotelId,
             isActive: true
           });
-          console.log('🔧 No laundry provider found, using any available provider for hotel:', hotelId);
+          // No laundry provider found, using any available provider for hotel (output removed)
         }
       }
 
-      console.log('🔧 Searching for housekeeping service provider for hotel:', hotelId);
-      console.log('🔧 Found service provider:', serviceProvider ? {
-        businessName: serviceProvider.businessName,
-        _id: serviceProvider._id,
-        phone: serviceProvider.phone
-      } : 'None found');
+      // Searching for housekeeping service provider for hotel (output removed)
+      // Found service provider (output removed)
 
       let housekeepingProvider = null;
       let providerPhone = null;
@@ -2917,7 +2731,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
         // First try to use the phone from ServiceProvider model
         if (serviceProvider.phone) {
           providerPhone = serviceProvider.phone;
-          console.log('🔧 Using ServiceProvider phone directly:', providerPhone);
+          // Using ServiceProvider phone directly (output removed)
         } else {
           // If no phone in ServiceProvider, try to find the User that references this ServiceProvider
           housekeepingProvider = await User.findOne({
@@ -2926,15 +2740,11 @@ router.post('/bookings/housekeeping', async (req, res) => {
             isActive: true
           });
 
-          console.log('🔧 Found housekeeping provider user:', housekeepingProvider ? {
-            name: housekeepingProvider.firstName,
-            phone: housekeepingProvider.phone,
-            serviceProviderId: housekeepingProvider.serviceProviderId
-          } : 'None found');
+          // Found housekeeping provider user (output removed)
 
           if (housekeepingProvider && housekeepingProvider.phone) {
             providerPhone = housekeepingProvider.phone;
-            console.log('🔧 Using User phone:', providerPhone);
+            // Using User phone (output removed)
           }
         }
       }
@@ -2943,7 +2753,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
       if (!providerPhone) {
         // Fallback to hotel phone if no service provider phone found
         providerPhone = hotel.phone;
-        console.log('🔧 Using hotel phone as fallback:', providerPhone);
+        // Using hotel phone as fallback (output removed)
       }
 
       if (providerPhone) {
@@ -2951,7 +2761,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
         if (!providerPhone.startsWith('+')) {
           providerPhone = '+' + providerPhone;
         }
-        console.log('🔧 Final provider phone for WhatsApp:', providerPhone);
+        // Final provider phone for WhatsApp (output removed)
 
         // Format scheduled time safely for WhatsApp (no newlines/special chars)
         let formattedScheduledTime = null;

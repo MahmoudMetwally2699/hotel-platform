@@ -35,7 +35,7 @@ class SessionMonitor {
       this.checkSession();
     }, this.checkInterval);
 
-    console.log('🔍 Session monitoring started');
+  // ...existing code...
   }
 
   /**
@@ -47,7 +47,7 @@ class SessionMonitor {
       this.intervalId = null;
     }
     this.isMonitoring = false;
-    console.log('🔍 Session monitoring stopped');
+  // ...existing code...
   }
 
   /**
@@ -86,7 +86,7 @@ class SessionMonitor {
    * Handle account deactivation due to checkout expiration
    */
   handleCheckoutExpiration() {
-    console.log('🏨 Account deactivated - checkout time expired');
+  // ...existing code...
 
     // Force logout
     store.dispatch(logout());
@@ -116,7 +116,7 @@ class SessionMonitor {
    * Handle general account deactivation
    */
   handleAccountDeactivation() {
-    console.log('🚫 Account deactivated');
+  // ...existing code...
 
     // Force logout
     store.dispatch(logout());
@@ -146,7 +146,7 @@ class SessionMonitor {
    * Handle general session expiration
    */
   handleSessionExpiration() {
-    console.log('⏰ Session expired');
+  // ...existing code...
 
     // Force logout
     store.dispatch(logout());

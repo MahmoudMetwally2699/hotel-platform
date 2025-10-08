@@ -282,9 +282,6 @@ router.post('/services', catchAsync(async (req, res, next) => {
   const providerId = req.user.serviceProviderId;
   const hotelId = req.user.hotelId;
 
-  // Log the incoming request body for debugging
-  console.log('🔵 Creating service with data:', JSON.stringify(req.body, null, 2));
-
   // Create service with all required fields
   const serviceData = {
     providerId: providerId,
@@ -317,8 +314,6 @@ router.post('/services', catchAsync(async (req, res, next) => {
     isActive: req.body.isActive || true,
     isApproved: true // Services are automatically approved
   };
-
-  console.log('🟢 Processed service data:', JSON.stringify(serviceData, null, 2));
 
   const service = await Service.create(serviceData);
 
@@ -1106,9 +1101,6 @@ router.get('/analytics/categories', catchAsync(async (req, res) => {
   const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
   const timeRange = req.query.timeRange || 'month';
 
-  console.log('🔍 Provider ID:', providerId);
-  console.log('🔍 Time Range:', timeRange);
-
   // Define date range based on timeRange parameter
   let startDate = new Date();
   let endDate = new Date();
@@ -1129,9 +1121,6 @@ router.get('/analytics/categories', catchAsync(async (req, res) => {
     default:
       startDate.setMonth(startDate.getMonth() - 1);
   }
-
-  console.log('🔍 Category Analytics - Provider ID:', providerId);
-  console.log('🔍 Category Analytics - Time Range:', { startDate, endDate });
 
   // Get regular booking analytics
   const regularBookingAnalytics = await Booking.aggregate([
@@ -1956,22 +1945,12 @@ router.get('/orders/by-category', catchAsync(async (req, res) => {
  * @access  Private/ServiceProvider
  */
 router.post('/categories/:category/items', catchAsync(async (req, res) => {
-  console.log('🔍 ENDPOINT HIT: POST /categories/laundry/items');
-
   // For service providers, use the serviceProviderId from the populated user
   const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
   const hotelId = req.user.hotelId;
-  console.log('🔍 Debug - POST /categories/laundry/items received:', {
-    userId: req.user._id,
-    providerId,
-    hotelId,
-    userRole: req.user.role,
-    body: req.body
-  });
 
   // Validate that the user has a serviceProviderId
   if (!providerId) {
-    console.log('❌ Validation failed: User does not have a serviceProviderId');
     return res.status(400).json({
       status: 'fail',
       message: 'User is not associated with a service provider'
@@ -1987,7 +1966,6 @@ router.post('/categories/:category/items', catchAsync(async (req, res) => {
 
   // Validation
   if (!name) {
-    console.log('❌ Validation failed: Service name is required');
     return res.status(400).json({
       status: 'fail',
       message: 'Service name is required'
@@ -1995,7 +1973,6 @@ router.post('/categories/:category/items', catchAsync(async (req, res) => {
   }
 
   if (!laundryItems || laundryItems.length === 0) {
-    console.log('❌ Validation failed: No laundry items provided', { laundryItems });
     return res.status(400).json({
       status: 'fail',
       message: 'At least one laundry item must be provided'
@@ -2007,10 +1984,6 @@ router.post('/categories/:category/items', catchAsync(async (req, res) => {
   );
 
   if (!hasValidItems) {
-    console.log('❌ Validation failed: No valid items with pricing', {
-      laundryItems,
-      hasValidItems
-    });
     return res.status(400).json({
       status: 'fail',
       message: 'At least one item must be available with valid pricing'
@@ -2038,7 +2011,6 @@ router.post('/categories/:category/items', catchAsync(async (req, res) => {
   });
 
   if (existingService) {
-    console.log('❌ Service already exists:', { providerId, hotelId, name });
     return res.status(400).json({
       status: 'fail',
       message: 'A laundry service with this name already exists'
@@ -2069,11 +2041,8 @@ router.post('/categories/:category/items', catchAsync(async (req, res) => {
     laundryItems: processedLaundryItems
   };
 
-  console.log('✅ Creating service with data:', serviceData);
-
   try {
     const service = await Service.create(serviceData);
-    console.log('✅ Service created successfully:', service._id);
 
     res.status(201).json({
       status: 'success',
@@ -2083,9 +2052,6 @@ router.post('/categories/:category/items', catchAsync(async (req, res) => {
       }
     });
   } catch (error) {
-    console.log('❌ Service creation failed:', error.message);
-    console.log('❌ Service creation error details:', error);
-
     return res.status(400).json({
       status: 'fail',
       message: `Service creation failed: ${error.message}`,
@@ -2196,22 +2162,12 @@ router.delete('/categories/laundry/items/:serviceId', catchAsync(async (req, res
  * @access  Private/ServiceProvider
  */
 router.post('/categories/transportation/vehicles', catchAsync(async (req, res) => {
-  console.log('🚗 ENDPOINT HIT: POST /categories/transportation/vehicles');
-
   // For service providers, use the serviceProviderId from the populated user
   const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
   const hotelId = req.user.hotelId;
-  console.log('🚗 Debug - POST /categories/transportation/vehicles received:', {
-    userId: req.user._id,
-    providerId,
-    hotelId,
-    userRole: req.user.role,
-    body: req.body
-  });
 
   // Validate that the user has a serviceProviderId
   if (!providerId) {
-    console.log('❌ Validation failed: User does not have a serviceProviderId');
     return res.status(400).json({
       status: 'fail',
       message: 'User is not associated with a service provider'
@@ -2227,7 +2183,6 @@ router.post('/categories/transportation/vehicles', catchAsync(async (req, res) =
 
   // Validation
   if (!name) {
-    console.log('❌ Validation failed: Service name is required');
     return res.status(400).json({
       status: 'fail',
       message: 'Service name is required'
@@ -2235,7 +2190,6 @@ router.post('/categories/transportation/vehicles', catchAsync(async (req, res) =
   }
 
   if (!transportationItems || transportationItems.length === 0) {
-    console.log('❌ Validation failed: No transportation vehicles provided', { transportationItems });
     return res.status(400).json({
       status: 'fail',
       message: 'At least one transportation vehicle must be provided'
@@ -2250,18 +2204,6 @@ router.post('/categories/transportation/vehicles', catchAsync(async (req, res) =
   });
 
   if (!hasValidVehicles) {
-    console.log('❌ Validation failed: No valid vehicles provided', {
-      transportationItems,
-      hasValidVehicles,
-      sampleVehicle: transportationItems[0],
-      detailedCheck: transportationItems.map(v => ({
-        isAvailable: v.isAvailable,
-        vehicleType: v.vehicleType,
-        hasCapacity: !!v.capacity,
-        passengers: v.capacity?.passengers,
-        validationResult: v.isAvailable && v.vehicleType && v.capacity && v.capacity.passengers > 0
-      }))
-    });
     return res.status(400).json({
       status: 'fail',
       message: 'At least one vehicle must be available with valid specifications (vehicle type and passenger capacity required)'
@@ -2278,7 +2220,6 @@ router.post('/categories/transportation/vehicles', catchAsync(async (req, res) =
     });
 
     let service;    if (existingService) {
-      console.log('🔄 Updating existing transportation service:', existingService._id);
       // Update existing service
       existingService.name = name;
       existingService.description = description;
@@ -2288,8 +2229,6 @@ router.post('/categories/transportation/vehicles', catchAsync(async (req, res) =
 
       service = await existingService.save();
     } else {
-      console.log('➕ Creating new transportation service');
-      // Create new service with all required fields
       service = new Service({
         name,
         description,
@@ -2356,8 +2295,6 @@ router.post('/categories/transportation/vehicles', catchAsync(async (req, res) =
       service = await service.save();
     }
 
-    console.log('✅ Transportation service saved successfully:', service._id);
-
     res.status(200).json({
       status: 'success',
       message: existingService ? 'Transportation service updated successfully' : 'Transportation service created successfully',
@@ -2382,16 +2319,8 @@ router.post('/categories/transportation/vehicles', catchAsync(async (req, res) =
  * @access  Private/ServiceProvider
  */
 router.get('/categories/transportation/vehicles', catchAsync(async (req, res) => {
-  console.log('🚗 ENDPOINT HIT: GET /categories/transportation/vehicles');
-
   const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
   const hotelId = req.user.hotelId;
-
-  console.log('🚗 Debug - GET /categories/transportation/vehicles:', {
-    providerId,
-    hotelId,
-    userRole: req.user.role
-  });
 
   if (!providerId) {
     return res.status(400).json({
@@ -2410,8 +2339,6 @@ router.get('/categories/transportation/vehicles', catchAsync(async (req, res) =>
     }).populate('providerId', 'businessName contactEmail phone');
 
     if (!service) {
-      console.log('📋 No transportation service found, returning empty service with templates');
-
       // Get transportation templates for initialization
       const templates = categoryTemplates.transportation;
 
@@ -2424,8 +2351,6 @@ router.get('/categories/transportation/vehicles', catchAsync(async (req, res) =>
         }
       });
     }
-
-    console.log('✅ Transportation service found:', service._id, 'with', service.transportationItems?.length || 0, 'vehicles');
 
     res.status(200).json({
       status: 'success',
@@ -2992,19 +2917,10 @@ router.get('/housekeeping-bookings', catchAsync(async (req, res) => {
   const hotelId = req.user.hotelId;
   const { status, limit = 50, page = 1 } = req.query;
 
-  console.log('🔧 Housekeeping bookings query - hotelId:', hotelId);
-  console.log('🔧 Housekeeping bookings query - providerId:', providerId);
-
   let query = {
     serviceType: 'housekeeping',
     serviceProviderId: providerId  // ✅ FIXED: Filter by service provider, not hotel
   };
-
-  if (status) {
-    query.status = status;
-  }
-
-  console.log('🔧 Housekeeping bookings query:', query);
 
   const bookings = await Booking.find(query)
     .sort({ bookingDate: -1 })

@@ -104,19 +104,16 @@ const TransportationBookingPage = () => {
       .replace(/_{2,}/g, '_')      // Replace multiple underscores with single underscore
       .replace(/^_|_$/g, '');      // Remove leading/trailing underscores
 
-    console.log(`🚗 Translating vehicle: "${vehicleType}" -> key: "${vehicleKey}"`);
     const translated = t(`transportationBooking.vehicleTypes.${vehicleKey}`, { defaultValue: null });
 
     // If translation exists, use it. Otherwise, format the original nicely
     if (translated && translated !== `transportationBooking.vehicleTypes.${vehicleKey}`) {
-      console.log(`🚗 Translation found: "${translated}"`);
       return translated;
     } else {
       // Format the original vehicle type nicely (replace underscores with spaces and capitalize)
       const formatted = vehicleType
         .replace(/_/g, ' ')           // Replace underscores with spaces
         .replace(/\b\w/g, l => l.toUpperCase()); // Capitalize first letter of each word
-      console.log(`🚗 No translation, using formatted: "${formatted}"`);
       return formatted;
     }
   };
@@ -174,19 +171,9 @@ const TransportationBookingPage = () => {
           const responseData = servicesResponse.data.data;
           const transportationServices = responseData?.services || [];
 
-          console.log('🚗 Transportation services response:', {
-            success: servicesResponse.data.success,
-            totalServices: transportationServices.length,
-            services: transportationServices.map(s => ({ id: s._id, name: s.name, category: s.category }))
-          });
-
           // Add detailed logging of the first service to see full structure
           if (transportationServices.length > 0) {
-            console.log('🚗 Full first service structure:', transportationServices[0]);
-            console.log('🚗 Service has transportationItems:', !!transportationServices[0].transportationItems);
-            console.log('🚗 TransportationItems count:', transportationServices[0].transportationItems?.length || 0);
             if (transportationServices[0].transportationItems?.length > 0) {
-              console.log('🚗 First transportation vehicle:', transportationServices[0].transportationItems[0]);
             }
           }
 
@@ -214,7 +201,6 @@ const TransportationBookingPage = () => {
         }
 
       } catch (error) {
-        console.error('Error fetching service details:', error);
 
         const errorMessage = '❌ Failed to load transportation services.\n\nPlease try again or contact support.\n\nError: ' + (error.response?.data?.message || error.message || 'Unknown error');
 
@@ -271,7 +257,6 @@ const TransportationBookingPage = () => {
         }));
     }
 
-    console.log('🚗 Available transportation vehicles:', allVehicles.length, allVehicles.map(v => ({ id: v.id, type: v.vehicleType, category: v.category })));
     return allVehicles;
   };
 
@@ -380,7 +365,6 @@ const TransportationBookingPage = () => {
   navigate('/my-transportation-bookings?tab=waitingForQuote');
 
     } catch (error) {
-      console.error('Error creating booking:', error);
       toast.error(error.response?.data?.message || t('transportationBooking.bookingError'));
     } finally {
       setSubmitting(false);

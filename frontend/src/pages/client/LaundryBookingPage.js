@@ -141,9 +141,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
       .replace(/_{2,}/g, '_')      // Replace multiple underscores with single underscore
       .replace(/^_|_$/g, '');      // Remove leading/trailing underscores
 
-    console.log(`🔤 Translating item: "${itemName}" -> key: "${itemKey}"`);
     const translated = t(`laundryBooking.itemNames.${itemKey}`, { defaultValue: itemName });
-    console.log(`🔤 Translation result: "${translated}"`);
 
     return translated;
   };
@@ -193,21 +191,10 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
           const servicesResponse = await apiClient.get(`/client/hotels/${hotelId}/services/laundry/items`);
 
           const responseData = servicesResponse.data.data;
-          const laundryServices = responseData?.services || [];          console.log('🔍 Laundry services response:', {
-            success: servicesResponse.data.success,
-            totalServices: laundryServices.length,
-            services: laundryServices.map(s => ({ id: s._id, name: s.name, category: s.category }))
-          });
+          const laundryServices = responseData?.services || [];
 
           // Add detailed logging of the first service to see full structure
           if (laundryServices.length > 0) {
-            console.log('🧺 Full first service structure:', laundryServices[0]);
-            console.log('🧺 Service has laundryItems:', !!laundryServices[0].laundryItems);
-            console.log('🧺 LaundryItems count:', laundryServices[0].laundryItems?.length || 0);
-            if (laundryServices[0].laundryItems?.length > 0) {
-              console.log('🧺 First laundry item:', laundryServices[0].laundryItems[0]);
-            }
-          }if (laundryServices && laundryServices.length > 0) {
             // Store all available services
             setServices(laundryServices);
             // Keep the first service as primary for backwards compatibility
@@ -219,7 +206,6 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
         }
 
       } catch (error) {
-        console.error('Error fetching service details:', error);
         toast.error(t('errors.loadServices'));
         navigate(`/hotels/${hotelId}/categories`);
       } finally {
@@ -350,8 +336,6 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
         serviceName: service?.name || 'Laundry Service'
       };
 
-      console.log('🔵 Proceeding to payment method selection for laundry booking');
-
       // Store booking data in localStorage and navigate to payment method selection
       localStorage.setItem('pendingBookingData', JSON.stringify(bookingData));
 
@@ -359,7 +343,6 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
       navigate(`/payment-method?serviceType=laundry&amount=${pricing.total}&currency=USD`);
 
     } catch (error) {
-      console.error('❌ Booking submission error:', error);
       toast.error(error.response?.data?.message || error.message || t('laundryBooking.bookingError'));
     } finally {
       setSubmitting(false);

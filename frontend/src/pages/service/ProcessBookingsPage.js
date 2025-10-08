@@ -34,7 +34,6 @@ const ProcessBookingsPage = () => {
         setError('Failed to load bookings');
         toast.error('Failed to load bookings');
         setLoading(false);
-        console.error('Error fetching bookings:', err);
       }
     };
 
@@ -76,7 +75,6 @@ const ProcessBookingsPage = () => {
       setProcessingAction(false);
     } catch (err) {
       toast.error(`Failed to ${action} booking`);
-      console.error(`Error ${action}ing booking:`, err);
       setProcessingAction(false);
     }
   };

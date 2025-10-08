@@ -14,7 +14,6 @@ import { toast } from 'react-toastify';
 export const showErrorToast = (error, fallbackMessage = 'An error occurred', options = {}) => {
   // Check if toast should be suppressed (e.g., for 401 errors that redirect)
   if (error?.suppressToast || error?.response?.data?.suppressToast) {
-    console.log('🔇 Toast suppressed for error:', error?.response?.data?.message || error?.message);
     return;
   }
 
@@ -29,7 +28,6 @@ export const showErrorToast = (error, fallbackMessage = 'An error occurred', opt
 
   // Don't show the default auth error message
   if (errorMessage === 'You are not logged in! Please log in to get access.') {
-    console.log('🔇 Suppressing default auth error message');
     return;
   }
 
@@ -102,7 +100,7 @@ export const showInfoToast = (message, options = {}) => {
  * @param {string} operation - Description of the operation that failed
  */
 export const handleApiError = (error, operation = 'operation') => {
-  console.error(`❌ ${operation} failed:`, error);
+  // ...existing code...
 
   // Check if this is a network error
   if (error?.isNetworkError) {
@@ -118,8 +116,7 @@ export const handleApiError = (error, operation = 'operation') => {
     switch (error.response.status) {
       case 401:
         // Don't show toast for 401 - handled by interceptor
-        console.log('🔇 401 error handled by API interceptor');
-        return;
+  return;
       case 403:
         showErrorToast(error, 'Access denied. You do not have permission to perform this action.');
         return;

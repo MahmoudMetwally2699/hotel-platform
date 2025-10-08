@@ -44,7 +44,6 @@ const LaundryPaymentFailed = () => {
         setError('Failed to fetch booking details');
       }
     } catch (err) {
-      console.error('Error fetching booking details:', err);
       setError('Failed to load booking information');
     } finally {
       setLoading(false);
@@ -68,7 +67,6 @@ const LaundryPaymentFailed = () => {
         toast.error('Failed to create new payment session');
       }
     } catch (err) {
-      console.error('Error retrying payment:', err);
       toast.error('Failed to retry payment. Please try again later.');
     } finally {
       setRetrying(false);

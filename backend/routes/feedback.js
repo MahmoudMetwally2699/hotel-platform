@@ -21,14 +21,6 @@ router.post('/feedback', protect, restrictTo('guest'), async (req, res) => {
   try {
     const { bookingId, rating, comment, serviceType } = req.body;
 
-    console.log('💬 Feedback submission request:', {
-      bookingId,
-      rating,
-      comment: comment ? comment.substring(0, 50) + '...' : 'No comment',
-      serviceType,
-      userId: req.user.id,
-      userEmail: req.user.email
-    });
 
     // Validate required fields
     if (!bookingId || !rating) {
@@ -76,21 +68,6 @@ router.post('/feedback', protect, restrictTo('guest'), async (req, res) => {
       }
     }
 
-    console.log('💬 Booking lookup result:', {
-      bookingFound: !!booking,
-      bookingType,
-      bookingId: booking?._id,
-      bookingNumber: booking?.bookingNumber || booking?.bookingReference,
-      bookingStatus: booking?.status || booking?.bookingStatus,
-      paymentStatus: booking?.payment?.status,
-      paymentMethod: booking?.payment?.paymentMethod,
-      guestId: booking?.guestId,
-      requestingUserId: req.user.id,
-      totalAmount: booking?.totalAmount || booking?.quote?.finalPrice,
-      pricingTotalAmount: booking?.pricing?.totalAmount,
-      currency: booking?.currency || booking?.pricing?.currency,
-      pricingCurrency: booking?.pricing?.currency
-    });
 
     if (!booking) {
       return res.status(404).json({
@@ -605,7 +582,6 @@ router.get('/superhotel-feedback', protect, restrictTo('superadmin'), async (req
     const sortOptions = {};
     sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-    console.log('🏨 Super Hotel feedback query:', query);
 
     const [feedback, total] = await Promise.all([
       Feedback.find(query)
@@ -659,11 +635,6 @@ router.get('/superhotel-feedback', protect, restrictTo('superadmin'), async (req
       }
     });
 
-    console.log('🏨 Super Hotel feedback retrieved successfully:', {
-      count: feedback.length,
-      total,
-      averageRating: stats.length > 0 ? stats[0].averageRating : 0
-    });
 
   } catch (error) {
     logger.error('Get super hotel feedback error:', error);

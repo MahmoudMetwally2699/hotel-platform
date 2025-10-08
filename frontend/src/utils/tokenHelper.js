@@ -33,7 +33,6 @@ export const tokenHasRole = (requiredRole) => {
     // Some APIs use id field, others might use different fields
     return false;
   } catch (error) {
-    console.error('Error checking token role:', error);
     return false;
   }
 };
@@ -50,7 +49,6 @@ export const getRoleFromToken = () => {
     const decoded = jwt_decode(token);
     return decoded.role;
   } catch (error) {
-    console.error('Error getting role from token:', error);
     return null;
   }
 };

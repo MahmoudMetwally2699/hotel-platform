@@ -89,7 +89,6 @@ const RestaurantBookingPage = () => {
           }
         }
       } catch (error) {
-        console.error('Error fetching service details:', error);
         toast.error(t('errors.loadServices'));
         navigate(`/hotels/${hotelId}/categories`);
       } finally {
@@ -207,8 +206,6 @@ const RestaurantBookingPage = () => {
         serviceName: service?.name || 'Restaurant Service'
       };
 
-      console.log('🍽️ Proceeding to payment method selection for restaurant booking');
-
       // Store booking data in localStorage and navigate to payment method selection
       localStorage.setItem('pendingBookingData', JSON.stringify(bookingData));
 
@@ -216,7 +213,6 @@ const RestaurantBookingPage = () => {
       navigate(`/payment-method?serviceType=restaurant&amount=${calculatePricing().total}&currency=USD`);
 
     } catch (error) {
-      console.error('❌ Booking submission error:', error);
       toast.error(error.response?.data?.message || t('guest.restaurant.failedToCreateBooking'));
     } finally {
       setSubmitting(false);

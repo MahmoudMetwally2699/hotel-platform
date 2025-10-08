@@ -44,7 +44,6 @@ const MetricsPage = () => {
         setError('Failed to load metrics');
         toast.error('Failed to load metrics');
         setLoading(false);
-        console.error('Error fetching metrics:', err);
       }
     };
 

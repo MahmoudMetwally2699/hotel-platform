@@ -54,7 +54,6 @@ const SuperHotelsPage = () => {
         toast.error('Failed to fetch super hotels');
       }
     } catch (error) {
-      console.error('Error fetching super hotels:', error);
       toast.error('Error fetching super hotels');
     } finally {
       setLoading(false);
@@ -78,7 +77,6 @@ const SuperHotelsPage = () => {
         toast.error('Failed to fetch hotels');
       }
     } catch (error) {
-      console.error('Error fetching hotels:', error);
       toast.error('Error fetching hotels');
     }
   };
@@ -107,16 +105,12 @@ const SuperHotelsPage = () => {
         toast.error(errorData.message || 'Failed to create super hotel');
       }
     } catch (error) {
-      console.error('Error creating super hotel:', error);
       toast.error('Error creating super hotel');
     }
   };
 
   const handleAssignHotels = async (e) => {
     e.preventDefault();
-
-    console.log('Assigning hotels:', assignedHotels);
-    console.log('Number of hotels to assign:', assignedHotels.length);
 
     try {
       const token = localStorage.getItem('token');
@@ -129,9 +123,7 @@ const SuperHotelsPage = () => {
         body: JSON.stringify({ hotelIds: assignedHotels })
       });
 
-      console.log('Response status:', response.status);
       const responseData = await response.json();
-      console.log('Response data:', responseData);
 
       if (response.ok) {
         toast.success('Hotels assigned successfully');
@@ -143,7 +135,6 @@ const SuperHotelsPage = () => {
         toast.error(responseData.message || 'Failed to assign hotels');
       }
     } catch (error) {
-      console.error('Error assigning hotels:', error);
       toast.error('Error assigning hotels');
     }
   };
@@ -171,7 +162,6 @@ const SuperHotelsPage = () => {
         toast.error(errorData.message || 'Failed to delete super hotel');
       }
     } catch (error) {
-      console.error('Error deleting super hotel:', error);
       toast.error('Error deleting super hotel');
     }
   };
@@ -469,14 +459,11 @@ const SuperHotelsPage = () => {
                           type="checkbox"
                           checked={assignedHotels.includes(hotel._id)}
                           onChange={(e) => {
-                            console.log(`Checkbox changed for hotel ${hotel.name}:`, e.target.checked);
                             if (e.target.checked) {
                               const newAssigned = [...assignedHotels, hotel._id];
-                              console.log('Adding hotel, new array:', newAssigned);
                               setAssignedHotels(newAssigned);
                             } else {
                               const newAssigned = assignedHotels.filter(id => id !== hotel._id);
-                              console.log('Removing hotel, new array:', newAssigned);
                               setAssignedHotels(newAssigned);
                             }
                           }}

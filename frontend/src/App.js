@@ -39,9 +39,6 @@ const AuthGuard = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const role = useSelector(selectAuthRole);
 
-  console.log('🛡️ AuthGuard - Current path:', location.pathname);
-  console.log('🛡️ AuthGuard - Auth state:', { isAuthenticated, role });
-
   useEffect(() => {
     // Check if current path is a public route
     const isPublicRoute = PUBLIC_ROUTES.some(route => {
@@ -51,17 +48,9 @@ const AuthGuard = () => {
       return location.pathname.startsWith(route);
     });
 
-    console.log('🛡️ AuthGuard - Route check:', {
-      currentPath: location.pathname,
-      isPublicRoute,
-      isAuthenticated,
-      role
-    });
-
     // Special handling for forbidden page - redirect authenticated users with proper roles
     if (location.pathname === '/forbidden') {
       if (isAuthenticated && role) {
-        console.log('🔄 Redirecting authenticated user away from forbidden page');
         // Redirect based on role
         switch (role) {
           case 'service':
@@ -86,48 +75,39 @@ const AuthGuard = () => {
 
     // Skip auth logic for other public routes
     if (isPublicRoute && location.pathname !== '/forbidden') {
-      console.log(`🌐 Public route accessed: ${location.pathname}`);
       return;
     }
 
     // If not authenticated, don't check roles
     if (!isAuthenticated) {
-      console.log('⏳ Not authenticated yet, skipping role check');
       return;
     }
 
     // If authenticated but no role yet, wait for role to be loaded
     if (!role) {
-      console.log('⏳ Authenticated but no role yet, waiting...');
       return;
     }
 
     // Now check role-based access
     if (location.pathname.startsWith('/service/') && role !== 'service') {
-      console.log('❌ AuthGuard - Access denied to service route, role:', role);
       navigate('/forbidden');
       return;
     }
 
     if (location.pathname.startsWith('/hotel/') && role !== 'hotel') {
-      console.log('❌ AuthGuard - Access denied to hotel route, role:', role);
       navigate('/forbidden');
       return;
     }
 
     if (location.pathname.startsWith('/superadmin/') && role !== 'superadmin') {
-      console.log('❌ AuthGuard - Access denied to superadmin route, role:', role);
       navigate('/forbidden');
       return;
     }
 
     if (location.pathname.startsWith('/super-hotel-admin/') && role !== 'superHotel') {
-      console.log('❌ AuthGuard - Access denied to super-hotel-admin route, role:', role);
       navigate('/forbidden');
       return;
     }
-
-    console.log('✅ AuthGuard - Route access granted');
 
   }, [isAuthenticated, role, location.pathname, navigate]);
 
@@ -162,33 +142,19 @@ function App() {
       return currentPath.startsWith(route);
     });
 
-    console.log('🚀 Hotel Service Platform initialized');
-    console.log('🔍 Initial auth state:', {
-      isAuthenticated: isAuthenticated,
-      hasUser: !!user,
-      isLoading: isLoading,
-      hasError: !!error,
-      currentPath: currentPath,
-      isPublicRoute: isPublicRoute
-    });
-
     // Skip auth check for public routes
     if (isPublicRoute) {
-      console.log(`🌐 Skipping auth check for public route: ${currentPath}`);
       setInitialAuthChecked(true);
       return;
     }
 
     // Only check auth if we don't already have an auth error or if we're not already loading
     if (!error && !isLoading) {
-      console.log('🍪 Checking authentication from cookie...');
 
       // Dispatch checkAuth and log the result
       dispatch(checkAuth()).then((result) => {
-        console.log('✅ checkAuth completed successfully');
         setInitialAuthChecked(true);
       }).catch((error) => {
-        console.log('❌ checkAuth failed - this is normal for unauthenticated users');
         setInitialAuthChecked(true);
         // Don't continue making requests if auth failed
       });
@@ -199,22 +165,13 @@ function App() {
 
   // Also log whenever auth state changes
   useEffect(() => {
-    console.log('🔄 Auth state:', {
-      isAuthenticated: isAuthenticated,
-      hasUser: !!user,
-      userRole: user?.role,
-      isLoading: isLoading,
-      hasError: !!error
-    });
   }, [user, isAuthenticated, isLoading, error]);
 
   // Session monitoring for authenticated users
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log('🔍 Starting session monitoring for authenticated user');
       sessionMonitor.startMonitoring();
     } else {
-      console.log('🔍 Stopping session monitoring - user not authenticated');
       sessionMonitor.stopMonitoring();
     }
 

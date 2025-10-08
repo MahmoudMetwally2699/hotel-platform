@@ -42,8 +42,6 @@ const SuperHotelAnalytics = () => {
   // Fetch available hotels for dropdown (independent of analytics filter)
   const fetchAvailableHotels = useCallback(async () => {
     try {
-      console.log('🏨 Fetching available hotels...');
-
       // Get SuperHotel token from localStorage
       const superHotelToken = localStorage.getItem('superHotelToken');
 
@@ -65,16 +63,12 @@ const SuperHotelAnalytics = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('🏨 Available hotels data:', data);
         // Extract hotels from nested data structure: data.data.hotels
         const hotels = data.data?.hotels || data.hotels || [];
-        console.log('🏨 Extracted hotels:', hotels);
         setAvailableHotels(hotels);
       } else {
-        console.error('🏨 Failed to fetch hotels:', response.status);
       }
     } catch (error) {
-      console.error('🏨 Error fetching hotels:', error);
       // Set as empty array on error to prevent map() issues
       setAvailableHotels([]);
     }
@@ -83,8 +77,6 @@ const SuperHotelAnalytics = () => {
   const fetchAnalyticsData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('🔍 Fetching analytics data...');
-      console.log(' API_BASE_URL:', API_BASE_URL);
 
       // Get SuperHotel token from localStorage
       const superHotelToken = localStorage.getItem('superHotelToken');
@@ -104,20 +96,14 @@ const SuperHotelAnalytics = () => {
         ...(selectedHotel !== 'all' && { hotelId: selectedHotel })
       });
 
-      console.log('🔗 Request URL:', `${API_BASE_URL}/admin/analytics/comprehensive?${params}`);
-
       const response = await fetch(`${API_BASE_URL}/admin/analytics/comprehensive?${params}`, {
         method: 'GET',
         headers,
         credentials: 'include' // Fallback to cookies
       });
 
-      console.log('📡 Response status:', response.status);
-      console.log('📡 Response headers:', response.headers);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Response error:', errorText);
         if (response.status === 401) {
           // Redirect to login if unauthorized
           toast.error('Session expired. Please log in again.');
@@ -128,10 +114,8 @@ const SuperHotelAnalytics = () => {
       }
 
       const data = await response.json();
-      console.log('✅ Analytics data received:', data);
       setAnalyticsData(data.data);
     } catch (error) {
-      console.error('❌ Error fetching analytics:', error);
       toast.error(`Failed to load analytics data: ${error.message}`);
     } finally {
       setLoading(false);
@@ -206,7 +190,6 @@ const SuperHotelAnalytics = () => {
         toast.success('Data exported successfully');
       }
     } catch (error) {
-      console.error('Error exporting data:', error);
       toast.error('Failed to export data');
     }
   };

@@ -14,13 +14,12 @@ class ServiceProviderService {  /**
    */
   async getServiceDetails(id) {
     try {
-      console.log('🔍 getServiceDetails: Fetching service for ID:', id);
-      console.log('🔍 getServiceDetails: Full URL:', `${CLIENT_API.SERVICES}/${id}`);
+  // ...existing code...
       const response = await apiClient.get(`${CLIENT_API.SERVICES}/${id}`);
-      console.log('✅ getServiceDetails: Response received:', response.data);
+  // ...existing code...
       return response.data;
     } catch (error) {
-      console.log('❌ getServiceDetails: Error occurred:', error.response?.data || error.message);
+  // ...existing code...
       throw error;
     }
   }
@@ -382,7 +381,7 @@ class ServiceProviderService {  /**
       );
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch superadmin analytics:', error);
+  // ...existing code...
       throw error;
     }
   }

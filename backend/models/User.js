@@ -306,18 +306,13 @@ userSchema.pre('save', function(next) {
   if (this.role === 'guest') {
     // Only require hotel selection during registration
     if (!this.selectedHotelId) {
-      console.log('Guest validation failed: missing selectedHotelId');
+      // Guest validation failed: missing selectedHotelId (output removed)
       return next(new Error('Guest users must select a hotel'));
     }
     // Check-in/out dates and room number are only required when hasActiveBooking is true
     if (this.hasActiveBooking && (!this.checkInDate || !this.checkOutDate || !this.roomNumber ||
         (typeof this.roomNumber === 'string' && this.roomNumber.trim() === ''))) {
-      console.log('Guest booking validation failed:', {
-        selectedHotelId: this.selectedHotelId,
-        checkInDate: this.checkInDate,
-        checkOutDate: this.checkOutDate,
-        roomNumber: this.roomNumber
-      });
+      // Guest booking validation failed (output removed)
       return next(new Error('Guest users with active bookings must have check-in/out dates and room number'));
     }
   }

@@ -70,7 +70,6 @@ const RegisterPage = () => {
   // Handle redirection after successful registration
   useEffect(() => {
     if (isAuthenticated && role === 'guest') {
-      console.log('Redirecting guest to categories page');
       // Get user data to extract hotelId
       const userData = user;
       let hotelId = userData?.selectedHotelId;
@@ -84,7 +83,6 @@ const RegisterPage = () => {
         navigate(`/hotels/${hotelId}/categories`, { replace: true });
       } else {
         // Fallback to homepage if no valid hotel ID
-        console.log('No valid hotel ID found, redirecting to homepage');
         navigate('/', { replace: true });
       }
     } else if (isAuthenticated && role !== 'guest') {
@@ -133,7 +131,6 @@ const RegisterPage = () => {
     try {
       // Clear any existing authentication session to prevent cookie interference
       // This ensures QR scanning works even if user has previous login cookies
-      console.log('Clearing existing session before QR validation...');
       authService.clearSession();
 
       const response = await hotelService.validateQRToken(qrToken);
@@ -156,7 +153,6 @@ const RegisterPage = () => {
         }, { replace: true });
       }
     } catch (error) {
-      console.error('QR validation error:', error);
       toast.error(error.response?.data?.message || 'Invalid QR code. Please try again or select hotel manually.');
     } finally {
       setValidatingQR(false);
@@ -175,7 +171,6 @@ const RegisterPage = () => {
    * Handle QR scan error
    */
   const handleQRScanError = (error) => {
-    console.error('QR scan error:', error);
     toast.error('Failed to scan QR code. Please try again.');
   };
 
