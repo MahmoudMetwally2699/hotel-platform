@@ -124,7 +124,7 @@ const GuestRestaurantBookings = () => {
 
   const getSpicyLevelDisplay = (level) => {
     const levels = {
-      mild: '🌶️',
+      normal: '🌶️',
       medium: '🌶️🌶️',
       hot: '🌶️🌶️🌶️',
       very_hot: '🌶️🌶️🌶️🌶️'
@@ -208,24 +208,24 @@ const GuestRestaurantBookings = () => {
   };
 
   const renderBookingCard = (booking) => (
-    <div key={booking._id} className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-2.5 sm:p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+    <div key={booking._id} className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-3 sm:p-6 hover:shadow-xl sm:hover:scale-[1.02] transition-all duration-300">
       {/* Compact Header */}
-      <div className="flex justify-between items-start mb-2 sm:mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 sm:w-10 sm:h-10 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-lg flex items-center justify-center shadow-md">
+      <div className="flex justify-between items-start mb-3 sm:mb-4">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
             <FaUtensils className="text-white text-xs sm:text-sm" />
           </div>
-          <div>
-            <h3 className="text-sm sm:text-lg font-bold text-gray-900">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm sm:text-lg font-bold text-gray-900 truncate">
               {booking.bookingNumber}
             </h3>
           </div>
         </div>
-        <div className="text-right">
-          <span className={`px-4 py-2 rounded-full text-sm font-semibold shadow-md backdrop-blur-sm ${getStatusColor(booking.status)}`}>
+        <div className="text-right flex-shrink-0 ml-2">
+          <span className={`px-2 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold shadow-md backdrop-blur-sm ${getStatusColor(booking.status)}`}>
             {getStatusLabel(booking.status)}
           </span>
-          <p className="text-xs text-gray-400 mt-2 font-medium">
+          <p className="text-xs text-gray-400 mt-1 sm:mt-2 font-medium">
             {new Date(booking.createdAt).toLocaleDateString()}
           </p>
         </div>
@@ -235,16 +235,16 @@ const GuestRestaurantBookings = () => {
       <div className="space-y-2 mb-3">
         {/* Hotel & Items in One Row */}
         <div className="bg-gradient-to-r from-[#3B5787]/10 to-[#67BAE0]/10 rounded-lg p-2 border border-[#67BAE0]/20">
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5">
-              <FaMapMarkerAlt className="text-[#3B5787] text-xs" />
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <FaMapMarkerAlt className="text-[#3B5787] text-xs flex-shrink-0" />
               <span className="font-semibold text-gray-900 truncate">
                 {booking.hotelId?.name || 'Hotel'}
               </span>
             </div>
-            <div className="flex items-center gap-1 text-gray-600 ml-2">
+            <div className="flex items-center gap-1 text-gray-600 ml-2 flex-shrink-0">
               <FaUtensils className="text-[#67BAE0] text-xs" />
-              <span className="whitespace-nowrap">
+              <span className="whitespace-nowrap text-xs sm:text-sm">
                 {booking.menuItems?.length || booking.items?.length || booking.bookingConfig?.menuItems?.length || 0} items
               </span>
             </div>
@@ -270,7 +270,7 @@ const GuestRestaurantBookings = () => {
                         const time = new Date(booking.scheduledDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                         return `${date} at ${time}`;
                       }
-                      return 'Schedule not set';
+                      return t('restaurant.scheduleNotSet', 'Schedule not set');
                     })()}
                   </div>
                 </div>
@@ -291,25 +291,26 @@ const GuestRestaurantBookings = () => {
             <span className="text-base font-bold text-emerald-600 bg-white/70 px-2 py-0.5 rounded-md">
               {(() => {
                 const total = booking.pricing?.total ||
+                             booking.pricing?.basePrice ||
                              booking.payment?.paidAmount ||
                              booking.payment?.amount ||
                              booking.totalAmount ||
                              booking.amount;
-                return total ? formatPriceByLanguage(total, i18n.language) : 'N/A';
+                return total && total > 0 ? formatPriceByLanguage(total, i18n.language) : t('common.notAvailable', 'N/A');
               })()}
             </span>
           </div>
         </div>
       )}
 
-      {/* Ultra Compact Action Buttons */}
-      <div className="flex gap-1.5 pt-1.5 border-t border-gray-100 mt-2">
+      {/* Mobile-Optimized Action Buttons */}
+      <div className="flex pt-3 border-t border-gray-100 mt-3">
         <button
           onClick={() => handleViewDetails(booking._id)}
-          className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[#3B5787] hover:text-[#67BAE0] bg-[#3B5787]/10 hover:bg-[#67BAE0]/20 border border-[#3B5787]/20 hover:border-[#67BAE0]/30 rounded-md font-medium text-xs transition-all duration-200"
+          className="flex-1 flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 text-white bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#2A4466] hover:to-[#5AA8CE] rounded-lg font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl touch-manipulation"
         >
-          <FaEye />
-          <span>Details</span>
+          <FaEye className="text-sm" />
+          <span>View Details</span>
         </button>
       </div>
     </div>
@@ -385,7 +386,7 @@ const GuestRestaurantBookings = () => {
         {/* Content */}
         {bookings.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
               {bookings.map(renderBookingCard)}
             </div>
 
@@ -485,9 +486,9 @@ const GuestRestaurantBookings = () => {
           </div>
         )}
 
-        {/* Modern Booking Details Modal */}
+        {/* Mobile-Responsive Booking Details Modal */}
         {selectedBooking && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50"
                onClick={(e) => {
                  // Only close if clicking the backdrop, not the modal content
                  if (e.target === e.currentTarget) {
@@ -495,16 +496,16 @@ const GuestRestaurantBookings = () => {
                    setSelectedBooking(null);
                  }
                }}>
-            <div className="bg-white/95 backdrop-blur-md rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20"
+            <div className="bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl w-full max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20"
                  onClick={(e) => e.stopPropagation()}>
-              <div className="p-6 sm:p-8">
-                <div className="flex justify-between items-center mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-xl flex items-center justify-center shadow-md">
-                      <FaUtensils className="text-white text-sm" />
+              <div className="p-3 sm:p-6 lg:p-8">
+                <div className="flex justify-between items-center mb-4 sm:mb-6">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-lg sm:rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                      <FaUtensils className="text-white text-xs sm:text-sm" />
                     </div>
-                    <h2 className="text-2xl font-bold bg-gradient-to-r from-[#3B5787] to-[#67BAE0] bg-clip-text text-transparent">
-                      Booking Details
+                    <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-[#3B5787] to-[#67BAE0] bg-clip-text text-transparent truncate">
+                      {t('restaurant.bookingDetails', 'Booking Details')}
                     </h2>
                   </div>
                   <button
@@ -512,41 +513,42 @@ const GuestRestaurantBookings = () => {
                       console.log('🔒 Close button clicked');
                       setSelectedBooking(null);
                     }}
-                    className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105"
+                    className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 hover:bg-gray-200 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 flex-shrink-0 touch-manipulation"
                   >
-                    <FaTimes className="text-gray-600" />
+                    <FaTimes className="text-gray-600 text-sm sm:text-base" />
                   </button>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <div className="w-5 h-5 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-md"></div>
-                      Booking Information
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-md flex-shrink-0"></div>
+                      <span className="truncate">{t('restaurant.bookingInformation', 'Booking Information')}</span>
                     </h3>
-                    <div className="bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 rounded-xl p-6 space-y-4 border border-[#67BAE0]/20">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Booking Number:</span>
-                        <span className="font-bold text-gray-900">{selectedBooking.bookingNumber}</span>
+                    <div className="bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 rounded-lg sm:rounded-xl p-3 sm:p-6 space-y-3 sm:space-y-4 border border-[#67BAE0]/20">
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="text-gray-700 font-medium text-sm sm:text-base flex-shrink-0">Booking Number:</span>
+                        <span className="font-bold text-gray-900 text-sm sm:text-base truncate">{selectedBooking.bookingNumber}</span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Status:</span>
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(selectedBooking.status)}`}>
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="text-gray-700 font-medium text-sm sm:text-base flex-shrink-0">Status:</span>
+                        <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold ${getStatusColor(selectedBooking.status)}`}>
                           {getStatusLabel(selectedBooking.status)}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Total Amount:</span>
-                        <span className="text-xl font-bold text-emerald-600">
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="text-gray-700 font-medium text-sm sm:text-base flex-shrink-0">Total Amount:</span>
+                        <span className="text-lg sm:text-xl font-bold text-emerald-600 truncate">
                           {(() => {
                             // Try multiple potential locations for the total amount
                             const total = selectedBooking.pricing?.total ||
+                                         selectedBooking.pricing?.basePrice ||
                                          selectedBooking.payment?.paidAmount ||
                                          selectedBooking.payment?.amount ||
                                          selectedBooking.totalAmount ||
                                          selectedBooking.amount;
 
-                            return total ? formatPriceByLanguage(total, i18n.language) : 'N/A';
+                            return total && total > 0 ? formatPriceByLanguage(total, i18n.language) : t('common.notAvailable', 'N/A');
                           })()}
                         </span>
                       </div>
@@ -560,7 +562,7 @@ const GuestRestaurantBookings = () => {
                       <div>
                         <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                           <div className="w-5 h-5 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-md"></div>
-                          Menu Items
+                          {t('restaurant.menuItems', 'Menu Items')}
                         </h3>
                         <div className="bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 rounded-xl p-6 space-y-4 border border-[#67BAE0]/20">
                           {menuItems.map((item, index) => (
@@ -580,7 +582,7 @@ const GuestRestaurantBookings = () => {
                                   {item.isVegan && (
                                     <span className="text-green-600 text-xs">V</span>
                                   )}
-                                  {item.spicyLevel && item.spicyLevel !== 'mild' && (
+                                  {item.spicyLevel && item.spicyLevel !== 'normal' && (
                                     <span className="text-red-600">
                                       {getSpicyLevelDisplay(item.spicyLevel)}
                                     </span>
@@ -598,10 +600,12 @@ const GuestRestaurantBookings = () => {
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="text-sm text-gray-600 font-medium">Qty: {item.quantity}</div>
+                              <div className="text-sm text-gray-600 font-medium">{t('restaurant.quantity', 'Qty')}: {item.quantity}</div>
                               <div className="text-lg font-bold text-emerald-600">
-                                {item.totalPrice ? formatPriceByLanguage(item.totalPrice, i18n.language) :
-                                 (item.price ? formatPriceByLanguage(item.price * item.quantity, i18n.language) : 'N/A')}
+                                {(() => {
+                                  const price = item.totalPrice || (item.price ? item.price * item.quantity : null);
+                                  return price && price > 0 ? formatPriceByLanguage(price, i18n.language) : t('common.notAvailable', 'N/A');
+                                })()}
                               </div>
                             </div>
                           </div>
@@ -616,7 +620,7 @@ const GuestRestaurantBookings = () => {
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <div className="w-5 h-5 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-md"></div>
-                        Schedule
+                        {t('restaurant.schedule', 'Schedule')}
                       </h3>
                       <div className="bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 rounded-xl p-6 space-y-4 border border-[#67BAE0]/20">
                         <div className="flex justify-between items-center">
@@ -676,30 +680,32 @@ const GuestRestaurantBookings = () => {
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <div className="w-5 h-5 bg-gradient-to-br from-emerald-500 to-green-600 rounded-md"></div>
-                        Payment Information
+                        {t('restaurant.paymentInformation', 'Payment Information')}
                       </h3>
                       <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-6 space-y-4 border border-emerald-200">
                         <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Payment Status:</span>
-                          <span className="text-green-600 font-medium">Completed</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Amount Paid:</span>
-                          <span className="font-medium">{formatPriceByLanguage(selectedBooking.payment.paidAmount, i18n.language)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Payment Date:</span>
-                          <span className="font-medium">{new Date(selectedBooking.payment.paymentDate).toLocaleString()}</span>
+                          <span className="text-gray-700 font-medium">{t('restaurant.amountPaid', 'Amount Paid')}:</span>
+                          <span className="font-medium">
+                            {(() => {
+                              // For amount paid, if payment.paidAmount is 0 (cash payment), show actual total
+                              const amount = selectedBooking.payment?.paidAmount > 0
+                                ? selectedBooking.payment?.paidAmount
+                                : selectedBooking.payment?.amount > 0
+                                  ? selectedBooking.payment?.amount
+                                  : selectedBooking.pricing?.total || selectedBooking.pricing?.basePrice;
+                              return amount && amount > 0 ? formatPriceByLanguage(amount, i18n.language) : t('common.notAvailable', 'N/A');
+                            })()}
+                          </span>
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="flex justify-center mt-8 pt-6 border-t border-gray-200">
+                <div className="flex justify-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
                   <button
                     onClick={() => setSelectedBooking(null)}
-                    className="px-8 py-3 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#67BAE0] hover:to-[#3B5787] text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                    className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#67BAE0] hover:to-[#3B5787] text-white rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 touch-manipulation"
                   >
                     Close Details
                   </button>

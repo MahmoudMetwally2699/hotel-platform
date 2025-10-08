@@ -383,9 +383,10 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
       <aside
         style={{ backgroundColor: '#3B5787' }}
         className={`text-white min-h-screen transition-all duration-300 ease-in-out z-30 shadow-xl
-          ${collapsed ? 'lg:w-16' : 'lg:w-64'}
+          ${collapsed ? 'lg:w-16' : 'lg:w-56 xl:w-64 2xl:w-72'}
           lg:relative lg:translate-x-0
           hidden lg:block
+          flex-shrink-0 max-w-xs
         `}
       >
         <div className={`px-6 py-6 border-b border-white/20 min-h-[5rem] ${collapsed ? 'flex justify-center items-center' : 'flex items-center justify-between'}`}>
@@ -466,15 +467,15 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                     </button>
                     {/* Submenu */}
                     {expandedMenus[item.key || item.name] && !collapsed && (
-                      <ul className="mt-2 ml-2 space-y-1">
+                      <ul className="mt-2 ml-2 space-y-1 max-w-full overflow-hidden">
                         {(item.children || item.submenu)?.map((child, childIndex) => (
-                          <li key={childIndex}>
+                          <li key={childIndex} className="max-w-full overflow-hidden">
                             <NavLink
                               to={child.path}
                               className={() => {
                                 const isActive = isPathActive(child.path);
                                 return `
-                                  flex items-center px-4 py-3 rounded-lg transition-all duration-200 min-h-[40px] group
+                                  flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 min-h-[36px] group max-w-full
                                   ${isActive
                                     ? 'text-white shadow-lg'
                                     : 'text-white/70 hover:text-white hover:bg-white/10'
@@ -486,10 +487,10 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                                 return isActive ? { backgroundColor: '#48ACDA' } : {};
                               }}
                             >
-                              <span className={`${isRTL ? 'ml-3' : 'mr-3'} transition-transform group-hover:scale-110`}>
+                              <span className={`${isRTL ? 'ml-2' : 'mr-2'} transition-transform group-hover:scale-110 flex-shrink-0`}>
                                 {getIcon(child.icon)}
                               </span>
-                              <span className="font-medium">{child.name}</span>
+                              <span className="font-medium text-sm truncate">{child.name}</span>
                             </NavLink>
                           </li>
                         ))}
@@ -540,10 +541,10 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 <button
                   key={item.key || item.name}
                   onClick={() => setShowMobileCategories(true)}
-                  className="flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[80px] text-white/80 hover:bg-white/10 hover:text-white"
+                  className="flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[120px] text-white/80 hover:bg-white/10 hover:text-white"
                 >
                   <span className="mb-1">{getIcon(item.icon)}</span>
-                  <span className="text-xs text-center leading-tight truncate w-full font-medium">
+                  <span className="text-xs text-center leading-tight w-full font-medium break-words">
                     {item.name}
                   </span>
                 </button>
@@ -557,7 +558,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 className={() => {
                   const isActive = isPathActive(item.path);
                   return `
-                    flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[80px]
+                    flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[120px]
                     ${isActive
                       ? 'text-white shadow-lg'
                       : 'text-white/80 hover:bg-white/10 hover:text-white'
@@ -570,7 +571,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 }}
               >
                 <span className="mb-1">{getIcon(item.icon)}</span>
-                <span className="text-xs text-center leading-tight truncate w-full font-medium">
+                <span className="text-xs text-center leading-tight w-full font-medium break-words">
                   {item.name}
                 </span>
               </NavLink>
@@ -579,7 +580,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           {navigationItems.length > 5 && (
             <button
               onClick={toggleSidebar}
-              className="flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[80px] text-white/80 hover:bg-white/10 hover:text-white"
+              className="flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[120px] text-white/80 hover:bg-white/10 hover:text-white"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -623,7 +624,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                       <NavLink
                         to={category.path}
                         onClick={() => setShowMobileCategories(false)}
-                        className="flex items-center space-x-4 w-full"
+                        className="flex items-center gap-4 w-full"
                       >
                         <div className="flex-shrink-0 p-3 bg-white rounded-lg shadow-sm">
                           <span className="text-2xl">{getIcon(category.icon)}</span>
@@ -632,11 +633,6 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                           <h4 className="text-lg font-semibold text-gray-900 truncate">
                             {category.name}
                           </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {category.path.includes('laundry') && t('categorySelection.categories.laundry.description')}
-                            {category.path.includes('transportation') && t('categorySelection.categories.transportation.description')}
-                            {category.path.includes('bookings') && 'Manage transportation bookings and requests'}
-                          </p>
                         </div>
                         <div className="flex-shrink-0">
                           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -709,7 +705,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                       <NavLink
                         to={booking.path}
                         onClick={() => setShowMobileCategories(false)}
-                        className="flex items-center space-x-4 w-full"
+                        className="flex items-center gap-4 w-full"
                       >
                         <div className="flex-shrink-0 p-3 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-lg shadow-sm">
                           {booking.icon === 'truck' && (
@@ -729,12 +725,6 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                           <h4 className="text-lg font-semibold text-gray-900 truncate">
                             {booking.name}
                           </h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {booking.path.includes('transportation') && 'View your transportation bookings'}
-                            {booking.path.includes('laundry') && 'Check your laundry service orders'}
-                            {booking.path.includes('restaurant') && 'See your restaurant reservations'}
-                            {booking.path.includes('housekeeping') && 'View your housekeeping service requests'}
-                          </p>
                         </div>
                         <div className="flex-shrink-0">
                           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -745,29 +735,6 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                     </div>
                   ));
                 })()}
-              </div>
-
-              {/* Quick Actions */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">
-                  {t('common.quickActions') || 'Quick Actions'}
-                </h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <NavLink
-                    to="/my-hotel-services"
-                    onClick={() => setShowMobileCategories(false)}
-                    className="flex items-center justify-center p-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    <span className="text-sm font-medium">{t('navigation.hotelServices')}</span>
-                  </NavLink>
-                  <NavLink
-                    to="/profile"
-                    onClick={() => setShowMobileCategories(false)}
-                    className="flex items-center justify-center p-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors"
-                  >
-                    <span className="text-sm font-medium">{t('navigation.profile')}</span>
-                  </NavLink>
-                </div>
               </div>
             </div>
           </div>

@@ -231,16 +231,9 @@ const DashboardPage = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex flex-col">
-                              <span className="text-sm font-medium text-gray-900">
-                                {order.serviceId?.name || order.serviceDetails?.name || order.serviceName || t('hotelAdmin.dashboard.recentOrders.unknownService')}
+                              <span className="text-sm font-medium text-gray-900 capitalize">
+                                {order.serviceId?.category || order.serviceDetails?.category || order.serviceType || t('hotelAdmin.dashboard.recentOrders.unknownService')}
                               </span>
-                              <div className="flex items-center space-x-2 mt-1">
-                                {(order.serviceId?.category || order.serviceDetails?.category || order.serviceType) && (
-                                  <span className="text-xs text-modern-darkGray capitalize bg-blue-50 px-2 py-1 rounded">
-                                    {order.serviceId?.category || order.serviceDetails?.category || order.serviceType}
-                                  </span>
-                                )}
-                              </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -348,14 +341,9 @@ const DashboardPage = () => {
                           <div className="flex justify-between items-center">
                             <span className="text-xs font-medium text-modern-darkGray">{t('hotelAdmin.dashboard.recentOrders.service')}</span>
                             <div className="text-right">
-                              <div className="text-sm font-medium text-gray-900">
-                                {order.serviceId?.name || order.serviceDetails?.name || order.serviceName || t('hotelAdmin.dashboard.recentOrders.unknownService')}
+                              <div className="text-sm font-medium text-gray-900 capitalize">
+                                {order.serviceId?.category || order.serviceDetails?.category || order.serviceType || t('hotelAdmin.dashboard.recentOrders.unknownService')}
                               </div>
-                              {(order.serviceId?.category || order.serviceDetails?.category || order.serviceType) && (
-                                <span className="text-xs text-modern-darkGray capitalize bg-blue-50 px-2 py-1 rounded">
-                                  {order.serviceId?.category || order.serviceDetails?.category || order.serviceType}
-                                </span>
-                              )}
                             </div>
                           </div>
 

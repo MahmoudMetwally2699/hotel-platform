@@ -12,8 +12,7 @@ import React, { useState, useEffect } from 'react';
 import { getVehicleIcon } from '../../utils/vehicleIconMap';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '../../redux/slices/authSlice';
+
 import {
   FaCar,
   FaArrowLeft,
@@ -35,7 +34,7 @@ const TransportationBookingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { hotelId } = useParams();
-  const currentUser = useSelector(selectCurrentUser);
+
 
   // Get service and hotel from location state
   const { service: passedService, hotel: passedHotel } = location.state || {};
@@ -63,6 +62,37 @@ const TransportationBookingPage = () => {
     luggageCount: 0
   });
   const [selectedVehicleTypeId, setSelectedVehicleTypeId] = useState('');
+  // Helper function to format hotel address
+  const formatHotelAddress = (hotel) => {
+    if (!hotel) return 'Hotel Location';
+
+    // If address is a string, return it directly
+    if (typeof hotel.address === 'string') {
+      return hotel.address;
+    }
+
+    // If address is an object, format it
+    if (hotel.address && typeof hotel.address === 'object') {
+      const { street, city, state, country, zipCode } = hotel.address;
+      const parts = [street, city, state, zipCode, country].filter(Boolean);
+      return parts.join(', ') || 'Hotel Location';
+    }
+
+    // If location is a string, return it
+    if (typeof hotel.location === 'string') {
+      return hotel.location;
+    }
+
+    // If location is an object, format it
+    if (hotel.location && typeof hotel.location === 'object') {
+      const { street, city, state, country, zipCode } = hotel.location;
+      const parts = [street, city, state, zipCode, country].filter(Boolean);
+      return parts.join(', ') || 'Hotel Location';
+    }
+
+    return hotel.name || 'Hotel Location';
+  };
+
   // Helper functions to translate vehicle category and type names
   const getVehicleTypeName = (vehicleType) => {
     // Convert vehicle type to key format for translation lookup
@@ -330,7 +360,7 @@ const TransportationBookingPage = () => {
         serviceId: service?._id,
         hotelId,
         tripDetails: {
-          pickupLocation: currentUser?.roomNumber || 'Hotel Room',
+          pickupLocation: formatHotelAddress(passedHotel || hotel),
           destination: bookingDetails.dropoffLocation,
           scheduledDateTime: `${bookingDetails.pickupDate}T${bookingDetails.pickupTime}:00.000Z`,
           passengerCount: bookingDetails.passengerCount || 1,
@@ -372,7 +402,7 @@ const TransportationBookingPage = () => {
       case 2:
         return selectedVehicles.every(vehicle => serviceTypes[vehicle.id]);
       case 3:
-        return bookingDetails.pickupDate && bookingDetails.pickupTime && currentUser?.roomNumber;
+        return bookingDetails.pickupDate && bookingDetails.pickupTime && (passedHotel || hotel);
       default:
         return true;
     }
@@ -963,10 +993,10 @@ const TransportationBookingPage = () => {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           <FaMapMarkerAlt className="inline mr-2 text-green-600" />
-                          {t('transportationBooking.pickupLocation')}
+                          {t('transportationBooking.location')}
                         </label>
                         <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-700 font-medium">
-                          Room {currentUser?.roomNumber || 'N/A'}
+                          {formatHotelAddress(passedHotel || hotel)}
                         </div>
                       </div>
                       <div>
@@ -1061,7 +1091,7 @@ const TransportationBookingPage = () => {
 
                   {/* Special Requests Section */}
                   <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-4 border border-gray-200">
-                    <label className="block text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <label className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
                       <FaStickyNote className="text-[#3B5787]" />
                       {t('transportationBooking.specialRequests')}
                     </label>
@@ -1126,7 +1156,7 @@ const TransportationBookingPage = () => {
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <p><strong>{t('transportationBooking.pickupDate')}:</strong> {bookingDetails.pickupDate}</p>
                       <p><strong>{t('transportationBooking.pickupTime')}:</strong> {bookingDetails.pickupTime}</p>
-                      <p><strong>{t('transportationBooking.pickup')}:</strong> Room {currentUser?.roomNumber || t('transportationBooking.notSpecified')}</p>
+                      <p><strong>{t('transportationBooking.pickup')}:</strong> {formatHotelAddress(passedHotel || hotel)}</p>
                       <p><strong>{t('transportationBooking.dropoff')}:</strong> {bookingDetails.dropoffLocation || t('transportationBooking.notSpecified')}</p>
                       {bookingDetails.returnDate && (
                         <>

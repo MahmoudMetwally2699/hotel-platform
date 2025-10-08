@@ -125,8 +125,7 @@ const HousekeepingServiceManagement = ({ onBack }) => {
   const serviceCategories = [
     { value: 'cleaning', label: t('housekeeping.categories.cleaning'), icon: FaBroom },
     { value: 'maintenance', label: t('housekeeping.categories.maintenance'), icon: FaUsers },
-    { value: 'amenities', label: t('housekeeping.categories.amenities'), icon: FaCheck },
-    { value: 'laundry', label: t('housekeeping.categories.laundry'), icon: FaClock }
+    { value: 'amenities', label: t('housekeeping.categories.amenities'), icon: FaCheck }
   ];
 
   useEffect(() => {
@@ -275,10 +274,10 @@ const HousekeepingServiceManagement = ({ onBack }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-      <div className="w-full p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 w-full overflow-x-hidden">
+      <div className="w-full max-w-full p-3 sm:p-4 lg:p-6 xl:p-8 min-w-0">
         {/* Modern Header */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#3B5787] via-[#4A6B95] to-[#67BAE0] p-8 sm:p-12 text-white shadow-2xl mb-8">
+        <div className="relative overflow-hidden rounded-2xl lg:rounded-3xl bg-gradient-to-br from-[#3B5787] via-[#4A6B95] to-[#67BAE0] p-4 sm:p-6 lg:p-8 xl:p-12 text-white shadow-2xl mb-6 lg:mb-8">
           {/* Decorative Elements */}
           <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-white/10 blur-xl"></div>
           <div className="absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/15"></div>
@@ -286,42 +285,43 @@ const HousekeepingServiceManagement = ({ onBack }) => {
           <div className="absolute bottom-12 right-12 h-4 w-4 rounded-full bg-white/25"></div>
 
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 lg:mb-6 gap-4">
+              <div className="flex items-center min-w-0">
                 <button
                   onClick={onBack}
-                  className="mr-6 p-3 rounded-2xl bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300"
+                  className="mr-3 sm:mr-4 lg:mr-6 p-2 sm:p-3 rounded-xl lg:rounded-2xl bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 flex-shrink-0"
                 >
-                  <FaArrowLeft className="text-xl" />
+                  <FaArrowLeft className="text-lg sm:text-xl" />
                 </button>
-                <div className="flex items-center">
-                  <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm mr-6">
-                    <FaBroom className="text-4xl" />
+                <div className="flex items-center min-w-0">
+                  <div className="p-2 sm:p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-white/20 backdrop-blur-sm mr-3 sm:mr-4 lg:mr-6 flex-shrink-0">
+                    <FaBroom className="text-2xl sm:text-3xl lg:text-4xl" />
                   </div>
-                  <div>
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-2">
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-1 lg:mb-2 truncate">
                       {t('housekeeping.title')}
                     </h1>
-                    <div className="h-1 w-20 bg-gradient-to-r from-white/60 to-transparent rounded-full"></div>
+                    <div className="h-0.5 lg:h-1 w-12 lg:w-20 bg-gradient-to-r from-white/60 to-transparent rounded-full"></div>
                   </div>
                 </div>
               </div>
               <button
                 onClick={() => setShowCreateForm(true)}
-                className={BTN.secondary + " bg-white text-[#3B5787] hover:bg-blue-50"}
+                className={BTN.secondary + " bg-white text-[#3B5787] hover:bg-blue-50 text-sm sm:text-base whitespace-nowrap flex-shrink-0"}
               >
                 <FaPlus className="mr-2" />
-                {t('housekeeping.management.addService')}
+                <span className="hidden sm:inline">{t('housekeeping.management.addService')}</span>
+                <span className="sm:hidden">Add</span>
               </button>
             </div>
-            <p className="text-lg text-blue-100 max-w-2xl">
+            <p className="text-sm sm:text-base lg:text-lg text-blue-100 max-w-full lg:max-w-2xl leading-relaxed">
               {t('housekeeping.subtitle')}
             </p>
           </div>
         </div>
 
         {/* Modern Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
           {serviceCategories.map(category => {
             const categoryServices = services.filter(s => s.subcategory === category.value && s.isActive);
             const IconComponent = category.icon;
@@ -348,7 +348,7 @@ const HousekeepingServiceManagement = ({ onBack }) => {
         </div>
 
         {/* Modern Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
           {services.map((service) => {
           const categoryInfo = getCategoryInfo(service.subcategory);
           const IconComponent = categoryInfo.icon;

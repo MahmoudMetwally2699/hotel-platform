@@ -13,7 +13,6 @@ import {
   FaMoneyBillWave,
   FaTimes,
   FaMapMarkerAlt,
-  FaSpinner,
   FaChevronLeft,
   FaChevronRight,
   FaCalendarAlt,
@@ -110,25 +109,40 @@ const GuestLaundryBookings = () => {
         const bookingsData = response.data.data.bookings || [];
         console.log('📋 Bookings data:', bookingsData);
 
+        // Filter out non-laundry bookings (client-side filter as backup)
+        const laundryBookings = bookingsData.filter(booking => {
+          const serviceType = booking.serviceType;
+          const serviceCategory = booking.serviceDetails?.category;
+          const isLaundryBooking = serviceType === 'laundry' || serviceCategory === 'laundry';
+
+          if (!isLaundryBooking) {
+            console.warn(`🚫 Filtering out non-laundry booking: ${booking.bookingNumber} (serviceType: ${serviceType}, category: ${serviceCategory})`);
+          }
+
+          return isLaundryBooking;
+        });
+
+        console.log(`📋 Filtered laundry bookings: ${laundryBookings.length} out of ${bookingsData.length} total bookings`);
+
         // Log first booking to see structure
-        if (bookingsData.length > 0) {
-          console.log('🔍 First booking structure:', bookingsData[0]);
-          console.log('🔍 Items in first booking:', {
-            laundryItems: bookingsData[0].laundryItems,
-            items: bookingsData[0].items,
-            selectedItems: bookingsData[0].selectedItems,
-            bookingItems: bookingsData[0].bookingItems
+        if (laundryBookings.length > 0) {
+          console.log('🔍 First laundry booking structure:', laundryBookings[0]);
+          console.log('🔍 Items in first laundry booking:', {
+            laundryItems: laundryBookings[0].laundryItems,
+            items: laundryBookings[0].items,
+            selectedItems: laundryBookings[0].selectedItems,
+            bookingItems: laundryBookings[0].bookingItems
           });
         }
 
-        setBookings(bookingsData);
+        setBookings(laundryBookings);
 
-        const pagination = response.data.data.pagination;
-        const totalBookingsFromApi = pagination?.total || response.data.data.bookings?.length || 0;
+        // Update pagination calculation based on filtered results
+        const totalBookingsFromApi = laundryBookings.length; // Use filtered count instead of API total
 
         // Calculate total pages correctly
         const calculatedTotalPages = Math.ceil(totalBookingsFromApi / itemsPerPage);
-        let totalPagesFromApi = pagination?.totalPages || calculatedTotalPages || 1;
+        let totalPagesFromApi = calculatedTotalPages || 1;
 
         // Override if API totalPages seems incorrect
         if (totalBookingsFromApi > itemsPerPage && totalPagesFromApi === 1) {
@@ -260,7 +274,7 @@ const GuestLaundryBookings = () => {
   const getStatusLabel = (status) => {
     const statusLabels = {
       'pending': t('common.pending') || 'Pending',
-      'payment_pending': 'Payment Pending',
+      'payment_pending': t('common.paymentPending', 'Payment Pending'),
       'confirmed': t('common.confirmed') || 'Confirmed',
       'in_progress': t('common.inProgress') || 'In Progress',
       'completed': t('common.completed') || 'Completed',
@@ -270,24 +284,24 @@ const GuestLaundryBookings = () => {
   };
 
   const renderBookingCard = (booking) => (
-    <div key={booking._id} className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-2.5 sm:p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+    <div key={booking._id} className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-3 sm:p-6 hover:shadow-xl sm:hover:scale-[1.02] transition-all duration-300">
       {/* Compact Header */}
-      <div className="flex justify-between items-start mb-2 sm:mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 sm:w-10 sm:h-10 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-lg flex items-center justify-center shadow-md">
+      <div className="flex justify-between items-start mb-3 sm:mb-4">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
             <FaTshirt className="text-white text-xs sm:text-sm" />
           </div>
-          <div>
-            <h3 className="text-sm sm:text-lg font-bold text-gray-900">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm sm:text-lg font-bold text-gray-900 truncate">
               {booking.bookingNumber}
             </h3>
           </div>
         </div>
-        <div className="text-right">
-          <span className={`px-4 py-2 rounded-full text-sm font-semibold shadow-md backdrop-blur-sm ${getStatusColor(booking.status)}`}>
+        <div className="text-right flex-shrink-0 ml-2">
+          <span className={`px-2 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold shadow-md backdrop-blur-sm ${getStatusColor(booking.status)}`}>
             {getStatusLabel(booking.status)}
           </span>
-          <p className="text-xs text-gray-400 mt-2 font-medium">
+          <p className="text-xs text-gray-400 mt-1 sm:mt-2 font-medium">
             {new Date(booking.createdAt).toLocaleDateString()}
           </p>
         </div>
@@ -297,16 +311,16 @@ const GuestLaundryBookings = () => {
       <div className="space-y-2 mb-3">
         {/* Hotel & Items in One Row */}
         <div className="bg-gradient-to-r from-[#3B5787]/10 to-[#67BAE0]/10 rounded-lg p-2 border border-[#67BAE0]/20">
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5">
-              <FaMapMarkerAlt className="text-[#3B5787] text-xs" />
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <FaMapMarkerAlt className="text-[#3B5787] text-xs flex-shrink-0" />
               <span className="font-semibold text-gray-900 truncate">
                 {booking.hotelId?.name || 'Hotel'}
               </span>
             </div>
-            <div className="flex items-center gap-1 text-gray-600 ml-2">
+            <div className="flex items-center gap-1 text-gray-600 ml-2 flex-shrink-0">
               <FaTshirt className="text-[#67BAE0] text-xs" />
-              <span className="whitespace-nowrap">
+              <span className="whitespace-nowrap text-xs sm:text-sm">
                 {(() => {
                   const itemsCount = booking.bookingConfig?.laundryItems?.length ||
                                    booking.laundryItems?.length ||
@@ -328,7 +342,7 @@ const GuestLaundryBookings = () => {
                     bookingDetailsItems: booking.bookingDetails?.items?.length
                   });
                   return itemsCount;
-                })()} items
+                })()} {t('common.items', 'items')}
               </span>
             </div>
           </div>
@@ -391,7 +405,7 @@ const GuestLaundryBookings = () => {
           className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[#3B5787] hover:text-[#67BAE0] bg-[#3B5787]/10 hover:bg-[#67BAE0]/20 border border-[#3B5787]/20 hover:border-[#67BAE0]/30 rounded-md font-medium text-xs transition-all duration-200"
         >
           <FaEye />
-          <span>Details</span>
+          <span>{t('common.details', 'Details')}</span>
         </button>
 
         {/* Show Pay Now button for payment_pending status */}
@@ -401,7 +415,7 @@ const GuestLaundryBookings = () => {
             className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-md font-semibold text-xs shadow-md hover:shadow-lg transition-all duration-200"
           >
             <FaMoneyBillWave />
-            <span>Pay</span>
+            <span>{t('common.pay', 'Pay')}</span>
           </button>
         )}
       </div>
@@ -459,7 +473,7 @@ const GuestLaundryBookings = () => {
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
               <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
               <div className="relative flex flex-col items-center">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">My Laundry Bookings</h1>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">{t('laundry.myBookings', 'My Laundry Bookings')}</h1>
                 <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">{t('laundry.labels.processing', 'Loading...')}</p>
               </div>
             </div>
@@ -474,7 +488,7 @@ const GuestLaundryBookings = () => {
           </div>
         ) : bookings.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
               {bookings.map(renderBookingCard)}
             </div>
 
@@ -581,7 +595,7 @@ const GuestLaundryBookings = () => {
         {/* Modern Booking Details Modal */}
         {selectedBooking && (
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50"
             onClick={(e) => {
               // Only close if clicking the backdrop, not the modal content
               if (e.target === e.currentTarget) {
@@ -591,25 +605,25 @@ const GuestLaundryBookings = () => {
             }}
           >
             <div
-              className="bg-white/95 backdrop-blur-md rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20"
+              className="bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl w-full max-w-sm sm:max-w-2xl lg:max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl border border-white/20"
               onClick={(e) => {
                 // Prevent modal from closing when clicking inside the modal content
                 e.stopPropagation();
               }}
             >
-              <div className="p-6 sm:p-8">
+              <div className="p-4 sm:p-6 lg:p-8">
                 {(() => {
                   try {
                     console.log('🎨 Rendering modal content for booking:', selectedBooking?.bookingNumber);
                     return (
                       <>
-                        <div className="flex justify-between items-center mb-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-xl flex items-center justify-center shadow-md">
-                              <FaTshirt className="text-white text-sm" />
+                        <div className="flex justify-between items-center mb-4 sm:mb-6">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                              <FaTshirt className="text-white text-xs sm:text-sm" />
                             </div>
-                            <h2 className="text-2xl font-bold bg-gradient-to-r from-[#3B5787] to-[#67BAE0] bg-clip-text text-transparent">
-                              Booking Details
+                            <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-[#3B5787] to-[#67BAE0] bg-clip-text text-transparent truncate">
+                              {t('laundry.bookingDetails', 'Booking Details')}
                             </h2>
                           </div>
                           <button
@@ -617,9 +631,9 @@ const GuestLaundryBookings = () => {
                               console.log('🔒 Close button clicked');
                               setSelectedBooking(null);
                             }}
-                            className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105"
+                            className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 hover:bg-gray-200 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 flex-shrink-0 ml-2"
                           >
-                            <FaTimes className="text-gray-600" />
+                            <FaTimes className="text-gray-600 text-sm sm:text-base" />
                           </button>
                         </div>
                       </>
@@ -633,7 +647,7 @@ const GuestLaundryBookings = () => {
                           onClick={() => setSelectedBooking(null)}
                           className="mt-2 px-4 py-2 bg-red-600 text-white rounded"
                         >
-                          Close
+                          {t('common.close', 'Close')}
                         </button>
                       </div>
                     );
@@ -648,17 +662,17 @@ const GuestLaundryBookings = () => {
                     </h3>
                     <div className="bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 rounded-xl p-6 space-y-4 border border-[#67BAE0]/20">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Booking Number:</span>
+                        <span className="text-gray-700 font-medium">{t('common.bookingNumber', 'Booking Number')}:</span>
                         <span className="font-bold text-gray-900">{selectedBooking.bookingNumber || 'N/A'}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Status:</span>
+                        <span className="text-gray-700 font-medium">{t('common.status', 'Status')}:</span>
                         <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(selectedBooking.status)}`}>
                           {getStatusLabel(selectedBooking.status)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Total Amount:</span>
+                        <span className="text-gray-700 font-medium">{t('laundry.labels.totalAmount', 'Total Amount')}:</span>
                         <span className="text-xl font-bold text-emerald-600">
                           {(() => {
                             // Try multiple potential locations for the total amount
@@ -725,8 +739,8 @@ const GuestLaundryBookings = () => {
                                                0;
 
                             laundryItems = [{
-                              itemName: selectedBooking.serviceDetails.name || 'Laundry Service',
-                              serviceTypeName: selectedBooking.serviceDetails.category || 'General',
+                              itemName: selectedBooking.serviceDetails.name || t('laundry.service', 'Laundry Service'),
+                              serviceTypeName: t('laundry.serviceName', 'Laundry'),
                               quantity: selectedBooking.bookingConfig?.quantity || 1,
                               totalPrice: totalAmount,
                               isFallback: true
@@ -886,37 +900,14 @@ const GuestLaundryBookings = () => {
                       </div>
                     </div>
                   )}
-
-                  {selectedBooking.payment?.status === 'completed' && (
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <div className="w-5 h-5 bg-gradient-to-br from-emerald-500 to-green-600 rounded-md"></div>
-                        Payment Information
-                      </h3>
-                      <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-6 space-y-4 border border-emerald-200">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Payment Status:</span>
-                          <span className="text-green-600 font-medium">Completed</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Amount Paid:</span>
-                          <span className="font-medium">{formatPriceByLanguage(selectedBooking.payment.paidAmount, i18n.language)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">Payment Date:</span>
-                          <span className="font-medium">{new Date(selectedBooking.payment.paymentDate).toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                <div className="flex justify-center mt-8 pt-6 border-t border-gray-200">
+                <div className="flex justify-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
                   <button
                     onClick={() => setSelectedBooking(null)}
-                    className="px-8 py-3 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#67BAE0] hover:to-[#3B5787] text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                    className="px-6 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#67BAE0] hover:to-[#3B5787] text-white rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 sm:transform sm:hover:scale-105 text-sm sm:text-base"
                   >
-                    Close Details
+                    {t('common.closeDetails', 'Close Details')}
                   </button>
                 </div>
               </div>

@@ -17,6 +17,13 @@
     "delete": "Delete",
     "edit": "Edit",
     "view": "View",
+    "details": "Details",
+    "pay": "Pay",
+    "paymentPending": "Payment Pending",
+    "closeDetails": "Close Details",
+    "items": "items",
+    "bookingNumber": "Booking Number",
+    "status": "Status",
     "back": "Back",
     "next": "Next",
     "previous": "Previous",
@@ -53,7 +60,8 @@
     "inProgress": "In Progress",
     "checkin": "Check-in",
     "expand": "Expand",
-    "collapse": "Collapse"
+    "collapse": "Collapse",
+    "breakfast": "Breakfast"
   },
   "platform": {
     "hotelPlatform": "Hotel Platform",
@@ -91,7 +99,9 @@
     "laundryBookings": "Laundry",
     "restaurantBookings": "Restaurant Orders",
     "housekeepingBookings": "Housekeeping",
-    "feedback": "Feedback"
+    "feedback": "Feedback",
+    "scheduleNotSet": "Schedule not set",
+    "notAvailable": "Not available"
   },"auth": {
     "signIn": "Sign In",
     "signUp": "Sign Up",
@@ -901,11 +911,14 @@
     },
     "laundry": {
       "subtitle": "Manage your laundry services, pricing, and bookings all in one place.",
+      "service": "Laundry Service",
+      "serviceName": "Laundry",
       "myBookings": "My Laundry Bookings",
       "bookingsSubtitle": "Manage and pay for your laundry service bookings.",
       "noBookings": "No laundry bookings found",
       "noBookingsDescription": "You don't have any laundry bookings yet.",
       "startBooking": "Start Booking",
+      "bookingDetails": "Booking Details",
       "labels": {
         "pending": "Pending",
         "pendingPayment": "Pending Payment",
@@ -1948,9 +1961,12 @@
       "waitingForQuote": "Waiting for quote",
       "readyForPayment": "Ready for payment",
       "confirmed": "Confirmed",
+      "completed": "Completed",
       "processing": "Processing",
       "scheduledTime": "Scheduled time",
       "pickup": "Pickup",
+      "location": "Location",
+      "hotelLocation": "Hotel Location",
       "destination": "Destination",
       "quotedPrice": "Quoted price",
       "quotedAt": "Quoted at",
@@ -1975,6 +1991,7 @@
       "pending_quote": "Pending quote",
       "payment_pending": "Payment pending",
       "payment_completed": "Payment completed",
+      "completed": "Completed",
       "quote_rejected": "Quote rejected"
     },
     "vehicleTypes": {
@@ -1987,6 +2004,7 @@
       "comfort": "Comfort",
       "economy": "Economy"
     },
+    "bookingDetails": "Booking Details",
     "info": {
       "title": "How Transportation Booking Works",
       "steps": {
@@ -1995,6 +2013,22 @@
         "step3": "Complete payment to confirm your booking immediately",
         "step4": "Receive confirmation and track your service"
       }
+    },
+    "modal": {
+      "tripInformation": "Trip Information",
+      "vehicle": "Vehicle",
+      "passengers": "Passengers",
+      "route": "Route",
+      "scheduledTime": "Scheduled Time",
+      "quoteInformation": "Quote Information",
+      "basePrice": "Base Price",
+      "finalPrice": "Final Price",
+      "quotedAt": "Quoted At",
+      "expiresAt": "Expires At",
+      "quoteNotes": "Quote Notes",
+      "serviceProvider": "Service Provider",
+      "close": "Close",
+      "payNow": "Pay Now"
     }
   },
 
@@ -2022,6 +2056,7 @@
     "returnDate": "Return Date",
     "returnTime": "Return Time",
     "pickupLocation": "Pickup Location",
+    "location": "Location",
     "dropoffLocation": "Drop-off Location",
     "passengerCount": "Number of Passengers",
     "luggageCount": "Number of Luggage",
@@ -2110,6 +2145,7 @@
     "notAvailable": "N/A",
     "tripDetails": "Trip Details",
     "from": "From",
+    "location": "Location",
     "to": "To",
     "dateTime": "Date & Time",
     "vehicleType": "Vehicle Type",
@@ -2157,6 +2193,7 @@
     "reference": "Reference: {{ref}}",
     "tripDetails": "Trip Details",
     "from": "From",
+    "location": "Location",
     "to": "To",
     "dateTime": "Date & Time",
     "vehicleType": "Vehicle Type",
@@ -2459,6 +2496,8 @@
       "total": "Total"
     },
     "restaurant": {
+      "diningExperience": "Dining Experience",
+      "restaurantAndDining": "Restaurant & Dining",
       "noRestaurantServices": "No Restaurant Services Available",
       "noRestaurantDescription": "This hotel doesn't offer restaurant services at the moment.",
       "menuItemsNotAvailable": "Menu Items Not Available",
@@ -2535,5 +2574,31 @@
     "rating3": "Good",
     "rating4": "Very Good",
     "rating5": "Excellent"
+  },
+  "restaurant": {
+    "bookingDetails": "Booking Details",
+    "bookingInformation": "Booking Information",
+    "bookingNumber": "Booking Number",
+    "status": "Status",
+    "totalAmount": "Total Amount",
+    "menuItems": "Menu Items",
+    "quantity": "Qty",
+    "schedule": "Schedule",
+    "date": "Date",
+    "time": "Time",
+    "deliveryLocation": "Delivery Location",
+    "specialRequests": "Special Requests",
+    "paymentInformation": "Payment Information",
+    "paymentStatus": "Payment Status",
+    "amountPaid": "Amount Paid",
+    "paymentDate": "Payment Date",
+    "prepTime": "prep time",
+    "notSet": "Not set",
+    "scheduleNotSet": "Schedule not set",
+    "completed": "Completed",
+    "labels": {
+      "confirmed": "Confirmed",
+      "completed": "Completed"
+    }
   }
 }

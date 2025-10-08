@@ -315,12 +315,12 @@ const RestaurantBookingPage = () => {
                 <div className="flex items-center space-x-2">
                   <div className="h-1 w-8 sm:w-12 bg-gradient-to-r from-[#3B5787] to-[#4a6694] rounded-full"></div>
                   <span className="text-xs font-medium text-[#3B5787] uppercase tracking-wider">
-                    Dining Experience
+                    {t('guest.restaurant.diningExperience')}
                   </span>
                 </div>
 
                 <h1 className="text-xl sm:text-3xl font-bold text-gray-900 leading-tight">
-                  Restaurant & Dining
+                  {t('guest.restaurant.restaurantAndDining')}
                 </h1>
 
                 {/* Modern Stats/Features - Mobile Optimized */}

@@ -889,7 +889,7 @@ const OrdersPage = () => {
                         <div className="bg-white rounded-lg p-3 border border-green-100">
                           {(currentOrder.location?.pickup?.address || currentOrder.location?.pickupLocation) && (
                             <div className="mb-2">
-                              <span className="text-sm font-medium text-gray-700">📍 Pickup Location: </span>
+                              <span className="text-sm font-medium text-gray-700">📍 Location: </span>
                               <span className="text-sm text-gray-900">
                                 {currentOrder.location.pickup?.address || currentOrder.location.pickupLocation}
                               </span>
@@ -977,7 +977,7 @@ const OrdersPage = () => {
                                     {item.isVegan && (
                                       <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">🌿 Vegan</span>
                                     )}
-                                    {item.spicyLevel && item.spicyLevel !== 'mild' && (
+                                    {item.spicyLevel && item.spicyLevel !== 'normal' && (
                                       <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
                                         🌶️ {item.spicyLevel}
                                       </span>
@@ -1034,7 +1034,7 @@ const OrdersPage = () => {
                            (currentOrder.location.pickup?.address !== currentOrder.location.delivery?.address) &&
                            (currentOrder.location.pickupLocation !== currentOrder.location.deliveryLocation) && (
                             <div className="mb-2">
-                              <span className="text-sm font-medium text-gray-700">📍 Pickup Location: </span>
+                              <span className="text-sm font-medium text-gray-700">📍 Location: </span>
                               <span className="text-sm text-gray-900">
                                 {currentOrder.location.pickup?.address || currentOrder.location.pickupLocation}
                               </span>

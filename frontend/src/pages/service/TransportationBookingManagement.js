@@ -451,7 +451,7 @@ const TransportationBookingManagement = () => {
                   <div className="col-span-2">
                     <span className="font-medium">{t('transportation.route')}:</span>
                     <p className="text-gray-600">
-                      {selectedBooking.tripDetails.pickupLocation} → {selectedBooking.tripDetails.destination}
+                      {selectedBooking.tripDetails.pickupLocation || selectedBooking.hotel?.address || selectedBooking.hotel?.location || 'Hotel Location'} → {selectedBooking.tripDetails.destination}
                     </p>
                   </div>
                   <div className="col-span-2">
@@ -609,8 +609,8 @@ const TransportationBookingManagement = () => {
                       </div>
                     </div>
                     <div>
-                      <span className="font-medium">{t('transportation.labels.pickup')}:</span>
-                      <p className="text-gray-600">{selectedBooking.tripDetails.pickupLocation}</p>
+                      <span className="font-medium">{t('transportation.labels.location')}:</span>
+                      <p className="text-gray-600">{selectedBooking.tripDetails.pickupLocation || selectedBooking.hotel?.address || selectedBooking.hotel?.location || 'Hotel Location'}</p>
                     </div>
                     <div>
                       <span className="font-medium">{t('transportation.labels.destination')}:</span>

@@ -384,7 +384,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
           imageUrl: item.imageUrl, // Add the missing imageUrl field!
           isAvailable: item.isAvailable,
           allergens: item.allergens || [],
-          spicyLevel: item.spicyLevel || 'mild',
+          spicyLevel: item.spicyLevel || 'normal',
           isVegetarian: item.isVegetarian || false,
           isVegan: item.isVegan || false,
           preparationTime: item.preparationTime || 15,
@@ -561,46 +561,23 @@ const RestaurantServiceCreator = ({ onBack }) => {
             Restaurant Service Details
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="block text-sm font-bold text-gray-700">
-                Service Name *
-              </label>
-              <input
-                type="text"
-                value={serviceDetails.name}
-                onChange={(e) => setServiceDetails(prev => ({ ...prev, name: e.target.value }))}
-                className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
-                placeholder="e.g., Downtown Restaurant, Rooftop Dining"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-bold text-gray-700">
-                Cuisine Type
-              </label>
-              <select
-                value={serviceDetails.cuisineType}
-                onChange={(e) => setServiceDetails(prev => ({ ...prev, cuisineType: e.target.value }))}
-                className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
-              >
-                <option value="">Select Cuisine Type</option>
-                <option value="local">Local Cuisine</option>
-                <option value="italian">Italian</option>
-                <option value="chinese">Chinese</option>
-                <option value="indian">Indian</option>
-                <option value="mexican">Mexican</option>
-                <option value="japanese">Japanese</option>
-                <option value="american">American</option>
-                <option value="mediterranean">Mediterranean</option>
-                <option value="international">International</option>
-              </select>
-            </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700">
+              Service Name *
+            </label>
+            <input
+              type="text"
+              value={serviceDetails.name}
+              onChange={(e) => setServiceDetails(prev => ({ ...prev, name: e.target.value }))}
+              className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
+              placeholder="e.g., Downtown Restaurant, Rooftop Dining"
+            />
           </div>
 
           <div className="space-y-2 mt-6">
             <label className="block text-sm font-bold text-gray-700">
               Service Description
+              <span className="text-sm font-normal text-gray-500 ml-2">(This description will appear for you as a service provider, not for users)</span>
             </label>
             <textarea
               value={serviceDetails.description}
@@ -662,7 +639,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                               />
                             ) : (
                               <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl mr-4 flex items-center justify-center text-2xl">
-                                {item.icon}
+                                🍽️
                               </div>
                             )}
                             <div>
@@ -743,7 +720,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                           </div>
                           <div className="bg-orange-50 rounded-lg p-3">
                             <div className="text-sm font-bold text-gray-700 mb-1">Spicy Level</div>
-                            <div className="text-lg font-bold text-orange-600 capitalize">{item.spicyLevel || 'mild'}</div>
+                            <div className="text-lg font-bold text-orange-600 capitalize">{item.spicyLevel || 'normal'}</div>
                           </div>
                           <div className="bg-purple-50 rounded-lg p-3">
                             <div className="text-sm font-bold text-gray-700 mb-1">Category</div>
@@ -763,7 +740,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                               🥬 Vegan
                             </span>
                           )}
-                          {item.spicyLevel && item.spicyLevel !== 'mild' && (
+                          {item.spicyLevel && item.spicyLevel !== 'normal' && (
                             <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
                               🌶️ {item.spicyLevel.charAt(0).toUpperCase() + item.spicyLevel.slice(1)}
                             </span>
@@ -918,41 +895,22 @@ const RestaurantServiceCreator = ({ onBack }) => {
                           Basic Information
                         </h4>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <label className="block text-sm font-bold text-gray-700">Service Name *</label>
-                            <input
-                              type="text"
-                              value={editFormData.name || ''}
-                              onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                              className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
-                              placeholder="Enter service name"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="block text-sm font-bold text-gray-700">Cuisine Type</label>
-                            <select
-                              value={editFormData.cuisineType || ''}
-                              onChange={(e) => setEditFormData(prev => ({ ...prev, cuisineType: e.target.value }))}
-                              className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
-                            >
-                              <option value="">Select Cuisine Type</option>
-                              <option value="local">Local Cuisine</option>
-                              <option value="italian">Italian</option>
-                              <option value="chinese">Chinese</option>
-                              <option value="indian">Indian</option>
-                              <option value="mexican">Mexican</option>
-                              <option value="japanese">Japanese</option>
-                              <option value="american">American</option>
-                              <option value="mediterranean">Mediterranean</option>
-                              <option value="international">International</option>
-                            </select>
-                          </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-bold text-gray-700">Service Name *</label>
+                          <input
+                            type="text"
+                            value={editFormData.name || ''}
+                            onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                            className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
+                            placeholder="Enter service name"
+                          />
                         </div>
 
                         <div className="space-y-2 mt-6">
-                          <label className="block text-sm font-bold text-gray-700">Service Description</label>
+                          <label className="block text-sm font-bold text-gray-700">
+                            Service Description
+                            <span className="text-sm font-normal text-gray-500 ml-2">(This description will appear for you as a service provider, not for users)</span>
+                          </label>
                           <textarea
                             value={editFormData.description || ''}
                             onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -1004,7 +962,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                                             className={item.imageUrl ? 'hidden' : 'text-lg'}
                                             style={{ display: item.imageUrl ? 'none' : 'block' }}
                                           >
-                                            {item.icon || '🍽️'}
+                                            🍽️
                                           </span>
                                         </div>
                                         <div>
@@ -1033,7 +991,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                                             🌱 Veg
                                           </span>
                                         )}
-                                        {item.spicyLevel && item.spicyLevel !== 'mild' && (
+                                        {item.spicyLevel && item.spicyLevel !== 'normal' && (
                                           <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
                                             🌶️ {item.spicyLevel}
                                           </span>
@@ -1313,12 +1271,11 @@ const CustomMenuItemForm = ({ onAddItem }) => {
     category: 'mains',
     description: '',
     price: '',
-    icon: '🍽️',
     imageUrl: '',
     preparationTime: '15',
     isVegetarian: false,
     isVegan: false,
-    spicyLevel: 'mild',
+    spicyLevel: 'normal',
     allergens: [],
     notes: ''
   });
@@ -1339,12 +1296,8 @@ const CustomMenuItemForm = ({ onAddItem }) => {
     { value: 'snacks', label: 'Snacks' }
   ];
 
-  const iconOptions = [
-    '🍽️', '🍕', '🍔', '🍗', '🥩', '🐟', '🍝', '🥗', '🍜', '🍲', '🥙', '🌮', '🍣', '🍤', '🍰', '🧁', '🍪', '☕', '🥤', '🍷', '🥘', '🍛', '🍱'
-  ];
-
   const spicyLevelOptions = [
-    { value: 'mild', label: 'Mild' },
+    { value: 'normal', label: 'Normal' },
     { value: 'medium', label: 'Medium' },
     { value: 'hot', label: 'Hot' },
     { value: 'very_hot', label: 'Very Hot' }
@@ -1549,12 +1502,11 @@ const CustomMenuItemForm = ({ onAddItem }) => {
         category: 'mains',
         description: '',
         price: '',
-        icon: '🍽️',
         imageUrl: '',
         preparationTime: '15',
         isVegetarian: false,
         isVegan: false,
-        spicyLevel: 'mild',
+        spicyLevel: 'normal',
         allergens: [],
         notes: ''
       });
@@ -1614,25 +1566,6 @@ const CustomMenuItemForm = ({ onAddItem }) => {
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
             required
           />
-        </div>
-
-        {/* Icon */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Icon (if no image)
-          </label>
-          <select
-            value={formData.icon}
-            onChange={(e) => handleInputChange('icon', e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            disabled={imagePreview || formData.imageUrl}
-          >
-            {iconOptions.map(icon => (
-              <option key={icon} value={icon}>
-                {icon} {icon}
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* Preparation Time */}
@@ -1725,14 +1658,23 @@ const CustomMenuItemForm = ({ onAddItem }) => {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Description
+          <span className="text-sm font-normal text-gray-500 ml-2">(Max 200 words)</span>
         </label>
         <textarea
           value={formData.description}
-          onChange={(e) => handleInputChange('description', e.target.value)}
+          onChange={(e) => {
+            const words = e.target.value.split(/\s+/).filter(word => word.length > 0);
+            if (words.length <= 200) {
+              handleInputChange('description', e.target.value);
+            }
+          }}
           placeholder="Describe the dish, ingredients, cooking method..."
           rows="3"
           className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
         />
+        <div className="text-sm text-gray-500 mt-1">
+          {formData.description.split(/\s+/).filter(word => word.length > 0).length}/200 words
+        </div>
       </div>
 
       {/* Dietary Options */}
@@ -1847,12 +1789,11 @@ const EditMenuItemForm = ({ item, onSave, onCancel }) => {
     category: item.category || 'mains',
     description: item.description || '',
     price: item.price || '',
-    icon: item.icon || '🍽️',
     imageUrl: item.imageUrl || '',
     preparationTime: item.preparationTime || 15,
     isVegetarian: item.isVegetarian || false,
     isVegan: item.isVegan || false,
-    spicyLevel: item.spicyLevel || 'mild',
+    spicyLevel: item.spicyLevel || 'normal',
     allergens: item.allergens || [],
     notes: item.notes || '',
     isAvailable: item.isAvailable !== undefined ? item.isAvailable : true
@@ -1871,12 +1812,8 @@ const EditMenuItemForm = ({ item, onSave, onCancel }) => {
     { value: 'snacks', label: 'Snacks' }
   ];
 
-  const iconOptions = [
-    '🍽️', '🍕', '🍔', '🍗', '🥩', '🐟', '🍝', '🥗', '🍜', '🍲', '🥙', '🌮', '🍣', '🍤', '🍰', '🧁', '🍪', '☕', '🥤', '🍷', '🥘', '🍛', '🍱'
-  ];
-
   const spicyLevelOptions = [
-    { value: 'mild', label: 'Mild' },
+    { value: 'normal', label: 'Normal' },
     { value: 'medium', label: 'Medium' },
     { value: 'hot', label: 'Hot' },
     { value: 'very_hot', label: 'Very Hot' }
@@ -1993,24 +1930,6 @@ const EditMenuItemForm = ({ item, onSave, onCancel }) => {
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   required
                 />
-              </div>
-
-              {/* Icon */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Icon (if no image)
-                </label>
-                <select
-                  value={formData.icon}
-                  onChange={(e) => handleInputChange('icon', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                >
-                  {iconOptions.map(icon => (
-                    <option key={icon} value={icon}>
-                      {icon} {icon}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               {/* Preparation Time */}
@@ -2158,12 +2077,11 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
     category: item.category || 'mains',
     description: item.description || '',
     price: item.price || '',
-    icon: item.icon || '🍽️',
     imageUrl: item.imageUrl || '',
     preparationTime: item.preparationTime || 15,
     isVegetarian: item.isVegetarian || false,
     isVegan: item.isVegan || false,
-    spicyLevel: item.spicyLevel || 'mild',
+    spicyLevel: item.spicyLevel || 'normal',
     allergens: item.allergens || [],
     notes: item.notes || '',
     isAvailable: item.isAvailable !== undefined ? item.isAvailable : true
@@ -2186,12 +2104,8 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
     { value: 'snacks', label: 'Snacks' }
   ];
 
-  const iconOptions = [
-    '🍽️', '🍕', '🍔', '🍗', '🥩', '🐟', '🍝', '🥗', '🍜', '🍲', '🥙', '🌮', '🍣', '🍤', '🍰', '🧁', '🍪', '☕', '🥤', '🍷'
-  ];
-
   const spicyLevelOptions = [
-    { value: 'mild', label: 'Mild' },
+    { value: 'normal', label: 'Normal' },
     { value: 'medium', label: 'Medium' },
     { value: 'hot', label: 'Hot' },
     { value: 'very_hot', label: 'Very Hot' }
@@ -2399,24 +2313,6 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
               onChange={(e) => handleInputChange('preparationTime', e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
             />
-          </div>
-
-          {/* Icon */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Icon
-            </label>
-            <select
-              value={formData.icon}
-              onChange={(e) => handleInputChange('icon', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
-            >
-              {iconOptions.map(icon => (
-                <option key={icon} value={icon}>
-                  {icon} {icon}
-                </option>
-              ))}
-            </select>
           </div>
 
           {/* Spicy Level */}

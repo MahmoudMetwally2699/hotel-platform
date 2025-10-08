@@ -461,7 +461,11 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
   const getCategoryInfo = (category) => {
     // Since we no longer have hardcoded categories, return a default info
-    const defaultInfo = { label: category, icon: FaBroom, color: 'blue' };
+    const defaultInfo = {
+      label: t(`housekeeping.categories.${category}`, category),
+      icon: FaBroom,
+      color: 'blue'
+    };
 
     // Try to find the service in our services array to get better info
     const service = services.find(s => s.subcategory === category || s.category === category);
@@ -472,7 +476,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       if (category === 'amenities') icon = FaMapMarkerAlt;
 
       return {
-        label: service.name || category,
+        label: t(`housekeeping.categories.${category}`, category),
         icon: icon,
         color: 'blue'
       };
@@ -506,7 +510,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
     // Validate required fields
     if (!Array.isArray(bookingDetails.specificCategory) || bookingDetails.specificCategory.length === 0) {
-      toast.error('Please select at least one issue category');
+      toast.error(t('housekeeping.selectAtLeastOneCategory', 'Please select at least one issue category'));
       setSubmitting(false);
       return;
     }
@@ -744,9 +748,9 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
               </div>
             ) : (
               /* Service Categories Layout - Dynamic from API */
-              <div className="max-w-sm mx-auto space-y-4">
+              <div className="max-w-4xl mx-auto">
                 {/* Dynamic Services from API */}
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {services.map((service, index) => {
                     // Get image based on service subcategory or default
                     const getServiceImage = (service) => {
@@ -778,38 +782,26 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                           description: service.description,
                           estimatedDuration: service.estimatedDuration || 30
                         })}
-                        className="group bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-all w-full"
+                        className="group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 w-full"
                       >
-                        <div className="flex items-center space-x-4">
-                          <div className="flex-shrink-0">
-                            <div className="w-16 h-16 rounded-xl overflow-hidden">
-                              <img
-                                src={getServiceImage(service)}
-                                alt={service.name}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            </div>
+                        {/* Large Image on Top */}
+                        <div className="relative w-full h-48 overflow-hidden">
+                          <img
+                            src={getServiceImage(service)}
+                            alt={service.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          {/* Icon overlay */}
+                          <div className="absolute top-4 left-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md">
+                            <ServiceIcon className="text-[#3B5787] text-lg" />
                           </div>
-                          <div className="flex-1 min-w-0 text-left">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <ServiceIcon className="text-[#3B5787] text-sm flex-shrink-0" />
-                              <h3 className="font-medium text-gray-900 text-sm truncate capitalize">
-                                {service.subcategory || service.category || 'Service'}
-                              </h3>
-                            </div>
-                            {service.description && (
-                              <p className="text-xs text-gray-500 line-clamp-2">{service.description}</p>
-                            )}
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="text-xs text-gray-600 font-medium truncate">
-                                {service.name}
-                              </span>
-                              <div className="flex items-center space-x-1">
-                                <span className="text-xs text-green-600 font-medium">Available</span>
-                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                              </div>
-                            </div>
-                          </div>
+                        </div>
+
+                        {/* Service Type Name Below */}
+                        <div className="p-4">
+                          <h3 className="font-semibold text-gray-900 text-lg text-center capitalize mb-2">
+                            {t(`housekeeping.categories.${service.subcategory || service.category}`, service.subcategory || service.category || 'Service')}
+                          </h3>
                         </div>
                       </button>
                     );
@@ -956,7 +948,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
               {/* Issue Category Selection - Required Field */}
               <div ref={dropdownRef}>
                 <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">
-                  Issue Category <span className="text-red-500">*</span>
+                  {t('housekeeping.issueCategory', 'Issue Category')} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <button
@@ -1038,7 +1030,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                   )}
                 </div>
                 {(!Array.isArray(bookingDetails.specificCategory) || bookingDetails.specificCategory.length === 0) && (
-                  <p className="text-xs text-red-500 mt-1">Please select at least one category for your request</p>
+                  <p className="text-xs text-red-500 mt-1">{t('housekeeping.selectCategoryError', 'Please select at least one category for your request')}</p>
                 )}
               </div>
 
@@ -1147,7 +1139,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
                   {/* Special Requests Textarea */}
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">Special Requests</label>
+                    <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">{t('housekeeping.specialRequests', 'Special Requests')}</label>
                     <div className="relative">
                       <textarea
                         value={bookingDetails.specialRequests}
@@ -1225,26 +1217,26 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
             </p>
 
             <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-              <h3 className="font-semibold text-gray-800 mb-3">Booking Details:</h3>
+              <h3 className="font-semibold text-gray-800 mb-3">{t('housekeeping.bookingDetails', 'Booking Details')}:</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Service:</span>
-                <span className="font-medium">{selectedService.name}</span>
+                <span className="text-gray-600">{t('housekeeping.serviceType', 'Service')}:</span>
+                <span className="font-medium">{t(`housekeeping.categories.${selectedService.category}`, selectedService.category)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Guest:</span>
+                <span className="text-gray-600">{t('housekeeping.guest', 'Guest')}:</span>
                 <span className="font-medium">{bookingDetails.guestName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Room:</span>
+                <span className="text-gray-600">{t('housekeeping.room', 'Room')}:</span>
                 <span className="font-medium">{bookingDetails.roomNumber || currentUserFromRedux?.roomNumber || currentUser?.roomNumber || 'N/A'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Phone:</span>
+                <span className="text-gray-600">{t('housekeeping.phone', 'Phone')}:</span>
                 <span className="font-medium">{bookingDetails.phoneNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Timing:</span>
+                <span className="text-gray-600">{t('housekeeping.timing', 'Timing')}:</span>
                 <span className="font-medium">
                   {bookingDetails.preferredTime === 'asap' || bookingDetails.preferredTime === 'now' ? t('housekeeping.asap', 'As soon as possible') : bookingDetails.preferredTime}
                 </span>

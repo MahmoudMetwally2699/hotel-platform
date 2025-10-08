@@ -198,8 +198,8 @@ const GuestTransportationBookings = () => {
             <div className="flex items-start gap-1 min-w-0 flex-1">
               <FaMapMarkerAlt className="text-green-600 text-xs mt-0.5 flex-shrink-0" />
               <div className="min-w-0 flex-1">
-                <span className="font-medium text-gray-700 block">{t('transportation.labels.pickup')}:</span>
-                <div className="text-gray-600 truncate">{booking.tripDetails?.pickupLocation}</div>
+                <span className="font-medium text-gray-700 block">{t('transportation.labels.location')}:</span>
+                <div className="text-gray-600 truncate">{booking.tripDetails?.pickupLocation || booking.hotel?.address || booking.hotel?.location || t('transportation.labels.hotelLocation', 'Hotel Location')}</div>
               </div>
             </div>
             <div className="flex items-start gap-1 min-w-0 flex-1">
@@ -241,7 +241,7 @@ const GuestTransportationBookings = () => {
           className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[#3B5787] hover:text-[#67BAE0] bg-[#3B5787]/10 hover:bg-[#67BAE0]/20 border border-[#3B5787]/20 hover:border-[#67BAE0]/30 rounded-md font-medium text-xs transition-all duration-200"
         >
           <FaEye />
-          <span>Details</span>
+          <span>{t('common.details', 'Details')}</span>
         </button>
 
         {/* Show Pay Now button only for payment_pending status (quote ready for payment) */}
@@ -251,7 +251,7 @@ const GuestTransportationBookings = () => {
             className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-md font-semibold text-xs shadow-md hover:shadow-lg transition-all duration-200"
           >
             <FaMoneyBillWave />
-            <span>Pay</span>
+            <span>{t('common.pay', 'Pay')}</span>
           </button>
         )}
       </div>
@@ -296,15 +296,15 @@ const GuestTransportationBookings = () => {
                     const urlTab = urlMapping[tab.id] || 'readyForPayment';
                     navigate(`/my-transportation-bookings?tab=${urlTab}`, { replace: true });
                   }}
-                  className={`flex-1 py-3 px-4 rounded-xl font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                  className={`flex-1 py-3 px-2 md:px-4 rounded-xl font-medium text-xs md:text-sm transition-all duration-300 flex items-center justify-center gap-1 md:gap-2 ${
                     selectedTab === tab.id
-                      ? 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white shadow-lg transform scale-[1.02]'
+                      ? 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white shadow-lg'
                       : 'text-gray-600 hover:text-[#3B5787] hover:bg-[#67BAE0]/10'
                   }`}
                 >
-                  <tab.icon className="text-sm" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
+                  <tab.icon className="text-xs md:text-sm flex-shrink-0" />
+                  <span className="hidden md:inline truncate">{tab.label}</span>
+                  <span className="md:hidden text-xs truncate">{tab.label.split(' ')[0]}</span>
                 </button>
               ))}
             </nav>
@@ -459,27 +459,27 @@ const GuestTransportationBookings = () => {
               <div className="space-y-6">
                 {/* Trip Information */}
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Trip Information</h4>
+                  <h4 className="font-medium text-gray-900 mb-3">{t('transportation.modal.tripInformation')}</h4>
                   <div className="bg-gray-50 rounded-md p-4 space-y-3">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <span className="font-medium">Vehicle:</span>
+                        <span className="font-medium">{t('transportation.modal.vehicle')}:</span>
                         <p className="text-gray-600">
                           {selectedBooking.vehicleDetails?.vehicleType} - {selectedBooking.vehicleDetails?.comfortLevel}
                         </p>
                       </div>
                       <div>
-                        <span className="font-medium">Passengers:</span>
+                        <span className="font-medium">{t('transportation.modal.passengers')}:</span>
                         <p className="text-gray-600">{selectedBooking.tripDetails?.passengerCount}</p>
                       </div>
                       <div className="col-span-2">
-                        <span className="font-medium">Route:</span>
+                        <span className="font-medium">{t('transportation.modal.route')}:</span>
                         <p className="text-gray-600">
                           {selectedBooking.tripDetails?.pickupLocation} → {selectedBooking.tripDetails?.destination}
                         </p>
                       </div>
                       <div className="col-span-2">
-                        <span className="font-medium">Scheduled Time:</span>
+                        <span className="font-medium">{t('transportation.modal.scheduledTime')}:</span>
                         <p className="text-gray-600">
                           {new Date(selectedBooking.tripDetails?.scheduledDateTime).toLocaleString()}
                         </p>
@@ -491,29 +491,29 @@ const GuestTransportationBookings = () => {
                 {/* Quote Information */}
                 {selectedBooking.quote && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Quote Information</h4>
+                    <h4 className="font-medium text-gray-900 mb-3">{t('transportation.modal.quoteInformation')}</h4>
                     <div className="bg-blue-50 rounded-md p-4">
                       <div className="grid grid-cols-2 gap-4 text-sm mb-3">
                         <div>
-                          <span className="font-medium">Base Price:</span>
+                          <span className="font-medium">{t('transportation.modal.basePrice')}:</span>
                           <p className="text-gray-700">{formatPriceByLanguage(selectedBooking.quote.basePrice, i18n.language)}</p>
                         </div>
                         <div>
-                          <span className="font-medium">Final Price:</span>
+                          <span className="font-medium">{t('transportation.modal.finalPrice')}:</span>
                           <p className="text-lg font-bold text-green-600">{formatPriceByLanguage(selectedBooking.quote.finalPrice, i18n.language)}</p>
                         </div>
                         <div>
-                          <span className="font-medium">Quoted At:</span>
+                          <span className="font-medium">{t('transportation.modal.quotedAt')}:</span>
                           <p className="text-gray-700">{new Date(selectedBooking.quote.quotedAt).toLocaleString()}</p>
                         </div>
                         <div>
-                          <span className="font-medium">Expires At:</span>
+                          <span className="font-medium">{t('transportation.modal.expiresAt')}:</span>
                           <p className="text-gray-700">{new Date(selectedBooking.quote.expiresAt).toLocaleString()}</p>
                         </div>
                       </div>
                       {selectedBooking.quote.quoteNotes && (
                         <div>
-                          <span className="font-medium">Quote Notes:</span>
+                          <span className="font-medium">{t('transportation.modal.quoteNotes')}:</span>
                           <p className="text-gray-700 mt-1">{selectedBooking.quote.quoteNotes}</p>
                         </div>
                       )}
@@ -523,7 +523,7 @@ const GuestTransportationBookings = () => {
 
                 {/* Service Provider Information */}
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-3">Service Provider</h4>
+                  <h4 className="font-medium text-gray-900 mb-3">{t('transportation.modal.serviceProvider')}</h4>
                   <div className="bg-gray-50 rounded-md p-4">
                     <p className="font-medium text-gray-900">{selectedBooking.serviceProvider?.businessName}</p>
                     <p className="text-gray-600">{selectedBooking.serviceProvider?.email}</p>
@@ -538,7 +538,7 @@ const GuestTransportationBookings = () => {
                   onClick={() => setSelectedBooking(null)}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >
-                  Close
+                  {t('transportation.modal.close')}
                 </button>
 
                 {selectedBooking.bookingStatus === 'payment_pending' && (
@@ -549,7 +549,7 @@ const GuestTransportationBookings = () => {
                     }}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
-                    Pay Now
+                    {t('transportation.modal.payNow')}
                   </button>
                 )}
               </div>

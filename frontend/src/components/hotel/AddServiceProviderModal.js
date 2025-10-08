@@ -37,16 +37,6 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
     // Tax Information
     taxId: '',
 
-    // Insurance Information
-    insuranceProvider: '',
-    insurancePolicyNumber: '',
-    insuranceCoverage: '',
-    insuranceExpiryDate: '',
-
-    // Capacity Information
-    maxOrdersPerDay: '',
-    totalEmployees: '',
-
     // Service Categories
     selectedCategories: [],
 
@@ -156,28 +146,6 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
       newErrors.taxId = 'Tax ID is required';
     }
 
-    // Insurance
-    if (!formData.insuranceProvider.trim()) {
-      newErrors.insuranceProvider = 'Insurance provider is required';
-    }
-    if (!formData.insurancePolicyNumber.trim()) {
-      newErrors.insurancePolicyNumber = 'Insurance policy number is required';
-    }
-    if (!formData.insuranceCoverage || formData.insuranceCoverage <= 0) {
-      newErrors.insuranceCoverage = 'Insurance coverage amount is required';
-    }
-    if (!formData.insuranceExpiryDate) {
-      newErrors.insuranceExpiryDate = 'Insurance expiry date is required';
-    }
-
-    // Capacity
-    if (!formData.maxOrdersPerDay || formData.maxOrdersPerDay <= 0) {
-      newErrors.maxOrdersPerDay = 'Maximum orders per day is required';
-    }
-    if (!formData.totalEmployees || formData.totalEmployees <= 0) {
-      newErrors.totalEmployees = 'Total employees count is required';
-    }
-
     // User credentials are required
     if (!formData.userEmail.trim()) {
       newErrors.userEmail = 'User email is required';
@@ -239,24 +207,6 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
         // Tax ID
         taxId: formData.taxId,
 
-        // Insurance
-        insurance: {
-          provider: formData.insuranceProvider,
-          policyNumber: formData.insurancePolicyNumber,
-          coverage: parseFloat(formData.insuranceCoverage),
-          expiryDate: formData.insuranceExpiryDate
-        },
-
-        // Capacity
-        capacity: {
-          maxOrdersPerDay: parseInt(formData.maxOrdersPerDay)
-        },
-
-        // Staff
-        staff: {
-          totalEmployees: parseInt(formData.totalEmployees)
-        },
-
         // User credentials
         userCredentials: {
           email: formData.userEmail,
@@ -295,12 +245,6 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
         licenseIssuedDate: '',
         licenseExpiryDate: '',
         taxId: '',
-        insuranceProvider: '',
-        insurancePolicyNumber: '',
-        insuranceCoverage: '',
-        insuranceExpiryDate: '',
-        maxOrdersPerDay: '',
-        totalEmployees: '',
         selectedCategories: [], // Add this missing field
         userEmail: '',
         userPassword: '',
@@ -815,208 +759,6 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     {errors.taxId}
                   </p>
                 )}
-              </div>
-            </div>
-
-            {/* Insurance Information Section */}
-            <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-6 border border-green-200">
-              <div className="flex items-center mb-6">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-semibold text-modern-darkGray">Insurance Information</h3>
-                  <p className="text-sm text-modern-gray">Insurance coverage and policy details</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-modern-darkGray">
-                    Insurance Provider *
-                  </label>
-                  <input
-                    type="text"
-                    name="insuranceProvider"
-                    value={formData.insuranceProvider}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
-                      errors.insuranceProvider
-                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
-                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
-                    }`}
-                    placeholder="Insurance company name"
-                    disabled={isLoading}
-                  />
-                  {errors.insuranceProvider && (
-                    <p className="text-red-500 text-sm font-medium flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      {errors.insuranceProvider}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-modern-darkGray">
-                    Policy Number *
-                  </label>
-                  <input
-                    type="text"
-                    name="insurancePolicyNumber"
-                    value={formData.insurancePolicyNumber}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
-                      errors.insurancePolicyNumber
-                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
-                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
-                    }`}
-                    placeholder="Policy number"
-                    disabled={isLoading}
-                  />
-                  {errors.insurancePolicyNumber && (
-                    <p className="text-red-500 text-sm font-medium flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      {errors.insurancePolicyNumber}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-modern-darkGray">
-                    Coverage Amount * ($)
-                  </label>
-                  <input
-                    type="number"
-                    name="insuranceCoverage"
-                    value={formData.insuranceCoverage}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
-                      errors.insuranceCoverage
-                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
-                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
-                    }`}
-                    placeholder="50000"
-                    min="1"
-                    disabled={isLoading}
-                  />
-                  {errors.insuranceCoverage && (
-                    <p className="text-red-500 text-sm font-medium flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      {errors.insuranceCoverage}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-modern-darkGray">
-                    Expiry Date *
-                  </label>
-                  <input
-                    type="date"
-                    name="insuranceExpiryDate"
-                    value={formData.insuranceExpiryDate}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
-                      errors.insuranceExpiryDate
-                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
-                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
-                    }`}
-                    disabled={isLoading}
-                  />
-                  {errors.insuranceExpiryDate && (
-                    <p className="text-red-500 text-sm font-medium flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      {errors.insuranceExpiryDate}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Capacity and Staff Information Section */}
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-200">
-              <div className="flex items-center mb-6">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-semibold text-modern-darkGray">Capacity & Staff</h3>
-                  <p className="text-sm text-modern-gray">Service capacity and operational details</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-modern-darkGray">
-                    Max Orders Per Day *
-                  </label>
-                  <input
-                    type="number"
-                    name="maxOrdersPerDay"
-                    value={formData.maxOrdersPerDay}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
-                      errors.maxOrdersPerDay
-                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
-                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
-                    }`}
-                    placeholder="10"
-                    min="1"
-                    disabled={isLoading}
-                  />
-                  {errors.maxOrdersPerDay && (
-                    <p className="text-red-500 text-sm font-medium flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      {errors.maxOrdersPerDay}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-modern-darkGray">
-                    Total Employees *
-                  </label>
-                  <input
-                    type="number"
-                    name="totalEmployees"
-                    value={formData.totalEmployees}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-modern-blue focus:border-modern-blue ${
-                      errors.totalEmployees
-                        ? 'border-red-300 bg-red-50 focus:ring-red-200 focus:border-red-400'
-                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
-                    }`}
-                    placeholder="1"
-                    min="1"
-                    disabled={isLoading}
-                  />
-                  {errors.totalEmployees && (
-                    <p className="text-red-500 text-sm font-medium flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                      {errors.totalEmployees}
-                    </p>
-                  )}
-                </div>
               </div>
             </div>
 

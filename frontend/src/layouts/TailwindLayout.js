@@ -16,13 +16,20 @@ const TailwindLayout = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen bg-background-default">      {/* Sidebar */}
-      <TailwindSidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />{/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="grid h-screen bg-background-default overflow-hidden" style={{ gridTemplateColumns: 'auto 1fr' }}>
+      {/* Sidebar */}
+      <div className="overflow-hidden">
+        <TailwindSidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex flex-col overflow-hidden min-w-0">
         {/* Header */}
-        <TailwindHeader onOpenSidebar={toggleSidebar} />        {/* Main Content Scrollable Area */}
-        <main className="flex-1 overflow-y-auto p-6 pt-4 md:ml-0 pb-20 lg:pb-6">
-          <div className="w-full">
+        <TailwindHeader onOpenSidebar={toggleSidebar} />
+
+        {/* Main Content Scrollable Area */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 pt-4 pb-20 lg:pb-6">
+          <div className="w-full max-w-none">
             {children}
           </div>
         </main>

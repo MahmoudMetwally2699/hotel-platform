@@ -187,8 +187,8 @@ const PaymentFailed = () => {
                   <div className="flex items-start">
                     <FaMapMarkerAlt className="mr-3 text-green-500 mt-1" />
                     <div>
-                      <p className="font-medium text-gray-900">{t('paymentFailed.from')}</p>
-                      <p className="text-gray-600">{booking.tripDetails.pickupLocation}</p>
+                      <p className="font-medium text-gray-900">{t('paymentFailed.location')}</p>
+                      <p className="text-gray-600">{booking.tripDetails.pickupLocation || 'Hotel Location'}</p>
                     </div>
                   </div>
                   <div className="flex items-start">

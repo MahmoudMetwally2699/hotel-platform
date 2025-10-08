@@ -334,9 +334,6 @@ const LoginPage = () => {
                 <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
                   <HiQrcode className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                   <h3 className="text-sm font-medium text-blue-800 mb-2">QR Code Required for Login</h3>
-                  <p className="text-xs text-blue-600 mb-3">
-                    To login, you must scan the QR code at hotel reception. This ensures you're logging into the correct hotel.
-                  </p>
                   <button
                     type="button"
                     onClick={() => setShowQRScanner(true)}

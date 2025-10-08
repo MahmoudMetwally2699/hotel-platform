@@ -206,12 +206,6 @@ const ProfilePage = () => {
               <h3 className="text-lg leading-6 font-medium text-gray-900">
                 {currentUser.firstName} {currentUser.lastName}
               </h3>
-              <p className="text-sm text-gray-500">
-                {userRole === 'super_admin' && t('profile.roles.superAdmin')}
-                {userRole === 'hotel_admin' && t('profile.roles.hotelAdmin')}
-                {userRole === 'service_provider' && t('profile.roles.serviceProvider')}
-                {userRole === 'guest' && t('profile.roles.guest')}
-              </p>
               <p className="text-sm text-gray-500">{currentUser.email}</p>
             </div>
           </div>
@@ -334,16 +328,7 @@ const ProfilePage = () => {
                     {currentUser.phone || t('profile.notProvided')}
                   </dd>
                 </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">{t('profile.role')}</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {userRole === 'super_admin' && t('profile.roles.superAdmin')}
-                    {userRole === 'hotel_admin' && t('profile.roles.hotelAdmin')}
-                    {userRole === 'service_provider' && t('profile.roles.serviceProvider')}
-                    {userRole === 'guest' && t('profile.roles.guest')}
-                  </dd>
-                </div>
-                <div className="bg-gray-50 px-4 py-5 sm:px-6">
+                <div className="bg-white px-4 py-5 sm:px-6">
                   <div className="flex justify-end">
                     <button
                       onClick={() => setIsEditing(true)}

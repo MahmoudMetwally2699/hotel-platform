@@ -419,9 +419,9 @@ const GuestCategorySelection = () => {
         {/* Quick Access Menu */}
         {showQuickAccess && (
           <div className="absolute bottom-16 right-0 mb-2">
-            <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 min-w-[280px] animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 min-w-[320px] animate-fade-in">
               <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">{t('guest.common.quickAccess')}</h3>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 {categories.map((category) => {
                   const IconComponent = categoryIcons[category.key] || FaShoppingBag;
                   return (
@@ -434,14 +434,15 @@ const GuestCategorySelection = () => {
                       className="flex flex-col items-center p-3 rounded-xl hover:bg-gray-50 transition-colors group"
                       title={category.title}
                     >
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#3B5787] to-[#61B6DE] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                        <IconComponent className="text-white text-sm" />
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#3B5787] to-[#61B6DE] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform relative">
+                        <IconComponent className="text-white text-lg" />
+                        {/* Service count badge */}
+                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                          {category.serviceCount}
+                        </div>
                       </div>
-                      <span className="text-xs font-medium text-gray-700 text-center truncate w-full">
+                      <span className="text-sm font-medium text-gray-700 text-center leading-tight break-words w-full">
                         {category.title}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {category.serviceCount}
                       </span>
                     </button>
                   );

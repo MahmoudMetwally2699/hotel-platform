@@ -16,12 +16,20 @@
     "delete": "حذف",
     "edit": "تعديل",
     "view": "عرض",
+    "details": "التفاصيل",
+    "pay": "دفع",
+    "paymentPending": "في انتظار الدفع",
+    "closeDetails": "إغلاق التفاصيل",
+    "items": "عناصر",
+    "bookingNumber": "رقم الحجز",
+    "status": "الحالة",
     "back": "رجوع",
     "next": "التالي",
     "previous": "السابق",
     "search": "بحث",
     "filter": "تصفية",
     "loading": "جاري التحميل...",
+    "notAvailable": "غير متوفر",
     "error": "خطأ",
     "success": "نجح",
     "warning": "تحذير",
@@ -51,7 +59,8 @@
     "inProgress": "قيد التنفيذ",
     "checkin": "تسجيل الوصول",
     "expand": "توسيع",
-    "collapse": "طي"
+    "collapse": "طي",
+    "breakfast": "الإفطار"
   },
   "platform": {
     "hotelPlatform": "منصة الفندق",
@@ -902,11 +911,14 @@
     },
     "laundry": {
       "subtitle": "إدارة جميع خدمات الغسيل والتسعير والحجوزات في مكان واحد.",
+      "service": "خدمة الغسيل",
+      "serviceName": "غسيل",
       "myBookings": "حجوزات الغسيل الخاصة بي",
       "bookingsSubtitle": "إدارة ودفع حجوزات خدمة الغسيل الخاصة بك.",
       "noBookings": "لا توجد حجوزات غسيل",
       "noBookingsDescription": "ليس لديك أي حجوزات غسيل حتى الآن.",
       "startBooking": "ابدأ الحجز",
+      "bookingDetails": "تفاصيل الحجز",
       "labels": {
         "pending": "في الانتظار",
         "pendingPayment": "في انتظار الدفع",
@@ -2031,6 +2043,7 @@
       "waitingForQuote": "في انتظار عرض السعر",
       "readyForPayment": "جاهز للدفع",
       "confirmed": "مؤكد",
+      "completed": "مكتمل",
       "bookingReference": "مرجع الحجز",
       "pickup": "نقطة الانطلاق",
       "destination": "الوجهة",
@@ -2040,6 +2053,8 @@
       "vehicle": "المركبة",
       "passengers": "مسافرين",
       "scheduledTime": "الوقت المجدول",
+      "location": "الموقع",
+      "hotelLocation": "موقع الفندق",
       "viewDetails": "عرض التفاصيل",
       "payNow": "ادفع الآن",
       "processing": "جاري المعالجة...",
@@ -2082,6 +2097,7 @@
       "premium": "ممتاز"
     },
     "bookTransportation": "احجز المواصلات",
+    "bookingDetails": "تفاصيل الحجز",
     "info": {
       "title": "كيف تعمل حجوزات المواصلات",
       "steps": {
@@ -2090,6 +2106,22 @@
         "step3": "أكمل الدفع لتأكيد حجزك فورًا",
         "step4": "استلم التأكيد وتتبع خدمتك"
       }
+    },
+    "modal": {
+      "tripInformation": "معلومات الرحلة",
+      "vehicle": "المركبة",
+      "passengers": "الركاب",
+      "route": "الطريق",
+      "scheduledTime": "الوقت المحدد",
+      "quoteInformation": "معلومات عرض السعر",
+      "basePrice": "السعر الأساسي",
+      "finalPrice": "السعر النهائي",
+      "quotedAt": "تاريخ عرض السعر",
+      "expiresAt": "ينتهي في",
+      "quoteNotes": "ملاحظات العرض",
+      "serviceProvider": "مقدم الخدمة",
+      "close": "إغلاق",
+      "payNow": "ادفع الآن"
     }
   },
   "transportationBooking": {
@@ -2101,6 +2133,7 @@
       "wheelchair_accessible": "مركبة مجهزة لذوي الاحتياجات الخاصة",
       "advance_booking": "حجز مسبق للرحلات",
       "hourly_rental": "تأجير بالساعة",
+      "daily_rental": "إيجار يومي",
       "airport_transfer": "نقل من وإلى المطار",
       "city_tour": "جولة سياحية"
     },
@@ -2112,6 +2145,7 @@
       "wheelchair_accessible": "تسهيلات خاصة لذوي الاحتياجات الخاصة",
       "advance_booking": "احجز رحلتك مسبقاً",
       "hourly_rental": "استأجر المركبة بالساعة حسب الحاجة",
+      "daily_rental": "إيجار يوم كامل مع سائق",
       "airport_transfer": "خدمة نقل متخصصة من وإلى المطار",
       "city_tour": "جولة سياحية مع سائق محترف"
     },
@@ -2451,7 +2485,17 @@
     "scheduleDate": "تاريخ الجدولة",
     "preferredTime": "الوقت المفضل",
     "quickIssueCategories": "فئات المشاكل السريعة",
-    "tapToViewCommonIssues": "اضغط لعرض المشاكل الشائعة"
+    "tapToViewCommonIssues": "اضغط لعرض المشاكل الشائعة",
+    "bookingDetails": "تفاصيل الحجز",
+    "serviceType": "نوع الخدمة",
+    "guest": "الضيف",
+    "room": "الغرفة",
+    "phone": "الهاتف",
+    "timing": "التوقيت",
+    "specialRequests": "طلبات خاصة",
+    "issueCategory": "فئة المشكلة",
+    "selectAtLeastOneCategory": "يرجى اختيار فئة واحدة على الأقل للمشكلة",
+    "selectCategoryError": "يرجى اختيار فئة واحدة على الأقل لطلبك"
   },
   "guest": {
     "common": {
@@ -2514,6 +2558,8 @@
       "total": "الإجمالي"
     },
     "restaurant": {
+      "diningExperience": "تجربة الطعام",
+      "restaurantAndDining": "المطعم والطعام",
       "noRestaurantServices": "لا توجد خدمات مطعم متاحة",
       "noRestaurantDescription": "هذا الفندق لا يقدم خدمات المطعم في الوقت الحالي.",
       "menuItemsNotAvailable": "عناصر القائمة غير متاحة",
@@ -2572,6 +2618,32 @@
         "cardDeclined": "تم رفض البطاقة",
         "networkError": "حدث خطأ في الشبكة"
       }
+    }
+  },
+  "restaurant": {
+    "bookingDetails": "تفاصيل الحجز",
+    "bookingInformation": "معلومات الحجز",
+    "bookingNumber": "رقم الحجز",
+    "status": "الحالة",
+    "totalAmount": "المبلغ الإجمالي",
+    "menuItems": "عناصر القائمة",
+    "quantity": "الكمية",
+    "schedule": "الجدولة",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "deliveryLocation": "موقع التسليم",
+    "specialRequests": "طلبات خاصة",
+    "paymentInformation": "معلومات الدفع",
+    "paymentStatus": "حالة الدفع",
+    "amountPaid": "المبلغ المدفوع",
+    "paymentDate": "تاريخ الدفع",
+    "prepTime": "وقت التحضير",
+    "notSet": "غير محدد",
+    "scheduleNotSet": "الجدولة غير محددة",
+    "completed": "مكتمل",
+    "labels": {
+      "confirmed": "مؤكد",
+      "completed": "مكتمل"
     }
   },
   "feedback": {

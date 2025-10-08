@@ -226,8 +226,8 @@ const serviceSchema = new mongoose.Schema({
     }],
     spicyLevel: {
       type: String,
-      enum: ['mild', 'medium', 'hot', 'very_hot'],
-      default: 'mild'
+      enum: ['normal', 'medium', 'hot', 'very_hot'],
+      default: 'normal'
     },
     isVegetarian: {
       type: Boolean,

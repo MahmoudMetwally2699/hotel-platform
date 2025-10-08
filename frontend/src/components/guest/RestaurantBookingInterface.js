@@ -222,7 +222,7 @@ const RestaurantBookingInterface = () => {
    */
   const getSpicyLevelIcon = (level) => {
     const levels = {
-      mild: '🌶️',
+      normal: '🌶️',
       medium: '🌶️🌶️',
       hot: '🌶️🌶️🌶️',
       very_hot: '🌶️🌶️🌶️🌶️'
@@ -403,7 +403,7 @@ const RestaurantBookingInterface = () => {
                                         Vegan
                                       </span>
                                     )}
-                                    {item.spicyLevel && item.spicyLevel !== 'mild' && (
+                                    {item.spicyLevel && item.spicyLevel !== 'normal' && (
                                       <span className="flex items-center bg-red-100 text-red-800 px-2 py-1 rounded">
                                         <FaPepperHot className="mr-1" />
                                         {getSpicyLevelIcon(item.spicyLevel)}

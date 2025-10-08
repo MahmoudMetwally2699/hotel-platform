@@ -338,16 +338,9 @@ const OrdersPage = () => {
                           </td>
                           <td className="px-4 py-4">
                             <div className="flex flex-col">
-                              <span className="text-sm font-medium text-gray-900 truncate max-w-[150px]">
-                                {order.serviceId?.name || order.service?.name || order.serviceName || t('hotelAdmin.dashboard.recentOrders.unknownService')}
+                              <span className="text-sm font-medium text-gray-900 truncate max-w-[150px] capitalize">
+                                {order.serviceId?.category || order.service?.category || order.serviceType || t('hotelAdmin.dashboard.recentOrders.unknownService')}
                               </span>
-                              <div className="flex items-center space-x-2 mt-1">
-                                {(order.serviceId?.category || order.service?.category || order.serviceType) && (
-                                  <span className="text-xs text-modern-darkGray capitalize bg-blue-50 px-2 py-1 rounded">
-                                    {order.serviceId?.category || order.service?.category || order.serviceType}
-                                  </span>
-                                )}
-                              </div>
                             </div>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
@@ -458,8 +451,8 @@ const OrdersPage = () => {
                       </div>
 
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {order.serviceId?.name || order.service?.name || order.serviceName || t('hotelAdmin.dashboard.recentOrders.unknownService')}
+                        <div className="text-sm font-medium text-gray-900 capitalize">
+                          {order.serviceId?.category || order.service?.category || order.serviceType || t('hotelAdmin.dashboard.recentOrders.unknownService')}
                         </div>
                       </div>
 

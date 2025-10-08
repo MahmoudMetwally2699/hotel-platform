@@ -22,7 +22,7 @@ const MenuItemCard = ({
   const { t, i18n } = useTranslation();
 
   const spicy = (level) =>
-    level === 'mild' ? '' :
+    level === 'normal' ? '' :
     level === 'medium' ? '🌶️🌶️' :
     level === 'hot' ? '🌶️🌶️🌶️' :
     level === 'very_hot' ? '🌶️🌶️🌶️🌶️' : '';
@@ -62,21 +62,21 @@ const MenuItemCard = ({
   );
 
   const Stepper = () => (
-    <div className="inline-flex items-center bg-white border border-gray-200 rounded-full shadow-sm">
+    <div className={`inline-flex items-center bg-white border border-gray-200 rounded-full shadow-sm ${isMobile ? 'scale-90' : ''}`}>
       <button
         onClick={onDecrease}
         aria-label={isRTL ? 'تقليل الكمية' : 'Decrease quantity'}
-        className="p-2.5 hover:bg-gray-50 rounded-l-full"
+        className={`${isMobile ? 'p-1 w-6 h-6' : 'p-2.5'} hover:bg-gray-50 rounded-l-full flex items-center justify-center`}
       >
-        <FaMinus className="w-3 h-3" />
+        <FaMinus className={`${isMobile ? 'w-2 h-2' : 'w-3 h-3'}`} />
       </button>
-      <span className="px-3 min-w-[28px] text-center font-bold text-gray-900">{quantity}</span>
+      <span className={`${isMobile ? 'px-1.5 min-w-[20px] text-xs' : 'px-3 min-w-[28px]'} text-center font-bold text-gray-900`}>{quantity}</span>
       <button
         onClick={onIncrease}
         aria-label={isRTL ? 'زيادة الكمية' : 'Increase quantity'}
-        className="p-2.5 hover:bg-gray-50 rounded-r-full"
+        className={`${isMobile ? 'p-1 w-6 h-6' : 'p-2.5'} hover:bg-gray-50 rounded-r-full flex items-center justify-center`}
       >
-        <FaPlus className="w-3 h-3" />
+        <FaPlus className={`${isMobile ? 'w-2 h-2' : 'w-3 h-3'}`} />
       </button>
     </div>
   );
@@ -105,17 +105,21 @@ const MenuItemCard = ({
             )}
             <Badges />
 
-            <div className={`mt-2 flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Price />
-              {quantity > 0 ? <Stepper /> : (
-                <button
-                  onClick={onAdd}
-                  aria-label={isRTL ? 'إضافة إلى الطلب' : 'Add to order'}
-                  className="rounded-full px-3 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#3B5787] to-[#61B6DE] hover:opacity-95 active:scale-[0.98] transition"
-                >
-                  {isRTL ? 'إضافة' : 'Add'}
-                </button>
-              )}
+            <div className={`mt-2 flex items-center justify-between gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="flex-shrink min-w-0 flex-1">
+                <Price />
+              </div>
+              <div className="flex-shrink-0 max-w-[100px]">
+                {quantity > 0 ? <Stepper /> : (
+                  <button
+                    onClick={onAdd}
+                    aria-label={isRTL ? 'إضافة إلى الطلب' : 'Add to order'}
+                    className="rounded-full px-2.5 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#3B5787] to-[#61B6DE] hover:opacity-95 active:scale-[0.98] transition"
+                  >
+                    {isRTL ? 'إضافة' : 'Add'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
