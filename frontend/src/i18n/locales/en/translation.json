@@ -1951,6 +1951,7 @@
     "tripDetails": "Trip Details",
     "noBookings": "No Bookings Found",
     "noBookingsDescription": "No transportation bookings found for the selected status.",
+    "bookTransportation": "Book Transportation",
     "tabs": {
       "pendingQuotes": "Pending Quotes",
       "pendingPayment": "Pending Payment",
@@ -2132,10 +2133,14 @@
     "title": "Payment Successful!",
     "laundryConfirmed": "Your laundry order has been confirmed",
     "transportConfirmed": "Your transportation booking has been confirmed",
+    "restaurantConfirmed": "Your restaurant reservation has been confirmed!",
     "orderConfirmed": "Order Confirmed",
     "bookingConfirmed": "Booking Confirmed",
+    "reservationConfirmed": "Reservation Confirmed",
     "reference": "Reference: {{ref}}",
     "orderDetails": "Order Details",
+    "reservationDetails": "Reservation Details",
+    "orderedItems": "Ordered Items",
     "items": "Items",
     "quantity": "Qty",
     "schedule": "Schedule",
@@ -2174,8 +2179,15 @@
       "viewBookings": "You can view this booking in your booking history",
       "beReady": "Be ready at your pickup location 10 minutes before the scheduled time"
     },
+    "nextRestaurant": {
+      "confirmationEmail": "You will receive a confirmation email shortly",
+      "restaurantContact": "The restaurant will contact you if needed",
+      "viewReservations": "You can view this reservation in your booking history",
+      "arriveOnTime": "Please arrive on time for your reservation"
+    },
     "exploreMoreServices": "Explore More Services",
     "bookAnotherTrip": "Book Another Trip",
+    "makeAnotherReservation": "Make Another Reservation",
     "needHelp": "Need help? Contact our support team at <1>{{email}}</1>"
   },
   "paymentFailed": {

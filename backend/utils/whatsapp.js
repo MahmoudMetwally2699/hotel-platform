@@ -330,9 +330,12 @@ const sendTransportationBookingConfirmation = async ({
 
 /**
  * Template: new_laundry_order_provider_e (language: en)
- * Body placeholders:
- *  {{guest_name}}, {{room_number}}, {{service_type}},
- *  {{scheduled_time}}, {{special_requests}}
+ * Body format:
+ *  👤 Guest Name: {{guest_name}}
+ *  🚪 Room: {{room_number}}
+ *  🧹 Service Type: {{service_type}}
+ *  ⏰ Scheduled Time: {{scheduled_time}}
+ *  📝 Notes: {{special_requests}}
  */
 const sendNewLaundryOrderToProvider = async ({
   providerPhone,
@@ -375,9 +378,12 @@ const sendNewLaundryOrderToProvider = async ({
 
 /**
  * Template: new_transportation_order_provider_ar (language: en)
- * Body placeholders:
- *  {{guest_name}}, {{room_number}}, {{trip_date}}, {{departure_time}},
- *  {{pickup_location}}, {{destination_location}}, {{vehicle_type}}, {{passenger_count}}
+ * Body format:
+ *  Guest name : {{guest_name}}
+ *  Room number : {{room_number}}
+ *  Trip on {{trip_date}} at {{departure_time}}
+ *  From {{pickup_location}} , to : {{destination_location}}
+ *  Vehicle: {{vehicle_type}}, Passengers: {{passenger_count}}
  */
 const sendNewTransportationOrderToProvider = async ({
   providerPhone,
@@ -398,7 +404,7 @@ const sendNewTransportationOrderToProvider = async ({
     languageCode: 'en',
     namedParams: {
       guest_name: guestName,
-      room_number: roomNumber,
+      room_number: roomNumber || 'N/A',
       trip_date: tripDate,
       departure_time: departureTime,
       pickup_location: pickupLocation,
@@ -566,6 +572,65 @@ const sendHousekeepingServiceStarted = async ({
   });
 };
 
+/**
+ * Template: dining_booking_confirmation_guest (language: en)
+ * Send dining/restaurant booking confirmation to guest
+ */
+const sendDiningBookingConfirmation = async ({
+  guestName,
+  guestPhone,
+  bookingNumber,
+  hotelName,
+  serviceType,
+  reservationDate,
+  reservationTime
+}) => {
+  return sendTemplateMessage(guestPhone, 'dining_booking_confirmation_guest', {
+    languageCode: 'en',
+    namedParams: {
+      guest_name: guestName,
+      booking_number: bookingNumber,
+      hotel_name: hotelName,
+      service_type: serviceType,
+      reservation_date: reservationDate,
+      reservation_time: reservationTime
+    }
+  });
+};
+
+/**
+ * Template: new_dining_order_provider (language: en)
+ * Send new dining order notification to service provider
+ */
+const sendNewDiningOrderToProvider = async ({
+  providerPhone,
+  bookingNumber,
+  guestName,
+  hotelName,
+  roomNumber,
+  guestPhone,
+  serviceType,
+  reservationDate,
+  reservationTime,
+  guestCount,
+  specialRequests,
+  totalAmount
+}) => {
+  // Format the scheduled time
+  let scheduledTime = `${reservationDate} at ${reservationTime}`;
+
+  return sendTemplateMessage(providerPhone, 'new_dining_order_provider', {
+    languageCode: 'en',
+    namedParams: {
+      guest_name: guestName,
+      room_number: roomNumber,
+      service_type: serviceType,
+      scheduled_time: scheduledTime,
+      special_requests: specialRequests || 'No special requests'
+    }
+  });
+};
+
 module.exports = {
   // Core
   sendTemplateMessage,
@@ -583,5 +648,8 @@ module.exports = {
   sendHousekeepingBookingConfirmation,
   sendNewHousekeepingOrderToProvider,
   sendHousekeepingServiceCompleted,
-  sendHousekeepingServiceStarted
+  sendHousekeepingServiceStarted,
+  // Dining services
+  sendDiningBookingConfirmation,
+  sendNewDiningOrderToProvider
 };

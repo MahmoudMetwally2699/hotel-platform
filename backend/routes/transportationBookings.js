@@ -201,9 +201,10 @@ router.post('/guest', protect, restrictTo('guest'), async (req, res) => {
           bookingNumber: booking.bookingReference,
           guestName: `${req.user.firstName} ${req.user.lastName || ''}`,
           hotelName: hotel.name,
+          roomNumber: hotel.name, // Use actual hotel name instead of generic "Hotel Lobby"
           guestPhone: req.user.phone,
-          tripDate: new Date(booking.tripDetails.scheduledDateTime).toLocaleDateString('ar-EG'),
-          departureTime: new Date(booking.tripDetails.scheduledDateTime).toLocaleTimeString('ar-EG'),
+          tripDate: new Date(booking.tripDetails.scheduledDateTime).toLocaleDateString('en-US'),
+          departureTime: new Date(booking.tripDetails.scheduledDateTime).toLocaleTimeString('en-US'),
           pickupLocation: booking.tripDetails.pickupLocation,
           destinationLocation: booking.tripDetails.destination,
           vehicleType: booking.vehicleDetails.vehicleType,

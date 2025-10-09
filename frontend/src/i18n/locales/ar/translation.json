@@ -2014,6 +2014,7 @@
     "tripDetails": "تفاصيل الرحلة",
     "noBookings": "لا توجد حجوزات",
     "noBookingsDescription": "لم يتم العثور على حجوزات مواصلات للحالة المحددة.",
+    "bookTransportation": "حجز المواصلات",
     "tabs": {
       "pendingQuotes": "عروض الأسعار المعلقة",
       "pendingPayment": "في انتظار الدفع",
@@ -2096,7 +2097,6 @@
       "comfort": "مريح",
       "premium": "ممتاز"
     },
-    "bookTransportation": "احجز المواصلات",
     "bookingDetails": "تفاصيل الحجز",
     "info": {
       "title": "كيف تعمل حجوزات المواصلات",
@@ -2224,10 +2224,14 @@
     "title": "تم الدفع بنجاح!",
     "laundryConfirmed": "تم تأكيد طلب الغسيل الخاص بك",
     "transportConfirmed": "تم تأكيد حجز النقل الخاص بك",
+    "restaurantConfirmed": "تم تأكيد حجز المطعم الخاص بك!",
     "orderConfirmed": "تم تأكيد الطلب",
     "bookingConfirmed": "تم تأكيد الحجز",
+    "reservationConfirmed": "تم تأكيد الحجز",
     "reference": "المرجع: {{ref}}",
     "orderDetails": "تفاصيل الطلب",
+    "reservationDetails": "تفاصيل الحجز",
+    "orderedItems": "العناصر المطلوبة",
     "items": "العناصر",
     "quantity": "الكمية",
     "schedule": "الجدول",
@@ -2237,6 +2241,7 @@
     "notAvailable": "غير متاح",
     "tripDetails": "تفاصيل الرحلة",
     "from": "من",
+    "location": "الموقع",
     "to": "إلى",
     "dateTime": "التاريخ والوقت",
     "vehicleType": "نوع المركبة",
@@ -2265,8 +2270,15 @@
       "viewBookings": "يمكنك عرض هذا الحجز في سجل حجوزاتك",
       "beReady": "كن جاهزًا في موقع الاستلام قبل 10 دقائق من الوقت المجدول"
     },
+    "nextRestaurant": {
+      "confirmationEmail": "ستتلقى رسالة تأكيد عبر البريد الإلكتروني قريبًا",
+      "restaurantContact": "سيتواصل المطعم معك إذا لزم الأمر",
+      "viewReservations": "يمكنك عرض هذا الحجز في سجل حجوزاتك",
+      "arriveOnTime": "يرجى الوصول في الوقت المحدد لحجزك"
+    },
     "exploreMoreServices": "استكشف المزيد من الخدمات",
     "bookAnotherTrip": "حجز رحلة أخرى",
+    "makeAnotherReservation": "قم بحجز آخر",
     "needHelp": "هل تحتاج مساعدة؟ تواصل مع فريق الدعم عبر <1>{{email}}</1>"
   },
   "paymentFailed": {

@@ -3,7 +3,7 @@
  * Shows all transportation bookings for the guest including quotes that need to be reviewed
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -37,7 +37,7 @@ const GuestTransportationBookings = () => {
   const [totalBookings, setTotalBookings] = useState(0);
   const itemsPerPage = 10;
 
-  // Initialize selectedTab from URL parameter
+  // Initialize selectedTab from URL parameter and refresh for new bookings
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam) {
@@ -52,6 +52,20 @@ const GuestTransportationBookings = () => {
     }
   }, [searchParams]);
 
+  // Special effect to handle new booking refresh
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'waitingForQuote' && selectedTab === 'pending_quote') {
+      // Only run this when both conditions are met
+      const timeoutId = setTimeout(() => {
+        // Force a fresh fetch without showing loading state
+        fetchBookings();
+      }, 800); // Shorter delay
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [selectedTab, searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const tabs = [
     { id: 'pending_quote', label: t('transportation.labels.waitingForQuote'), icon: FaClock },
     { id: 'payment_pending', label: t('transportation.labels.readyForPayment'), icon: FaMoneyBillWave },
@@ -63,6 +77,29 @@ const GuestTransportationBookings = () => {
     fetchBookings();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Refresh data when returning to this page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchBookings();
+      }
+    };
+
+    const handleFocus = () => {
+      fetchBookings();
+    };
+
+    // Listen for page visibility changes (when user switches tabs/apps and comes back)
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Listen for window focus (when user clicks back on the window)
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [selectedTab]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     setCurrentPage(1); // Reset to page 1 when tab changes
     fetchBookings();
@@ -72,7 +109,7 @@ const GuestTransportationBookings = () => {
     fetchBookings();
   }, [currentPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.get(`/transportation-bookings/guest?status=${selectedTab}&page=${currentPage}&limit=${itemsPerPage}`);
@@ -105,7 +142,7 @@ const GuestTransportationBookings = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedTab, currentPage, itemsPerPage, t]);
 
   const handlePayNow = async (booking) => {
 

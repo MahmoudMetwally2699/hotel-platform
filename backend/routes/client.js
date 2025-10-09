@@ -17,7 +17,9 @@ const {
   sendTransportationBookingConfirmation,
   sendNewTransportationOrderToProvider,
   sendHousekeepingBookingConfirmation,
-  sendNewHousekeepingOrderToProvider
+  sendNewHousekeepingOrderToProvider,
+  sendDiningBookingConfirmation,
+  sendNewDiningOrderToProvider
 } = require('../utils/whatsapp');
 
 /**
@@ -731,49 +733,84 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
     try {
       // Send confirmation to guest via WhatsApp
       if (user.phone) {
-        await sendLaundryBookingConfirmation({
-          guestName: `${user.firstName} ${user.lastName || ''}`,
-          guestPhone: user.phone,
-          bookingNumber,
-          hotelName: hotel.name,
-          serviceProviderName: service.providerId.businessName,
-          serviceType: service.name,
-          pickupDate: new Date(finalBookingDate).toLocaleDateString('ar-EG'),
-          pickupTime: finalSelectedTime || 'سيتم التأكيد',
-          roomNumber,
-          totalAmount: finalPrice,
-          paymentStatus: 'في انتظار الدفع'
-        });
+        if (service.category === 'dining' || service.category === 'restaurant') {
+          await sendDiningBookingConfirmation({
+            guestName: `${user.firstName} ${user.lastName || ''}`,
+            guestPhone: user.phone,
+            bookingNumber,
+            hotelName: hotel.name,
+            serviceType: 'Dining Service',
+            reservationDate: new Date(finalBookingDate).toLocaleDateString('en-US'),
+            reservationTime: finalSelectedTime || 'To be confirmed'
+          });
+        } else {
+          // Default to laundry template for other services
+          await sendLaundryBookingConfirmation({
+            guestName: `${user.firstName} ${user.lastName || ''}`,
+            guestPhone: user.phone,
+            bookingNumber,
+            hotelName: hotel.name,
+            serviceProviderName: service.providerId.businessName,
+            serviceType: service.name,
+            pickupDate: new Date(finalBookingDate).toLocaleDateString('ar-EG'),
+            pickupTime: finalSelectedTime || 'سيتم التأكيد',
+            roomNumber,
+            totalAmount: finalPrice,
+            paymentStatus: 'في انتظار الدفع'
+          });
+        }
         logger.info('WhatsApp booking confirmation sent to guest', {
           bookingNumber,
-          guestPhone: user.phone
+          guestPhone: user.phone,
+          category: service.category
         });
       }
 
       // Send notification to service provider via WhatsApp
       if (service.providerId.phone) {
-        await sendNewLaundryOrderToProvider({
-          providerPhone: service.providerId.phone,
-          bookingNumber,
-          guestName: `${user.firstName} ${user.lastName || ''}`,
-          hotelName: hotel.name,
-          roomNumber,
-          guestPhone: user.phone,
-          pickupDate: new Date(finalBookingDate).toLocaleDateString('ar-EG'),
-          pickupTime: finalSelectedTime || 'سيتم التأكيد',
-          serviceType: service.name,
-          specialNotes: specialRequests,
-          baseAmount: providerAmount
-        });
+        if (service.category === 'dining' || service.category === 'restaurant') {
+          await sendNewDiningOrderToProvider({
+            providerPhone: service.providerId.phone,
+            bookingNumber,
+            guestName: `${user.firstName} ${user.lastName || ''}`,
+            hotelName: hotel.name,
+            roomNumber,
+            guestPhone: user.phone,
+            serviceType: 'Dining Service',
+            reservationDate: new Date(finalBookingDate).toLocaleDateString('en-US'),
+            reservationTime: finalSelectedTime || 'To be confirmed',
+            guestCount: finalQuantity,
+            specialRequests: specialRequests || 'No special requests',
+            totalAmount: providerAmount
+          });
+        } else {
+          // Default to laundry template for other services
+          await sendNewLaundryOrderToProvider({
+            providerPhone: service.providerId.phone,
+            bookingNumber,
+            guestName: `${user.firstName} ${user.lastName || ''}`,
+            hotelName: hotel.name,
+            roomNumber,
+            guestPhone: user.phone,
+            pickupDate: new Date(finalBookingDate).toLocaleDateString('ar-EG'),
+            pickupTime: finalSelectedTime || 'سيتم التأكيد',
+            serviceType: service.name,
+            specialNotes: specialRequests,
+            baseAmount: providerAmount
+          });
+        }
         logger.info('WhatsApp order notification sent to provider', {
           bookingNumber,
-          providerPhone: service.providerId.phone
+          providerPhone: service.providerId.phone,
+          category: service.category
         });
       }
     } catch (whatsappError) {
       logger.error('Failed to send WhatsApp notifications', {
         error: whatsappError.message,
-        bookingNumber
+        stack: whatsappError.stack,
+        bookingNumber,
+        category: service.category
       });
       // Don't fail the booking if WhatsApp fails
     }
@@ -1571,7 +1608,7 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
       _id: serviceId,      hotelId: hotelId,
       category: 'laundry',
       isActive: true
-    }).populate('providerId', 'businessName email markup');
+    }).populate('providerId', 'businessName email phone markup');
 
     if (!service) {
       return res.status(404).json({
@@ -1786,10 +1823,77 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
       // Don't fail the booking if email fails
     }
 
+    // Send WhatsApp notifications
+    try {
+      // Send confirmation to guest via WhatsApp
+      if (user.phone) {
+        await sendLaundryBookingConfirmation({
+          guestName: `${user.firstName} ${user.lastName || ''}`,
+          guestPhone: user.phone,
+          bookingNumber,
+          hotelName: hotel.name,
+          serviceProviderName: service.providerId.businessName,
+          serviceType: service.name,
+          pickupDate: schedule.preferredDate,
+          pickupTime: schedule.preferredTime || 'سيتم التأكيد',
+          roomNumber: location.pickupLocation,
+          totalAmount: totalAmount,
+          paymentStatus: paymentMethod === 'cash' ? 'تم الدفع نقداً' : 'في انتظار الدفع'
+        });
+        logger.info('WhatsApp laundry booking confirmation sent to guest', {
+          bookingNumber,
+          guestPhone: user.phone
+        });
+      }
+
+      // Send notification to service provider via WhatsApp
+      if (service.providerId.phone) {
+        logger.info('Attempting to send WhatsApp to provider', {
+          providerPhone: service.providerId.phone,
+          bookingNumber,
+          guestName: `${user.firstName} ${user.lastName || ''}`,
+          serviceType: service.name
+        });
+
+        await sendNewLaundryOrderToProvider({
+          providerPhone: service.providerId.phone,
+          bookingNumber,
+          guestName: `${user.firstName} ${user.lastName || ''}`,
+          hotelName: hotel.name,
+          roomNumber: location.pickupLocation,
+          guestPhone: user.phone,
+          pickupDate: schedule.preferredDate,
+          pickupTime: schedule.preferredTime || 'سيتم التأكيد',
+          serviceType: 'Laundry Service',
+          specialNotes: guestDetails?.specialRequests || 'لا توجد ملاحظات خاصة',
+          baseAmount: providerEarnings
+        });
+        logger.info('WhatsApp laundry order notification sent to provider', {
+          bookingNumber,
+          providerPhone: service.providerId.phone
+        });
+      } else {
+        logger.warn('No provider phone found for WhatsApp notification', {
+          bookingNumber,
+          providerId: service.providerId._id,
+          providerBusinessName: service.providerId.businessName
+        });
+      }
+    } catch (whatsappError) {
+      logger.error('Failed to send WhatsApp notifications for laundry booking', {
+        error: whatsappError.message,
+        stack: whatsappError.stack,
+        bookingNumber,
+        userPhone: user.phone,
+        providerPhone: service.providerId?.phone
+      });
+      // Don't fail the booking if WhatsApp fails
+    }
+
     // Create appropriate response message based on payment method
     const successMessage = paymentMethod === 'cash'
-      ? 'Laundry booking created successfully. Payment will be collected at the hotel.'
-      : 'Laundry booking created successfully. Please proceed to payment.';
+      ? 'Laundry booking created successfully. Payment will be collected at the hotel. The service provider has been notified.'
+      : 'Laundry booking created successfully. Please proceed to payment. The service provider has been notified.';
 
     res.status(201).json({
       success: true,
@@ -2765,9 +2869,26 @@ router.post('/bookings/housekeeping', async (req, res) => {
 
         // Format scheduled time safely for WhatsApp (no newlines/special chars)
         let formattedScheduledTime = null;
-        if (scheduledDateTime) {
+
+        // Check if user wants ASAP service
+        const isASAP = preferredTime === 'now' ||
+                       preferredTime === 'As soon as possible' ||
+                       preferredTime === 'as soon as possible' ||
+                       preferredTime === 'ASAP' ||
+                       preferredTime === 'في أقرب وقت ممكن';
+
+        if (!isASAP && scheduledDateTime) {
           const date = new Date(scheduledDateTime);
-          formattedScheduledTime = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+          // If preferredTime contains actual time (like "01:09"), use it instead of the date's time
+          if (preferredTime && preferredTime.match(/^\d{1,2}:\d{2}$/)) {
+            formattedScheduledTime = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${preferredTime}`;
+          } else {
+            formattedScheduledTime = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+          }
+        } else if (!isASAP && preferredTime && preferredTime.match(/^\d{1,2}:\d{2}$/)) {
+          // If no scheduledDateTime but preferredTime has time format, use today's date with that time
+          const today = new Date();
+          formattedScheduledTime = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()} ${preferredTime}`;
         }
 
         await sendNewHousekeepingOrderToProvider({
@@ -2777,8 +2898,8 @@ router.post('/bookings/housekeeping', async (req, res) => {
           hotelName: hotel.name,
           roomNumber,
           guestPhone: phoneNumber,
-          serviceType: serviceName,
-          preferredTime: preferredTime === 'now' ? 'في أقرب وقت ممكن' : 'حسب الموعد المحدد',
+          serviceType: specificCategory || serviceCategory || 'housekeeping',
+          preferredTime: formattedScheduledTime || (isASAP ? 'في أقرب وقت ممكن' : preferredTime),
           scheduledTime: formattedScheduledTime || 'حسب الوقت المفضل',
           estimatedDuration: estimatedDuration || 30,
           specialRequests: specialRequests || 'لا توجد ملاحظات خاصة'
