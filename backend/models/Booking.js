@@ -116,6 +116,56 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
         },
         message: 'Invalid specific category provided'
       }
+    },
+    // Analytics data for quick issue tracking (housekeeping services)
+    selectedQuickIssues: [{
+      text: {
+        type: String,
+        required: true
+      },
+      category: {
+        type: String,
+        required: true
+      },
+      timestamp: {
+        type: Date,
+        required: true
+      },
+      serviceType: {
+        type: String,
+        required: true
+      }
+    }],
+    quickIssueAnalytics: {
+      totalQuickIssuesSelected: {
+        type: Number,
+        default: 0
+      },
+      issuesByCategory: {
+        type: Map,
+        of: Number,
+        default: new Map()
+      },
+      mostCommonIssues: [{
+        type: String
+      }]
+    },
+    issueClassification: {
+      hasQuickIssues: {
+        type: Boolean,
+        default: false
+      },
+      hasCustomRequests: {
+        type: Boolean,
+        default: false
+      },
+      quickIssueCategories: [{
+        type: String
+      }],
+      selectionPattern: [{
+        category: String,
+        timestamp: Date
+      }]
     }
   },
   // Booking Configuration

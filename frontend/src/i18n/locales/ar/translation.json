@@ -60,7 +60,8 @@
     "checkin": "تسجيل الوصول",
     "expand": "توسيع",
     "collapse": "طي",
-    "breakfast": "الإفطار"
+    "breakfast": "الإفطار",
+    "others": "أخرى"
   },
   "platform": {
     "hotelPlatform": "منصة الفندق",
@@ -2339,7 +2340,18 @@
     "categories": {
       "amenities": "المرافق",
       "cleaning": "تنظيف الغرفة",
-      "maintenance": "الصيانة"
+      "maintenance": "الصيانة",
+      "electricalIssues": "المشاكل الكهربائية",
+      "plumbingIssues": "مشاكل السباكة",
+      "acHeating": "التكييف والتدفئة",
+      "furnitureRepair": "إصلاح الأثاث",
+      "electronicsIssues": "مشاكل الأجهزة الإلكترونية",
+      "generalCleaning": "تنظيف عام للغرفة",
+      "deepCleaning": "تنظيف عميق",
+      "stainRemoval": "إزالة البقع",
+      "bathroomAmenities": "مستلزمات الحمام",
+      "roomSupplies": "مستلزمات الغرفة",
+      "cleaningSupplies": "مستلزمات التنظيف"
     },
     "descriptions": {
       "amenities": "مناشف ومستلزمات جديدة",
@@ -2506,6 +2518,9 @@
     "timing": "التوقيت",
     "specialRequests": "طلبات خاصة",
     "issueCategory": "فئة المشكلة",
+    "selectIssueCategories": "اختر فئات المشاكل...",
+    "selectOthersDescription": "اختر \"أخرى\" من فئات المشاكل أعلاه لوصف طلبك المخصص",
+    "selectOthersPlaceholder": "اختر \"أخرى\" من الفئات أعلاه لتفعيل هذا الحقل",
     "selectAtLeastOneCategory": "يرجى اختيار فئة واحدة على الأقل للمشكلة",
     "selectCategoryError": "يرجى اختيار فئة واحدة على الأقل لطلبك"
   },

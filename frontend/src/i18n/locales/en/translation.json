@@ -61,7 +61,8 @@
     "checkin": "Check-in",
     "expand": "Expand",
     "collapse": "Collapse",
-    "breakfast": "Breakfast"
+    "breakfast": "Breakfast",
+    "others": "Others"
   },
   "platform": {
     "hotelPlatform": "Hotel Platform",
@@ -2278,7 +2279,18 @@
       "cleaning": "Room Cleaning",
       "maintenance": "Maintenance",
       "amenities": "Amenities",
-      "laundry": "Laundry Service"
+      "laundry": "Laundry Service",
+      "electricalIssues": "Electrical Issues",
+      "plumbingIssues": "Plumbing Issues",
+      "acHeating": "AC & Heating",
+      "furnitureRepair": "Furniture Repair",
+      "electronicsIssues": "Electronics Issues",
+      "generalCleaning": "General Room Cleaning",
+      "deepCleaning": "Deep Cleaning",
+      "stainRemoval": "Stain Removal",
+      "bathroomAmenities": "Bathroom Amenities",
+      "roomSupplies": "Room Supplies",
+      "cleaningSupplies": "Cleaning Supplies"
     },
     "guestServices": "Guest services",
     "scheduleService": "Schedule our service below",
@@ -2444,6 +2456,12 @@
     "onSchedule": "On Schedule",
     "scheduleDate": "Schedule Date",
     "preferredTime": "Preferred Time",
+    "issueCategory": "Issue Category",
+    "selectIssueCategories": "Select issue categories...",
+    "selectOthersDescription": "Select \"Others\" from the issue categories above to describe your custom request",
+    "selectOthersPlaceholder": "Select \"Others\" from categories above to enable this field",
+    "selectCategoryError": "Please select at least one category for your request",
+    "selectAtLeastOneCategory": "Please select at least one issue category",
     "quickIssueCategories": "Quick Issue Categories",
     "tapToViewCommonIssues": "Tap to view common issues"
   },

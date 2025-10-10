@@ -64,6 +64,11 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const [timeOption, setTimeOption] = useState('asap'); // 'asap' or 'custom'
   const dropdownRef = useRef(null);
 
+  // Analytics state for quick issue tracking
+  // Captures metadata for predefined quick issues to enable future analytics dashboard creation
+  // Each issue contains: { text, category, timestamp, serviceType }
+  const [selectedQuickIssues, setSelectedQuickIssues] = useState([]);
+
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -279,22 +284,61 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
   // Handler for category checkbox selection
   const handleCategoryToggle = (categoryValue) => {
+    // Find the category label for feedback
+    const category = getSpecificCategories(selectedService.category).find(cat => cat.value === categoryValue);
+    const categoryLabel = category ? category.label : categoryValue;
+
     setBookingDetails(prev => {
       const currentCategories = Array.isArray(prev.specificCategory) ? prev.specificCategory : [];
       const isSelected = currentCategories.includes(categoryValue);
 
       if (isSelected) {
+        // Show feedback for removal
+        toast.info(`${categoryLabel} removed`, {
+          position: "bottom-center",
+          autoClose: 1000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: false,
+          draggable: false,
+          style: {
+            background: 'linear-gradient(135deg, #6b7280 0%, #9ca3af 100%)',
+            color: 'white',
+            borderRadius: '12px',
+            fontSize: '14px'
+          }
+        });
+
         return {
           ...prev,
           specificCategory: currentCategories.filter(cat => cat !== categoryValue)
         };
       } else {
+        // Show feedback for addition
+        toast.success(`${categoryLabel} selected`, {
+          position: "bottom-center",
+          autoClose: 1000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: false,
+          draggable: false,
+          style: {
+            background: 'linear-gradient(135deg, #3B5787 0%, #67BAE0 100%)',
+            color: 'white',
+            borderRadius: '12px',
+            fontSize: '14px'
+          }
+        });
+
         return {
           ...prev,
           specificCategory: [...currentCategories, categoryValue]
         };
       }
     });
+
+    // Close the dropdown immediately to provide visual feedback
+    setIssueCategoryDropdownOpen(false);
   };
 
   // Get filtered quick hint categories based on selected issue categories
@@ -373,29 +417,58 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   };
 
   // Handle quick hint selection
+  // Enhanced with analytics data capture for future dashboard insights
+  // Tracks: issue frequency, category patterns, selection timestamps, and user behavior
   const handleQuickHintSelect = (hint) => {
     const currentText = bookingDetails.specialRequests;
     const newText = currentText ? `${currentText}\n• ${hint}` : `• ${hint}`;
     setBookingDetails(prev => ({ ...prev, specialRequests: newText }));
 
-    // Optionally collapse the category after selection
-    setExpandedCategory(null);
+    // Analytics: Track selected quick issues with metadata
+    const issueMetadata = {
+      text: hint,
+      category: selectedService?.category || 'unknown',
+      timestamp: new Date().toISOString(),
+      serviceType: 'housekeeping'
+    };
 
-    // Show a subtle feedback
-    toast.success('Issue added to your request', {
+    // Prevent duplicate tracking of the same issue
+    setSelectedQuickIssues(prev => {
+      const existingIssue = prev.find(issue => issue.text === hint);
+      if (existingIssue) {
+        // Update timestamp for existing issue to track re-selection
+        return prev.map(issue =>
+          issue.text === hint
+            ? { ...issue, timestamp: new Date().toISOString() }
+            : issue
+        );
+      } else {
+        // Add new issue to analytics
+        return [...prev, issueMetadata];
+      }
+    });
+
+    // Show toast feedback for quick hint selection
+    toast.success(`"${hint}" added to notes`, {
       position: "bottom-center",
-      autoClose: 1500,
+      autoClose: 1000,
       hideProgressBar: true,
       closeOnClick: true,
       pauseOnHover: false,
       draggable: false,
       style: {
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #3B5787 0%, #67BAE0 100%)',
         color: 'white',
         borderRadius: '12px',
         fontSize: '14px'
       }
     });
+
+    // Optionally collapse the category after selection
+    setExpandedCategory(null);
+
+    // Close the quick hints dropdown to provide visual feedback
+    setShowQuickHints(false);
   };
 
   // Service categories are now dynamically loaded from the API
@@ -404,24 +477,24 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const getSpecificCategories = (serviceCategory) => {
     const categories = {
       maintenance: [
-        { value: 'electrical_issues', label: 'Electrical Issues', icon: FaBolt, color: "bg-gradient-to-r from-yellow-500 to-orange-500" },
-        { value: 'plumbing_issues', label: 'Plumbing Issues', icon: FaWrench, color: "bg-gradient-to-r from-blue-500 to-cyan-500" },
-        { value: 'ac_heating', label: 'AC & Heating', icon: FaSnowflake, color: "bg-gradient-to-r from-cyan-500 to-blue-500" },
-        { value: 'furniture_repair', label: 'Furniture Repair', icon: FaCouch, color: "bg-gradient-to-r from-amber-600 to-orange-600" },
-        { value: 'electronics_issues', label: 'Electronics Issues', icon: FaTv, color: "bg-gradient-to-r from-indigo-500 to-purple-500" },
-        { value: 'others', label: 'Others', icon: FaLightbulb, color: "bg-gradient-to-r from-gray-500 to-gray-600" }
+        { value: 'electrical_issues', label: t('housekeeping.categories.electricalIssues', 'Electrical Issues'), icon: FaBolt, color: "bg-gradient-to-r from-yellow-500 to-orange-500" },
+        { value: 'plumbing_issues', label: t('housekeeping.categories.plumbingIssues', 'Plumbing Issues'), icon: FaWrench, color: "bg-gradient-to-r from-blue-500 to-cyan-500" },
+        { value: 'ac_heating', label: t('housekeeping.categories.acHeating', 'AC & Heating'), icon: FaSnowflake, color: "bg-gradient-to-r from-cyan-500 to-blue-500" },
+        { value: 'furniture_repair', label: t('housekeeping.categories.furnitureRepair', 'Furniture Repair'), icon: FaCouch, color: "bg-gradient-to-r from-amber-600 to-orange-600" },
+        { value: 'electronics_issues', label: t('housekeeping.categories.electronicsIssues', 'Electronics Issues'), icon: FaTv, color: "bg-gradient-to-r from-indigo-500 to-purple-500" },
+        { value: 'others', label: t('common.others', 'Others'), icon: FaLightbulb, color: "bg-gradient-to-r from-gray-500 to-gray-600" }
       ],
       cleaning: [
-        { value: 'general_cleaning', label: 'General Room Cleaning', icon: FaBroom, color: "bg-gradient-to-r from-[#3B5787] to-[#67BAE0]" },
-        { value: 'deep_cleaning', label: 'Deep Cleaning', icon: FaSprayCan, color: "bg-gradient-to-r from-green-500 to-emerald-500" },
-        { value: 'stain_removal', label: 'Stain Removal', icon: FaSprayCan, color: "bg-gradient-to-r from-red-500 to-pink-500" },
-        { value: 'others', label: 'Others', icon: FaLightbulb, color: "bg-gradient-to-r from-gray-500 to-gray-600" }
+        { value: 'general_cleaning', label: t('housekeeping.categories.generalCleaning', 'General Room Cleaning'), icon: FaBroom, color: "bg-gradient-to-r from-[#3B5787] to-[#67BAE0]" },
+        { value: 'deep_cleaning', label: t('housekeeping.categories.deepCleaning', 'Deep Cleaning'), icon: FaSprayCan, color: "bg-gradient-to-r from-green-500 to-emerald-500" },
+        { value: 'stain_removal', label: t('housekeeping.categories.stainRemoval', 'Stain Removal'), icon: FaSprayCan, color: "bg-gradient-to-r from-red-500 to-pink-500" },
+        { value: 'others', label: t('common.others', 'Others'), icon: FaLightbulb, color: "bg-gradient-to-r from-gray-500 to-gray-600" }
       ],
       amenities: [
-        { value: 'bathroom_amenities', label: 'Bathroom Amenities', icon: FaSprayCan, color: "bg-gradient-to-r from-blue-400 to-cyan-400" },
-        { value: 'room_supplies', label: 'Room Supplies', icon: FaBroom, color: "bg-gradient-to-r from-purple-500 to-indigo-500" },
-        { value: 'cleaning_supplies', label: 'Cleaning Supplies', icon: FaSprayCan, color: "bg-gradient-to-r from-green-400 to-teal-400" },
-        { value: 'others', label: 'Others', icon: FaLightbulb, color: "bg-gradient-to-r from-gray-500 to-gray-600" }
+        { value: 'bathroom_amenities', label: t('housekeeping.categories.bathroomAmenities', 'Bathroom Amenities'), icon: FaSprayCan, color: "bg-gradient-to-r from-blue-400 to-cyan-400" },
+        { value: 'room_supplies', label: t('housekeeping.categories.roomSupplies', 'Room Supplies'), icon: FaBroom, color: "bg-gradient-to-r from-purple-500 to-indigo-500" },
+        { value: 'cleaning_supplies', label: t('housekeeping.categories.cleaningSupplies', 'Cleaning Supplies'), icon: FaSprayCan, color: "bg-gradient-to-r from-green-400 to-teal-400" },
+        { value: 'others', label: t('common.others', 'Others'), icon: FaLightbulb, color: "bg-gradient-to-r from-gray-500 to-gray-600" }
       ]
     };
     return categories[serviceCategory] || [];
@@ -534,20 +607,73 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       // For backend compatibility, keep 'now' for ASAP but also provide display text
       const backendTime = bookingDetails.preferredTime === 'asap' ? 'now' : bookingDetails.preferredTime;
 
+      // Generate analytics data from selected quick issues
+      const quickIssueAnalytics = {
+        totalQuickIssuesSelected: selectedQuickIssues.length,
+        issuesByCategory: selectedQuickIssues.reduce((acc, issue) => {
+          acc[issue.category] = (acc[issue.category] || 0) + 1;
+          return acc;
+        }, {}),
+        mostCommonIssues: selectedQuickIssues
+          .reduce((acc, issue) => {
+            const existing = acc.find(item => item.text === issue.text);
+            if (existing) {
+              existing.count += 1;
+            } else {
+              acc.push({ text: issue.text, count: 1 });
+            }
+            return acc;
+          }, [])
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5)
+          .map(item => item.text)
+      };
+
+      // Create issue classification for categorized data with proper boolean values
+      const issueClassification = {
+        hasQuickIssues: Boolean(selectedQuickIssues.length > 0),
+        hasCustomRequests: Boolean(bookingDetails.specialRequests && bookingDetails.specialRequests.trim() !== ''),
+        quickIssueCategories: [...new Set(selectedQuickIssues.map(issue => issue.category))],
+        selectionPattern: selectedQuickIssues.map(issue => ({
+          category: issue.category,
+          timestamp: issue.timestamp
+        }))
+      };
+
       const bookingData = {
         serviceId: selectedService.id,
         serviceName: selectedService.name,
         serviceCategory: selectedService.category, // Include the service category
         specificCategory: bookingDetails.specificCategory, // Include the specific category for analysis
         hotelId,
-        ...bookingDetails,
+        // Explicitly include booking details to avoid spreading issues
+        guestName: bookingDetails.guestName,
         roomNumber: currentUserFromRedux?.roomNumber || currentUser?.roomNumber || bookingDetails.roomNumber,
+        phoneNumber: bookingDetails.phoneNumber,
         preferredTime: backendTime, // Send 'now' for backend compatibility
+        scheduledDateTime: bookingDetails.scheduledDateTime,
+        specialRequests: bookingDetails.specialRequests,
+        guestEmail: bookingDetails.guestEmail,
         serviceType: 'housekeeping',
         status: 'pending',
         bookingDate: new Date().toISOString(),
-        estimatedDuration: selectedService.estimatedDuration
+        estimatedDuration: selectedService.estimatedDuration,
+        // Analytics data for future dashboard creation
+        selectedQuickIssues,
+        quickIssueAnalytics,
+        issueClassification
       };
+
+      // Log analytics data for testing and verification
+      console.log('📊 Analytics Data Captured:', {
+        selectedQuickIssues,
+        quickIssueAnalytics,
+        issueClassification,
+        totalQuickIssues: selectedQuickIssues.length
+      });
+
+      // Debug the complete booking data
+      console.log('🎯 Complete Booking Data:', bookingData);
 
       const response = await apiClient.post('/client/bookings/housekeeping', bookingData);
 
@@ -651,6 +777,8 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       guestEmail: '',
       specificCategory: ''
     });
+    // Reset analytics state
+    setSelectedQuickIssues([]);
   };
 
   if (loading) {
@@ -990,7 +1118,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                           );
                         })
                       ) : (
-                        <span className="text-[#3B5787]/60">Select issue categories...</span>
+                        <span className="text-[#3B5787]/60">{t('housekeeping.selectIssueCategories', 'Select issue categories...')}</span>
                       )}
                     </div>
                     <div className={`transform transition-all duration-300 ml-2 flex-shrink-0 mt-1 ${issueCategoryDropdownOpen ? 'rotate-180' : ''}`}>
@@ -1161,7 +1289,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                     {!isOthersSelected && (
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mb-2">
                         <p className="text-xs text-yellow-700">
-                          💡 Select "Others" from the issue categories above to describe your custom request
+                          💡 {t('housekeeping.selectOthersDescription', 'Select "Others" from the issue categories above to describe your custom request')}
                         </p>
                       </div>
                     )}
@@ -1180,7 +1308,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                         placeholder={
                           isOthersSelected
                             ? t('housekeeping.additionalNotes', 'Describe your issue or request...')
-                            : 'Select "Others" from categories above to enable this field'
+                            : t('housekeeping.selectOthersPlaceholder', 'Select "Others" from categories above to enable this field')
                         }
                       />
                       {bookingDetails.specialRequests.length > 0 && isOthersSelected && (

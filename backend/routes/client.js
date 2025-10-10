@@ -2518,7 +2518,11 @@ router.post('/bookings/housekeeping', async (req, res) => {
       scheduledDateTime,
       specialRequests,
       guestEmail,
-      estimatedDuration
+      estimatedDuration,
+      // Analytics data for future dashboard creation
+      selectedQuickIssues,
+      quickIssueAnalytics,
+      issueClassification
     } = req.body;
 
     // Validate required fields
@@ -2659,6 +2663,23 @@ router.post('/bookings/housekeeping', async (req, res) => {
       // Housekeeping booking - Service provider (output removed)
     }
 
+    // Validate and sanitize analytics data to ensure proper types
+    const sanitizedIssueClassification = issueClassification ? {
+      hasQuickIssues: Boolean(issueClassification.hasQuickIssues),
+      hasCustomRequests: Boolean(issueClassification.hasCustomRequests),
+      quickIssueCategories: Array.isArray(issueClassification.quickIssueCategories)
+        ? issueClassification.quickIssueCategories
+        : [],
+      selectionPattern: Array.isArray(issueClassification.selectionPattern)
+        ? issueClassification.selectionPattern
+        : []
+    } : {
+      hasQuickIssues: false,
+      hasCustomRequests: false,
+      quickIssueCategories: [],
+      selectionPattern: []
+    };
+
     // Create booking with all required fields for housekeeping services
     const bookingData = {
       // Core booking fields - handle both custom and real services
@@ -2686,7 +2707,15 @@ router.post('/bookings/housekeeping', async (req, res) => {
       serviceDetails: {
         name: service ? service.name : serviceName,
         category: 'housekeeping', // Use 'housekeeping' since that's what the Booking model expects
-        specificCategory: specificCategory // Add the specific category for analysis
+        specificCategory: specificCategory, // Add the specific category for analysis
+        // Analytics data for dashboard insights
+        selectedQuickIssues: selectedQuickIssues || [],
+        quickIssueAnalytics: quickIssueAnalytics || {
+          totalQuickIssuesSelected: 0,
+          issuesByCategory: {},
+          mostCommonIssues: []
+        },
+        issueClassification: sanitizedIssueClassification
       },
 
       // Booking Configuration
