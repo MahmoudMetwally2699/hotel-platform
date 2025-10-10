@@ -474,7 +474,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
     const service = await Service.findOne({
       _id: serviceId,
       isActive: true
-    }).populate('providerId', 'businessName email markup');
+    }).populate('providerId', 'businessName email markup phone');
 
     if (!service) {
       return res.status(404).json({
@@ -767,10 +767,45 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       }
 
       // Send notification to service provider via WhatsApp
-      if (service.providerId.phone) {
+      // First check if ServiceProvider has phone, if not get it from User
+      let providerPhone = service.providerId.phone;
+
+      // If ServiceProvider doesn't have phone, try to get it from the associated User
+      if (!providerPhone) {
+        try {
+          const providerUser = await User.findOne({
+            serviceProviderId: service.providerId._id,
+            role: 'service'
+          }).select('phone');
+          providerPhone = providerUser?.phone;
+        } catch (err) {
+          logger.error('Error fetching provider user phone', {
+            serviceProviderId: service.providerId._id,
+            error: err.message
+          });
+        }
+      }
+
+      logger.info('Checking service provider for WhatsApp notification', {
+        bookingNumber,
+        providerId: service.providerId._id,
+        providerBusinessName: service.providerId.businessName,
+        serviceProviderPhone: service.providerId.phone,
+        userPhone: providerPhone,
+        hasPhone: !!providerPhone,
+        category: service.category
+      });
+
+      // Console log provider phone debugging info
+      console.log('📱 PROVIDER PHONE DEBUG:');
+      console.log('   ServiceProvider phone:', service.providerId.phone);
+      console.log('   Final phone used:', providerPhone);
+      console.log('   Phone source:', service.providerId.phone ? 'ServiceProvider' : 'User account');
+
+      if (providerPhone) {
         if (service.category === 'dining' || service.category === 'restaurant') {
           await sendNewDiningOrderToProvider({
-            providerPhone: service.providerId.phone,
+            providerPhone: providerPhone,
             bookingNumber,
             guestName: `${user.firstName} ${user.lastName || ''}`,
             hotelName: hotel.name,
@@ -786,7 +821,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
         } else {
           // Default to laundry template for other services
           await sendNewLaundryOrderToProvider({
-            providerPhone: service.providerId.phone,
+            providerPhone: providerPhone,
             bookingNumber,
             guestName: `${user.firstName} ${user.lastName || ''}`,
             hotelName: hotel.name,
@@ -801,7 +836,17 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
         }
         logger.info('WhatsApp order notification sent to provider', {
           bookingNumber,
-          providerPhone: service.providerId.phone,
+          providerPhone: providerPhone,
+          category: service.category
+        });
+
+        // Console log the provider phone for debugging
+        console.log('🔔 SERVICE PROVIDER WHATSAPP SENT TO:', providerPhone);
+      } else {
+        logger.warn('Service provider phone number not available for WhatsApp notification', {
+          bookingNumber,
+          providerId: service.providerId._id,
+          providerBusinessName: service.providerId.businessName,
           category: service.category
         });
       }

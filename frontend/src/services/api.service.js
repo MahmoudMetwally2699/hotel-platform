@@ -110,22 +110,8 @@ apiClient.interceptors.response.use(
     // Reset 401 handling flag on successful responses
     is401HandlingInProgress = false;
 
-    // Handle cash payment redirects globally
-    if (response.data && response.data.redirectUrl && response.data.paymentMethod === 'cash') {
-  // ...existing code...
-
-      // Use setTimeout to prevent navigation during current response handling
-      setTimeout(() => {
-        window.location.href = response.data.redirectUrl;
-      }, 100);
-    } else if (response.data && response.data.data && response.data.data.redirectUrl && response.data.data.paymentMethod === 'cash') {
-  // ...existing code...
-
-      // Use setTimeout to prevent navigation during current response handling
-      setTimeout(() => {
-        window.location.href = response.data.data.redirectUrl;
-      }, 100);
-    }
+    // Note: Removed global cash payment redirect handling to allow components
+    // to handle navigation properly. Components will use the redirectUrl from response.
 
     return response;
   },

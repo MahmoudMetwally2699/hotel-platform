@@ -167,36 +167,38 @@ const PaymentMethodSelectionPage = () => {
         if (response.data.success) {
           toast.success(t('payment.cashBookingSuccess', 'Booking confirmed! Payment will be collected at the hotel.'));
 
-          // Navigate to PaymentSuccess page to show feedback modal (backup to global interceptor)
+          // Navigate to PaymentSuccess page to show feedback modal
           const updatedBooking = response.data.data?.booking || response.data.data || response.data.booking;
           const bookingReference = updatedBooking?.bookingNumber || updatedBooking?._id || updatedBooking?.id || bookingId;
 
-          // Check if global interceptor will handle redirect
-          if (!response.data.redirectUrl && !response.data.data?.redirectUrl) {
+          // Use redirect URL from backend if available
+          const redirectUrl = response.data.data?.redirectUrl || response.data.redirectUrl;
 
-            if (!bookingReference || bookingReference === 'undefined') {
-              toast.error('Booking updated but unable to show confirmation. Please check your bookings.');
-              // Fall back to bookings list if we can't get the booking reference
-              const urlServiceType = searchParams.get('serviceType');
-              switch (urlServiceType) {
-                case 'laundry':
-                  navigate('/my-laundry-bookings');
-                  break;
-                case 'restaurant':
-                  navigate('/my-restaurant-bookings');
-                  break;
-                case 'transportation':
-                  navigate('/my-transportation-bookings');
-                  break;
-                default:
-                  navigate('/my-transportation-bookings');
-              }
-              return;
-            }
+          if (redirectUrl) {
+            navigate(redirectUrl);
+            return;
+          }
 
-            // Manual redirect as backup
+          // Fallback: build redirect URL manually
+          if (bookingReference && bookingReference !== 'undefined') {
             navigate(`/guest/payment-success?booking=${bookingReference}&paymentMethod=cash&serviceType=${searchParams.get('serviceType') || 'regular'}`);
           } else {
+            // Last resort: go to appropriate bookings list
+            toast.error('Booking updated but unable to show confirmation. Please check your bookings.');
+            const urlServiceType = searchParams.get('serviceType');
+            switch (urlServiceType) {
+              case 'laundry':
+                navigate('/my-laundry-bookings');
+                break;
+              case 'restaurant':
+                navigate('/my-restaurant-bookings');
+                break;
+              case 'transportation':
+                navigate('/my-transportation-bookings');
+                break;
+              default:
+                navigate('/my-transportation-bookings');
+            }
           }
         }
       } else if (bookingData) {
@@ -224,35 +226,37 @@ const PaymentMethodSelectionPage = () => {
 
           toast.success(t('payment.cashBookingCreated', 'Booking created successfully! Payment will be collected at the hotel.'));
 
-          // Navigate to PaymentSuccess page to show feedback modal (backup to global interceptor)
+          // Navigate to PaymentSuccess page to show feedback modal
           const newBooking = response.data.data?.booking || response.data.booking || response.data;
           const bookingReference = newBooking?.bookingNumber || newBooking?._id || newBooking?.id;
 
-          // Check if global interceptor will handle redirect
-          if (!response.data.redirectUrl && !response.data.data?.redirectUrl) {
+          // Use redirect URL from backend if available
+          const redirectUrl = response.data.data?.redirectUrl || response.data.redirectUrl;
 
-            if (!bookingReference || bookingReference === 'undefined') {
-              toast.error('Booking created but unable to show confirmation. Please check your bookings.');
-              // Fall back to bookings list if we can't get the booking reference
-              switch (serviceType) {
-                case 'laundry':
-                  navigate('/my-laundry-bookings');
-                  break;
-                case 'restaurant':
-                  navigate('/my-restaurant-bookings');
-                  break;
-                case 'transportation':
-                  navigate('/my-transportation-bookings');
-                  break;
-                default:
-                  navigate('/my-transportation-bookings');
-              }
-              return;
-            }
+          if (redirectUrl) {
+            navigate(redirectUrl);
+            return;
+          }
 
-            // Manual redirect as backup
+          // Fallback: build redirect URL manually
+          if (bookingReference && bookingReference !== 'undefined') {
             navigate(`/guest/payment-success?booking=${bookingReference}&paymentMethod=cash&serviceType=${serviceType}`);
           } else {
+            // Last resort: go to appropriate bookings list
+            toast.error('Booking created but unable to show confirmation. Please check your bookings.');
+            switch (serviceType) {
+              case 'laundry':
+                navigate('/my-laundry-bookings');
+                break;
+              case 'restaurant':
+                navigate('/my-restaurant-bookings');
+                break;
+              case 'transportation':
+                navigate('/my-transportation-bookings');
+                break;
+              default:
+                navigate('/my-transportation-bookings');
+            }
           }
         }
       } else {
