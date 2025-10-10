@@ -273,6 +273,10 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
   const quickHintCategories = getQuickHintCategories();
 
+  // Check if "Others" is selected to enable/disable special requests field
+  const isOthersSelected = Array.isArray(bookingDetails.specificCategory) &&
+    bookingDetails.specificCategory.includes('others');
+
   // Handler for category checkbox selection
   const handleCategoryToggle = (categoryValue) => {
     setBookingDetails(prev => {
@@ -404,17 +408,20 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
         { value: 'plumbing_issues', label: 'Plumbing Issues', icon: FaWrench, color: "bg-gradient-to-r from-blue-500 to-cyan-500" },
         { value: 'ac_heating', label: 'AC & Heating', icon: FaSnowflake, color: "bg-gradient-to-r from-cyan-500 to-blue-500" },
         { value: 'furniture_repair', label: 'Furniture Repair', icon: FaCouch, color: "bg-gradient-to-r from-amber-600 to-orange-600" },
-        { value: 'electronics_issues', label: 'Electronics Issues', icon: FaTv, color: "bg-gradient-to-r from-indigo-500 to-purple-500" }
+        { value: 'electronics_issues', label: 'Electronics Issues', icon: FaTv, color: "bg-gradient-to-r from-indigo-500 to-purple-500" },
+        { value: 'others', label: 'Others', icon: FaLightbulb, color: "bg-gradient-to-r from-gray-500 to-gray-600" }
       ],
       cleaning: [
         { value: 'general_cleaning', label: 'General Room Cleaning', icon: FaBroom, color: "bg-gradient-to-r from-[#3B5787] to-[#67BAE0]" },
         { value: 'deep_cleaning', label: 'Deep Cleaning', icon: FaSprayCan, color: "bg-gradient-to-r from-green-500 to-emerald-500" },
-        { value: 'stain_removal', label: 'Stain Removal', icon: FaSprayCan, color: "bg-gradient-to-r from-red-500 to-pink-500" }
+        { value: 'stain_removal', label: 'Stain Removal', icon: FaSprayCan, color: "bg-gradient-to-r from-red-500 to-pink-500" },
+        { value: 'others', label: 'Others', icon: FaLightbulb, color: "bg-gradient-to-r from-gray-500 to-gray-600" }
       ],
       amenities: [
         { value: 'bathroom_amenities', label: 'Bathroom Amenities', icon: FaSprayCan, color: "bg-gradient-to-r from-blue-400 to-cyan-400" },
         { value: 'room_supplies', label: 'Room Supplies', icon: FaBroom, color: "bg-gradient-to-r from-purple-500 to-indigo-500" },
-        { value: 'cleaning_supplies', label: 'Cleaning Supplies', icon: FaSprayCan, color: "bg-gradient-to-r from-green-400 to-teal-400" }
+        { value: 'cleaning_supplies', label: 'Cleaning Supplies', icon: FaSprayCan, color: "bg-gradient-to-r from-green-400 to-teal-400" },
+        { value: 'others', label: 'Others', icon: FaLightbulb, color: "bg-gradient-to-r from-gray-500 to-gray-600" }
       ]
     };
     return categories[serviceCategory] || [];
@@ -511,6 +518,14 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     // Validate required fields
     if (!Array.isArray(bookingDetails.specificCategory) || bookingDetails.specificCategory.length === 0) {
       toast.error(t('housekeeping.selectAtLeastOneCategory', 'Please select at least one issue category'));
+      setSubmitting(false);
+      return;
+    }
+
+    // Validate special requests when "Others" is selected
+    const hasOthersSelected = bookingDetails.specificCategory.includes('others');
+    if (hasOthersSelected && (!bookingDetails.specialRequests || bookingDetails.specialRequests.trim() === '')) {
+      toast.error('Please describe your request in the Special Requests field when "Others" is selected');
       setSubmitting(false);
       return;
     }
@@ -1139,17 +1154,36 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
 
                   {/* Special Requests Textarea */}
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">{t('housekeeping.specialRequests', 'Special Requests')}</label>
+                    <label className="block text-xs sm:text-sm font-semibold text-[#3B5787] mb-1.5 sm:mb-2">
+                      {t('housekeeping.specialRequests', 'Special Requests')}
+                      {isOthersSelected && <span className="text-red-500 ml-1">*</span>}
+                    </label>
+                    {!isOthersSelected && (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mb-2">
+                        <p className="text-xs text-yellow-700">
+                          💡 Select "Others" from the issue categories above to describe your custom request
+                        </p>
+                      </div>
+                    )}
                     <div className="relative">
                       <textarea
                         value={bookingDetails.specialRequests}
                         onChange={(e) => setBookingDetails(prev => ({ ...prev, specialRequests: e.target.value }))}
-                        className="w-full px-3 sm:px-4 py-3 sm:py-4 border-2 border-[#67BAE0]/30 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] resize-none text-xs sm:text-sm bg-white/80 backdrop-blur-sm transition-all duration-200 hover:border-[#67BAE0]/50"
+                        disabled={!isOthersSelected}
+                        className={`w-full px-3 sm:px-4 py-3 sm:py-4 border-2 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] text-[#3B5787] resize-none text-xs sm:text-sm backdrop-blur-sm transition-all duration-200 ${
+                          isOthersSelected
+                            ? 'border-[#67BAE0]/30 bg-white/80 hover:border-[#67BAE0]/50'
+                            : 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                        }`}
                         rows="3"
                         maxLength="500"
-                        placeholder={t('housekeeping.additionalNotes', 'Describe your issue or request...')}
+                        placeholder={
+                          isOthersSelected
+                            ? t('housekeeping.additionalNotes', 'Describe your issue or request...')
+                            : 'Select "Others" from categories above to enable this field'
+                        }
                       />
-                      {bookingDetails.specialRequests.length > 0 && (
+                      {bookingDetails.specialRequests.length > 0 && isOthersSelected && (
                         <div className="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 flex items-center gap-1 sm:gap-2">
                           <button
                             type="button"

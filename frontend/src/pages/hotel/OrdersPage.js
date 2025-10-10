@@ -26,6 +26,11 @@ const OrdersPage = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // Status update modal state
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [statusNotes, setStatusNotes] = useState('');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pagination, setPagination] = useState({
@@ -75,7 +80,64 @@ const OrdersPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [pagination.page, pagination.limit, selectedCategory, statusFilter, searchTerm, user]);  useEffect(() => {
+  }, [pagination.page, pagination.limit, selectedCategory, statusFilter, searchTerm]);
+
+  // Update booking status
+  const updateBookingStatus = async (bookingId, newStatus, notes) => {
+    try {
+      setIsUpdatingStatus(true);
+      const response = await apiClient.patch(`${HOTEL_API.BOOKINGS}/${bookingId}/status`, {
+        status: newStatus,
+        notes: notes
+      });
+
+      if (response.data.status === 'success') {
+        // Update the booking in the local state
+        setBookings(prevBookings =>
+          prevBookings.map(booking =>
+            booking._id === bookingId
+              ? { ...booking, status: newStatus }
+              : booking
+          )
+        );
+
+        // Update selected order if it's the same booking
+        if (selectedOrder && selectedOrder._id === bookingId) {
+          setSelectedOrder(prev => ({ ...prev, status: newStatus }));
+        }
+
+        alert('Booking status updated successfully!');
+        setIsStatusModalOpen(false);
+        setSelectedStatus('');
+        setStatusNotes('');
+      }
+    } catch (error) {
+      console.error('Error updating booking status:', error);
+      alert(`Error updating booking status: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  // Handle status update form submission
+  const handleStatusUpdate = (e) => {
+    e.preventDefault();
+    if (!selectedStatus) {
+      alert('Please select a status');
+      return;
+    }
+    updateBookingStatus(selectedOrder._id, selectedStatus, statusNotes);
+  };
+
+  // Available statuses for hotel admin
+  const availableStatuses = [
+    { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'confirmed', label: 'Confirmed', color: 'bg-blue-100 text-blue-800' },
+    { value: 'assigned', label: 'Assigned', color: 'bg-purple-100 text-purple-800' },
+    { value: 'in-progress', label: 'In Progress', color: 'bg-indigo-100 text-indigo-800' },
+    { value: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800' },
+    { value: 'cancelled', label: 'Cancelled', color: 'bg-red-100 text-red-800' }
+  ];  useEffect(() => {
     if (isAuthenticated) {
       fetchBookings();
     }
@@ -338,16 +400,28 @@ const OrdersPage = () => {
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
                             <span className="text-sm font-bold text-gray-900">
-                              ${(order.pricing?.totalAmount ||
-                                 order.payment?.totalAmount ||
-                                 order.totalAmount ||
-                                 order.finalPrice ||
-                                 order.quotedPrice || 0).toFixed(2)}
+                              {(() => {
+                                const category = (order.serviceId?.category || order.service?.category || order.serviceType || '').toLowerCase();
+                                if (category === 'housekeeping' || category === 'cleaning') {
+                                  return '---';
+                                }
+                                return `$${(order.pricing?.totalAmount ||
+                                           order.payment?.totalAmount ||
+                                           order.totalAmount ||
+                                           order.finalPrice ||
+                                           order.quotedPrice || 0).toFixed(2)}`;
+                              })()}
                             </span>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
                             <span className="text-sm text-gray-700">
-                              {order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card'}
+                              {(() => {
+                                const category = (order.serviceId?.category || order.service?.category || order.serviceType || '').toLowerCase();
+                                if (category === 'housekeeping' || category === 'cleaning') {
+                                  return '---';
+                                }
+                                return order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card';
+                              })()}
                             </span>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
@@ -450,14 +524,26 @@ const OrdersPage = () => {
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-bold text-gray-900">
-                            ${(order.pricing?.totalAmount ||
-                               order.payment?.totalAmount ||
-                               order.totalAmount ||
-                               order.finalPrice ||
-                               order.quotedPrice || 0).toFixed(2)}
+                            {(() => {
+                              const category = (order.serviceId?.category || order.service?.category || order.serviceType || '').toLowerCase();
+                              if (category === 'housekeeping' || category === 'cleaning') {
+                                return '---';
+                              }
+                              return `$${(order.pricing?.totalAmount ||
+                                         order.payment?.totalAmount ||
+                                         order.totalAmount ||
+                                         order.finalPrice ||
+                                         order.quotedPrice || 0).toFixed(2)}`;
+                            })()}
                           </div>
                           <div className="text-xs text-gray-600">
-                            {order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card'}
+                            {(() => {
+                              const category = (order.serviceId?.category || order.service?.category || order.serviceType || '').toLowerCase();
+                              if (category === 'housekeeping' || category === 'cleaning') {
+                                return '---';
+                              }
+                              return order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card';
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -631,17 +717,29 @@ const OrdersPage = () => {
                   <div>
                     <span className="text-gray-600">{t('hotelAdmin.orders.table.amount')}:</span>
                     <p className="font-medium text-green-600">
-                      ${(selectedOrder.pricing?.totalAmount ||
-                         selectedOrder.payment?.totalAmount ||
-                         selectedOrder.totalAmount ||
-                         selectedOrder.finalPrice ||
-                         selectedOrder.quotedPrice || 0).toFixed(2)}
+                      {(() => {
+                        const category = (selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || '').toLowerCase();
+                        if (category === 'housekeeping' || category === 'cleaning') {
+                          return '---';
+                        }
+                        return `$${(selectedOrder.pricing?.totalAmount ||
+                                   selectedOrder.payment?.totalAmount ||
+                                   selectedOrder.totalAmount ||
+                                   selectedOrder.finalPrice ||
+                                   selectedOrder.quotedPrice || 0).toFixed(2)}`;
+                      })()}
                     </p>
                   </div>
                   <div>
                     <span className="text-gray-600">Payment Method:</span>
                     <p className="font-medium">
-                      {selectedOrder.payment?.paymentMethod === 'cash' ? 'Cash at Hotel' : 'Online Payment'}
+                      {(() => {
+                        const category = (selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || '').toLowerCase();
+                        if (category === 'housekeeping' || category === 'cleaning') {
+                          return '---';
+                        }
+                        return selectedOrder.payment?.paymentMethod === 'cash' ? 'Cash at Hotel' : 'Online Payment';
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -709,25 +807,348 @@ const OrdersPage = () => {
                 <h4 className="font-semibold text-gray-900 mb-3">{t('hotelAdmin.orders.details.serviceDetails')}</h4>
                 <div className="bg-white border rounded-lg p-4">
                   <h5 className="font-medium text-gray-900 mb-2">
-                    {selectedOrder.serviceId?.name || selectedOrder.service?.name || selectedOrder.serviceName || t('hotelAdmin.dashboard.recentOrders.unknownService')}
+                    {(() => {
+                      const category = (selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || selectedOrder.serviceDetails?.category || '').toLowerCase();
+                      const categoryNames = {
+                        'housekeeping': 'Housekeeping Service',
+                        'cleaning': 'Cleaning Service',
+                        'laundry': 'Laundry Service',
+                        'transportation': 'Transportation Service',
+                        'tours': 'Tours & Travel Service',
+                        'restaurant': 'Restaurant Service',
+                        'dining': 'Dining Service',
+                        'maintenance': 'Maintenance Service',
+                        'amenities': 'Amenities Service'
+                      };
+                      return categoryNames[category] || 'Service';
+                    })()}
                   </h5>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-gray-600">{t('hotelAdmin.orders.details.category')}:</span>
-                      <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                        {selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || 'N/A'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">{t('hotelAdmin.orders.details.provider')}:</span>
-                      <span className="ml-2 font-medium">
-                        {selectedOrder.serviceProviderId?.businessName || selectedOrder.serviceProvider?.businessName || t('hotelAdmin.orders.details.unknownProvider')}
-                      </span>
-                    </div>
-                    {selectedOrder.serviceDetails?.specialRequests && (
+                  <div className="space-y-4 text-sm">
+                    {/* Basic Service Information */}
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <span className="text-gray-600">{t('hotelAdmin.orders.details.specialRequests')}:</span>
-                        <p className="ml-2 text-gray-900">{selectedOrder.serviceDetails.specialRequests}</p>
+                        <span className="text-gray-600">{t('hotelAdmin.orders.details.category')}:</span>
+                        <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                          {selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || selectedOrder.serviceDetails?.category || 'N/A'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">{t('hotelAdmin.orders.details.provider')}:</span>
+                        <span className="ml-2 font-medium">
+                          {selectedOrder.serviceProviderId?.businessName || selectedOrder.serviceProvider?.businessName || t('hotelAdmin.orders.details.unknownProvider')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Housekeeping Specific Details */}
+                    {(() => {
+                      const category = (selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || selectedOrder.serviceDetails?.category || '').toLowerCase();
+                      if (category === 'housekeeping' || category === 'cleaning') {
+                        return (
+                          <div className="bg-blue-50 rounded-lg p-3 space-y-2">
+                            <h6 className="font-medium text-blue-900">Housekeeping Details</h6>
+
+                            {/* Category Issues */}
+                            {selectedOrder.serviceDetails?.specificCategory && (
+                              <div>
+                                <span className="text-blue-700 font-medium">Issue Categories:</span>
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                  {Array.isArray(selectedOrder.serviceDetails.specificCategory)
+                                    ? selectedOrder.serviceDetails.specificCategory.map((cat, index) => (
+                                        <span key={index} className="px-2 py-1 bg-blue-200 text-blue-800 rounded text-xs">
+                                          {cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                        </span>
+                                      ))
+                                    : (
+                                        <span className="px-2 py-1 bg-blue-200 text-blue-800 rounded text-xs">
+                                          {selectedOrder.serviceDetails.specificCategory.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                        </span>
+                                      )
+                                  }
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Special Requests */}
+                            {(selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests || selectedOrder.bookingDetails?.specialRequests) && (
+                              <div>
+                                <span className="text-blue-700 font-medium">Special Requests:</span>
+                                <p className="text-blue-900 mt-1">
+                                  {selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests || selectedOrder.bookingDetails?.specialRequests}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Room Number */}
+                            {selectedOrder.guestDetails?.roomNumber && (
+                              <div>
+                                <span className="text-blue-700 font-medium">Room Number:</span>
+                                <span className="ml-2 text-blue-900">{selectedOrder.guestDetails.roomNumber}</span>
+                              </div>
+                            )}
+
+                            {/* Urgency Level */}
+                            {selectedOrder.schedule?.urgencyLevel && (
+                              <div>
+                                <span className="text-blue-700 font-medium">Urgency:</span>
+                                <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
+                                  selectedOrder.schedule.urgencyLevel === 'urgent' ? 'bg-red-100 text-red-800' :
+                                  selectedOrder.schedule.urgencyLevel === 'high' ? 'bg-orange-100 text-orange-800' :
+                                  'bg-green-100 text-green-800'
+                                }`}>
+                                  {selectedOrder.schedule.urgencyLevel}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Laundry Specific Details */}
+                    {(() => {
+                      const category = (selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || selectedOrder.serviceDetails?.category || '').toLowerCase();
+                      if (category === 'laundry' && selectedOrder.bookingConfig?.laundryItems?.length > 0) {
+                        return (
+                          <div className="bg-green-50 rounded-lg p-3 space-y-2">
+                            <h6 className="font-medium text-green-900">Laundry Details</h6>
+
+                            {/* Laundry Items */}
+                            <div>
+                              <span className="text-green-700 font-medium">Items:</span>
+                              <div className="mt-2 space-y-2">
+                                {selectedOrder.bookingConfig.laundryItems.map((item, index) => (
+                                  <div key={index} className="bg-green-100 rounded p-2 text-sm">
+                                    <div className="flex justify-between items-start">
+                                      <div>
+                                        <span className="font-medium text-green-900">{item.itemName}</span>
+                                        <span className="ml-2 text-green-700">({item.itemCategory})</span>
+                                      </div>
+                                      <span className="text-green-800 font-medium">x{item.quantity}</span>
+                                    </div>
+                                    {item.serviceType && (
+                                      <div className="text-green-700 text-xs mt-1">
+                                        Service: {item.serviceType.name}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Express Service */}
+                            {selectedOrder.bookingConfig?.isExpressService && (
+                              <div>
+                                <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-medium">
+                                  Express Service
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Special Requests */}
+                            {(selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests) && (
+                              <div>
+                                <span className="text-green-700 font-medium">Special Requests:</span>
+                                <p className="text-green-900 mt-1">
+                                  {selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Transportation Specific Details */}
+                    {(() => {
+                      const category = (selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || selectedOrder.serviceDetails?.category || '').toLowerCase();
+                      if (category === 'transportation') {
+                        return (
+                          <div className="bg-purple-50 rounded-lg p-3 space-y-2">
+                            <h6 className="font-medium text-purple-900">Transportation Details</h6>
+
+                            {/* Pickup Location */}
+                            {selectedOrder.location?.pickup && (
+                              <div>
+                                <span className="text-purple-700 font-medium">Pickup Location:</span>
+                                <p className="text-purple-900 mt-1">{selectedOrder.location.pickup.address}</p>
+                                {selectedOrder.location.pickup.instructions && (
+                                  <p className="text-purple-700 text-sm">Instructions: {selectedOrder.location.pickup.instructions}</p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Delivery Location */}
+                            {selectedOrder.location?.delivery && (
+                              <div>
+                                <span className="text-purple-700 font-medium">Destination:</span>
+                                <p className="text-purple-900 mt-1">{selectedOrder.location.delivery.address}</p>
+                                {selectedOrder.location.delivery.instructions && (
+                                  <p className="text-purple-700 text-sm">Instructions: {selectedOrder.location.delivery.instructions}</p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Vehicle Type */}
+                            {selectedOrder.assignment?.vehicle && (
+                              <div>
+                                <span className="text-purple-700 font-medium">Vehicle Type:</span>
+                                <span className="ml-2 text-purple-900">{selectedOrder.assignment.vehicle}</span>
+                              </div>
+                            )}
+
+                            {/* Special Requests */}
+                            {(selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests) && (
+                              <div>
+                                <span className="text-purple-700 font-medium">Special Requests:</span>
+                                <p className="text-purple-900 mt-1">
+                                  {selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Restaurant/Dining Specific Details */}
+                    {(() => {
+                      const category = (selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || selectedOrder.serviceDetails?.category || '').toLowerCase();
+                      if ((category === 'restaurant' || category === 'dining') && selectedOrder.bookingConfig?.menuItems?.length > 0) {
+                        return (
+                          <div className="bg-yellow-50 rounded-lg p-3 space-y-2">
+                            <h6 className="font-medium text-yellow-900">Menu Items</h6>
+
+                            <div className="space-y-2">
+                              {selectedOrder.bookingConfig.menuItems.map((item, index) => (
+                                <div key={index} className="bg-yellow-100 rounded p-2 text-sm">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <span className="font-medium text-yellow-900">{item.itemName}</span>
+                                      <span className="ml-2 text-yellow-700">({item.itemCategory})</span>
+                                    </div>
+                                    <span className="text-yellow-800 font-medium">x{item.quantity}</span>
+                                  </div>
+                                  {item.description && (
+                                    <p className="text-yellow-700 text-xs mt-1">{item.description}</p>
+                                  )}
+                                  {item.specialInstructions && (
+                                    <p className="text-yellow-700 text-xs mt-1 italic">Note: {item.specialInstructions}</p>
+                                  )}
+                                  <div className="flex gap-2 mt-1">
+                                    {item.isVegetarian && (
+                                      <span className="px-1 py-0.5 bg-green-200 text-green-800 rounded text-xs">Vegetarian</span>
+                                    )}
+                                    {item.isVegan && (
+                                      <span className="px-1 py-0.5 bg-green-200 text-green-800 rounded text-xs">Vegan</span>
+                                    )}
+                                    {item.spicyLevel && item.spicyLevel !== 'normal' && (
+                                      <span className="px-1 py-0.5 bg-red-200 text-red-800 rounded text-xs">
+                                        {item.spicyLevel.replace('_', ' ')}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Special Requests */}
+                            {(selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests) && (
+                              <div>
+                                <span className="text-yellow-700 font-medium">Special Requests:</span>
+                                <p className="text-yellow-900 mt-1">
+                                  {selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Tours/Travel Specific Details */}
+                    {(() => {
+                      const category = (selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || selectedOrder.serviceDetails?.category || '').toLowerCase();
+                      if (category === 'tours' || category === 'travel') {
+                        return (
+                          <div className="bg-indigo-50 rounded-lg p-3 space-y-2">
+                            <h6 className="font-medium text-indigo-900">Tour Details</h6>
+
+                            {/* Service Location */}
+                            {selectedOrder.location?.service && (
+                              <div>
+                                <span className="text-indigo-700 font-medium">Tour Location:</span>
+                                <p className="text-indigo-900 mt-1">{selectedOrder.location.service.address}</p>
+                                {selectedOrder.location.service.meetingPoint && (
+                                  <p className="text-indigo-700 text-sm">Meeting Point: {selectedOrder.location.service.meetingPoint}</p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Number of Participants */}
+                            {selectedOrder.bookingConfig?.quantity && (
+                              <div>
+                                <span className="text-indigo-700 font-medium">Participants:</span>
+                                <span className="ml-2 text-indigo-900">{selectedOrder.bookingConfig.quantity} person(s)</span>
+                              </div>
+                            )}
+
+                            {/* Special Requests */}
+                            {(selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests) && (
+                              <div>
+                                <span className="text-indigo-700 font-medium">Special Requests:</span>
+                                <p className="text-indigo-900 mt-1">
+                                  {selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* General Special Requests (for services not covered above) */}
+                    {(() => {
+                      const category = (selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || selectedOrder.serviceDetails?.category || '').toLowerCase();
+                      const coveredCategories = ['housekeeping', 'cleaning', 'laundry', 'transportation', 'restaurant', 'dining', 'tours', 'travel'];
+                      const hasSpecialRequests = selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests || selectedOrder.bookingDetails?.specialRequests;
+
+                      if (!coveredCategories.includes(category) && hasSpecialRequests) {
+                        return (
+                          <div>
+                            <span className="text-gray-600">{t('hotelAdmin.orders.details.specialRequests')}:</span>
+                            <p className="ml-2 text-gray-900">{hasSpecialRequests}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Additional Services */}
+                    {selectedOrder.bookingConfig?.additionalServices?.length > 0 && (
+                      <div>
+                        <span className="text-gray-600">Additional Services:</span>
+                        <div className="mt-1 space-y-1">
+                          {selectedOrder.bookingConfig.additionalServices.map((service, index) => (
+                            <div key={index} className="flex justify-between bg-gray-100 rounded px-2 py-1 text-sm">
+                              <span>{service.name}</span>
+                              <span className="font-medium">${service.price.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notes */}
+                    {selectedOrder.bookingConfig?.notes && (
+                      <div>
+                        <span className="text-gray-600">Notes:</span>
+                        <p className="ml-2 text-gray-900">{selectedOrder.bookingConfig.notes}</p>
                       </div>
                     )}
                   </div>
@@ -781,7 +1202,8 @@ const OrdersPage = () => {
                 </button>
                 <button
                   onClick={() => {
-                    // Add functionality to update order status if needed
+                    setIsStatusModalOpen(true);
+                    setSelectedStatus(selectedOrder.status || 'pending');
                   }}
                   className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-modern-blue to-modern-lightBlue border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
                 >
@@ -789,6 +1211,123 @@ const OrdersPage = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status Update Modal */}
+      {isStatusModalOpen && selectedOrder && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsStatusModalOpen(false);
+            }
+          }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-white">Update Order Status</h3>
+                <button
+                  onClick={() => setIsStatusModalOpen(false)}
+                  className="text-white hover:text-gray-200 transition-colors duration-200"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <form onSubmit={handleStatusUpdate} className="p-6 space-y-4">
+              {/* Order Info */}
+              <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                <div className="font-medium text-gray-900">
+                  Order #{selectedOrder.bookingId || selectedOrder._id?.slice(-6)}
+                </div>
+                <div className="text-gray-600">
+                  Current Status:
+                  <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    selectedOrder.status === 'completed' ? 'bg-green-100 text-green-800' :
+                    selectedOrder.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    selectedOrder.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    selectedOrder.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {selectedOrder.status || 'processing'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  New Status
+                </label>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-modern-blue focus:border-transparent"
+                  required
+                >
+                  <option value="">Select Status</option>
+                  {availableStatuses.map((status) => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  value={statusNotes}
+                  onChange={(e) => setStatusNotes(e.target.value)}
+                  placeholder="Add any notes about this status update..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-modern-blue focus:border-transparent"
+                  rows={3}
+                />
+              </div>
+
+              {/* Status Preview */}
+              {selectedStatus && (
+                <div className="bg-blue-50 rounded-lg p-3">
+                  <div className="text-sm text-blue-800">
+                    Status will be updated to:
+                    <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      availableStatuses.find(s => s.value === selectedStatus)?.color || 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {availableStatuses.find(s => s.value === selectedStatus)?.label || selectedStatus}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsStatusModalOpen(false)}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdatingStatus || !selectedStatus}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-modern-blue to-modern-lightBlue border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isUpdatingStatus ? 'Updating...' : 'Update Status'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

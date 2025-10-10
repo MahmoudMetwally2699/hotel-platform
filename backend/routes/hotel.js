@@ -3188,6 +3188,66 @@ router.put('/bookings/:id/payment-status', catchAsync(async (req, res, next) => 
   });
 }));
 
+/**
+ * @desc    Update booking status
+ * @route   PATCH /api/hotel/bookings/:id/status
+ * @access  Private (Hotel Admin only)
+ */
+router.patch('/bookings/:id/status', protect, restrictTo('hotel'), restrictToOwnHotel, catchAsync(async (req, res, next) => {
+  const { status, notes } = req.body;
+  const bookingId = req.params.id;
+
+  // Validate status
+  const validStatuses = [
+    'pending', 'confirmed', 'assigned', 'in-progress',
+    'pickup-scheduled', 'picked-up', 'in-service',
+    'delivery-scheduled', 'completed', 'cancelled',
+    'refunded', 'disputed'
+  ];
+
+  if (!validStatuses.includes(status)) {
+    return next(new AppError('Invalid status value', 400));
+  }
+
+  // Find the booking and verify it belongs to the hotel
+  const booking = await Booking.findOne({
+    _id: bookingId,
+    hotelId: req.user.hotelId
+  });
+
+  if (!booking) {
+    return next(new AppError('Booking not found or access denied', 404));
+  }
+
+  // Store old status for logging
+  const oldStatus = booking.status;
+
+  // Update booking status using the model method
+  await booking.updateStatus(status, req.user._id, notes);
+
+  logger.info(`Booking ${bookingId} status updated from ${oldStatus} to ${status}`, {
+    hotelId: req.user.hotelId,
+    userId: req.user._id,
+    bookingId,
+    oldStatus,
+    newStatus: status,
+    notes
+  });
+
+  res.status(200).json({
+    status: 'success',
+    message: `Booking status updated to ${status}`,
+    data: {
+      booking: {
+        id: booking._id,
+        bookingNumber: booking.bookingNumber,
+        status: booking.status,
+        statusHistory: booking.statusHistory
+      }
+    }
+  });
+}));
+
 // Import and use feedback routes for hotel
 const feedbackRoutes = require('./feedback');
 router.use('/', feedbackRoutes);

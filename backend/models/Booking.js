@@ -108,7 +108,9 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
             // Amenities categories
             'bathroom_amenities',
             'room_supplies',
-            'cleaning_supplies'
+            'cleaning_supplies',
+            // Others category for custom requests
+            'others'
           ];
           return categories.every(category => allowedCategories.includes(category));
         },
