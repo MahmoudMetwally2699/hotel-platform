@@ -115,7 +115,7 @@ const SuperAdminHotelsPage = () => {
         }
       };
 
-      const result = await dispatch(createHotel(finalFormData)).unwrap();
+      await dispatch(createHotel(finalFormData)).unwrap();
       alert('Hotel and admin account created successfully!'); // Temporary replacement
       setShowCreateModal(false);
       resetForm();
@@ -128,12 +128,39 @@ const SuperAdminHotelsPage = () => {
   const handleUpdateHotel = async (e) => {
     e.preventDefault();
 
+    // Only validate passwords if at least one password field has actual content
+    const passwordValue = formData.adminData.password ? formData.adminData.password.trim() : '';
+    const confirmPasswordValue = formData.adminData.confirmPassword ? formData.adminData.confirmPassword.trim() : '';
+    const hasPasswordData = passwordValue !== '' || confirmPasswordValue !== '';
+
+    if (hasPasswordData) {
+      // If user is trying to change password, both fields must be filled and match
+      if (passwordValue === '') {
+        alert('Please enter the new password');
+        return;
+      }
+
+      if (confirmPasswordValue === '') {
+        alert('Please confirm the new password');
+        return;
+      }
+
+      if (passwordValue !== confirmPasswordValue) {
+        alert('Admin passwords do not match');
+        return;
+      }
+
+      if (passwordValue.length < 6) {
+        alert('Admin password must be at least 6 characters long');
+        return;
+      }
+    }
+
     try {
       // Upload logo if a new one was selected
       let logoUrl = selectedHotel.images?.logo; // Keep existing logo by default
       if (logoFile) {
         logoUrl = await uploadLogo(logoFile);
-      } else {
       }
 
       // Prepare updated hotel data
@@ -145,13 +172,35 @@ const SuperAdminHotelsPage = () => {
         }
       };
 
-      await dispatch(updateHotel({ id: selectedHotel._id, ...updatedHotelData })).unwrap();
-      alert('Hotel updated successfully'); // Temporary replacement
+      // If admin credentials are provided, include them
+      const hasAdminDataToUpdate = formData.adminData.firstName?.trim() ||
+                                   formData.adminData.lastName?.trim() ||
+                                   formData.adminData.email?.trim() ||
+                                   formData.adminData.phone?.trim() ||
+                                   (formData.adminData.password?.trim() && formData.adminData.password.length > 0);
+
+      if (hasAdminDataToUpdate) {
+        // Only include password if it's actually provided
+        const adminDataToUpdate = {
+          firstName: formData.adminData.firstName,
+          lastName: formData.adminData.lastName,
+          email: formData.adminData.email,
+          phone: formData.adminData.phone
+        };
+
+        // Only include password if user provided one
+        if (formData.adminData.password && formData.adminData.password.trim() !== '') {
+          adminDataToUpdate.password = formData.adminData.password;
+        }
+
+        updatedHotelData.adminData = adminDataToUpdate;
+      }      await dispatch(updateHotel({ id: selectedHotel._id, ...updatedHotelData })).unwrap();
+      alert('Hotel updated successfully');
       setShowEditModal(false);
       resetForm();
       dispatch(fetchAllHotels());
     } catch (error) {
-      alert(`Error updating hotel: ${error.message || error}`); // Temporary replacement
+      alert(`Error updating hotel: ${error.message || error}`);
     }
   };
 
@@ -309,11 +358,13 @@ const SuperAdminHotelsPage = () => {
 
   const openEditModal = (hotel) => {
     setSelectedHotel(hotel);
+
+    // Clear any previous form data first
     setFormData({
       name: hotel.name || '',
       description: hotel.description || '',
-      contactEmail: hotel.contactEmail || '',
-      contactPhone: hotel.contactPhone || '',
+      contactEmail: hotel.email || '', // Fixed: use hotel.email instead of hotel.contactEmail
+      contactPhone: hotel.phone || '', // Fixed: use hotel.phone instead of hotel.contactPhone
       address: {
         street: hotel.address?.street || '',
         city: hotel.address?.city || '',
@@ -330,6 +381,15 @@ const SuperAdminHotelsPage = () => {
         currency: hotel.paymentSettings?.currency || 'USD',
         taxRate: hotel.paymentSettings?.taxRate || 0,
         acceptedMethods: hotel.paymentSettings?.acceptedMethods || ['cash']
+      },
+      // Hotel Admin credentials for editing - always start with empty passwords
+      adminData: {
+        firstName: hotel.adminId?.firstName || '',
+        lastName: hotel.adminId?.lastName || '',
+        email: hotel.adminId?.email || '',
+        phone: hotel.adminId?.phone || '',
+        password: '', // Always empty for security and to avoid validation issues
+        confirmPassword: '' // Always empty for security and to avoid validation issues
       }
     });
 
@@ -338,6 +398,14 @@ const SuperAdminHotelsPage = () => {
     setLogoFile(null); // Clear any previously selected file
 
     setShowEditModal(true);
+
+    // Force clear password fields after modal opens (helps with browser autofill)
+    setTimeout(() => {
+      const passwordField = document.querySelector('input[name="adminData.password"]');
+      const confirmField = document.querySelector('input[name="adminData.confirmPassword"]');
+      if (passwordField) passwordField.value = '';
+      if (confirmField) confirmField.value = '';
+    }, 100);
   };  const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (name.startsWith('address.')) {
@@ -387,7 +455,7 @@ const SuperAdminHotelsPage = () => {
   const filteredHotels = hotels?.filter(hotel => {
     const matchesSearch = hotel.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           hotel.address?.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          hotel.contactEmail?.toLowerCase().includes(searchTerm.toLowerCase());
+                          hotel.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' ||
                          (filterStatus === 'active' && hotel.isActive && hotel.isPublished) ||
                          (filterStatus === 'pending' && !hotel.isPublished) ||
@@ -505,8 +573,8 @@ const SuperAdminHotelsPage = () => {
                   <div className="text-sm text-gray-500">{hotel.address?.street}</div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                  <div className="text-sm text-gray-900">{hotel.contactEmail}</div>
-                  <div className="text-sm text-gray-500">{hotel.contactPhone}</div>
+                  <div className="text-sm text-gray-900">{hotel.email}</div>
+                  <div className="text-sm text-gray-500">{hotel.phone}</div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -1140,6 +1208,90 @@ const SuperAdminHotelsPage = () => {
                   </div>
                 </div>
 
+                {/* Hotel Admin Credentials Section */}
+                <div className="border-t pt-4">
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Hotel Admin Credentials</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Update hotel administrator information. All fields are optional - only modify what you want to change.
+                    <span className="font-medium"> Leave password fields empty to keep current password.</span>
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Admin First Name</label>
+                      <input
+                        type="text"
+                        name="adminData.firstName"
+                        value={formData.adminData?.firstName || ''}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Admin Last Name</label>
+                      <input
+                        type="text"
+                        name="adminData.lastName"
+                        value={formData.adminData?.lastName || ''}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Admin Email</label>
+                      <input
+                        type="email"
+                        name="adminData.email"
+                        value={formData.adminData?.email || ''}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Admin Phone</label>
+                      <input
+                        type="tel"
+                        name="adminData.phone"
+                        value={formData.adminData?.phone || ''}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">New Password (Optional)</label>
+                      <input
+                        type="password"
+                        name="adminData.password"
+                        value={formData.adminData?.password || ''}
+                        onChange={handleInputChange}
+                        placeholder="Enter new password or leave empty"
+                        autoComplete="new-password"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Leave empty to keep current password</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                      <input
+                        type="password"
+                        name="adminData.confirmPassword"
+                        value={formData.adminData?.confirmPassword || ''}
+                        onChange={handleInputChange}
+                        placeholder="Confirm new password"
+                        autoComplete="new-password"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Only required if changing password</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex items-center space-x-4">
                   <label className="flex items-center">
                     <input
@@ -1163,23 +1315,47 @@ const SuperAdminHotelsPage = () => {
                   </label>
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex justify-between items-center pt-4">
                   <button
                     type="button"
                     onClick={() => {
-                      setShowEditModal(false);
-                      resetForm();
+                      if (window.confirm('Are you sure you want to delete this hotel? This action cannot be undone and will also deactivate the hotel admin account.')) {
+                        dispatch(deleteHotel(selectedHotel._id))
+                          .unwrap()
+                          .then(() => {
+                            alert('Hotel deleted successfully');
+                            setShowEditModal(false);
+                            resetForm();
+                            dispatch(fetchAllHotels());
+                          })
+                          .catch((error) => {
+                            alert(`Error deleting hotel: ${error.message || error}`);
+                          });
+                      }
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
-                    Cancel
+                    Delete Hotel
                   </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Update Hotel
-                  </button>
+
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowEditModal(false);
+                        resetForm();
+                      }}
+                      className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Update Hotel
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>

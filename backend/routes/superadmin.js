@@ -143,7 +143,7 @@ router.get('/dashboard', catchAsync(async (req, res) => {
  */
 router.get('/hotels', catchAsync(async (req, res) => {
   const hotels = await Hotel.find()
-    .populate('adminId', 'firstName lastName email')
+    .populate('adminId', 'firstName lastName email phone')
     .sort({ createdAt: -1 });
 
   res.status(200).json({
@@ -442,13 +442,38 @@ router.post('/hotels/:hotelId/assign-admin', catchAsync(async (req, res, next) =
  * @access  Private/SuperAdmin
  */
 router.put('/hotels/:id', catchAsync(async (req, res, next) => {
-  const hotel = await Hotel.findByIdAndUpdate(req.params.id, req.body, {
+  const { adminData, ...hotelData } = req.body;
+
+  // Update hotel information
+  const hotel = await Hotel.findByIdAndUpdate(req.params.id, hotelData, {
     new: true,
     runValidators: true
   });
 
   if (!hotel) {
     return next(new AppError('No hotel found with that ID', 404));
+  }
+
+  // Update hotel admin credentials if provided
+  if (adminData && hotel.adminId) {
+    const updateFields = {};
+
+    if (adminData.firstName) updateFields.firstName = adminData.firstName;
+    if (adminData.lastName) updateFields.lastName = adminData.lastName;
+    if (adminData.email) updateFields.email = adminData.email;
+    if (adminData.phone) updateFields.phone = adminData.phone;
+
+    // Only update password if provided
+    if (adminData.password && adminData.password.trim() !== '') {
+      updateFields.password = adminData.password;
+    }
+
+    if (Object.keys(updateFields).length > 0) {
+      await User.findByIdAndUpdate(hotel.adminId, updateFields, {
+        new: true,
+        runValidators: true
+      });
+    }
   }
 
   logger.info(`Hotel updated: ${hotel.name}`, { hotelId: hotel._id });
@@ -461,22 +486,29 @@ router.put('/hotels/:id', catchAsync(async (req, res, next) => {
 
 /**
  * @route   DELETE /api/superadmin/hotels/:id
- * @desc    Delete hotel (deactivate)
+ * @desc    Delete hotel (hard delete)
  * @access  Private/SuperAdmin
  */
 router.delete('/hotels/:id', catchAsync(async (req, res, next) => {
-  // Soft delete by marking as inactive instead of removing from database
-  const hotel = await Hotel.findByIdAndUpdate(
-    req.params.id,
-    { isActive: false, isPublished: false },
-    { new: true }
-  );
+  // Get hotel with admin info first
+  const hotel = await Hotel.findById(req.params.id);
 
   if (!hotel) {
     return next(new AppError('No hotel found with that ID', 404));
   }
 
-  logger.info(`Hotel deactivated: ${hotel.name}`, { hotelId: hotel._id });
+  // Delete associated hotel admin account if it exists
+  if (hotel.adminId) {
+    await User.findByIdAndDelete(hotel.adminId);
+  }
+
+  // Hard delete the hotel from database
+  await Hotel.findByIdAndDelete(req.params.id);
+
+  logger.info(`Hotel and admin permanently deleted: ${hotel.name}`, {
+    hotelId: hotel._id,
+    adminId: hotel.adminId
+  });
 
   res.status(200).json({
     status: 'success',
