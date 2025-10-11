@@ -6,15 +6,17 @@
 
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import jwt_decode from 'jwt-decode';
 import { selectCurrentUser, selectIsAuthenticated, selectAuthRole, fetchProfile, logout, restoreFromLocalStorage } from '../redux/slices/authSlice';
 // import socketService from '../services/socket.service';
 import cookieHelper from '../utils/cookieHelper';
+import { performSecureLogout, isTokenValid } from '../utils/secureLogout';
 
 export const useAuth = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const currentUser = useSelector(selectCurrentUser);
   const isAuthenticated = useSelector(selectIsAuthenticated);
@@ -104,17 +106,18 @@ export const useAuth = () => {
   }, [dispatch, isAuthenticated, navigate, role, currentUser, authChecked]);
 
   /**
-   * Handle user logout
+   * Handle user logout with secure cleanup
    */
-  const handleLogout = () => {    dispatch(logout())
+  const handleLogout = () => {
+    dispatch(logout())
       .unwrap()
       .then(() => {
-        // Disconnect socket and redirect to login
-        // socketService.disconnect();
-        navigate('/login');
+        // Perform secure logout with proper cleanup
+        performSecureLogout(navigate, location.pathname);
       })
       .catch((error) => {
-        // Logout failed, but still redirect to login
+        // Even if logout request fails, perform secure cleanup locally
+        performSecureLogout(navigate, location.pathname);
       });
   };
   /**
@@ -168,13 +171,12 @@ export const useAuth = () => {
       const token = cookieHelper.getAuthToken();
       if (!token) return null;
 
-      const decoded = jwt_decode(token);
-      const currentTime = Date.now() / 1000;
-
-      if (decoded.exp < currentTime) {
+      // Use enhanced token validation
+      if (!isTokenValid(token)) {
         return null;
       }
 
+      const decoded = jwt_decode(token);
       return decoded;
     } catch (error) {
       return null;

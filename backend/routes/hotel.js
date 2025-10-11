@@ -2782,7 +2782,7 @@ router.post('/inside-services/:serviceId/activate', catchAsync(async (req, res) 
       pricing: {
         basePrice: 0,
         pricingType: 'variable',
-        currency: 'EGP'
+        currency: 'USD'
       },
       availability: {
         isAvailable: true,

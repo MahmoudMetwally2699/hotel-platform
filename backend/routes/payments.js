@@ -54,7 +54,7 @@ router.post('/create-intent', protect, restrictTo('guest'), checkStripeConfigure
     // Create payment intent
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(booking.totalAmount * 100), // Convert to cents
-      currency: booking.currency || 'egp',
+      currency: booking.currency || 'usd',
       metadata: {
         bookingId: booking._id.toString(),
         userId: req.user.id.toString(),

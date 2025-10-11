@@ -146,7 +146,7 @@ const hotelPaymentSchema = new mongoose.Schema({
   currency: {
     type: String,
     default: 'USD',
-    enum: ['EGP', 'USD', 'EUR', 'GBP', 'SAR']
+    enum: ['USD', 'EUR', 'GBP', 'SAR']
   },
 
   // Metadata

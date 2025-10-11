@@ -148,7 +148,7 @@ const GuestTransportationBookings = () => {
 
     // For payment_pending status, redirect to payment method selection to complete payment
     const amount = booking.quote?.finalPrice || booking.totalAmount || 0;
-    const currency = booking.pricing?.currency || 'EGP';
+    const currency = booking.pricing?.currency || 'USD';
 
     const paymentUrl = `/payment-method?bookingId=${booking._id}&amount=${amount}&currency=${currency}&serviceType=transportation`;
 

@@ -22,7 +22,7 @@ const KASHIER_CONFIG = {
   merchantId: process.env.KASHIER_MERCHANT_ID,
   apiKey: process.env.KASHIER_API_KEY,
   secretKey: process.env.KASHIER_SECRET_KEY,
-  currency: process.env.KASHIER_CURRENCY || 'EGP',
+  currency: process.env.KASHIER_CURRENCY || 'USD',
   mode: process.env.KASHIER_MODE || 'test'
 };
 
@@ -197,7 +197,7 @@ router.post('/create-session', protect, restrictTo('guest'), async (req, res) =>
 router.post('/create-payment-session', protect, restrictTo('guest'), async (req, res) => {
   try {
   const { bookingData, bookingType = 'laundry', amount } = req.body;
-  const currency = 'EGP';
+  const currency = 'USD';
 
   // ...removed console.log for production...
 
@@ -990,7 +990,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
               },
               totalBeforeMarkup: parseFloat(paymentData.amount) || 0, // Will be recalculated
               totalAmount: parseFloat(paymentData.amount) || 0,
-              currency: 'EGP', // Use valid enum value instead of EGP
+              currency: 'USD', // Use valid enum value instead of EGP
               providerEarnings: parseFloat(paymentData.amount) || 0, // Will be recalculated
               hotelEarnings: 0 // Will be recalculated
             },
@@ -1239,7 +1239,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
               },
               totalBeforeMarkup: parseFloat(paymentData.amount) || 0, // Will be recalculated
               totalAmount: parseFloat(paymentData.amount) || 0,
-              currency: 'EGP',
+              currency: 'USD',
               providerEarnings: parseFloat(paymentData.amount) || 0, // Will be recalculated
               hotelEarnings: 0 // Will be recalculated
             },
@@ -1438,7 +1438,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
                 pickupDate: new Date(booking.schedule?.preferredDate).toLocaleDateString('ar-EG'),
                 pickupTime: booking.schedule?.preferredTime || 'سيتم التأكيد',
                 roomNumber: booking.location?.pickup?.address || booking.guestDetails?.roomNumber || 'سيتم التأكيد',
-                totalAmount: `${booking.pricing?.totalAmount || paymentData.amount} ${booking.pricing?.currency || 'EGP'}`,
+                totalAmount: `${booking.pricing?.totalAmount || paymentData.amount} ${booking.pricing?.currency || 'USD'}`,
                 paymentStatus: 'تم الدفع'
               };
 
@@ -1471,7 +1471,7 @@ router.post('/confirm-payment-public/:bookingId', async (req, res) => {
                 pickupTime: booking.schedule?.preferredTime || 'سيتم التأكيد',
                 serviceType: service?.name || 'خدمة الغسيل',
                 specialNotes: booking.guestDetails?.specialRequests || booking.bookingConfig?.specialRequests || '',
-                baseAmount: `${booking.pricing?.providerEarnings || booking.pricing?.totalBeforeMarkup || paymentData.amount} ${booking.pricing?.currency || 'EGP'}`
+                baseAmount: `${booking.pricing?.providerEarnings || booking.pricing?.totalBeforeMarkup || paymentData.amount} ${booking.pricing?.currency || 'USD'}`
               });
               logger.info('WhatsApp order notification sent to provider (public)', {
                 bookingNumber: booking.bookingNumber,

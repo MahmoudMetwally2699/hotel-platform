@@ -122,15 +122,85 @@ const AppRouter = () => {
         {/* Client/Guest Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/hotels" element={<HotelListPage />} />
-        <Route path="/hotels/:hotelId/categories" element={<TailwindLayout><HotelCategoryServicesPage /></TailwindLayout>} />        <Route path="/hotels/:hotelId/services/:category" element={<TailwindLayout><HotelCategoryServicesPage /></TailwindLayout>} />
-        <Route path="/hotels/:hotelId/services/laundry/booking" element={<TailwindLayout><LaundryBookingPage /></TailwindLayout>} />
-        <Route path="/hotels/:hotelId/services/restaurant/booking" element={<TailwindLayout><RestaurantBookingPage /></TailwindLayout>} />
-        <Route path="/hotels/:hotelId/services/dining/booking" element={<TailwindLayout><RestaurantBookingPage /></TailwindLayout>} />
-        <Route path="/hotels/:hotelId/services/transportation/booking" element={<TailwindLayout><TransportationBookingPage /></TailwindLayout>} />
-        <Route path="/hotels/:hotelId/services/housekeeping/booking" element={<TailwindLayout><HousekeepingBookingPage /></TailwindLayout>} />
+
+        {/* Protected Hotel Service Routes - Require Authentication */}
+        <Route
+          path="/hotels/:hotelId/categories"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <HotelCategoryServicesPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotels/:hotelId/services/:category"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <HotelCategoryServicesPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotels/:hotelId/services/laundry/booking"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <LaundryBookingPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotels/:hotelId/services/restaurant/booking"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <RestaurantBookingPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotels/:hotelId/services/dining/booking"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <RestaurantBookingPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotels/:hotelId/services/transportation/booking"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <TransportationBookingPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotels/:hotelId/services/housekeeping/booking"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <HousekeepingBookingPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Public Payment Routes - These should remain accessible for payment completion */}
         <Route path="/guest/payment-success" element={<TailwindLayout><PaymentSuccess /></TailwindLayout>} />
         <Route path="/guest/payment-failed" element={<TailwindLayout><PaymentFailed /></TailwindLayout>} />
         <Route path="/payment-method" element={<TailwindLayout><PaymentMethodSelectionPage /></TailwindLayout>} />
+
+        {/* Public Service Discovery Routes */}
         <Route path="/services/:category" element={<ServiceListPage />} />
         <Route path="/services/details/:id" element={<ServiceDetailsPage />} />
 

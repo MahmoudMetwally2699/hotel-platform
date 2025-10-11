@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.minimal.css';
 import AppRouter from './routes/AppRouter';
 import { selectIsAuthenticated, selectAuthRole, checkAuth } from './redux/slices/authSlice';
 import sessionMonitor from './services/sessionMonitor.service';
+import { isProtectedRoute } from './utils/secureLogout';
 import './i18n'; // Initialize i18n
 import './App.css';
 
@@ -88,7 +89,7 @@ const AuthGuard = () => {
       return;
     }
 
-    // Now check role-based access
+    // Now check role-based access with enhanced protection
     if (location.pathname.startsWith('/service/') && role !== 'service') {
       navigate('/forbidden');
       return;
@@ -105,6 +106,12 @@ const AuthGuard = () => {
     }
 
     if (location.pathname.startsWith('/super-hotel-admin/') && role !== 'superHotel') {
+      navigate('/forbidden');
+      return;
+    }
+
+    // Additional check for hotel service routes - require guest role
+    if (isProtectedRoute(location.pathname) && role !== 'guest') {
       navigate('/forbidden');
       return;
     }

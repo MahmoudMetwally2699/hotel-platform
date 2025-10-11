@@ -400,6 +400,13 @@ const authSlice = createSlice({
       state.user = null;
       state.role = null;
       state.error = null;
+
+      // Clear all local storage data to ensure complete logout
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('role');
     });
 
     builder.addCase(logout.rejected, (state) => {
@@ -407,6 +414,13 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.user = null;
       state.role = null;
+
+      // Even if logout request failed, clear local state for security
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('role');
     });
 
     // Fetch profile cases

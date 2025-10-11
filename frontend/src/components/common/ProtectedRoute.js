@@ -9,12 +9,15 @@ import PropTypes from 'prop-types';
 import useAuth from '../../hooks/useAuth';
 
 const ProtectedRoute = ({ children, allowedRoles, redirectPath = '/login' }) => {
-  const { isAuthenticated, role } = useAuth();
+  const { isAuthenticated, role, checkToken } = useAuth();
   const location = useLocation();
 
-  // If not authenticated, redirect to login
-  if (!isAuthenticated) {
-    alert(`🚨 PROTECTED ROUTE REDIRECT!\n\nREASON: Not authenticated\nPath: ${location.pathname}\nAuthenticated: ${isAuthenticated}\nRole: ${role}\nRedirecting to: ${redirectPath}`);
+  // Additional token validation
+  const tokenData = checkToken();
+  const isTokenValid = !!tokenData;
+
+  // If not authenticated or token is invalid, redirect to login
+  if (!isAuthenticated || !isTokenValid) {
     return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
 
@@ -29,12 +32,9 @@ const ProtectedRoute = ({ children, allowedRoles, redirectPath = '/login' }) => 
     const hasRequiredRole = allowedRolesArray.includes(userRole);
 
     if (!hasRequiredRole) {
-      alert(`🚨 PROTECTED ROUTE REDIRECT!\n\nREASON: Role mismatch\nPath: ${location.pathname}\nUser Role: "${userRole}"\nAllowed Roles: [${allowedRolesArray.join(', ')}]\nAuthenticated: ${isAuthenticated}\nRedirecting to: /forbidden`);
       // User doesn't have required role, redirect to forbidden
       return <Navigate to="/forbidden" state={{ from: location }} replace />;
-    } else {
     }
-  } else {
   }
 
   // User is authenticated and has required role, render the children

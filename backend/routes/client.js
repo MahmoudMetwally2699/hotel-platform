@@ -589,7 +589,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
         providerEarnings: providerAmount,
         hotelEarnings: hotelCommission,
         platformFee: Math.round((finalPrice * 0.05) * 100) / 100, // 5% platform fee
-        currency: service.pricing.currency || 'EGP'
+        currency: service.pricing.currency || 'USD'
       },
 
       // Payment information
@@ -664,7 +664,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           - Time: ${finalSelectedTime || 'To be confirmed'}
           - Room: ${roomNumber}
           - Quantity: ${finalQuantity}
-          - Total Amount: $${finalPrice} ${service.pricing.currency || 'EGP'}
+          - Total Amount: $${finalPrice} ${service.pricing.currency || 'USD'}
           - Payment Method: ${paymentMethodText}
 
           Special Requests: ${specialRequests || 'None'}
@@ -713,7 +713,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           - Requested Date: ${new Date(finalBookingDate).toLocaleDateString()}
           - Requested Time: ${finalSelectedTime || 'To be confirmed'}
           - Quantity: ${finalQuantity}
-          - Amount: $${providerAmount} ${service.pricing.currency || 'EGP'}
+          - Amount: $${providerAmount} ${service.pricing.currency || 'USD'}
           - Payment Method: ${paymentMethodText}
           - Payment Status: ${paymentStatus}
 
@@ -1817,7 +1817,7 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
         },
         totalBeforeMarkup: totalBeforeMarkup,
         totalAmount: totalAmount,
-        currency: 'EGP',        providerEarnings: providerEarnings,
+        currency: 'USD',        providerEarnings: providerEarnings,
         hotelEarnings: hotelEarnings
       },
 

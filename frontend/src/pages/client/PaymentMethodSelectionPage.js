@@ -31,7 +31,7 @@ const PaymentMethodSelectionPage = () => {
   // Get booking data from URL params or localStorage
   const bookingId = searchParams.get('bookingId');
   const amount = searchParams.get('amount');
-  const currency = searchParams.get('currency') || 'EGP';
+  const currency = searchParams.get('currency') || 'USD';
   const serviceType = searchParams.get('serviceType') || 'regular';
   const hotelId = searchParams.get('hotelId');
 

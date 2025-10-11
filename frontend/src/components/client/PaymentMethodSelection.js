@@ -17,7 +17,7 @@ const PaymentMethodSelection = ({
   selectedMethod,
   onMethodChange,
   totalAmount,
-  currency = 'EGP',
+  currency = 'USD',
   className = '',
   showPricing = true,
   hotelPaymentSettings = null

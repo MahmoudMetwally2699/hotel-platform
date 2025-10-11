@@ -211,7 +211,7 @@ const transportationBookingSchema = new mongoose.Schema({
     currency: {
       type: String,
       default: 'USD',
-      enum: ['USD', 'EGP', 'EUR', 'GBP']
+      enum: ['USD', 'EUR', 'GBP']
     },
 
     paymentDate: Date,

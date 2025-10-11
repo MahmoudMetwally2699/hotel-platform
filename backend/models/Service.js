@@ -443,7 +443,7 @@ const serviceSchema = new mongoose.Schema({
     currency: {
       type: String,
       default: 'USD',
-      enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'EGP']
+      enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
     },
 
     pricingType: {

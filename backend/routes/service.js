@@ -2036,7 +2036,7 @@ router.post('/categories/:category/items', catchAsync(async (req, res) => {
     pricing: {
       basePrice: 0, // Will be calculated dynamically
       pricingType: 'per-item',
-      currency: 'EGP'
+      currency: 'USD'
     },
     laundryItems: processedLaundryItems
   };
@@ -2244,7 +2244,7 @@ router.post('/categories/transportation/vehicles', catchAsync(async (req, res) =
         pricing: {
           basePrice: 25, // Default base price, will be overridden by individual vehicle pricing
           pricingType: 'per-item', // Transportation is priced per vehicle/service
-          currency: 'EGP'
+          currency: 'USD'
         },
 
         // Required specifications fields
@@ -2746,7 +2746,7 @@ router.post('/housekeeping-services', catchAsync(async (req, res) => {
     serviceType: 'housekeeping',
     pricing: {
       basePrice: basePrice || 0,
-      currency: 'EGP',
+      currency: 'USD',
       pricingType: 'per-service'
     },
     specifications: {
