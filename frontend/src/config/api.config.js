@@ -5,9 +5,15 @@
 
 // Dynamic API base URL configuration for different environments
 const getApiBaseUrl = () => {
-  // Always use the environment variable or fallback to localhost
-  // This works for both development and production
-  return process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+  const envUrl = process.env.REACT_APP_API_URL;
+
+  if (envUrl) {
+    // For production, ensure we have the /api suffix
+    return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+  }
+
+  // Fallback for development
+  return 'http://localhost:5000/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
@@ -25,6 +31,7 @@ export const AUTH_API = {
   PROFILE: `/auth/profile`,
   UPDATE_AVATAR: `/auth/update-avatar`,
   CHANGE_PASSWORD: `/auth/change-password`,
+  VALIDATE_QR: `/auth/validate-qr`, // Add this if missing
 };
 
 // Guest/Client endpoints

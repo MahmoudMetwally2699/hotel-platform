@@ -66,7 +66,12 @@ try {
         }
 
         // In production, check allowed origins
-        const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
+        const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+          'http://localhost:3000',
+          'https://qickroom.cloud',
+          'https://www.qickroom.cloud',
+          'https://hotel-platform-teud.vercel.app' // Keep for backup
+        ];
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
@@ -79,7 +84,8 @@ try {
       }
     },
     credentials: true,
-    optionsSuccessStatus: 200  };
+    optionsSuccessStatus: 200
+  };
   app.use(cors(corsOptions));
   console.log('✅ CORS configured');
   // Rate limiting disabled
@@ -111,6 +117,16 @@ try {
       status: 'OK',
       timestamp: new Date().toISOString(),
       uptime: process.uptime()
+    });
+  });
+
+  // CORS test endpoint
+  app.get('/test-cors', (req, res) => {
+    res.status(200).json({
+      status: 'CORS working',
+      origin: req.headers.origin,
+      timestamp: new Date().toISOString(),
+      message: 'If you can see this, CORS is configured correctly'
     });
   });  console.log('✅ Health check endpoint configured');
   // API Routes
