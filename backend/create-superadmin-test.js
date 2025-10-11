@@ -31,7 +31,7 @@ const createSuperAdmin = async () => {
 
     // Check if superadmin already exists
     const existingUser = await User.findOne({
-      email: 'mahmetwally@gmail.com'
+      email: 'admin@qickroom.com'
     });
 
     if (existingUser) {
@@ -43,9 +43,9 @@ const createSuperAdmin = async () => {
 
     // Create superadmin user object (password will be hashed by pre-save middleware)
     const superAdminData = {
-      firstName: 'Mahmoud',
-      lastName: 'Metwally',
-      email: 'mahmetwally@gmail.com',      password: 'Mah@1234', // Plain password - will be hashed by mongoose middleware
+      firstName: 'Qickroom',
+      lastName: 'Admin',
+      email:'admin@qickroom.com',      password: 'Qickroom@super@2035', // Plain password - will be hashed by mongoose middleware
       role: 'superadmin',
       isActive: true,
       permissions: {
