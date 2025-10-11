@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import toast, { Toaster } from 'react-hot-toast';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-toastify/dist/ReactToastify.minimal.css';
 import AppRouter from './routes/AppRouter';
@@ -89,32 +90,64 @@ const AuthGuard = () => {
       return;
     }
 
+
+
     // Now check role-based access with enhanced protection
     if (location.pathname.startsWith('/service/') && role !== 'service') {
-      navigate('/forbidden');
+      toast.error(
+        `Access Denied: You need Service Provider role to access this area. Your role: ${role}`,
+        { duration: 5000, position: 'top-center' }
+      );
+      setTimeout(() => navigate('/forbidden'), 500);
       return;
     }
 
     if (location.pathname.startsWith('/hotel/') && role !== 'hotel') {
-      navigate('/forbidden');
+      toast.error(
+        `Access Denied: You need Hotel Admin role to access this area. Your role: ${role}`,
+        { duration: 5000, position: 'top-center' }
+      );
+      setTimeout(() => navigate('/forbidden'), 500);
       return;
     }
 
     if (location.pathname.startsWith('/superadmin/') && role !== 'superadmin') {
-      navigate('/forbidden');
+      toast.error(
+        `Access Denied: You need Super Admin role to access this area.\n\nYour role: ${role}\n\nPlease check:\n1. Did you log in with correct Super Admin credentials?\n2. Is your account role "superadmin" in database?`,
+        { duration: 6000, position: 'top-center' }
+      );
+      setTimeout(() => navigate('/forbidden'), 500);
       return;
     }
 
     if (location.pathname.startsWith('/super-hotel-admin/') && role !== 'superHotel') {
-      navigate('/forbidden');
+      toast.error(
+        `Access Denied: You need Super Hotel Admin role to access this area. Your role: ${role}`,
+        { duration: 5000, position: 'top-center' }
+      );
+      setTimeout(() => navigate('/forbidden'), 500);
       return;
     }
 
-    // Additional check for hotel service routes - require guest role
-    if (isProtectedRoute(location.pathname) && role !== 'guest') {
-      navigate('/forbidden');
+    // Additional check for guest-specific routes ONLY (not admin routes)
+    // This checks routes like /hotels/:id/services, /my-bookings, etc.
+    // We need to exclude admin routes from this check
+    const isGuestRoute = isProtectedRoute(location.pathname) &&
+                        !location.pathname.startsWith('/service/') &&
+                        !location.pathname.startsWith('/hotel/') &&
+                        !location.pathname.startsWith('/superadmin/') &&
+                        !location.pathname.startsWith('/super-hotel-admin/');
+
+    if (isGuestRoute && role !== 'guest') {
+      toast.error(
+        `Access Denied: You need Guest role to access this area. Your role: ${role}`,
+        { duration: 5000, position: 'top-center' }
+      );
+      setTimeout(() => navigate('/forbidden'), 500);
       return;
     }
+
+    // Log successful access
 
   }, [isAuthenticated, role, location.pathname, navigate]);
 
@@ -123,7 +156,7 @@ const AuthGuard = () => {
 
 function App() {
   const dispatch = useDispatch();
-  const { user, isAuthenticated, isLoading, error } = useSelector(state => state.auth);
+  const { user, isAuthenticated, isLoading, error, role } = useSelector(state => state.auth);
 
   // Track if we've already attempted initial auth check to prevent loops
   const [initialAuthChecked, setInitialAuthChecked] = React.useState(false);
@@ -172,7 +205,8 @@ function App() {
 
   // Also log whenever auth state changes
   useEffect(() => {
-  }, [user, isAuthenticated, isLoading, error]);
+
+  }, [user, isAuthenticated, isLoading, error, role]);
 
   // Session monitoring for authenticated users
   useEffect(() => {
@@ -190,6 +224,32 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background-default">
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+            fontSize: '14px',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 5000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <BrowserRouter>
         <AuthGuard />
       </BrowserRouter>
