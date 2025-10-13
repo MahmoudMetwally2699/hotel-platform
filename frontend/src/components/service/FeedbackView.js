@@ -4,11 +4,13 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FaStar, FaUser, FaCalendarAlt, FaComment, FaSearch } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
 
 const ServiceProviderFeedbackView = () => {
+  const { t } = useTranslation();
   const [feedback, setFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
@@ -39,7 +41,7 @@ const ServiceProviderFeedbackView = () => {
       }
     } catch (error) {
       console.error('Error fetching feedback:', error);
-      toast.error('Failed to load feedback');
+      toast.error(t('serviceProvider.feedback.loadErrorToast'));
       // Set empty defaults on error
       setFeedback([]);
       setPagination({});
@@ -47,7 +49,7 @@ const ServiceProviderFeedbackView = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, t]);
 
   useEffect(() => {
     fetchFeedback();
@@ -78,11 +80,11 @@ const ServiceProviderFeedbackView = () => {
 
   const getRatingLabel = (rating) => {
     const labels = {
-      1: 'Poor',
-      2: 'Fair',
-      3: 'Good',
-      4: 'Very Good',
-      5: 'Excellent'
+      1: t('feedback.rating1'),
+      2: t('feedback.rating2'),
+      3: t('feedback.rating3'),
+      4: t('feedback.rating4'),
+      5: t('feedback.rating5')
     };
     return labels[rating] || '';
   };
@@ -92,10 +94,10 @@ const ServiceProviderFeedbackView = () => {
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm p-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          Service Feedback
+          {t('serviceProvider.feedback.title')}
         </h1>
         <p className="text-gray-600">
-          View and manage feedback for your services
+          {t('serviceProvider.feedback.subtitle')}
         </p>
       </div>
 
@@ -104,7 +106,7 @@ const ServiceProviderFeedbackView = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Average Rating</p>
+              <p className="text-gray-600 text-sm">{t('serviceProvider.feedback.statistics.averageRating')}</p>
               <p className="text-2xl font-bold text-blue-600">
                 {statistics.averageRating || '0.0'}
               </p>
@@ -118,7 +120,7 @@ const ServiceProviderFeedbackView = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Total Reviews</p>
+              <p className="text-gray-600 text-sm">{t('serviceProvider.feedback.statistics.totalReviews')}</p>
               <p className="text-2xl font-bold text-green-600">
                 {statistics.totalCount || 0}
               </p>
@@ -132,7 +134,7 @@ const ServiceProviderFeedbackView = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">5-Star Reviews</p>
+              <p className="text-gray-600 text-sm">{t('serviceProvider.feedback.statistics.fiveStarReviews')}</p>
               <p className="text-2xl font-bold text-yellow-500">
                 {statistics.ratingDistribution?.[5] || 0}
               </p>
@@ -146,7 +148,7 @@ const ServiceProviderFeedbackView = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Low Ratings</p>
+              <p className="text-gray-600 text-sm">{t('serviceProvider.feedback.statistics.lowRatings')}</p>
               <p className="text-2xl font-bold text-red-500">
                 {(statistics.ratingDistribution?.[1] || 0) + (statistics.ratingDistribution?.[2] || 0)}
               </p>
@@ -167,7 +169,7 @@ const ServiceProviderFeedbackView = () => {
               <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search feedback..."
+                placeholder={t('serviceProvider.feedback.filters.searchPlaceholder')}
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -181,12 +183,12 @@ const ServiceProviderFeedbackView = () => {
             onChange={(e) => handleFilterChange('rating', e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="">All Ratings</option>
-            <option value="5">5 Stars</option>
-            <option value="4">4 Stars</option>
-            <option value="3">3 Stars</option>
-            <option value="2">2 Stars</option>
-            <option value="1">1 Star</option>
+            <option value="">{t('serviceProvider.feedback.filters.allRatings')}</option>
+            <option value="5">{t('serviceProvider.feedback.filters.fiveStars')}</option>
+            <option value="4">{t('serviceProvider.feedback.filters.fourStars')}</option>
+            <option value="3">{t('serviceProvider.feedback.filters.threeStars')}</option>
+            <option value="2">{t('serviceProvider.feedback.filters.twoStars')}</option>
+            <option value="1">{t('serviceProvider.feedback.filters.oneStar')}</option>
           </select>
 
           {/* Service Type Filter */}
@@ -195,11 +197,11 @@ const ServiceProviderFeedbackView = () => {
             onChange={(e) => handleFilterChange('serviceType', e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="all">All Services</option>
-            <option value="laundry">Laundry</option>
-            <option value="transportation">Transportation</option>
-            <option value="housekeeping">Housekeeping</option>
-            <option value="dining">Dining</option>
+            <option value="all">{t('serviceProvider.feedback.filters.allServices')}</option>
+            <option value="laundry">{t('serviceProvider.feedback.filters.laundry')}</option>
+            <option value="transportation">{t('serviceProvider.feedback.filters.transportation')}</option>
+            <option value="housekeeping">{t('serviceProvider.feedback.filters.housekeeping')}</option>
+            <option value="dining">{t('serviceProvider.feedback.filters.dining')}</option>
           </select>
         </div>
       </div>
@@ -209,12 +211,12 @@ const ServiceProviderFeedbackView = () => {
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading feedback...</p>
+            <p className="mt-4 text-gray-600">{t('serviceProvider.feedback.emptyState.loadingFeedback')}</p>
           </div>
         ) : feedback.length === 0 ? (
           <div className="p-8 text-center">
             <FaComment className="text-gray-400 text-4xl mx-auto mb-4" />
-            <p className="text-gray-600">No feedback found</p>
+            <p className="text-gray-600">{t('serviceProvider.feedback.emptyState.noFeedback')}</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
@@ -227,7 +229,7 @@ const ServiceProviderFeedbackView = () => {
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">
-                        {item.guestName || 'Anonymous'}
+                        {item.guestName || t('serviceProvider.feedback.feedbackCard.anonymous')}
                       </h3>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <FaCalendarAlt />
@@ -247,7 +249,7 @@ const ServiceProviderFeedbackView = () => {
 
                 <div className="mb-3">
                   <p className="text-sm text-gray-600 mb-1">
-                    Service: <span className="font-medium">{item.serviceName}</span>
+                    {t('serviceProvider.feedback.feedbackCard.service')}: <span className="font-medium">{item.serviceName}</span>
                     {item.serviceType && (
                       <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
                         {item.serviceType}
@@ -271,7 +273,11 @@ const ServiceProviderFeedbackView = () => {
           <div className="p-6 border-t border-gray-200">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-600">
-                Showing {((pagination.page - 1) * 10) + 1} to {Math.min(pagination.page * 10, pagination.total)} of {pagination.total} results
+                {t('serviceProvider.feedback.pagination.showing', {
+                  from: ((pagination.page - 1) * 10) + 1,
+                  to: Math.min(pagination.page * 10, pagination.total),
+                  total: pagination.total
+                })}
               </p>
               <div className="flex gap-2">
                 <button
@@ -279,14 +285,14 @@ const ServiceProviderFeedbackView = () => {
                   disabled={!pagination.hasPrev}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
-                  Previous
+                  {t('serviceProvider.feedback.pagination.previous')}
                 </button>
                 <button
                   onClick={() => handleFilterChange('page', filters.page + 1)}
                   disabled={!pagination.hasNext}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
-                  Next
+                  {t('serviceProvider.feedback.pagination.next')}
                 </button>
               </div>
             </div>

@@ -57,6 +57,7 @@ const RestaurantBookingPage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isCartExpanded, setIsCartExpanded] = useState(false);
 
   useEffect(() => {
     const fetchServiceDetails = async () => {
@@ -403,34 +404,53 @@ const RestaurantBookingPage = () => {
               <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
                 {/* Filters */}
                 <div className="p-4 sm:p-5 border-b border-gray-100">
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                    <div className="flex-1">
-                      <div className="relative">
-                        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input
-                          type="text"
-                          placeholder="Search menu items…"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#61B6DE] focus:border-[#61B6DE] text-sm"
-                          aria-label="Search menu items"
-                        />
-                      </div>
+                  {/* Search Bar */}
+                  <div className="mb-4">
+                    <div className="relative">
+                      <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search menu items…"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#61B6DE] focus:border-[#61B6DE] text-sm"
+                        aria-label="Search menu items"
+                      />
                     </div>
-                    <div className="sm:w-56">
-                      <select
-                        value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="w-full py-3 px-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#61B6DE] focus:border-[#61B6DE] text-sm"
-                        aria-label="Filter by category"
-                      >
-                        <option value="all">{t('common.allCategories')}</option>
-                        <option value="appetizers">{t('guest.restaurant.appetizers')}</option>
-                        <option value="mains">{t('guest.restaurant.mainCourses')}</option>
-                        <option value="desserts">{t('guest.restaurant.desserts')}</option>
-                        <option value="beverages">{t('guest.restaurant.beverages')}</option>
-                        <option value="breakfast">{t('common.breakfast')}</option>
-                      </select>
+                  </div>
+
+                  {/* Category Filter - Horizontal Scrollable Chips */}
+                  <div className="overflow-x-auto -mx-4 sm:mx-0 modern-scrollbar">
+                    <div className="flex gap-2 pb-2 px-4 sm:px-0" style={{ width: 'max-content', minWidth: '100%' }}>
+                      {[
+                        { value: 'all', label: t('common.allCategories'), icon: '🍽️' },
+                        { value: 'appetizers', label: t('guest.restaurant.appetizers'), icon: '🥗' },
+                        { value: 'mains', label: t('guest.restaurant.mainCourses'), icon: '🍖' },
+                        { value: 'desserts', label: t('guest.restaurant.desserts'), icon: '🍰' },
+                        { value: 'beverages', label: t('guest.restaurant.beverages'), icon: '🥤' },
+                        { value: 'breakfast', label: t('common.breakfast'), icon: '🍳' },
+                        { value: 'lunch', label: 'Lunch', icon: '🍱' },
+                        { value: 'dinner', label: 'Dinner', icon: '🍴' },
+                        { value: 'snacks', label: 'Snacks', icon: '🍿' }
+                      ].map((category) => (
+                        <button
+                          key={category.value}
+                          onClick={() => setCategoryFilter(category.value)}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-full whitespace-nowrap text-sm font-medium transition-all duration-200 flex-shrink-0 ${
+                            categoryFilter === category.value
+                              ? 'bg-gradient-to-r from-[#61B6DE] to-[#4A9CC5] text-white shadow-lg transform scale-105'
+                              : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-[#61B6DE] hover:text-[#61B6DE] hover:shadow-md active:scale-95'
+                          }`}
+                        >
+                          <span className="text-lg">{category.icon}</span>
+                          <span>{category.label}</span>
+                          {categoryFilter === category.value && (
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -701,45 +721,104 @@ const RestaurantBookingPage = () => {
         </div>
       </main>
 
-      {/* Mobile sticky cart bar */}
+      {/* Sticky Mobile Cart - Laundry Style */}
       {selectedItems.length > 0 && (
-        <div className="lg:hidden sticky bottom-0 z-30 border-t border-gray-200 bg-white/90 backdrop-blur-md">
-          <div className={`w-full px-4 py-3 flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className="h-9 w-9 rounded-full bg-[#3B5787] grid place-items-center text-white">
-                <FaShoppingCart />
-              </div>
-              <div className={textAlign}>
-                <div className="text-sm font-semibold">{selectedItems.length} item{selectedItems.length>1?'s':''}</div>
-                <div className="text-xs text-gray-600">Total ${pricing.total.toFixed(2)}</div>
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+          {/* Expandable Cart Summary */}
+          {isCartExpanded && (
+            <div className="border-b border-gray-200 max-h-64 overflow-y-auto">
+              <div className="px-4 py-3">
+                <h4 className="font-medium text-gray-900 mb-3 text-sm">Order Summary</h4>
+                <div className="space-y-2">
+                  {selectedItems.map(item => (
+                    <div key={item.id} className="flex justify-between items-center text-sm">
+                      <div className="flex-1">
+                        <span className="text-gray-900">{item.name}</span>
+                        <span className="text-gray-500 ml-1">×{item.quantity}</span>
+                      </div>
+                      <span className="text-gray-900 font-medium">
+                        {formatPriceByLanguage(item.price * item.quantity, i18n.language)}
+                      </span>
+                    </div>
+                  ))}
+
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between font-bold text-green-600 mt-1">
+                      <span>Total</span>
+                      <span>{formatTotalWithSar(pricing.total, i18n.language)}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            {step === 1 && (
-              <button
-                onClick={() => setStep(2)}
-                className="rounded-xl bg-gradient-to-r from-[#3B5787] to-[#61B6DE] text-white px-4 py-2.5 text-sm font-semibold"
-              >
-                Continue
-              </button>
-            )}
-            {step === 2 && (
-              <button
-                onClick={() => setStep(3)}
-                disabled={!bookingDetails.preferredDate || !bookingDetails.preferredTime || !currentUser?.roomNumber}
-                className="rounded-xl bg-gradient-to-r from-[#3B5787] to-[#61B6DE] text-white px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
-              >
-                Review
-              </button>
-            )}
-            {step === 3 && (
-              <button
-                onClick={handleBookingSubmit}
-                disabled={submitting}
-                className="rounded-xl bg-green-600 text-white px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
-              >
-                {submitting ? <FaSpinner className="animate-spin" /> : 'Pay'}
-              </button>
-            )}
+          )}
+
+          {/* Main Cart Bar */}
+          <div className="px-4 py-3">
+            <div
+              className="flex items-center justify-between mb-2 cursor-pointer"
+              onClick={() => setIsCartExpanded(!isCartExpanded)}
+            >
+              <div className="flex items-center">
+                <div className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium mr-2">
+                  {selectedItems.reduce((sum, item) => sum + item.quantity, 0)}
+                </div>
+                <span className="text-sm text-gray-600">
+                  {selectedItems.reduce((sum, item) => sum + item.quantity, 0)} {t('guest.restaurant.items')}
+                </span>
+                <div className="ml-2">
+                  <svg
+                    className={`w-4 h-4 text-gray-400 transition-transform ${isCartExpanded ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold text-green-600">
+                  {formatTotalWithSar(pricing.total, i18n.language)}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              {step === 1 && (
+                <button
+                  onClick={() => setStep(2)}
+                  className="flex-1 bg-[#3B5787] hover:bg-[#2d4265] text-white font-medium py-3 px-4 rounded-lg transition-colors text-sm"
+                >
+                  Continue
+                </button>
+              )}
+              {step === 2 && (
+                <button
+                  onClick={() => setStep(3)}
+                  disabled={!bookingDetails.preferredDate || !bookingDetails.preferredTime || !currentUser?.roomNumber}
+                  className="flex-1 bg-[#3B5787] hover:bg-[#2d4265] disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors text-sm"
+                >
+                  Review Order
+                </button>
+              )}
+              {step === 3 && (
+                <button
+                  onClick={handleBookingSubmit}
+                  disabled={submitting}
+                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center text-sm"
+                >
+                  {submitting ? (
+                    <>
+                      <FaSpinner className="animate-spin mr-2" />
+                      {t('guest.restaurant.creatingOrder')}
+                    </>
+                  ) : (
+                    t('guest.restaurant.confirmAndPay')
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

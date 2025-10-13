@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FaStar,
   FaChartBar,
@@ -15,6 +16,7 @@ import {
 import apiClient from '../../services/api.service';
 
 const ServiceProviderFeedback = () => {
+  const { t } = useTranslation();
   const [feedbacks, setFeedbacks] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,11 +48,11 @@ const ServiceProviderFeedback = () => {
       }
     } catch (error) {
       console.error('Failed to fetch feedbacks:', error);
-      setError('Failed to load feedback data');
+      setError(t('serviceProvider.feedback.loadError'));
     } finally {
       setLoading(false);
     }
-  }, [currentPage, filters]);
+  }, [currentPage, filters, t]);
 
   useEffect(() => {
     fetchFeedbacks();
@@ -88,7 +90,7 @@ const ServiceProviderFeedback = () => {
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading feedback data...</p>
+            <p className="mt-4 text-gray-600">{t('serviceProvider.feedback.loading')}</p>
           </div>
         </div>
       </div>
@@ -102,10 +104,10 @@ const ServiceProviderFeedback = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             <FaComments className="inline mr-3" style={{ color: '#3B5787' }} />
-            Customer Feedback
+            {t('serviceProvider.feedback.title')}
           </h1>
           <p className="text-gray-600">
-            See what customers are saying about your services
+            {t('serviceProvider.feedback.subtitle')}
           </p>
         </div>
 
@@ -115,7 +117,7 @@ const ServiceProviderFeedback = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Average Rating</p>
+                  <p className="text-sm font-medium text-gray-500">{t('serviceProvider.feedback.statistics.averageRating')}</p>
                   <p className={`text-3xl font-bold ${getRatingColor(statistics.averageRating)}`}>
                     {statistics.averageRating || '0.0'}
                   </p>
@@ -129,7 +131,7 @@ const ServiceProviderFeedback = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Total Reviews</p>
+                  <p className="text-sm font-medium text-gray-500">{t('serviceProvider.feedback.statistics.totalReviews')}</p>
                   <p className="text-3xl font-bold" style={{ color: '#3B5787' }}>
                     {statistics.totalFeedbacks || 0}
                   </p>
@@ -143,7 +145,7 @@ const ServiceProviderFeedback = () => {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">5-Star Reviews</p>
+                  <p className="text-sm font-medium text-gray-500">{t('serviceProvider.feedback.statistics.fiveStarReviews')}</p>
                   <p className="text-3xl font-bold text-green-600">
                     {statistics.ratingsDistribution?.[5] || 0}
                   </p>
@@ -161,7 +163,7 @@ const ServiceProviderFeedback = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rating
+                {t('serviceProvider.feedback.filters.rating')}
               </label>
               <select
                 value={filters.rating}
@@ -169,18 +171,18 @@ const ServiceProviderFeedback = () => {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
                 style={{ focusRingColor: '#67BAE0' }}
               >
-                <option value="">All Ratings</option>
-                <option value="5">5 Stars</option>
-                <option value="4">4 Stars</option>
-                <option value="3">3 Stars</option>
-                <option value="2">2 Stars</option>
-                <option value="1">1 Star</option>
+                <option value="">{t('serviceProvider.feedback.filters.allRatings')}</option>
+                <option value="5">{t('serviceProvider.feedback.filters.fiveStars')}</option>
+                <option value="4">{t('serviceProvider.feedback.filters.fourStars')}</option>
+                <option value="3">{t('serviceProvider.feedback.filters.threeStars')}</option>
+                <option value="2">{t('serviceProvider.feedback.filters.twoStars')}</option>
+                <option value="1">{t('serviceProvider.feedback.filters.oneStar')}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
+                {t('serviceProvider.feedback.filters.status')}
               </label>
               <select
                 value={filters.status}
@@ -188,15 +190,15 @@ const ServiceProviderFeedback = () => {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
                 style={{ focusRingColor: '#67BAE0' }}
               >
-                <option value="active">Active</option>
-                <option value="hidden">Hidden</option>
-                <option value="flagged">Flagged</option>
+                <option value="active">{t('serviceProvider.feedback.filters.active')}</option>
+                <option value="hidden">{t('serviceProvider.feedback.filters.hidden')}</option>
+                <option value="flagged">{t('serviceProvider.feedback.filters.flagged')}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sort By
+                {t('serviceProvider.feedback.filters.sortBy')}
               </label>
               <select
                 value={`${filters.sortBy}-${filters.sortOrder}`}
@@ -208,10 +210,10 @@ const ServiceProviderFeedback = () => {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
                 style={{ focusRingColor: '#67BAE0' }}
               >
-                <option value="createdAt-desc">Newest First</option>
-                <option value="createdAt-asc">Oldest First</option>
-                <option value="rating-desc">Highest Rating</option>
-                <option value="rating-asc">Lowest Rating</option>
+                <option value="createdAt-desc">{t('serviceProvider.feedback.filters.newestFirst')}</option>
+                <option value="createdAt-asc">{t('serviceProvider.feedback.filters.oldestFirst')}</option>
+                <option value="rating-desc">{t('serviceProvider.feedback.filters.highestRating')}</option>
+                <option value="rating-asc">{t('serviceProvider.feedback.filters.lowestRating')}</option>
               </select>
             </div>
           </div>
@@ -221,14 +223,14 @@ const ServiceProviderFeedback = () => {
         <div className="bg-white rounded-lg shadow-sm">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4">
-              {error}
+              {t('serviceProvider.feedback.loadError')}
             </div>
           )}
 
           {feedbacks.length === 0 && !loading ? (
             <div className="p-8 text-center text-gray-500">
               <FaComments className="mx-auto text-4xl mb-4 opacity-50" />
-              <p>No feedback found for your services</p>
+              <p>{t('serviceProvider.feedback.emptyState.noFeedback')}</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
@@ -273,7 +275,7 @@ const ServiceProviderFeedback = () => {
 
                       {/* Hotel Info */}
                       <p className="text-xs text-gray-500">
-                        Hotel: {feedback.hotelId?.name || 'Unknown'}
+                        {t('serviceProvider.feedback.feedbackCard.hotel')}: {feedback.hotelId?.name || t('serviceProvider.feedback.feedbackCard.unknown')}
                       </p>
                     </div>
                   </div>
@@ -292,7 +294,7 @@ const ServiceProviderFeedback = () => {
                 disabled={currentPage === 1}
                 className="px-3 py-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                Previous
+                {t('serviceProvider.feedback.pagination.previous')}
               </button>
 
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
@@ -318,7 +320,7 @@ const ServiceProviderFeedback = () => {
                 disabled={currentPage === totalPages}
                 className="px-3 py-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
               >
-                Next
+                {t('serviceProvider.feedback.pagination.next')}
               </button>
             </nav>
           </div>

@@ -17,10 +17,13 @@ import useServiceProviderCategories from '../../hooks/useServiceProviderCategori
 import apiClient from '../../services/api.service';
 
 const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [hoveredCard, setHoveredCard] = useState(null);
   const { categories, loading, hasCategory } = useServiceProviderCategories();
   const [insideServicesAvailable, setInsideServicesAvailable] = useState(false);
+
+  // Check if language is RTL
+  const isRTL = i18n.language === 'ar';
 
   // Check if inside services are available
   useEffect(() => {
@@ -51,13 +54,13 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
     if (hasOutsideServices) {
       categoryTypes.push({
         id: 'outside',
-        title: 'Outside Hotel Services',
-        description: 'Services provided by external service providers',
+        title: t('serviceProvider.dashboard.outsideServices.title'),
+        description: t('serviceProvider.dashboard.outsideServices.description'),
         icon: FaBuilding,
         color: 'blue',
         services: [
-          { name: 'Laundry Services', icon: FaTshirt, description: 'Professional laundry and dry cleaning' },
-          { name: 'Transportation Services', icon: FaCar, description: 'Vehicle rental and transportation' }
+          { name: t('serviceProvider.dashboard.serviceCategories.laundryServices.name'), icon: FaTshirt, description: t('serviceProvider.dashboard.serviceCategories.laundryServices.description') },
+          { name: t('serviceProvider.dashboard.serviceCategories.transportationServices.name'), icon: FaCar, description: t('serviceProvider.dashboard.serviceCategories.transportationServices.description') }
         ]
       });
     }
@@ -69,13 +72,13 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
     if (hasInsideServiceCategories && insideServicesAvailable) {
       categoryTypes.push({
         id: 'inside',
-        title: 'Inside Hotel Services',
-        description: 'Services provided within hotel premises',
+        title: t('serviceProvider.dashboard.insideServices.title'),
+        description: t('serviceProvider.dashboard.insideServices.description'),
         icon: FaHotel,
         color: 'green',
         services: [
-          { name: 'Hotel Restaurant', icon: FaCoffee, description: 'Main dining facilities and reservations' },
-          { name: 'Housekeeping Services', icon: FaHotel, description: 'Room cleaning and maintenance requests' }
+          { name: t('serviceProvider.dashboard.serviceCategories.hotelRestaurant.name'), icon: FaCoffee, description: t('serviceProvider.dashboard.serviceCategories.hotelRestaurant.description') },
+          { name: t('serviceProvider.dashboard.serviceCategories.housekeepingServices.name'), icon: FaHotel, description: t('serviceProvider.dashboard.serviceCategories.housekeepingServices.description') }
         ]
       });
     }
@@ -94,7 +97,7 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100" dir={isRTL ? 'rtl' : 'ltr'}>
         {/* Header Section with Gradient Background */}
         <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden mx-3 sm:mx-4 lg:mx-6">
           {/* Background Pattern */}
@@ -103,9 +106,9 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
           <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
 
           <div className="relative max-w-4xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Service Categories</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">{t('serviceProvider.dashboard.title')}</h1>
             <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">
-              Loading available service categories...
+              {t('serviceProvider.dashboard.loadingCategories')}
             </p>
           </div>
         </div>
@@ -128,14 +131,14 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
   // Show empty state if no categories are available
   if (availableCategoryTypes.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100" dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-8">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-8 text-white">
             <div className="max-w-4xl">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Service Categories</h1>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">{t('serviceProvider.dashboard.title')}</h1>
               <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">
-                No service categories are currently available for your account.
+                {t('serviceProvider.dashboard.noCategoriesDescription')}
               </p>
             </div>
           </div>
@@ -146,9 +149,9 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
               <div className="mb-8">
                 <FaHotel className="text-6xl text-gray-400 mx-auto mb-4" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">No Service Categories Available</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('serviceProvider.dashboard.noCategories')}</h3>
               <p className="text-gray-600 mb-8 leading-relaxed">
-                No service categories are currently enabled for your account. Please contact your hotel administrator to enable service categories such as laundry, transportation, dining, or housekeeping.
+                {t('serviceProvider.dashboard.noCategoriesDescription')}
               </p>
             </div>
           </div>
@@ -158,14 +161,14 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
         {/* Modern Header Section - Mobile Responsive */}
         <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white">
           <div className="max-w-4xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Service Categories</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">{t('serviceProvider.dashboard.title')}</h1>
             <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">
-              Select the type of services you want to offer. You can activate multiple categories and manage them independently.
+              {t('serviceProvider.dashboard.subtitle')}
             </p>
           </div>
         </div>
@@ -204,7 +207,7 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
 
                   <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-4 sm:space-y-0">
                     <div className="flex items-center">
-                      <div className="p-3 sm:p-4 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl mr-4 sm:mr-6 group-hover:bg-white/30 transition-all duration-300 shrink-0">
+                      <div className={`p-3 sm:p-4 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl ${isRTL ? 'ml-4 sm:ml-6' : 'mr-4 sm:mr-6'} group-hover:bg-white/30 transition-all duration-300 shrink-0`}>
                         <IconComponent className="text-2xl sm:text-3xl" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -215,7 +218,7 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
                     <div className="flex items-center self-center sm:self-auto">
                       <FaArrowRight className={`text-xl sm:text-2xl transition-all duration-300 ${
                         isHovered ? 'sm:translate-x-2 sm:scale-110' : ''
-                      } group-hover:text-white`} />
+                      } group-hover:text-white ${isRTL ? 'rotate-180' : ''}`} />
                     </div>
                   </div>
                 </div>
@@ -223,15 +226,15 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
                 {/* Modern Services Preview */}
                 <div className="p-4 sm:p-6 lg:p-8">
                   <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center">
-                    <span className="w-1 h-5 sm:h-6 bg-gradient-to-b from-[#3B5787] to-[#67BAE0] rounded-full mr-2 sm:mr-3"></span>
-                    Available Services:
+                    <span className={`w-1 h-5 sm:h-6 bg-gradient-to-b from-[#3B5787] to-[#67BAE0] rounded-full ${isRTL ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'}`}></span>
+                    {t('serviceProvider.dashboard.availableServices')}
                   </h3>
                   <div className="grid grid-cols-1 gap-3 sm:gap-4">
                     {categoryType.services.slice(0, 4).map((service, index) => {
                       const ServiceIcon = service.icon;
                       return (
                         <div key={index} className="group flex items-center p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg sm:rounded-xl border border-gray-100 hover:border-[#67BAE0]/30 hover:shadow-md transition-all duration-300">
-                          <div className={`p-2 sm:p-3 rounded-lg sm:rounded-xl mr-3 sm:mr-4 transition-all duration-300 shrink-0 ${
+                          <div className={`p-2 sm:p-3 rounded-lg sm:rounded-xl ${isRTL ? 'ml-3 sm:ml-4' : 'mr-3 sm:mr-4'} transition-all duration-300 shrink-0 ${
                             categoryType.color === 'blue'
                               ? 'bg-[#3B5787]/10 text-[#3B5787] group-hover:bg-[#3B5787] group-hover:text-white'
                               : 'bg-[#67BAE0]/10 text-[#67BAE0] group-hover:bg-[#67BAE0] group-hover:text-white'
@@ -248,7 +251,7 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
                     {categoryType.services.length > 4 && (
                       <div className="text-center mt-3 sm:mt-4">
                         <span className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-100 text-gray-700 text-xs sm:text-sm font-medium rounded-full">
-                          +{categoryType.services.length - 4} more services
+                          +{categoryType.services.length - 4} {t('serviceProvider.dashboard.moreServices')}
                         </span>
                       </div>
                     )}
@@ -265,8 +268,8 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
                     } text-white shadow-lg hover:shadow-xl transform sm:hover:scale-[1.02]
                     flex items-center justify-center group
                   `}>
-                    <span>Select {categoryType.title}</span>
-                    <FaArrowRight className="ml-2 sm:ml-3 transition-transform duration-300 group-hover:translate-x-1 text-sm sm:text-base" />
+                    <span>{t(categoryType.id === 'outside' ? 'serviceProvider.dashboard.outsideServices.selectButton' : 'serviceProvider.dashboard.insideServices.selectButton')}</span>
+                    <FaArrowRight className={`${isRTL ? 'mr-2 sm:mr-3 rotate-180' : 'ml-2 sm:ml-3'} transition-transform duration-300 group-hover:translate-x-1 text-sm sm:text-base`} />
                   </button>
                 </div>
 
@@ -282,34 +285,34 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
         {/* Modern Information Section */}
         <div className="mt-8 sm:mt-10 lg:mt-12 bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">How it works</h3>
-            <p className="text-white/90 text-sm sm:text-base">Choose your service category and start earning with our platform</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">{t('serviceProvider.dashboard.howItWorks.title')}</h3>
+            <p className="text-white/90 text-sm sm:text-base">{t('serviceProvider.dashboard.howItWorks.subtitle')}</p>
           </div>
           <div className="p-4 sm:p-6 lg:p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-start">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-full flex items-center justify-center mr-3 sm:mr-4 mt-0.5 sm:mt-1 shrink-0">
-                    <FaBuilding className="text-white text-xs sm:text-sm" />
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#3B5787] to-[#67BAE0] rounded-full flex items-center justify-center ${isRTL ? 'ml-3 sm:ml-4' : 'mr-3 sm:mr-4'} flex-shrink-0`}>
+                    <FaBuilding className="text-white text-sm sm:text-base" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h4 className="text-base sm:text-lg font-bold text-gray-900 mb-2">Outside Hotel Services</h4>
+                    <h4 className="text-base sm:text-lg font-bold text-gray-900 mb-3">{t('serviceProvider.dashboard.howItWorks.outside.title')}</h4>
                     <ul className="space-y-1.5 sm:space-y-2 text-gray-700">
                       <li className="flex items-start">
-                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#67BAE0] rounded-full mt-1.5 sm:mt-2 mr-2 sm:mr-3 flex-shrink-0"></span>
-                        <span className="text-sm sm:text-base"><strong>Partner</strong> with external service providers</span>
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#67BAE0] rounded-full mt-1.5 sm:mt-2 ${isRTL ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'} flex-shrink-0`}></span>
+                        <span className="text-sm sm:text-base"><strong>{t('serviceProvider.dashboard.howItWorks.outside.point1.bold')}</strong> {t('serviceProvider.dashboard.howItWorks.outside.point1.text')}</span>
                       </li>
                       <li className="flex items-start">
-                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#67BAE0] rounded-full mt-1.5 sm:mt-2 mr-2 sm:mr-3 flex-shrink-0"></span>
-                        <span className="text-sm sm:text-base"><strong>Set markup</strong> percentages on service provider base prices</span>
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#67BAE0] rounded-full mt-1.5 sm:mt-2 ${isRTL ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'} flex-shrink-0`}></span>
+                        <span className="text-sm sm:text-base"><strong>{t('serviceProvider.dashboard.howItWorks.outside.point2.bold')}</strong> {t('serviceProvider.dashboard.howItWorks.outside.point2.text')}</span>
                       </li>
                       <li className="flex items-start">
-                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#67BAE0] rounded-full mt-1.5 sm:mt-2 mr-2 sm:mr-3 flex-shrink-0"></span>
-                        <span className="text-sm sm:text-base"><strong>Guests pay</strong> final price (base + markup)</span>
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#67BAE0] rounded-full mt-1.5 sm:mt-2 ${isRTL ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'} flex-shrink-0`}></span>
+                        <span className="text-sm sm:text-base"><strong>{t('serviceProvider.dashboard.howItWorks.outside.point3.bold')}</strong> {t('serviceProvider.dashboard.howItWorks.outside.point3.text')}</span>
                       </li>
                       <li className="flex items-start">
-                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#67BAE0] rounded-full mt-1.5 sm:mt-2 mr-2 sm:mr-3 flex-shrink-0"></span>
-                        <span className="text-sm sm:text-base"><strong>Revenue split:</strong> Hotel receives markup, provider receives base price</span>
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#67BAE0] rounded-full mt-1.5 sm:mt-2 ${isRTL ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'} flex-shrink-0`}></span>
+                        <span className="text-sm sm:text-base"><strong>{t('serviceProvider.dashboard.howItWorks.outside.point4.bold')}</strong> {t('serviceProvider.dashboard.howItWorks.outside.point4.text')}</span>
                       </li>
                     </ul>
                   </div>
@@ -317,27 +320,27 @@ const ServiceCategorySelector = ({ onCategoryTypeSelect }) => {
               </div>
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-start">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-[#67BAE0] to-[#3B5787] rounded-full flex items-center justify-center mr-3 sm:mr-4 mt-0.5 sm:mt-1 shrink-0">
-                    <FaHotel className="text-white text-xs sm:text-sm" />
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#67BAE0] to-[#3B5787] rounded-full flex items-center justify-center ${isRTL ? 'ml-3 sm:ml-4' : 'mr-3 sm:mr-4'} flex-shrink-0`}>
+                    <FaHotel className="text-white text-sm sm:text-base" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h4 className="text-base sm:text-lg font-bold text-gray-900 mb-2">Inside Hotel Services</h4>
+                    <h4 className="text-base sm:text-lg font-bold text-gray-900 mb-3">{t('serviceProvider.dashboard.howItWorks.inside.title')}</h4>
                     <ul className="space-y-1.5 sm:space-y-2 text-gray-700">
                       <li className="flex items-start">
-                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#3B5787] rounded-full mt-1.5 sm:mt-2 mr-2 sm:mr-3 flex-shrink-0"></span>
-                        <span className="text-sm sm:text-base"><strong>Direct services</strong> within hotel premises</span>
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#3B5787] rounded-full mt-1.5 sm:mt-2 ${isRTL ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'} flex-shrink-0`}></span>
+                        <span className="text-sm sm:text-base"><strong>{t('serviceProvider.dashboard.howItWorks.inside.point1.bold')}</strong> {t('serviceProvider.dashboard.howItWorks.inside.point1.text')}</span>
                       </li>
                       <li className="flex items-start">
-                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#3B5787] rounded-full mt-1.5 sm:mt-2 mr-2 sm:mr-3 flex-shrink-0"></span>
-                        <span className="text-sm sm:text-base"><strong>On-site delivery</strong> to hotel guests</span>
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#3B5787] rounded-full mt-1.5 sm:mt-2 ${isRTL ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'} flex-shrink-0`}></span>
+                        <span className="text-sm sm:text-base"><strong>{t('serviceProvider.dashboard.howItWorks.inside.point2.bold')}</strong> {t('serviceProvider.dashboard.howItWorks.inside.point2.text')}</span>
                       </li>
                       <li className="flex items-start">
-                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#3B5787] rounded-full mt-1.5 sm:mt-2 mr-2 sm:mr-3 flex-shrink-0"></span>
-                        <span className="text-sm sm:text-base"><strong>Coordinate</strong> with hotel staff for seamless service</span>
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#3B5787] rounded-full mt-1.5 sm:mt-2 ${isRTL ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'} flex-shrink-0`}></span>
+                        <span className="text-sm sm:text-base"><strong>{t('serviceProvider.dashboard.howItWorks.inside.point3.bold')}</strong> {t('serviceProvider.dashboard.howItWorks.inside.point3.text')}</span>
                       </li>
                       <li className="flex items-start">
-                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#3B5787] rounded-full mt-1.5 sm:mt-2 mr-2 sm:mr-3 flex-shrink-0"></span>
-                        <span className="text-sm sm:text-base"><strong>Full control</strong> over service management and execution</span>
+                        <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#3B5787] rounded-full mt-1.5 sm:mt-2 ${isRTL ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'} flex-shrink-0`}></span>
+                        <span className="text-sm sm:text-base"><strong>{t('serviceProvider.dashboard.howItWorks.inside.point4.bold')}</strong> {t('serviceProvider.dashboard.howItWorks.inside.point4.text')}</span>
                       </li>
                     </ul>
                   </div>

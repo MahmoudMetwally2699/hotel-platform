@@ -166,10 +166,10 @@ const HousekeepingServiceManagement = ({ onBack }) => {
         instructions: ''
       });
       setShowCreateForm(false);
-      toast.success('Housekeeping service created successfully');
+      toast.success(t('housekeeping.messages.serviceCreated'));
     } catch (error) {
       console.error('Error creating service:', error);
-      toast.error('Failed to create service');
+      toast.error(t('housekeeping.messages.createFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -186,7 +186,7 @@ const HousekeepingServiceManagement = ({ onBack }) => {
           : service
       ));
 
-      toast.success(`Service ${action}d successfully`);
+      toast.success(`${t('housekeeping.messages.service' + (action === 'activate' ? 'Activated' : 'Deactivated'))}`);
     } catch (error) {
       console.error('Error toggling service status:', error);
       // Optimistic update
@@ -195,7 +195,7 @@ const HousekeepingServiceManagement = ({ onBack }) => {
           ? { ...service, isActive: !currentStatus }
           : service
       ));
-      toast.success(`Service ${currentStatus ? 'deactivated' : 'activated'} successfully`);
+      toast.success(`${t('housekeeping.messages.service' + (currentStatus ? 'Deactivated' : 'Activated'))}`);
     }
   };
 
@@ -206,20 +206,20 @@ const HousekeepingServiceManagement = ({ onBack }) => {
       return;
     }
 
-    if (!window.confirm('Are you sure you want to delete this service?')) return;
+    if (!window.confirm(t('housekeeping.messages.confirmDelete'))) return;
 
     try {
       await apiClient.delete(`/service/housekeeping-services/${serviceId}`);
 
       // Only update UI if backend deletion was successful
       setServices(prev => prev.filter(service => (service._id || service.id) !== serviceId));
-      toast.success('Service deleted successfully');
+      toast.success(t('housekeeping.messages.serviceDeleted'));
     } catch (error) {
       console.error('Error deleting service:', error);
       console.error('Error response:', error.response?.data);
 
       // Show the actual error message from the backend
-      const errorMessage = error.response?.data?.message || 'Failed to delete service';
+      const errorMessage = error.response?.data?.message || t('housekeeping.messages.deleteFailed');
       toast.error(errorMessage);
 
       // Don't optimistically update the UI if there was an error
@@ -239,8 +239,8 @@ const HousekeepingServiceManagement = ({ onBack }) => {
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
           <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
           <div className="relative flex flex-col items-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Housekeeping Services</h1>
-            <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">Loading available housekeeping services...</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">{t('housekeeping.title')}</h1>
+            <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">{t('housekeeping.messages.loadingServices')}</p>
           </div>
         </div>
         <div className="w-full px-2 sm:px-3 lg:px-4">

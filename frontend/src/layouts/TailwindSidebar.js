@@ -141,7 +141,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
 
         if (hasCategory('housekeeping')) {
           manageServicesChildren.push({
-            name: 'Housekeeping Services',
+            name: t('categorySelection.sidebar.housekeepingServices'),
             path: '/service/housekeeping',
             icon: 'broom'
           });
@@ -149,7 +149,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
 
         if (hasCategory('dining')) {
           manageServicesChildren.push({
-            name: 'Restaurant Services',
+            name: t('categorySelection.sidebar.restaurantServices'),
             path: '/service/restaurant',
             icon: 'restaurant'
           });

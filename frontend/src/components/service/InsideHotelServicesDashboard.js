@@ -22,7 +22,8 @@ import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
 
 const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(null);
@@ -84,6 +85,63 @@ const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
     operatingHours: { start: '09:00', end: '17:00' },
     features: []
   });
+
+  // Helper function to translate service names
+  const translateServiceName = (serviceName) => {
+    const serviceMap = {
+      'Room Service': 'roomService',
+      'Hotel Restaurant': 'hotelRestaurant',
+      'Concierge Services': 'conciergeServices',
+      'Housekeeping Requests': 'housekeepingRequests',
+      'Housekeeping Services': 'housekeepingRequests'
+    };
+
+    const serviceKey = serviceMap[serviceName];
+    if (serviceKey) {
+      return t(`serviceProvider.insideHotelServices.defaultServices.${serviceKey}.name`);
+    }
+    return serviceName;
+  };
+
+  // Helper function to translate service descriptions
+  const translateServiceDescription = (description) => {
+    const descriptionMap = {
+      'In-room dining and service requests': 'roomService',
+      'Main dining facilities and reservations': 'hotelRestaurant',
+      'Guest assistance and recommendations': 'conciergeServices',
+      'Room cleaning and maintenance requests': 'housekeepingRequests'
+    };
+
+    const serviceKey = descriptionMap[description];
+    if (serviceKey) {
+      return t(`serviceProvider.insideHotelServices.defaultServices.${serviceKey}.description`);
+    }
+    return description;
+  };
+
+  // Helper function to translate feature names
+  const translateFeature = (feature) => {
+    const featureMap = {
+      '24/7 availability option': 'roomService.features.availability',
+      'Menu customization': 'roomService.features.menuCustomization',
+      'Special dietary accommodations': 'roomService.features.dietaryAccommodations',
+      'Table reservations': 'hotelRestaurant.features.tableReservations',
+      'Private dining': 'hotelRestaurant.features.privateDining',
+      'Event catering': 'hotelRestaurant.features.eventCatering',
+      'Local recommendations': 'conciergeServices.features.localRecommendations',
+      'Booking assistance': 'conciergeServices.features.bookingAssistance',
+      'Special requests': 'conciergeServices.features.specialRequests',
+      'Extra cleaning': 'housekeepingRequests.features.extraCleaning',
+      'Amenity requests': 'housekeepingRequests.features.amenityRequests',
+      'Maintenance issues': 'housekeepingRequests.features.maintenanceIssues'
+    };
+
+    const featureKey = featureMap[feature];
+    if (featureKey) {
+      return t(`serviceProvider.insideHotelServices.defaultServices.${featureKey}`);
+    }
+    return feature;
+  };
 
   useEffect(() => {
     fetchHotelServices();
@@ -192,14 +250,14 @@ const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
   }
 
   return (
-    <div className="w-full p-6">
+    <div className="w-full p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Inside Hotel Services</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('serviceProvider.insideHotelServices.title')}</h1>
             <p className="text-gray-600">
-              Manage services you provide within hotel premises. These services are delivered directly to hotel guests on-site.
+              {t('serviceProvider.insideHotelServices.subtitle')}
             </p>
           </div>
           <div className="flex gap-3">
@@ -207,14 +265,14 @@ const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
               onClick={() => setShowCreateForm(true)}
               className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center"
             >
-              <FaPlus className="mr-2" />
-              Add Service
+              <FaPlus className={`${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {t('serviceProvider.insideHotelServices.addService')}
             </button>
             <button
               onClick={onBackToCategories}
               className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
-              Back to Categories
+              {t('serviceProvider.insideHotelServices.backToCategories')}
             </button>
           </div>
         </div>
@@ -222,12 +280,12 @@ const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
         {/* Active Services Summary */}
         {services.filter(s => s.isActive).length > 0 && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-green-800 mb-2">Active Services</h3>
+            <h3 className="text-lg font-semibold text-green-800 mb-2">{t('serviceProvider.insideHotelServices.activeServices')}</h3>
             <div className="flex flex-wrap gap-2">
               {services.filter(s => s.isActive).map(service => (
                 <div key={service.id} className="flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                  <FaCheck className="mr-2" />
-                  {service.name}
+                  <FaCheck className={`${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {translateServiceName(service.name)}
                 </div>
               ))}
             </div>
@@ -280,17 +338,17 @@ const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
                 </div>
 
                 <h3 className="text-xl font-bold text-center mb-2 text-gray-800">
-                  {service.name}
+                  {translateServiceName(service.name)}
                 </h3>
 
                 <p className="text-gray-600 text-center text-sm mb-4">
-                  {service.description}
+                  {translateServiceDescription(service.description)}
                 </p>
 
                 {/* Operating Hours */}
                 {service.operatingHours && (
                   <div className="flex items-center justify-center mb-4 text-sm text-gray-600">
-                    <FaClock className="mr-2" />
+                    <FaClock className={`${isRTL ? 'ml-2' : 'mr-2'}`} />
                     {service.operatingHours.start === '24/7' ? '24/7' :
                       `${service.operatingHours.start} - ${service.operatingHours.end}`
                     }
@@ -300,19 +358,19 @@ const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
                 {/* Features */}
                 {service.features && service.features.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-xs text-gray-500 mb-2">Features:</p>
+                    <p className="text-xs text-gray-500 mb-2">{t('serviceProvider.insideHotelServices.features')}</p>
                     <div className="flex flex-wrap gap-1">
                       {service.features.slice(0, 2).map((feature, index) => (
                         <span
                           key={index}
                           className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs"
                         >
-                          {feature}
+                          {translateFeature(feature)}
                         </span>
                       ))}
                       {service.features.length > 2 && (
                         <span className="text-gray-400 text-xs">
-                          +{service.features.length - 2} more
+                          +{service.features.length - 2} {t('serviceProvider.insideHotelServices.more')}
                         </span>
                       )}
                     </div>
@@ -335,18 +393,18 @@ const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
                 >
                   {isActivating ? (
                     <div className="flex items-center justify-center">
-                      <FaSpinner className="animate-spin mr-2" />
-                      Processing...
+                      <FaSpinner className={`animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('serviceProvider.insideHotelServices.processing')}
                     </div>
                   ) : isActive ? (
                     <div className="flex items-center justify-center">
-                      <FaTimes className="mr-2" />
-                      Deactivate
+                      <FaTimes className={`${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('serviceProvider.insideHotelServices.deactivate')}
                     </div>
                   ) : (
                     <div className="flex items-center justify-center">
-                      <FaCheck className="mr-2" />
-                      Activate
+                      <FaCheck className={`${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('serviceProvider.insideHotelServices.activate')}
                     </div>
                   )}
                 </button>
@@ -359,12 +417,12 @@ const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
       {/* Create Service Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-bold mb-4">Add New Hotel Service</h2>
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4" dir={isRTL ? 'rtl' : 'ltr'}>
+            <h2 className="text-xl font-bold mb-4">{t('serviceProvider.insideHotelServices.addNewService')}</h2>
             <form onSubmit={handleCreateService}>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Service Name
+                  {t('serviceProvider.insideHotelServices.serviceName')}
                 </label>
                 <input
                   type="text"
@@ -376,7 +434,7 @@ const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
+                  {t('serviceProvider.insideHotelServices.description')}
                 </label>
                 <textarea
                   value={newService.description}
@@ -388,16 +446,16 @@ const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category
+                  {t('serviceProvider.insideHotelServices.category')}
                 </label>
                 <select
                   value={newService.category}
                   onChange={(e) => setNewService(prev => ({ ...prev, category: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="dining">Dining</option>
-                  <option value="assistance">Guest Assistance</option>
-                  <option value="maintenance">Maintenance</option>
+                  <option value="dining">{t('serviceProvider.insideHotelServices.categories.dining')}</option>
+                  <option value="assistance">{t('serviceProvider.insideHotelServices.guestAssistance')}</option>
+                  <option value="maintenance">{t('serviceProvider.insideHotelServices.categories.maintenance')}</option>
                 </select>
               </div>
               <div className="flex gap-3">
@@ -405,14 +463,14 @@ const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
                   type="submit"
                   className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg font-medium transition-colors"
                 >
-                  Create Service
+                  {t('serviceProvider.insideHotelServices.createService')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(false)}
                   className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg font-medium transition-colors"
                 >
-                  Cancel
+                  {t('serviceProvider.insideHotelServices.cancel')}
                 </button>
               </div>
             </form>
@@ -432,13 +490,13 @@ const InsideHotelServicesDashboard = ({ onBackToCategories }) => {
               onClick={() => window.location.href = '/hotel/inside-services/manage'}
               className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
-              Manage Service Details
+              {t('serviceProvider.insideHotelServices.manageServiceDetails')}
             </button>
             <button
               onClick={() => window.location.href = '/hotel/bookings'}
               className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
-              View Bookings
+              {t('serviceProvider.insideHotelServices.viewBookings')}
             </button>
           </div>
         </div>

@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import {
   FaUtensils,
@@ -102,7 +103,7 @@ const modalStyles = `
 `;
 
 const RestaurantServiceCreator = ({ onBack }) => {
-  // const { t } = useTranslation(); // Currently not used
+  const { t } = useTranslation();
 
   // Inject custom styles for modal animations
   useEffect(() => {
@@ -170,7 +171,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
       console.log('✅ Restaurant services loaded:', services.length, 'services');
     } catch (error) {
       console.error('❌ Error fetching restaurant services:', error);
-      toast.error('Failed to load restaurant services');
+      toast.error(t('serviceProvider.restaurant.messages.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -182,12 +183,12 @@ const RestaurantServiceCreator = ({ onBack }) => {
   const addCustomMenuItem = (customItem) => {
     // Check if item already exists
     if (menuItems.find(item => item.name === customItem.name)) {
-      toast.warn('Menu item with this name already exists');
+      toast.warn(t('serviceProvider.restaurant.messages.itemAlreadyExists'));
       return false;
     }
 
     setMenuItems(prev => [...prev, customItem]);
-    toast.success(`${customItem.name} added to menu`);
+    toast.success(t('serviceProvider.restaurant.messages.itemAdded', { itemName: customItem.name }));
     return true;
   };
 
@@ -196,7 +197,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
    */
   const removeItem = (itemName) => {
     setMenuItems(prev => prev.filter(item => item.name !== itemName));
-    toast.success('Menu item removed');
+    toast.success(t('serviceProvider.restaurant.messages.itemRemoved'));
   };
 
   /**
@@ -293,8 +294,9 @@ const RestaurantServiceCreator = ({ onBack }) => {
         updatedItem
       });
 
+      // Only send the menuItems array, not the entire service object
+      // This prevents the service.category from overriding menu item categories
       const response = await apiClient.put(`/service/services/${serviceId}`, {
-        ...service,
         menuItems: updatedMenuItems
       });
 
@@ -305,7 +307,24 @@ const RestaurantServiceCreator = ({ onBack }) => {
       if (response.data.status === 'success') {
         toast.success('✅ Menu item updated successfully!');
         console.log('✅ Update successful, refreshing services...');
-        await fetchExistingServices(); // Refresh the services list
+
+        // Refresh the services list first
+        await fetchExistingServices();
+
+        // Then update the editFormData if we're in edit mode for this service
+        // We need to fetch the services again to get the updated data
+        if (editingService === serviceId) {
+          try {
+            const updatedServiceResponse = await apiClient.get(`/service/services/${serviceId}`);
+            if (updatedServiceResponse.data.status === 'success') {
+              setEditFormData(updatedServiceResponse.data.data);
+              console.log('✅ Edit form data refreshed with latest menu items');
+            }
+          } catch (err) {
+            console.error('Error refreshing edit form data:', err);
+          }
+        }
+
         console.log('✅ About to close edit form...');
         setEditingServiceMenuItem(null);
         console.log('✅ Edit form should be closed now');
@@ -332,18 +351,18 @@ const RestaurantServiceCreator = ({ onBack }) => {
    */
   const validateForm = () => {
     if (!serviceDetails.name.trim()) {
-      toast.error('Service name is required');
+      toast.error(t('serviceProvider.restaurant.messages.serviceNameRequired'));
       return false;
     }
 
     if (menuItems.length === 0) {
-      toast.error('Please add at least one menu item');
+      toast.error(t('serviceProvider.restaurant.messages.addOneItem'));
       return false;
     }
 
     const invalidItems = menuItems.filter(item => item.price <= 0);
     if (invalidItems.length > 0) {
-      toast.error('All menu items must have a valid price');
+      toast.error(t('serviceProvider.restaurant.messages.validPrice'));
       return false;
     }
 
@@ -398,7 +417,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
       console.log('📥 Create restaurant service response:', response.data);
 
       if (response.data.status === 'success') {
-        toast.success('✅ Restaurant service created successfully!');
+        toast.success(t('serviceProvider.restaurant.messages.serviceCreated'));
         console.log('✅ Service created successfully, resetting form...');
         // Reset form
         setServiceDetails({ name: '', description: '', cuisineType: '', mealTypes: [] });
@@ -415,7 +434,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Error creating restaurant service:', error);
-      toast.error(error.response?.data?.message || error.message || 'Failed to create restaurant service');
+      toast.error(error.response?.data?.message || error.message || t('serviceProvider.restaurant.messages.serviceCreateFailed'));
     } finally {
       setLoading(false);
     }
@@ -463,7 +482,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
       console.log('📥 Save response:', response.data);
 
       if (response.data.status === 'success') {
-        toast.success('Restaurant service updated successfully!');
+        toast.success(t('serviceProvider.restaurant.messages.serviceUpdated'));
         setEditingService(null);
         setEditFormData({});
         await fetchExistingServices();
@@ -473,7 +492,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Error updating restaurant service:', error);
-      toast.error(error.response?.data?.message || 'Failed to update restaurant service');
+      toast.error(error.response?.data?.message || t('serviceProvider.restaurant.messages.serviceUpdateFailed'));
     } finally {
       setLoading(false);
     }
@@ -491,7 +510,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
       console.log('📥 Toggle response:', response.data);
 
       if (response.data.status === 'success') {
-        toast.success(`Service ${currentStatus ? 'deactivated' : 'activated'} successfully`);
+        toast.success(t(`serviceProvider.restaurant.messages.service${currentStatus ? 'Deactivated' : 'Activated'}`));
         await fetchExistingServices();
         console.log('✅ Service availability toggled successfully');
       } else {
@@ -499,7 +518,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Error toggling service availability:', error);
-      toast.error('Failed to update service availability');
+      toast.error(t('serviceProvider.restaurant.messages.toggleFailed'));
     }
   };
 
@@ -507,7 +526,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
    * Delete a service
    */
   const handleDeleteService = async (serviceId) => {
-    if (!window.confirm('Are you sure you want to delete this service? This action cannot be undone.')) {
+    if (!window.confirm(t('serviceProvider.restaurant.messages.confirmDelete'))) {
       return;
     }
 
@@ -519,7 +538,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
       console.log('📥 Delete response:', response.data);
 
       if (response.data.status === 'success') {
-        toast.success('Service deleted successfully');
+        toast.success(t('serviceProvider.restaurant.messages.serviceDeleted'));
         console.log('✅ Service deleted, refreshing services...');
         await fetchExistingServices();
         console.log('✅ Services list refreshed');
@@ -528,7 +547,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Error deleting service:', error);
-      toast.error('Failed to delete service');
+      toast.error(t('serviceProvider.restaurant.messages.serviceDeleteFailed'));
     }
   };
 
@@ -536,14 +555,8 @@ const RestaurantServiceCreator = ({ onBack }) => {
    * Get translated category name
    */
   const getCategoryName = (category) => {
-    const categoryNames = {
-      breakfast: 'Breakfast',
-      mains: 'Main Courses',
-      appetizers: 'Appetizers',
-      desserts: 'Desserts',
-      beverages: 'Beverages'
-    };
-    return categoryNames[category] || category;
+    const categoryKey = category?.toLowerCase();
+    return t(`serviceProvider.restaurant.categories.${categoryKey}`, category);
   };
 
   /**
@@ -558,33 +571,33 @@ const RestaurantServiceCreator = ({ onBack }) => {
             <div className="p-2 rounded-lg bg-blue-500 mr-3">
               <FaUtensils className="text-white text-sm" />
             </div>
-            Restaurant Service Details
+            {t('serviceProvider.restaurant.form.serviceDetails')}
           </h3>
 
           <div className="space-y-2">
             <label className="block text-sm font-bold text-gray-700">
-              Service Name *
+              {t('serviceProvider.restaurant.form.serviceName')} *
             </label>
             <input
               type="text"
               value={serviceDetails.name}
               onChange={(e) => setServiceDetails(prev => ({ ...prev, name: e.target.value }))}
               className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
-              placeholder="e.g., Downtown Restaurant, Rooftop Dining"
+              placeholder={t('serviceProvider.restaurant.form.serviceNamePlaceholder')}
             />
           </div>
 
           <div className="space-y-2 mt-6">
             <label className="block text-sm font-bold text-gray-700">
-              Service Description
-              <span className="text-sm font-normal text-gray-500 ml-2">(This description will appear for you as a service provider, not for users)</span>
+              {t('serviceProvider.restaurant.form.serviceDescription')}
+              <span className="text-sm font-normal text-gray-500 ml-2">{t('serviceProvider.restaurant.form.serviceDescriptionNote')}</span>
             </label>
             <textarea
               value={serviceDetails.description}
               onChange={(e) => setServiceDetails(prev => ({ ...prev, description: e.target.value }))}
               className={INPUT + " resize-none transition-all duration-300 focus:scale-[1.02]"}
               rows="4"
-              placeholder="Describe your restaurant service, specialties, dining experience..."
+              placeholder={t('serviceProvider.restaurant.form.serviceDescriptionPlaceholder')}
             />
           </div>
         </div>
@@ -595,10 +608,10 @@ const RestaurantServiceCreator = ({ onBack }) => {
             <div className="p-2 rounded-lg bg-green-500 mr-3">
               <FaPlus className="text-white text-sm" />
             </div>
-            Add Custom Menu Item
+            {t('serviceProvider.restaurant.form.addCustomItem')}
           </h3>
 
-          <CustomMenuItemForm onAddItem={addCustomMenuItem} />
+          <CustomMenuItemForm onAddItem={addCustomMenuItem} t={t} />
         </div>
 
         {/* Menu Items List */}
@@ -608,7 +621,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
               <div className="p-2 rounded-lg bg-purple-500 mr-3">
                 <FaListUl className="text-white text-sm" />
               </div>
-              Your Menu Items ({menuItems.length})
+              {t('serviceProvider.restaurant.form.yourMenuItems')} ({menuItems.length})
             </h3>
 
             <div className="space-y-6">
@@ -623,6 +636,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                       item={item}
                       onSave={(updatedItem) => updateMenuItem(itemIndex, updatedItem)}
                       onCancel={cancelEditingItem}
+                      t={t}
                     />
                   ) : (
                     // View Mode
@@ -645,7 +659,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                             <div>
                               <h4 className="text-xl font-bold">{item.name}</h4>
                               <p className="text-blue-100 text-sm">
-                                {getCategoryName(item.category)} • ${item.price} • {item.preparationTime || 15} min
+                                {getCategoryName(item.category)} • ${item.price} ({(item.price * 3.75).toFixed(2)} SAR) • {item.preparationTime || 15} min
                               </p>
                             </div>
                           </div>
@@ -713,6 +727,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                           <div className="bg-blue-50 rounded-lg p-3">
                             <div className="text-sm font-bold text-gray-700 mb-1">Price</div>
                             <div className="text-lg font-bold text-blue-600">${item.price}</div>
+                            <div className="text-xs text-gray-500">({(item.price * 3.75).toFixed(2)} SAR)</div>
                           </div>
                           <div className="bg-green-50 rounded-lg p-3">
                             <div className="text-sm font-bold text-gray-700 mb-1">Prep Time</div>
@@ -787,12 +802,12 @@ const RestaurantServiceCreator = ({ onBack }) => {
             {loading ? (
               <>
                 <FaSpinner className="animate-spin mr-2" />
-                Creating Service...
+                {t('serviceProvider.restaurant.actions.creating')}
               </>
             ) : (
               <>
                 <FaSave className="mr-2" />
-                Create Restaurant Service
+                {t('serviceProvider.restaurant.actions.createService')}
               </>
             )}
           </button>
@@ -813,8 +828,8 @@ const RestaurantServiceCreator = ({ onBack }) => {
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
             <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
             <div className="relative flex flex-col items-center">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Restaurant Services</h1>
-              <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">Loading available restaurant services...</p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">{t('serviceProvider.restaurant.title')}</h1>
+              <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">{t('serviceProvider.restaurant.messages.loadingServices')}</p>
             </div>
           </div>
           <div className="w-full px-2 sm:px-3 lg:px-4">
@@ -836,14 +851,14 @@ const RestaurantServiceCreator = ({ onBack }) => {
             <div className="p-8 rounded-3xl bg-gradient-to-br from-gray-50 to-blue-50 mb-6">
               <FaUtensils className="text-8xl text-gray-300 mb-4 mx-auto" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-3">No Restaurant Services Found</h3>
-            <p className="text-gray-600 mb-8 leading-relaxed">You haven't created any restaurant services yet. Start by adding your first service to showcase your culinary offerings.</p>
+            <h3 className="text-2xl font-bold text-gray-800 mb-3">{t('serviceProvider.restaurant.messages.noServicesFound')}</h3>
+            <p className="text-gray-600 mb-8 leading-relaxed">{t('serviceProvider.restaurant.messages.noServicesDescription')}</p>
             <button
               onClick={() => setActiveTab('add')}
               className={BTN.primary + " px-8 py-4 text-lg"}
             >
               <FaPlus className="mr-2" />
-              Create Your First Service
+              {t('serviceProvider.restaurant.messages.createFirstService')}
             </button>
           </div>
         </div>
@@ -857,7 +872,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
             <div className="p-2 rounded-lg bg-orange-500 mr-3">
               <FaCog className="text-white text-sm" />
             </div>
-            Manage Restaurant Services
+            {t('serviceProvider.restaurant.messages.manageRestaurant')}
           </h3>
 
           <div className="space-y-6">
@@ -940,7 +955,8 @@ const RestaurantServiceCreator = ({ onBack }) => {
                                     item={item}
                                     onSave={async (updatedItem) => await updateServiceMenuItem(service._id, index, updatedItem)}
                                     onCancel={cancelEditingServiceMenuItem}
-                                  />
+                                      t={t}
+                                    />
                                 ) : (
                                   // View Mode
                                   <>
@@ -968,7 +984,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                                         <div>
                                           <h5 className="font-semibold text-gray-800">{item.name}</h5>
                                           <p className="text-sm text-gray-600">
-                                            ${item.price} • {item.preparationTime || 15} min
+                                            ${item.price} ({(item.price * 3.75).toFixed(2)} SAR) • {item.preparationTime || 15} min
                                             {item.category && ` • ${item.category}`}
                                           </p>
                                         </div>
@@ -1074,7 +1090,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                               ? 'bg-green-500 text-white'
                               : 'bg-red-500 text-white'
                           }`}>
-                            {service.isActive ? 'Active' : 'Inactive'}
+                            {service.isActive ? t('serviceProvider.restaurant.status.active') : t('serviceProvider.restaurant.status.inactive')}
                           </div>
                         </div>
                       </div>
@@ -1129,10 +1145,30 @@ const RestaurantServiceCreator = ({ onBack }) => {
                       {/* Service Info */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
-                          <h6 className="text-sm font-bold text-gray-700 mb-2">Category</h6>
-                          <span className="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700">
-                            {service.category || 'Dining'}
-                          </span>
+                          <h6 className="text-sm font-bold text-gray-700 mb-2">Menu Categories</h6>
+                          <div className="flex flex-wrap gap-2">
+                            {service.menuItems && service.menuItems.length > 0 ? (
+                              (() => {
+                                // Get unique categories from menu items
+                                const uniqueCategories = [...new Set(service.menuItems.map(item => item.category).filter(Boolean))];
+                                return uniqueCategories.length > 0 ? (
+                                  uniqueCategories.map((cat, idx) => (
+                                    <span key={idx} className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                                      {getCategoryName(cat)}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700">
+                                    No categories
+                                  </span>
+                                );
+                              })()
+                            ) : (
+                              <span className="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700">
+                                No menu items
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div>
                           <h6 className="text-sm font-bold text-gray-700 mb-2">Created</h6>
@@ -1149,7 +1185,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                           className={BTN.secondary + " flex-1"}
                         >
                           <FaEdit className="mr-2" />
-                          Edit Service
+                          {t('serviceProvider.restaurant.actions.editService')}
                         </button>
                         <button
                           onClick={() => toggleServiceAvailability(service._id, service.isActive)}
@@ -1158,12 +1194,12 @@ const RestaurantServiceCreator = ({ onBack }) => {
                           {service.isActive ? (
                             <>
                               <FaEyeSlash className="mr-2" />
-                              Deactivate
+                              {t('serviceProvider.restaurant.actions.deactivate')}
                             </>
                           ) : (
                             <>
                               <FaEye className="mr-2" />
-                              Activate
+                              {t('serviceProvider.restaurant.actions.activate')}
                             </>
                           )}
                         </button>
@@ -1213,7 +1249,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                   </div>
                   <div>
                     <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-2">
-                      Restaurant Services
+                      {t('serviceProvider.restaurant.title')}
                     </h1>
                     <div className="h-1 w-20 bg-gradient-to-r from-white/60 to-transparent rounded-full"></div>
                   </div>
@@ -1221,7 +1257,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
               </div>
             </div>
             <p className="text-lg text-blue-100 max-w-2xl">
-              Create and manage your restaurant services and menu items for hotel guests
+              {t('serviceProvider.restaurant.subtitle')}
             </p>
           </div>
         </div>
@@ -1237,7 +1273,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                 }`}
               >
                 <FaPlus className="mr-2" />
-                Add Restaurant Service
+                {t('serviceProvider.restaurant.tabs.addService')}
               </button>
               <button
                 onClick={() => setActiveTab('manage')}
@@ -1246,7 +1282,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                 }`}
               >
                 <FaCog className="mr-2" />
-                Manage Services
+                {t('serviceProvider.restaurant.tabs.manageServices')}
               </button>
             </nav>
           </div>
@@ -1265,7 +1301,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
  * Custom Menu Item Form Component
  * Allows service providers to create completely custom menu items
  */
-const CustomMenuItemForm = ({ onAddItem }) => {
+const CustomMenuItemForm = ({ onAddItem, t }) => {
   const [formData, setFormData] = useState({
     name: '',
     category: 'mains',
@@ -1459,12 +1495,12 @@ const CustomMenuItemForm = ({ onAddItem }) => {
 
     // Validation
     if (!formData.name.trim()) {
-      toast.error('Item name is required');
+      toast.error(t('serviceProvider.restaurant.messages.itemRequired'));
       return;
     }
 
     if (!formData.price || parseFloat(formData.price) <= 0) {
-      toast.error('Valid price is required');
+      toast.error(t('serviceProvider.restaurant.messages.priceRequired'));
       return;
     }
 
@@ -1473,11 +1509,11 @@ const CustomMenuItemForm = ({ onAddItem }) => {
     // Upload image if selected
     if (imageFile) {
       console.log('🟡 Starting image upload...');
-      toast.info('Uploading image...');
+      toast.info(t('serviceProvider.restaurant.messages.uploadingImage'));
       imageUrl = await uploadImageToCloudinary();
       console.log('🟡 Upload result:', imageUrl);
       if (!imageUrl) {
-        toast.error('Failed to upload image. Please try again.');
+        toast.error(t('serviceProvider.restaurant.messages.imageUploadFailed'));
         return;
       }
     } else {
@@ -1520,13 +1556,13 @@ const CustomMenuItemForm = ({ onAddItem }) => {
         {/* Item Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Item Name *
+            {t('serviceProvider.restaurant.form.itemNameRequired')}
           </label>
           <input
             type="text"
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
-            placeholder="e.g., Grilled Chicken Breast"
+            placeholder={t('serviceProvider.restaurant.form.itemNamePlaceholder')}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
             required
           />
@@ -1535,7 +1571,7 @@ const CustomMenuItemForm = ({ onAddItem }) => {
         {/* Category */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Category *
+            {t('serviceProvider.restaurant.form.categoryRequired')}
           </label>
           <select
             value={formData.category}
@@ -1545,7 +1581,7 @@ const CustomMenuItemForm = ({ onAddItem }) => {
           >
             {categoryOptions.map(option => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {t(`serviceProvider.restaurant.categories.${option.value}`, option.label)}
               </option>
             ))}
           </select>
@@ -1554,7 +1590,7 @@ const CustomMenuItemForm = ({ onAddItem }) => {
         {/* Price */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Price (USD) *
+            {t('serviceProvider.restaurant.form.priceRequired')}
           </label>
           <input
             type="number"
@@ -1562,23 +1598,28 @@ const CustomMenuItemForm = ({ onAddItem }) => {
             min="0"
             value={formData.price}
             onChange={(e) => handleInputChange('price', e.target.value)}
-            placeholder="0.00"
+            placeholder={t('serviceProvider.restaurant.form.pricePlaceholder')}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
             required
           />
+          {formData.price > 0 && (
+            <p className="text-xs text-gray-500 mt-1">
+              ({(formData.price * 3.75).toFixed(2)} SAR)
+            </p>
+          )}
         </div>
 
         {/* Preparation Time */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Preparation Time (minutes)
+            {t('serviceProvider.restaurant.form.prepTime')}
           </label>
           <input
             type="number"
             min="1"
             value={formData.preparationTime}
             onChange={(e) => handleInputChange('preparationTime', e.target.value)}
-            placeholder="15"
+            placeholder={t('serviceProvider.restaurant.form.prepTimeDefault')}
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -1586,7 +1627,7 @@ const CustomMenuItemForm = ({ onAddItem }) => {
         {/* Spicy Level */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Spicy Level
+            {t('serviceProvider.restaurant.form.spicyLevel')}
           </label>
           <select
             value={formData.spicyLevel}
@@ -1595,7 +1636,7 @@ const CustomMenuItemForm = ({ onAddItem }) => {
           >
             {spicyLevelOptions.map(option => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {t(`serviceProvider.restaurant.spicyLevels.${option.value}`, option.label)}
               </option>
             ))}
           </select>
@@ -1605,7 +1646,7 @@ const CustomMenuItemForm = ({ onAddItem }) => {
       {/* Image Upload Section */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Menu Item Image
+          {t('serviceProvider.restaurant.form.imageUpload')}
         </label>
 
         {!imagePreview && !formData.imageUrl ? (
@@ -1624,9 +1665,9 @@ const CustomMenuItemForm = ({ onAddItem }) => {
                 </svg>
               </div>
               <p className="text-sm text-gray-600 mb-1">
-                <span className="font-medium text-blue-600 hover:text-blue-500">Click to upload</span> or drag and drop
+                <span className="font-medium text-blue-600 hover:text-blue-500">{t('serviceProvider.restaurant.form.clickToUpload')}</span> {t('serviceProvider.restaurant.form.dragDrop')}
               </p>
-              <p className="text-xs text-gray-500">PNG, JPG, JPEG up to 5MB</p>
+              <p className="text-xs text-gray-500">{t('serviceProvider.restaurant.form.imageFormat')}</p>
             </label>
           </div>
         ) : (
@@ -1648,7 +1689,7 @@ const CustomMenuItemForm = ({ onAddItem }) => {
               </button>
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              {imageFile ? 'New image selected' : 'Current image'}
+              {imageFile ? t('serviceProvider.restaurant.form.newImageSelected') : t('serviceProvider.restaurant.form.currentImage')}
             </p>
           </div>
         )}
@@ -1657,8 +1698,8 @@ const CustomMenuItemForm = ({ onAddItem }) => {
       {/* Description */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Description
-          <span className="text-sm font-normal text-gray-500 ml-2">(Max 200 words)</span>
+          {t('serviceProvider.restaurant.form.description')}
+          <span className="text-sm font-normal text-gray-500 ml-2">{t('serviceProvider.restaurant.form.descriptionNote')}</span>
         </label>
         <textarea
           value={formData.description}
@@ -1668,48 +1709,53 @@ const CustomMenuItemForm = ({ onAddItem }) => {
               handleInputChange('description', e.target.value);
             }
           }}
-          placeholder="Describe the dish, ingredients, cooking method..."
+          placeholder={t('serviceProvider.restaurant.form.descriptionPlaceholder')}
           rows="3"
           className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
         />
         <div className="text-sm text-gray-500 mt-1">
-          {formData.description.split(/\s+/).filter(word => word.length > 0).length}/200 words
+          {t('serviceProvider.restaurant.form.wordsCountSuffix', { count: formData.description.split(/\s+/).filter(word => word.length > 0).length })}
         </div>
       </div>
 
       {/* Dietary Options */}
-      <div className="flex gap-4">
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={formData.isVegetarian}
-            onChange={(e) => handleInputChange('isVegetarian', e.target.checked)}
-            className="mr-2"
-          />
-          <span className="text-sm text-gray-700">Vegetarian</span>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {t('serviceProvider.restaurant.form.dietaryOptions')}
         </label>
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={formData.isVegan}
-            onChange={(e) => handleInputChange('isVegan', e.target.checked)}
-            className="mr-2"
-          />
-          <span className="text-sm text-gray-700">Vegan</span>
-        </label>
+        <div className="flex gap-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={formData.isVegetarian}
+              onChange={(e) => handleInputChange('isVegetarian', e.target.checked)}
+              className="mr-2"
+            />
+            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.form.vegetarian')}</span>
+          </label>
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={formData.isVegan}
+              onChange={(e) => handleInputChange('isVegan', e.target.checked)}
+              className="mr-2"
+            />
+            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.form.vegan')}</span>
+          </label>
+        </div>
       </div>
 
       {/* Allergens */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Allergens
+          {t('serviceProvider.restaurant.form.allergens')}
         </label>
         <div className="flex gap-2 mb-2">
           <input
             type="text"
             value={allergenInput}
             onChange={(e) => setAllergenInput(e.target.value)}
-            placeholder="e.g., nuts, dairy, gluten"
+            placeholder={t('serviceProvider.restaurant.form.allergensPlaceholder')}
             className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
           />
           <button
@@ -1717,7 +1763,7 @@ const CustomMenuItemForm = ({ onAddItem }) => {
             onClick={addAllergen}
             className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
           >
-            Add
+            {t('serviceProvider.restaurant.form.addButton')}
           </button>
         </div>
         {formData.allergens.length > 0 && (
@@ -1744,12 +1790,12 @@ const CustomMenuItemForm = ({ onAddItem }) => {
       {/* Notes */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Additional Notes
+          {t('serviceProvider.restaurant.form.additionalNotes')}
         </label>
         <textarea
           value={formData.notes}
           onChange={(e) => handleInputChange('notes', e.target.value)}
-          placeholder="Special preparation instructions, serving suggestions..."
+          placeholder={t('serviceProvider.restaurant.form.notesPlaceholder')}
           rows="2"
           className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
         />
@@ -1765,12 +1811,12 @@ const CustomMenuItemForm = ({ onAddItem }) => {
           {uploadingImage ? (
             <>
               <FaSpinner className="animate-spin mr-2" />
-              Uploading Image...
+              {t('serviceProvider.restaurant.messages.uploadingImage')}
             </>
           ) : (
             <>
               <FaPlus className="mr-2" />
-              Add Menu Item
+              {t('serviceProvider.restaurant.form.addMenuItem')}
             </>
           )}
         </button>
@@ -1783,7 +1829,7 @@ const CustomMenuItemForm = ({ onAddItem }) => {
  * Edit Menu Item Form Component
  * Allows editing all menu item fields in a comprehensive form
  */
-const EditMenuItemForm = ({ item, onSave, onCancel }) => {
+const EditMenuItemForm = ({ item, onSave, onCancel, t }) => {
   const [formData, setFormData] = useState({
     name: item.name || '',
     category: item.category || 'mains',
@@ -1845,12 +1891,12 @@ const EditMenuItemForm = ({ item, onSave, onCancel }) => {
 
     // Validation
     if (!formData.name.trim()) {
-      toast.error('Item name is required');
+      toast.error(t('serviceProvider.restaurant.messages.itemRequired'));
       return;
     }
 
     if (!formData.price || parseFloat(formData.price) <= 0) {
-      toast.error('Valid price is required');
+      toast.error(t('serviceProvider.restaurant.messages.priceRequired'));
       return;
     }
 
@@ -1861,7 +1907,7 @@ const EditMenuItemForm = ({ item, onSave, onCancel }) => {
     };
 
     onSave(updatedItem);
-    toast.success('Menu item updated successfully');
+    toast.success(t('serviceProvider.restaurant.messages.itemUpdated'));
   };
 
   return (
@@ -1879,18 +1925,18 @@ const EditMenuItemForm = ({ item, onSave, onCancel }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div className="bg-blue-50 rounded-xl p-6">
-            <h5 className="font-bold text-gray-800 mb-4">Basic Information</h5>
+            <h5 className="font-bold text-gray-800 mb-4">{t('serviceProvider.restaurant.form.basicInfo')}</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Item Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Item Name *
+                  {t('serviceProvider.restaurant.form.itemNameRequired')}
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="e.g., Grilled Chicken Breast"
+                  placeholder={t('serviceProvider.restaurant.form.itemNamePlaceholder')}
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -1899,7 +1945,7 @@ const EditMenuItemForm = ({ item, onSave, onCancel }) => {
               {/* Category */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category *
+                  {t('serviceProvider.restaurant.form.categoryRequired')}
                 </label>
                 <select
                   value={formData.category}
@@ -1909,7 +1955,7 @@ const EditMenuItemForm = ({ item, onSave, onCancel }) => {
                 >
                   {categoryOptions.map(option => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {t(`serviceProvider.restaurant.categories.${option.value}`, option.label)}
                     </option>
                   ))}
                 </select>
@@ -2071,7 +2117,7 @@ const EditMenuItemForm = ({ item, onSave, onCancel }) => {
  * Service Menu Item Edit Form Component
  * Specialized form for editing menu items within the service management context
  */
-const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
+const ServiceMenuItemEditForm = ({ item, onSave, onCancel, t }) => {
   const [formData, setFormData] = useState({
     name: item.name || '',
     category: item.category || 'mains',
@@ -2105,10 +2151,10 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
   ];
 
   const spicyLevelOptions = [
-    { value: 'normal', label: 'Normal' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'hot', label: 'Hot' },
-    { value: 'very_hot', label: 'Very Hot' }
+    { value: 'normal', label: t('serviceProvider.restaurant.form.spicyLevelNormal') },
+    { value: 'medium', label: t('serviceProvider.restaurant.form.spicyLevelMedium') },
+    { value: 'hot', label: t('serviceProvider.restaurant.form.spicyLevelHot') },
+    { value: 'very_hot', label: t('serviceProvider.restaurant.form.spicyLevelVeryHot') }
   ];
 
   const handleInputChange = (field, value) => {
@@ -2245,7 +2291,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
       <div className="flex items-center justify-between mb-4">
         <h6 className="font-bold text-blue-800 flex items-center">
           <FaEdit className="mr-2" />
-          Edit Menu Item
+          {t('serviceProvider.restaurant.form.editMenuItem')}
         </h6>
       </div>
 
@@ -2255,7 +2301,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
           {/* Item Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Item Name *
+              {t('serviceProvider.restaurant.form.itemNameRequired')}
             </label>
             <input
               type="text"
@@ -2269,7 +2315,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
           {/* Category */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category *
+              {t('serviceProvider.restaurant.form.categoryRequired')}
             </label>
             <select
               value={formData.category}
@@ -2288,7 +2334,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
           {/* Price */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Price (USD) *
+              {t('serviceProvider.restaurant.form.priceRequired')}
             </label>
             <input
               type="number"
@@ -2304,7 +2350,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
           {/* Preparation Time */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Prep Time (min)
+              {t('serviceProvider.restaurant.form.prepTime')}
             </label>
             <input
               type="number"
@@ -2318,7 +2364,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
           {/* Spicy Level */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Spicy Level
+              {t('serviceProvider.restaurant.form.spicyLevel')}
             </label>
             <select
               value={formData.spicyLevel}
@@ -2337,7 +2383,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
         {/* Description */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Description
+            {t('serviceProvider.restaurant.form.description')}
           </label>
           <textarea
             value={formData.description}
@@ -2350,7 +2396,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
         {/* Image Upload Section */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Menu Item Image
+            {t('serviceProvider.restaurant.form.menuItemImage')}
           </label>
 
           {/* Current Image or Preview */}
@@ -2386,7 +2432,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
               <div className="flex items-center gap-2 text-blue-600">
                 <FaCamera className="text-lg" />
                 <span className="text-sm font-medium">
-                  {(imagePreview || formData.imageUrl) ? 'Change Image' : 'Add Image'}
+                  {(imagePreview || formData.imageUrl) ? t('serviceProvider.restaurant.form.changeImage') : t('serviceProvider.restaurant.form.addImage')}
                 </span>
               </div>
             </label>
@@ -2394,13 +2440,13 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
             {uploadingImage && (
               <div className="flex items-center gap-2 text-blue-600">
                 <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
-                <span className="text-sm">Uploading...</span>
+                <span className="text-sm">{t('serviceProvider.restaurant.form.uploading')}</span>
               </div>
             )}
           </div>
 
           <p className="text-xs text-gray-500 mt-1">
-            Recommended: 400x400px, max 5MB (JPG, PNG, WebP)
+            {t('serviceProvider.restaurant.form.imageRecommendation')}
           </p>
         </div>
 
@@ -2413,7 +2459,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
               onChange={(e) => handleInputChange('isVegetarian', e.target.checked)}
               className="mr-2"
             />
-            <span className="text-sm text-gray-700">Vegetarian</span>
+            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.form.vegetarian')}</span>
           </label>
           <label className="flex items-center">
             <input
@@ -2422,7 +2468,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
               onChange={(e) => handleInputChange('isVegan', e.target.checked)}
               className="mr-2"
             />
-            <span className="text-sm text-gray-700">Vegan</span>
+            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.form.vegan')}</span>
           </label>
           <label className="flex items-center">
             <input
@@ -2431,21 +2477,21 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
               onChange={(e) => handleInputChange('isAvailable', e.target.checked)}
               className="mr-2"
             />
-            <span className="text-sm text-gray-700">Available</span>
+            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.form.available')}</span>
           </label>
         </div>
 
         {/* Allergens */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Allergens
+            {t('serviceProvider.restaurant.form.allergens')}
           </label>
           <div className="flex gap-2 mb-2">
             <input
               type="text"
               value={allergenInput}
               onChange={(e) => setAllergenInput(e.target.value)}
-              placeholder="Add allergen"
+              placeholder={t('serviceProvider.restaurant.form.allergensPlaceholder')}
               className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
             />
             <button
@@ -2453,7 +2499,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
               onClick={addAllergen}
               className="px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm"
             >
-              Add
+              {t('serviceProvider.restaurant.form.addButton')}
             </button>
           </div>
           {formData.allergens.length > 0 && (
@@ -2480,13 +2526,13 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
         {/* Notes */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Additional Notes
+            {t('serviceProvider.restaurant.form.additionalNotes')}
           </label>
           <textarea
             value={formData.notes}
             onChange={(e) => handleInputChange('notes', e.target.value)}
             rows="2"
-            placeholder="Special instructions..."
+            placeholder={t('serviceProvider.restaurant.form.notesPlaceholder')}
             className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
@@ -2505,12 +2551,12 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
             {isSaving ? (
               <>
                 <FaSpinner className="inline mr-1 animate-spin" />
-                Saving...
+                {t('serviceProvider.restaurant.form.saving')}
               </>
             ) : (
               <>
                 <FaSave className="inline mr-1" />
-                Save Changes
+                {t('serviceProvider.restaurant.form.saveChanges')}
               </>
             )}
           </button>
@@ -2521,7 +2567,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel }) => {
             className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             <FaTimes className="inline mr-1" />
-            Cancel
+            {t('serviceProvider.restaurant.form.cancel')}
           </button>
         </div>
       </form>

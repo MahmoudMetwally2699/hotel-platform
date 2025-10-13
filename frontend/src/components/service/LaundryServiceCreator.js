@@ -462,8 +462,8 @@ const LaundryServiceCreator = () => {
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
             <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
             <div className="relative flex flex-col items-center">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Laundry Services</h1>
-              <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">Loading available laundry services...</p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">{t('serviceProvider.laundryManagement.title')}</h1>
+              <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">{t('serviceProvider.laundryManagement.messages.loadingServices')}</p>
             </div>
           </div>
           <div className="w-full px-2 sm:px-3 lg:px-4">
@@ -499,7 +499,7 @@ const LaundryServiceCreator = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              Your Laundry Services
+              {t('serviceProvider.laundryManagement.yourServices')}
             </h3>
             <p className="text-gray-600">
               {t('serviceProvider.laundryManagement.servicesCount', { count: existingServices.length })}
@@ -528,34 +528,34 @@ const LaundryServiceCreator = () => {
                 // ----- Enhanced Edit Mode -----
                 <div className="relative z-10 space-y-6">
                   <div className="text-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-900">Edit Service</h3>
-                    <p className="text-gray-600">Update your service details and pricing</p>
+                    <h3 className="text-xl font-bold text-gray-900">{t('serviceProvider.laundryManagement.form.editService')}</h3>
+                    <p className="text-gray-600">{t('serviceProvider.laundryManagement.form.editServiceDesc')}</p>
                   </div>
 
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-gray-800 mb-2">
-                          Service Name
+                          {t('serviceProvider.laundryManagement.form.serviceName')}
                         </label>
                         <input
                           type="text"
                           value={editFormData.name}
                           onChange={(e) => setEditFormData((p) => ({ ...p, name: e.target.value }))}
                           className={inputBase}
-                          placeholder="Enter service name..."
+                          placeholder={t('serviceProvider.laundryManagement.form.enterServiceName')}
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-gray-800 mb-2">
-                          Description
+                          {t('serviceProvider.laundryManagement.form.description')}
                         </label>
                         <textarea
                           rows={4}
                           value={editFormData.description}
                           onChange={(e) => setEditFormData((p) => ({ ...p, description: e.target.value }))}
                           className={inputBase}
-                          placeholder="Describe your service..."
+                          placeholder={t('serviceProvider.laundryManagement.form.descriptionPlaceholder')}
                         />
                       </div>
                     </div>
@@ -565,7 +565,7 @@ const LaundryServiceCreator = () => {
                       <div>
                         <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
                           <Icon type="package" className="mr-2" />
-                          Items & Pricing
+                          {t('serviceProvider.laundryManagement.form.itemsPricing')}
                         </h4>
                         <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
                           {editFormData.laundryItems.map((item, itemIndex) => (
@@ -576,7 +576,7 @@ const LaundryServiceCreator = () => {
                                 </div>
                                 <div>
                                   <h5 className="font-bold text-gray-900">{getTranslatedItemName(item.name)}</h5>
-                                  <p className="text-sm text-gray-600">Configure pricing for this item</p>
+                                  <p className="text-sm text-gray-600">{t('serviceProvider.laundryManagement.form.configurePricing')}</p>
                                 </div>
                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -607,20 +607,27 @@ const LaundryServiceCreator = () => {
                                       </label>
                                     </div>
                                     {st.isAvailable && (
-                                      <div className="relative">
-                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                                        <input
-                                          type="number"
-                                          min="0"
-                                          step="0.01"
-                                          value={st.price}
-                                          onChange={(e) =>
-                                            updateEditingItemPrice(itemIndex, st.serviceTypeId, e.target.value)
-                                          }
-                                          className={inputBase + ' pl-8'}
-                                          placeholder="0.00"
-                                        />
-                                      </div>
+                                      <>
+                                        <div className="relative">
+                                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            value={st.price}
+                                            onChange={(e) =>
+                                              updateEditingItemPrice(itemIndex, st.serviceTypeId, e.target.value)
+                                            }
+                                            className={inputBase + ' pl-8'}
+                                            placeholder="0.00"
+                                          />
+                                        </div>
+                                        {st.price > 0 && (
+                                          <p className="text-xs text-gray-500 mt-1">
+                                            ({(st.price * 3.75).toFixed(2)} SAR)
+                                          </p>
+                                        )}
+                                      </>
                                     )}
                                   </div>
                                 ))}
@@ -638,14 +645,14 @@ const LaundryServiceCreator = () => {
                         className={btn.primary + ' flex-1 sm:flex-none'}
                       >
                         <Icon type="save" className="mr-2" />
-                        Save Changes
+                        {t('serviceProvider.laundryManagement.form.saveChanges')}
                       </button>
                       <button
                         onClick={cancelEditing}
                         className={btn.neutral + ' flex-1 sm:flex-none'}
                       >
                         <Icon type="times" className="mr-2" />
-                        Cancel
+                        {t('serviceProvider.laundryManagement.actions.cancel')}
                       </button>
                     </div>
                   </div>
@@ -667,7 +674,7 @@ const LaundryServiceCreator = () => {
                           ? 'px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200'
                           : 'px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200'
                       }>
-                        {service.isActive ? '● Active' : '● Inactive'}
+                        {service.isActive ? `● ${t('serviceProvider.laundryManagement.status.active')}` : `● ${t('serviceProvider.laundryManagement.status.inactive')}`}
                       </span>
                     </div>
                   </div>
@@ -679,7 +686,7 @@ const LaundryServiceCreator = () => {
                         {service.laundryItems?.length || 0}
                       </div>
                       <div className="text-xs text-gray-600 font-medium">
-                        Items
+                        {t('serviceProvider.laundryManagement.stats.items')}
                       </div>
                     </div>
                     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 text-center border border-blue-200">
@@ -687,7 +694,7 @@ const LaundryServiceCreator = () => {
                         {service.performance?.totalBookings || service.stats?.bookings || service.totalBookings || 0}
                       </div>
                       <div className="text-xs text-gray-600 font-medium">
-                        Bookings
+                        {t('serviceProvider.laundryManagement.stats.bookings')}
                       </div>
                     </div>
                     <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-4 text-center border border-emerald-200">
@@ -695,7 +702,7 @@ const LaundryServiceCreator = () => {
                         ${service.performance?.totalRevenue || service.stats?.revenue || service.totalRevenue || 0}
                       </div>
                       <div className="text-xs text-gray-600 font-medium">
-                        Revenue
+                        {t('serviceProvider.laundryManagement.stats.revenue')}
                       </div>
                     </div>
                   </div>
@@ -704,21 +711,21 @@ const LaundryServiceCreator = () => {
                   <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100">
                     <button onClick={() => startEditingService(service)} className={btn.secondary + ' flex-1 sm:flex-none'}>
                       <Icon type="edit" className="mr-2" />
-                      Edit
+                      {t('serviceProvider.laundryManagement.actions.edit')}
                     </button>
                     <button
                       onClick={() => toggleServiceAvailability(service._id, service.isActive)}
                       className={(service.isActive ? btn.warn : btn.success) + ' flex-1 sm:flex-none'}
                     >
                       <Icon type="toggle" className="mr-2" />
-                      {service.isActive ? 'Deactivate' : 'Activate'}
+                      {service.isActive ? t('serviceProvider.laundryManagement.actions.deactivate') : t('serviceProvider.laundryManagement.actions.activate')}
                     </button>
                     <button
                       onClick={() => deleteExistingService(service._id)}
                       className={btn.danger + ' flex-1 sm:flex-none'}
                     >
                       <Icon type="trash" className="mr-2" />
-                      Delete
+                      {t('serviceProvider.laundryManagement.actions.delete')}
                     </button>
                   </div>
                 </div>
@@ -744,10 +751,10 @@ const LaundryServiceCreator = () => {
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">
-                  Service Information
+                  {t('serviceProvider.laundryManagement.form.serviceInformation')}
                 </h3>
                 <p className="text-gray-600">
-                  Set up your laundry service details
+                  {t('serviceProvider.laundryManagement.form.serviceInformationDesc')}
                 </p>
               </div>
             </div>
@@ -755,39 +762,39 @@ const LaundryServiceCreator = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  Service Name *
+                  {t('serviceProvider.laundryManagement.form.serviceName')} *
                 </label>
                 <input
                   type="text"
                   value={serviceDetails.name}
                   onChange={(e) => setServiceDetails((p) => ({ ...p, name: e.target.value }))}
                   className={inputBase}
-                  placeholder="e.g., Express Laundry Service"
+                  placeholder={t('serviceProvider.laundryManagement.form.serviceNamePlaceholder')}
                 />
               </div>
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  Short Description
+                  {t('serviceProvider.laundryManagement.form.shortDescription')}
                 </label>
                 <input
                   type="text"
                   value={serviceDetails.shortDescription}
                   onChange={(e) => setServiceDetails((p) => ({ ...p, shortDescription: e.target.value }))}
                   className={inputBase}
-                  placeholder="Quick summary of your service"
+                  placeholder={t('serviceProvider.laundryManagement.form.shortDescriptionPlaceholder')}
                 />
               </div>
             </div>
             <div className="mt-6">
               <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Full Description
+                {t('serviceProvider.laundryManagement.form.fullDescription')}
               </label>
               <textarea
                 rows={4}
                 value={serviceDetails.description}
                 onChange={(e) => setServiceDetails((p) => ({ ...p, description: e.target.value }))}
                 className={inputBase}
-                placeholder="Detailed description of your laundry service offerings..."
+                placeholder={t('serviceProvider.laundryManagement.form.fullDescriptionPlaceholder')}
               />
             </div>
           </div>
@@ -803,10 +810,10 @@ const LaundryServiceCreator = () => {
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">
-                  Add Laundry Items
+                  {t('serviceProvider.laundryManagement.form.addLaundryItems')}
                 </h3>
                 <p className="text-gray-600">
-                  Choose items to include in your service
+                  {t('serviceProvider.laundryManagement.form.addLaundryItemsDesc')}
                 </p>
               </div>
             </div>
@@ -818,7 +825,7 @@ const LaundryServiceCreator = () => {
                   className={inputBase + ' text-base font-medium'}
                   value=""
                 >
-                  <option value="">Select an item to add...</option>
+                  <option value="">{t('serviceProvider.laundryManagement.form.selectItemToAdd')}</option>
                   {availableItems.map((it, idx) => (
                     <option key={idx} value={it.name}>
                       {it.icon} {getTranslatedItemName(it.name)} ({getTranslatedCategoryName(it.category)})
@@ -829,7 +836,7 @@ const LaundryServiceCreator = () => {
               <div className="flex items-center gap-2 px-4 py-3 bg-white rounded-xl border border-[#67BAE0]/30 shadow-sm">
                 <Icon type="list" className="text-[#3B5787]" />
                 <span className="font-semibold text-[#3B5787]">
-                  {laundryItems.length} Items Added
+                  {t('serviceProvider.laundryManagement.form.itemsAdded', { count: laundryItems.length })}
                 </span>
               </div>
             </div>
@@ -930,23 +937,30 @@ const LaundryServiceCreator = () => {
                               </label>
                             </div>
                             {st.isAvailable && (
-                              <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-2">
-                                  Price (USD)
-                                </label>
-                                <div className="relative">
-                                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={st.price}
-                                    onChange={(e) => updateServiceTypePrice(item.name, st.serviceTypeId, e.target.value)}
-                                    className={inputBase + ' pl-8'}
-                                    placeholder="0.00"
-                                  />
+                              <>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                                    Price (USD)
+                                  </label>
+                                  <div className="relative">
+                                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={st.price}
+                                      onChange={(e) => updateServiceTypePrice(item.name, st.serviceTypeId, e.target.value)}
+                                      className={inputBase + ' pl-8'}
+                                      placeholder="0.00"
+                                    />
+                                  </div>
+                                  {st.price > 0 && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      ({(st.price * 3.75).toFixed(2)} SAR)
+                                    </p>
+                                  )}
                                 </div>
-                              </div>
+                              </>
                             )}
                           </div>
                         );

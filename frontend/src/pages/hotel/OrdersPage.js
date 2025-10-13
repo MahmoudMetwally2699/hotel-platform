@@ -132,9 +132,6 @@ const OrdersPage = () => {
   // Available statuses for hotel admin
   const availableStatuses = [
     { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'confirmed', label: 'Confirmed', color: 'bg-blue-100 text-blue-800' },
-    { value: 'assigned', label: 'Assigned', color: 'bg-purple-100 text-purple-800' },
-    { value: 'in-progress', label: 'In Progress', color: 'bg-indigo-100 text-indigo-800' },
     { value: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800' },
     { value: 'cancelled', label: 'Cancelled', color: 'bg-red-100 text-red-800' }
   ];  useEffect(() => {
@@ -1267,19 +1264,31 @@ const OrdersPage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   New Status
                 </label>
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-modern-blue focus:border-transparent"
-                  required
-                >
-                  <option value="">Select Status</option>
+                <div className="space-y-2">
                   {availableStatuses.map((status) => (
-                    <option key={status.value} value={status.value}>
-                      {status.label}
-                    </option>
+                    <label
+                      key={status.value}
+                      className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
+                        selectedStatus === status.value
+                          ? 'border-modern-blue bg-blue-50 shadow-sm'
+                          : 'border-gray-300 hover:border-modern-blue hover:bg-gray-50'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="status"
+                        value={status.value}
+                        checked={selectedStatus === status.value}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                        className="w-4 h-4 text-modern-blue focus:ring-modern-blue"
+                        required
+                      />
+                      <span className={`ml-3 px-3 py-1 rounded-full text-sm font-semibold ${status.color}`}>
+                        {status.label}
+                      </span>
+                    </label>
                   ))}
-                </select>
+                </div>
               </div>
 
               {/* Notes */}

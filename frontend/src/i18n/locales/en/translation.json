@@ -62,11 +62,25 @@
     "expand": "Expand",
     "collapse": "Collapse",
     "breakfast": "Breakfast",
-    "others": "Others"
+    "others": "Others",
+    "comingSoon": "Coming Soon",
+    "deactivate": "Deactivate",
+    "tip": "Tip",
+    "service": "Service"
   },
   "platform": {
     "hotelPlatform": "Hotel Platform",
     "servicePlatform": "Service Platform"
+  },
+  "categorySelection": {
+    "manageServices": "Manage Services",
+    "sidebar": {
+      "transportationBookings": "Transportation Bookings",
+      "laundryManagement": "Laundry Management",
+      "transportationManagement": "Transportation Management",
+      "housekeepingServices": "Housekeeping Services",
+      "restaurantServices": "Restaurant Services"
+    }
   },
   "navigation": {
     "home": "Home",
@@ -120,7 +134,43 @@
     "loginSuccess": "Login successful",
     "loginError": "Login failed",
     "registerSuccess": "Registration successful",
-    "registerError": "Registration failed",
+    "registerError": "Registration failed"
+      },
+      "spicyLevels": {
+        "normal": "Normal",
+        "medium": "Medium",
+        "hot": "Hot",
+        "veryHot": "Very Hot"
+      },
+      "categories": {
+        "appetizers": "Appetizers",
+        "mains": "Main Courses",
+        "desserts": "Desserts",
+        "beverages": "Beverages",
+        "salads": "Salads",
+        "soups": "Soups",
+        "snacks": "Snacks"
+      },
+      "dietary": {
+        "vegetarian": "Vegetarian",
+        "vegan": "Vegan",
+        "available": "Available"
+      },
+      "imageUpload": {
+        "changeImage": "Change Image",
+        "addImage": "Add Image",
+        "uploading": "Uploading...",
+        "imageRecommendation": "Recommended: 400x400px, max 5MB (JPG, PNG, WebP)",
+        "removeImage": "Remove image"
+      },
+      "allergens": {
+        "title": "Allergens",
+        "placeholder": "Add allergen",
+        "add": "Add"
+      },
+      "notes": {
+        "title": "Additional Notes",
+        "placeholder": "Special instructions...",
     "invalidCredentials": "Invalid email or password",
     "passwordResetSent": "Password reset link sent to your email",
     "passwordResetSuccess": "Password reset successful"
@@ -963,7 +1013,112 @@
       "newest": "Newest",
       "oldest": "Oldest",
       "highestAmount": "Highest Amount",
-      "lowestAmount": "Lowest Amount"
+      "lowestAmount": "Lowest Amount",
+      "manageTrackOrders": "Manage and track all your service orders in one place",
+      "filterOrders": "Filter Orders",
+      "rows": "Rows",
+      "dateRange": "Date Range",
+      "allTime": "All Time",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last7Days": "Last 7 Days",
+      "last30Days": "Last 30 Days",
+      "serviceType": "Service Type",
+      "allServices": "All Services",
+      "regularServices": "Regular Services",
+      "housekeeping": "Housekeeping",
+      "totalResults": "Total Results",
+      "loadingOrders": "Loading Orders",
+      "fetchingOrders": "Please wait while we fetch your latest orders and bookings.",
+      "paymentMethod": "Payment Method",
+      "cash": "Cash",
+      "visaCard": "Visa/Card",
+      "showing": "Showing",
+      "of": "of",
+      "prev": "Prev",
+      "next": "Next",
+      "roomCleaning": "Room Cleaning",
+      "amenitiesRequest": "Amenities Request",
+      "maintenanceRequest": "Maintenance Request",
+      "housekeepingService": "Housekeeping Service",
+      "laundryService": "Laundry Service",
+      "transportationService": "Transportation Service",
+      "orderDetailsTitle": "Order Details",
+      "statusLabel": "Status",
+      "orderDate": "Order Date",
+      "scheduledDate": "Scheduled Date",
+      "notScheduled": "Not scheduled",
+      "noTimeSpecified": "No time specified",
+      "guestInformation": "Guest Information",
+      "unknownGuest": "Unknown Guest",
+      "noEmailProvided": "No email provided",
+      "noPhoneProvided": "No phone provided",
+      "laundryItems": "Laundry Items",
+      "serviceTypeNotSpecified": "Service Type Not Specified",
+      "popular": "Popular",
+      "qty": "Qty",
+      "pickupDelivery": "Pickup & Delivery",
+      "location": "Location",
+      "deliveryLocationLabel": "Delivery Location",
+      "instructions": "Instructions",
+      "generalLaundry": "General Laundry",
+      "expressService": "Express Service",
+      "detailedItemBreakdown": "Detailed item breakdown not available for this booking",
+      "menuItems": "Menu Items",
+      "veg": "Veg",
+      "vegan": "Vegan",
+      "prepTime": "Prep Time",
+      "allergens": "Allergens",
+      "special": "Special",
+      "deliveryInformation": "Delivery Information",
+      "specialRequestsDelivery": "Special Requests",
+      "transportationDetails": "Transportation Details",
+      "vehicle": "Vehicle",
+      "pickup": "Pickup",
+      "delivery": "Delivery",
+      "estimatedDuration": "Estimated Duration",
+      "housekeepingServiceDetails": "Housekeeping Service Details",
+      "serviceCategory": "Service Category",
+      "issueCategory": "Issue Category",
+      "subcategory": "Subcategory",
+      "roomNumber": "Room Number",
+      "serviceOptionsAddOns": "Service Options & Add-ons",
+      "selectedOptions": "Selected Options",
+      "additionalServices": "Additional Services",
+      "notesSpecialRequests": "Notes/Special Requests",
+      "pricingDetails": "Pricing Details",
+      "basePrice": "Base Price",
+      "hotelMarkup": "Hotel Markup",
+      "quantity": "Quantity",
+      "totalAmount": "Total Amount",
+      "onlinePayment": "Online Payment",
+      "cashAtHotel": "Cash at Hotel",
+      "markAsCompleted": "Mark as Completed",
+      "markAsInProgress": "Mark as In Progress",
+      "cancelOrder": "Cancel Order",
+      "close": "Close",
+      "unknownHotel": "Unknown Hotel",
+      "electricalIssues": "Electrical Issues",
+      "plumbingIssues": "Plumbing Issues",
+      "acHeating": "AC & Heating",
+      "furnitureRepair": "Furniture Repair",
+      "electronicsIssues": "Electronics Issues",
+      "generalCleaning": "General Room Cleaning",
+      "deepCleaning": "Deep Cleaning",
+      "stainRemoval": "Stain Removal",
+      "bathroomAmenities": "Bathroom Amenities",
+      "roomSupplies": "Room Supplies",
+      "cleaningSupplies": "Cleaning Supplies",
+      "notSpecifiedCategory": "Not specified",
+      "washOnly": "Wash Only",
+      "washOnlyDesc": "Machine wash with appropriate detergent",
+      "ironOnly": "Iron Only",
+      "ironOnlyDesc": "Professional ironing and pressing",
+      "washIron": "Wash + Iron",
+      "washIronDesc": "Complete wash and iron service",
+      "dryCleaning": "Dry Cleaning",
+      "dryCleaningDesc": "Professional dry cleaning service",
+      "hours": "hours"
     },
     "services": {
       "title": "Service Management",
@@ -1131,25 +1286,37 @@
       "form": {
         "serviceName": "Service Name",
         "serviceNameRequired": "Service name is required",
-        "serviceNamePlaceholder": "e.g., Premium Laundry Service",
+        "serviceNamePlaceholder": "e.g., Express Laundry Service",
         "shortDescription": "Short Description",
-        "shortDescriptionPlaceholder": "Brief service description",
+        "shortDescriptionPlaceholder": "Quick summary of your service",
         "fullDescription": "Full Description",
-        "fullDescriptionPlaceholder": "Detailed description of your laundry service",
+        "fullDescriptionPlaceholder": "Detailed description of your laundry service offerings...",
         "description": "Description",
+        "descriptionPlaceholder": "Describe your service...",
         "serviceInformation": "Service Information",
+        "serviceInformationDesc": "Set up your laundry service details",
         "addLaundryItems": "Add Laundry Items",
+        "addLaundryItemsDesc": "Choose items to include in your service",
         "selectItemToAdd": "Select an item to add...",
-        "yourLaundryItems": "Your Laundry Items ({{count}})",
+        "yourLaundryItems": "Your Laundry Items",
+        "itemsAdded": "{{count}} Items Added",
         "itemsPricing": "Items & Pricing",
+        "configurePricing": "Configure pricing for this item",
         "price": "Price ($)",
         "pricePlaceholder": "0.00",
         "notes": "Notes (optional)",
         "notesPlaceholder": "Special instructions or notes for this item",
-        "category": "Category"
+        "category": "Category",
+        "editService": "Edit Service",
+        "editServiceDesc": "Update your service details and pricing",
+        "saveChanges": "Save Changes",
+        "enterServiceName": "Enter service name..."
       },
       "messages": {
         "loadingTemplate": "Loading laundry template...",
+        "loadingServices": "Loading available laundry services...",
+        "noServicesYet": "You haven't created any laundry services yet.",
+        "createFirstService": "Create Your First Service",
         "noServicesFound": "No Services Found",
         "failedToLoadServices": "Failed to load existing services",
         "serviceUpdatedSuccess": "Service updated successfully!",
@@ -1170,6 +1337,261 @@
         "creatingService": "Creating Service...",
         "createLaundryService": "Create Laundry Service",
         "deleteConfirmation": "Are you sure you want to delete this service? This action cannot be undone."
+      }
+    },
+    "transportation": {
+      "title": "Transportation Services",
+      "description": "Create vehicle offerings, enable service types, and keep your catalog sharp",
+      "tabs": {
+        "manageServices": "Manage Services",
+        "addNewService": "Add New Service"
+      },
+      "stats": {
+        "services": "Services",
+        "active": "Active",
+        "bookings": "Bookings",
+        "revenue": "Revenue",
+        "vehicles": "Vehicles"
+      },
+      "toolbar": {
+        "search": "Search services...",
+        "status": "Status",
+        "statusAll": "All Services",
+        "statusActive": "Active Only",
+        "statusInactive": "Inactive Only",
+        "sort": "Sort",
+        "sortUpdated": "Recently Updated",
+        "sortName": "Name A-Z",
+        "sortBookings": "Most Bookings",
+        "sortRevenue": "Highest Revenue",
+        "ascending": "↑ Ascending",
+        "descending": "↓ Descending"
+      },
+      "service": {
+        "yourServices": "Your Transportation Services",
+        "pages": "pages",
+        "totalServices": "total services",
+        "noServicesFound": "No Transportation Services Found",
+        "noServicesDescription": "Ready to get started? Create your first transportation service and start managing your fleet.",
+        "loadingServices": "Loading available transportation services..."
+      },
+      "form": {
+        "editService": "Edit Service",
+        "editServiceDesc": "Update your transportation service details",
+        "serviceName": "Service Name",
+        "serviceNamePlaceholder": "e.g., Airport Transfer Service",
+        "shortDescription": "Short Description",
+        "shortDescriptionPlaceholder": "Brief service description...",
+        "serviceDetails": "Service Details",
+        "serviceDetailsPlaceholder": "Provide detailed information about your transportation service...",
+        "uniqueNameTip": "Use unique names for each service to avoid conflicts",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe your service...",
+        "serviceInformation": "Service Information",
+        "serviceInformationDesc": "Set up your transportation service details and vehicle options",
+        "vehicleManagement": "Vehicle Management",
+        "vehicleManagementDesc": "Add and configure vehicles for your service",
+        "availableVehicles": "Available Vehicle Types",
+        "availableVehiclesDesc": "Add and configure vehicle options for your service",
+        "selectVehicle": "Select a vehicle to add...",
+        "addVehicleType": "Add Vehicle Type",
+        "vehiclesInService": "Vehicles in Service",
+        "addVehicle": "Add Vehicle",
+        "noVehiclesAdded": "No Vehicle Types Added Yet",
+        "addVehiclesPrompt": "Use the dropdown above to add vehicle types to your transportation service",
+        "vehicleDetails": "Vehicle Details",
+        "serviceTypes": "Service Types",
+        "pricingConfiguration": "Pricing Configuration",
+        "quoteBasedPricing": "Quote-Based Pricing System",
+        "quoteBasedPricingDesc": "Transportation services use quote-based pricing. Customers will request quotes for their specific trips, and you can provide customized pricing based on distance, duration, and service type.",
+        "capacity": "Capacity",
+        "capacityUnit": "passengers",
+        "features": "Features",
+        "hourly": "Hourly",
+        "daily": "Daily",
+        "airport": "Airport Transfer",
+        "pricePerHour": "Price per hour",
+        "pricePerDay": "Price per day",
+        "airportTransferPrice": "Airport transfer price",
+        "enableService": "Enable this service type",
+        "saveChanges": "Save Changes",
+        "cancel": "Cancel"
+      },
+      "actions": {
+        "edit": "Edit",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "delete": "Delete",
+        "save": "Save",
+        "remove": "Remove"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "messages": {
+        "serviceUpdated": "Service updated successfully!",
+        "updateFailed": "Failed to update service",
+        "serviceDeleted": "Service deleted successfully!",
+        "deleteFailed": "Failed to delete service",
+        "confirmDeleteService": "Are you sure you want to delete this service? This action cannot be undone.",
+        "serviceActivated": "Service activated successfully!",
+        "serviceDeactivated": "Service deactivated successfully!",
+        "toggleFailed": "Failed to toggle service status",
+        "quoteServiceCreatedSuccessfully": "Transportation service created successfully!",
+        "failedToCreateService": "Failed to create transportation service",
+        "serviceNameRequired": "Service name is required",
+        "addAtLeastOneVehicle": "Please add at least one vehicle",
+        "creatingService": "Creating Service...",
+        "createService": "Create Transportation Service",
+        "vehicleAddedSuccessfully": "Vehicle added successfully!"
+      },
+      "services": {
+        "messages": {
+          "vehicleAddedSuccessfully": "Vehicle added successfully!",
+          "createService": "Create Transportation Service"
+        }
+      }
+    },
+    "restaurant": {
+      "title": "Restaurant Services",
+      "subtitle": "Create and manage your restaurant services and menu items for hotel guests",
+      "tabs": {
+        "addService": "Add Restaurant Service",
+        "manageServices": "Manage Services"
+      },
+      "form": {
+        "serviceDetails": "Restaurant Service Details",
+        "serviceName": "Service Name",
+        "serviceNameRequired": "Service Name *",
+        "serviceNamePlaceholder": "e.g., Downtown Restaurant, Rooftop Dining",
+        "serviceDescription": "Service Description",
+        "serviceDescriptionNote": "(This description will appear for you as a service provider, not for users)",
+        "serviceDescriptionPlaceholder": "Describe your restaurant service, specialties, dining experience...",
+        "addCustomItem": "Add Custom Menu Item",
+        "yourMenuItems": "Your Menu Items",
+        "basicInfo": "Basic Information",
+        "itemName": "Item Name",
+        "itemNameRequired": "Item Name *",
+        "itemNamePlaceholder": "e.g., Grilled Chicken Breast",
+        "category": "Category",
+        "categoryRequired": "Category *",
+        "price": "Price (USD)",
+        "priceRequired": "Price (USD) *",
+        "pricePlaceholder": "0.00",
+        "prepTime": "Preparation Time (minutes)",
+        "prepTimeDefault": "15",
+        "spicyLevel": "Spicy Level",
+        "imageUpload": "Menu Item Image",
+        "clickToUpload": "Click to upload",
+        "dragDrop": "or drag and drop",
+        "imageFormat": "PNG, JPG, JPEG up to 5MB",
+        "newImageSelected": "New image selected",
+        "currentImage": "Current image",
+        "description": "Description",
+        "descriptionNote": "(Max 200 words)",
+        "descriptionPlaceholder": "Describe the dish, ingredients, cooking method...",
+        "wordsCount": "words",
+        "wordsCountSuffix": "{{count}}/200 words",
+        "dietaryOptions": "Dietary Options",
+        "vegetarian": "Vegetarian",
+        "vegan": "Vegan",
+        "allergens": "Allergens",
+        "allergensPlaceholder": "e.g., nuts, dairy, gluten",
+        "addButton": "Add",
+        "additionalNotes": "Additional Notes",
+        "notesPlaceholder": "Special preparation instructions, serving suggestions...",
+        "addMenuItem": "Add Menu Item",
+        "editMenuItem": "Edit Menu Item",
+        "saveChanges": "Save Changes",
+        "cancel": "Cancel",
+        "editService": "Edit Restaurant Service",
+        "menuItemsManagement": "Menu Items Management"
+      },
+      "categories": {
+        "appetizers": "Appetizers",
+        "mains": "Main Courses",
+        "desserts": "Desserts",
+        "beverages": "Beverages",
+        "breakfast": "Breakfast",
+        "lunch": "Lunch",
+        "dinner": "Dinner",
+        "snacks": "Snacks"
+      },
+      "spicyLevels": {
+        "normal": "Normal",
+        "medium": "Medium",
+        "hot": "Hot",
+        "veryHot": "Very Hot"
+      },
+      "actions": {
+        "addItem": "Add Item",
+        "edit": "Edit",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "editService": "Edit Service",
+        "createService": "Create Restaurant Service",
+        "creating": "Creating Service...",
+        "remove": "Remove",
+        "available": "Available",
+        "unavailable": "Unavailable"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "stats": {
+        "menuItems": "Menu Items",
+        "availableItems": "Available items",
+        "orders": "Orders",
+        "totalOrders": "Total orders",
+        "revenue": "Revenue",
+        "totalEarned": "Total earned"
+      },
+      "info": {
+        "menuCategories": "Menu Categories",
+        "noCategories": "No categories",
+        "noMenuItems": "No menu items",
+        "created": "Created",
+        "notAvailable": "N/A"
+      },
+      "messages": {
+        "loadingServices": "Loading available restaurant services...",
+        "failedToLoad": "Failed to load restaurant services",
+        "itemAlreadyExists": "Menu item with this name already exists",
+        "itemAdded": "{{itemName}} added to menu",
+        "itemRemoved": "Menu item removed",
+        "itemRequired": "Item name is required",
+        "priceRequired": "Valid price is required",
+        "serviceNameRequired": "Service name is required",
+        "addOneItem": "Please add at least one menu item",
+        "validPrice": "All menu items must have a valid price",
+        "uploadingImage": "Uploading image...",
+        "imageUploadFailed": "Failed to upload image. Please try again.",
+        "imageSelectError": "Please select a valid image file",
+        "imageSizeError": "Image size should be less than 5MB",
+        "serviceCreated": "✅ Restaurant service created successfully!",
+        "serviceCreateFailed": "Failed to create restaurant service",
+        "itemUpdated": "Menu item updated successfully",
+        "updatingItem": "Updating menu item...",
+        "itemUpdateFailed": "Failed to update menu item",
+        "serviceUpdated": "Restaurant service updated successfully!",
+        "serviceUpdateFailed": "Failed to update restaurant service",
+        "confirmDelete": "Are you sure you want to delete this service? This action cannot be undone.",
+        "serviceDeleted": "Service deleted successfully",
+        "serviceDeleteFailed": "Failed to delete service",
+        "serviceActivated": "Service activated successfully",
+        "serviceDeactivated": "Service deactivated successfully",
+        "toggleFailed": "Failed to update service availability",
+        "noServicesFound": "No Restaurant Services Found",
+        "noServicesDescription": "You haven't created any restaurant services yet. Start by adding your first service to showcase your culinary offerings.",
+        "createFirstService": "Create Your First Service",
+        "manageRestaurant": "Manage Restaurant Services",
+        "noMenuItemsFound": "No menu items found for this service",
+        "menuItemsNote": "Menu items are managed in the 'Add Items' tab when creating services"
       }
     },
     "analytics": {
@@ -1202,6 +1624,59 @@
       "orderNotifications": "Order Notifications",
       "paymentNotifications": "Payment Notifications"
     },
+    "feedback": {
+      "title": "Customer Feedback",
+      "subtitle": "See what customers are saying about your services",
+      "loading": "Loading feedback data...",
+      "statistics": {
+        "averageRating": "Average Rating",
+        "totalReviews": "Total Reviews",
+        "fiveStarReviews": "5-Star Reviews",
+        "lowRatings": "Low Ratings"
+      },
+      "filters": {
+        "rating": "Rating",
+        "allRatings": "All Ratings",
+        "fiveStars": "5 Stars",
+        "fourStars": "4 Stars",
+        "threeStars": "3 Stars",
+        "twoStars": "2 Stars",
+        "oneStar": "1 Star",
+        "status": "Status",
+        "active": "Active",
+        "hidden": "Hidden",
+        "flagged": "Flagged",
+        "sortBy": "Sort By",
+        "newestFirst": "Newest First",
+        "oldestFirst": "Oldest First",
+        "highestRating": "Highest Rating",
+        "lowestRating": "Lowest Rating",
+        "searchPlaceholder": "Search feedback...",
+        "allServices": "All Services",
+        "laundry": "Laundry",
+        "transportation": "Transportation",
+        "housekeeping": "Housekeeping",
+        "dining": "Dining"
+      },
+      "emptyState": {
+        "noFeedback": "No feedback found for your services",
+        "noResults": "No feedback matches your filters",
+        "loadingFeedback": "Loading feedback..."
+      },
+      "loadError": "Failed to load feedback data",
+      "loadErrorToast": "Failed to load feedback",
+      "feedbackCard": {
+        "hotel": "Hotel",
+        "unknown": "Unknown",
+        "anonymous": "Anonymous",
+        "service": "Service"
+      },
+      "pagination": {
+        "previous": "Previous",
+        "next": "Next",
+        "showing": "Showing {{from}} to {{to}} of {{total}} results"
+      }
+    },
     "quickActions": {
       "title": "Quick Actions",
       "viewNewOrders": "View New Orders",
@@ -1218,8 +1693,184 @@
       "thisWeek": "This Week",
       "noBookings": "No upcoming bookings",
       "noBookingsDescription": "You don't have any bookings scheduled.",
-      "viewAll": "View All Orders"    }
-  },  "categorySelection": {
+      "viewAll": "View All Orders"    },
+    "dashboard": {
+      "title": "Service Categories",
+      "subtitle": "Select the type of services you want to offer. You can activate multiple categories and manage them independently.",
+      "loadingCategories": "Loading available service categories...",
+      "noCategories": "No Service Categories Available",
+      "noCategoriesDescription": "No service categories are currently enabled for your account. Please contact your hotel administrator to enable service categories such as laundry, transportation, dining, or housekeeping.",
+      "outsideServices": {
+        "title": "Outside Hotel Services",
+        "description": "Services provided by external service providers",
+        "selectButton": "Select Outside Hotel Services"
+      },
+      "insideServices": {
+        "title": "Inside Hotel Services",
+        "description": "Services provided within hotel premises",
+        "selectButton": "Select Inside Hotel Services"
+      },
+      "availableServices": "Available Services:",
+      "moreServices": "more services",
+      "breadcrumbs": {
+        "serviceCategories": "Service Categories",
+        "outsideHotelServices": "Outside Hotel Services",
+        "insideHotelServices": "Inside Hotel Services"
+      },
+      "howItWorks": {
+        "title": "How it works",
+        "subtitle": "Choose your service category and start earning with our platform",
+        "outside": {
+          "title": "Outside Hotel Services",
+          "point1": {
+            "bold": "Partner",
+            "text": "with external service providers"
+          },
+          "point2": {
+            "bold": "Set markup",
+            "text": "percentages on service provider base prices"
+          },
+          "point3": {
+            "bold": "Guests pay",
+            "text": "final price (base + markup)"
+          },
+          "point4": {
+            "bold": "Revenue split:",
+            "text": "Hotel receives markup, provider receives base price"
+          }
+        },
+        "inside": {
+          "title": "Inside Hotel Services",
+          "point1": {
+            "bold": "Direct services",
+            "text": "within hotel premises"
+          },
+          "point2": {
+            "bold": "On-site delivery",
+            "text": "to hotel guests"
+          },
+          "point3": {
+            "bold": "Coordinate",
+            "text": "with hotel staff for seamless service"
+          },
+          "point4": {
+            "bold": "Full control",
+            "text": "over service management and execution"
+          }
+        }
+      },
+      "serviceCategories": {
+        "laundryServices": {
+          "name": "Laundry Services",
+          "description": "Professional laundry and dry cleaning"
+        },
+        "transportationServices": {
+          "name": "Transportation Services",
+          "description": "Vehicle rental and transportation"
+        },
+        "hotelRestaurant": {
+          "name": "Hotel Restaurant",
+          "description": "Main dining facilities and reservations"
+        },
+        "housekeepingServices": {
+          "name": "Housekeeping Services",
+          "description": "Room cleaning and maintenance requests"
+        }
+      }
+    },
+    "insideHotelServices": {
+      "title": "Inside Hotel Services",
+      "subtitle": "Manage services you provide within hotel premises. These services are delivered directly to hotel guests on-site.",
+      "addService": "Add Service",
+      "backToCategories": "Back to Categories",
+      "activeServices": "Active Services",
+      "availableServices": "Available Services",
+      "noServices": "No Services Available",
+      "noServicesDescription": "There are no inside hotel services configured yet.",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "edit": "Edit Service",
+      "delete": "Delete Service",
+      "activating": "Activating...",
+      "processing": "Processing...",
+      "manageService": "Manage Service",
+      "operatingHours": "Operating Hours",
+      "features": "Features:",
+      "basePrice": "Base Price",
+      "category": "Category",
+      "more": "more",
+      "successMessage": "Excellent! You have activated {{count}} inside hotel service! Guests can now book these services directly within the hotel premises",
+      "manageServiceDetails": "Manage Service Details",
+      "viewBookings": "View Bookings",
+      "addNewService": "Add New Hotel Service",
+      "serviceName": "Service Name",
+      "description": "Description",
+      "createService": "Create Service",
+      "cancel": "Cancel",
+      "guestAssistance": "Guest Assistance",
+      "categories": {
+        "dining": "Dining",
+        "assistance": "Assistance",
+        "maintenance": "Maintenance",
+        "wellness": "Wellness"
+      },
+      "sampleServices": "Sample Services",
+      "defaultServices": {
+        "roomService": {
+          "name": "Room Service",
+          "description": "In-room dining and service requests",
+          "features": {
+            "availability": "24/7 availability option",
+            "menuCustomization": "Menu customization",
+            "dietaryAccommodations": "Special dietary accommodations"
+          }
+        },
+        "hotelRestaurant": {
+          "name": "Hotel Restaurant",
+          "description": "Main dining facilities and reservations",
+          "features": {
+            "tableReservations": "Table reservations",
+            "privateDining": "Private dining",
+            "eventCatering": "Event catering"
+          }
+        },
+        "conciergeServices": {
+          "name": "Concierge Services",
+          "description": "Guest assistance and recommendations",
+          "features": {
+            "localRecommendations": "Local recommendations",
+            "bookingAssistance": "Booking assistance",
+            "specialRequests": "Special requests"
+          }
+        },
+        "housekeepingRequests": {
+          "name": "Housekeeping Services",
+          "description": "Room cleaning and maintenance requests",
+          "features": {
+            "extraCleaning": "Extra cleaning",
+            "amenityRequests": "Amenity requests",
+            "maintenanceIssues": "Maintenance issues"
+          }
+        }
+      }
+    },
+    "insideServicesCategorySelection": {
+      "title": "Inside Hotel Services",
+      "subtitle": "Select and activate the inside hotel services you want to offer. These services are provided within the hotel premises.",
+      "backToCategories": "Back to Categories",
+      "activeInsideServices": "Active Inside Services",
+      "noServicesAvailable": "No Inside Hotel Services Available",
+      "noServicesDescription": "No inside hotel service categories are currently enabled for your account. Please contact your hotel administrator to enable the required service categories such as dining or housekeeping.",
+      "sampleServices": "Sample Services:",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "activating": "Activating...",
+      "deactivating": "Deactivating...",
+      "successMessage": "🏨 Excellent! You have activated {{count}} inside hotel service! Guests can now book these services directly within the hotel premises.",
+      "successMessagePlural": "🏨 Excellent! You have activated {{count}} inside hotel services! Guests can now book these services directly within the hotel premises.",
+      "manageServiceDetails": "Manage Service Details"
+    },
+    "categorySelection": {
     "title": "Service Categories",
     "description": "Select the service categories you want to offer. You can activate multiple categories and manage them independently.",
     "activeCategories": "Active Categories",
@@ -1234,17 +1885,21 @@
     "successMessage": "Great! You've activated",
     "categorySingle": "category",
     "categoryPlural": "categories",
-    "successDescription": "Now you can create services for each active category.",    "manageServices": "Manage Services",
+    "successDescription": "Now you can create services for each active category.",
+    "manageServices": "Manage Services",
     "sidebar": {
       "laundryManagement": "Laundry Service Management",
       "transportationManagement": "Transportation Service Management",
-      "transportationBookings": "Transportation Bookings"
+      "transportationBookings": "Transportation Bookings",
+      "housekeepingServices": "Housekeeping Services",
+      "restaurantServices": "Restaurant Services"
     },
     "offlineMode": "Using offline mode - some features may be limited",
     "activatedLocally": "activated locally (offline mode)",
     "deactivatedLocally": "deactivated locally (offline mode)",
     "failedToActivate": "Failed to activate category",
-    "failedToDeactivate": "Failed to deactivate category",    "sampleItems": {
+    "failedToDeactivate": "Failed to deactivate category",
+    "sampleItems": {
       "shirts": "Shirts",
       "pants": "Pants",
       "dresses": "Dresses",
@@ -1339,6 +1994,18 @@
       "linens": "Bed Linens",
       "home": "Home Items"
     },
+    "vehicleTypeNames": {
+      "Economy Sedan": "Economy Sedan",
+      "Comfort Sedan": "Comfort Sedan",
+      "Van": "Van",
+      "Economy/Compact Car": "Economy/Compact Car",
+      "Sedan/Midsize": "Sedan/Midsize",
+      "SUV/Crossover": "SUV/Crossover",
+      "Large Vehicle": "Large Vehicle",
+      "Van/MPV": "Van/MPV",
+      "Luxury/Premium": "Luxury/Premium",
+      "Premium SUV": "Premium SUV"
+    },
     "categories": {
       "laundry": {
         "name": "Laundry Services",
@@ -1420,17 +2087,7 @@
     "paymentFailed": "Payment Failed",
     "paymentPending": "Payment Pending",
     "refundPayment": "Refund Payment",
-    "paymentHistory": "Payment History"
-  },  "notifications": {
-    "newBooking": "New booking received",
-    "bookingConfirmed": "Booking confirmed",
-    "bookingCancelled": "Booking cancelled",
-    "paymentReceived": "Payment received",
-    "serviceCompleted": "Service completed",
-    "markAsRead": "Mark as read",
-    "markAllRead": "Mark all as read",
-    "noNotifications": "No notifications",
-    "viewNotifications": "View notifications"
+    "paymentHistory": "Payment History"}
   },
   "errors": {
     "404": "Page not found",
@@ -1610,7 +2267,7 @@
       "copyright": "© 2025 QuickRoom. All rights reserved. Designed for exceptional guest experiences."
     }
   },
-  "categories": {
+  "guestCategoriesMeta": {
     "availableAt": "Available at",
     "totalServices": "Total Services",
     "allPrices": "All Prices",
@@ -1635,7 +2292,8 @@
     "selectItems": "Select Items",
     "bookNow": "Book Now",
     "enhancedLaundryExperience": "Enhanced Laundry Experience",
-    "laundryExperienceDescription": "Select multiple items, choose service types, and enjoy room pickup & delivery!"
+    "laundryExperienceDescription": "Select multiple items, choose service types, and enjoy room pickup & delivery!",
+    "transportationServices": "Transportation Services"
   },
   "hotels": {
     "searchHotels": "Search Hotels",
@@ -2274,6 +2932,17 @@
         "description": "Describe what this service includes and how it benefits guests",
         "instructions": "Special instructions or requirements for this service"
       }
+    },
+    "messages": {
+      "loadingServices": "Loading available housekeeping services...",
+      "serviceCreated": "Housekeeping service created successfully",
+      "createFailed": "Failed to create service",
+      "confirmDelete": "Are you sure you want to delete this service?",
+      "serviceDeleted": "Service deleted successfully",
+      "deleteFailed": "Failed to delete service",
+      "serviceActivated": "Service activated successfully",
+      "serviceDeactivated": "Service deactivated successfully",
+      "toggleFailed": "Failed to toggle service status"
     },
     "categories": {
       "cleaning": "Room Cleaning",

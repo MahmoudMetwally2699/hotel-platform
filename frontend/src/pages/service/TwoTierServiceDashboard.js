@@ -52,10 +52,10 @@ const TwoTierServiceDashboard = () => {
                   onClick={handleBackToMain}
                   className="hover:text-blue-600 transition-colors"
                 >
-                  Service Categories
+                  {t('serviceProvider.dashboard.breadcrumbs.serviceCategories')}
                 </button>
                 <span>/</span>
-                <span className="text-gray-900 font-medium">Outside Hotel Services</span>
+                <span className="text-gray-900 font-medium">{t('serviceProvider.dashboard.breadcrumbs.outsideHotelServices')}</span>
               </nav>
             </div>
 
@@ -76,10 +76,10 @@ const TwoTierServiceDashboard = () => {
                   onClick={handleBackToMain}
                   className="hover:text-blue-600 transition-colors"
                 >
-                  Service Categories
+                  {t('serviceProvider.dashboard.breadcrumbs.serviceCategories')}
                 </button>
                 <span>/</span>
-                <span className="text-gray-900 font-medium">Inside Hotel Services</span>
+                <span className="text-gray-900 font-medium">{t('serviceProvider.dashboard.breadcrumbs.insideHotelServices')}</span>
               </nav>
             </div>
 

@@ -200,21 +200,21 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
                     {categoryTitle} {t('navigation.services')}
                   </h1>
                   <p className="text-sm sm:text-base text-gray-600 mt-1 truncate">
-                    {t('categories.availableAt')} {hotel?.name}
+                    {t('guestCategoriesMeta.availableAt')} {hotel?.name}
                   </p>
                 </div>
               </div>
             </div>
             <div className="flex sm:hidden items-center justify-between">
               <div className={`${isRTL ? 'text-left' : 'text-right'}`}>
-                <p className="text-xs text-gray-500">{t('categories.totalServices')}</p>
+                <p className="text-xs text-gray-500">{t('guestCategoriesMeta.totalServices')}</p>
                 <p className="text-xl font-bold text-gray-900">
                   {filteredAndSortedServices.length}
                 </p>
               </div>            </div>
             <div className="hidden sm:flex items-center space-x-4">
               <div className={`${isRTL ? 'text-left' : 'text-right'}`}>
-                <p className="text-sm text-gray-500">{t('categories.totalServices')}</p>
+                <p className="text-sm text-gray-500">{t('guestCategoriesMeta.totalServices')}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {filteredAndSortedServices.length}
                 </p>
@@ -240,9 +240,9 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
                   onChange={(e) => setPriceFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="all">{t('categories.allPrices')}</option>
-                  <option value="budget">{t('categories.budget')}</option>
-                  <option value="premium">{t('categories.premium')}</option>
+                  <option value="all">{t('guestCategoriesMeta.allPrices')}</option>
+                  <option value="budget">{t('guestCategoriesMeta.budget')}</option>
+                  <option value="premium">{t('guestCategoriesMeta.premium')}</option>
                 </select>
               </div>
 
@@ -253,8 +253,8 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
                   onChange={(e) => setAvailabilityFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="all">{t('categories.allServices')}</option>
-                  <option value="available">{t('categories.availableNow')}</option>
+                  <option value="all">{t('guestCategoriesMeta.allServices')}</option>
+                  <option value="available">{t('guestCategoriesMeta.availableNow')}</option>
                 </select>
               </div>
             </div>
@@ -262,7 +262,7 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <FaSort className="text-gray-500" />
-                <span className="font-medium text-gray-700">{t('categories.sortBy')}:</span>
+                <span className="font-medium text-gray-700">{t('guestCategoriesMeta.sortBy')}:</span>
               </div>
 
               <div>
@@ -271,10 +271,10 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
                   onChange={(e) => setSortBy(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="price_low">{t('categories.priceLowToHigh')}</option>
-                  <option value="price_high">{t('categories.priceHighToLow')}</option>
-                  <option value="rating">{t('categories.highestRated')}</option>
-                  <option value="popularity">{t('categories.mostPopular')}</option>
+                  <option value="price_low">{t('guestCategoriesMeta.priceLowToHigh')}</option>
+                  <option value="price_high">{t('guestCategoriesMeta.priceHighToLow')}</option>
+                  <option value="rating">{t('guestCategoriesMeta.highestRated')}</option>
+                  <option value="popularity">{t('guestCategoriesMeta.mostPopular')}</option>
                 </select>
               </div>
             </div>
@@ -285,16 +285,16 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
           <div className="text-center py-12">
             <IconComponent className="text-6xl text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-medium text-gray-900 mb-2">
-              {t('categories.noServicesAvailable', { category: categoryTitle.toLowerCase() })}
+              {t('guestCategoriesMeta.noServicesAvailable', { category: categoryTitle.toLowerCase() })}
             </h3>
             <p className="text-gray-600 mb-6">
-              {t('categories.noServicesDescription', { category: categoryTitle.toLowerCase() })}
+              {t('guestCategoriesMeta.noServicesDescription', { category: categoryTitle.toLowerCase() })}
             </p>
             <button
               onClick={handleBackToCategories}
               className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
-              {t('categories.browseOtherCategories')}
+              {t('guestCategoriesMeta.browseOtherCategories')}
             </button>
           </div>
         ) : (          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -324,7 +324,7 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
                   </div>                  {service.performance?.totalBookings > 10 && (
                     <div className="absolute top-2 left-2">
                       <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                        {t('categories.popular')}
+                        {t('guestCategoriesMeta.popular')}
                       </span>
                     </div>
                   )}
@@ -340,7 +340,7 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
                   </p>                  {/* Provider Info */}
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
                     <div className="flex items-center">
-                      <span className="text-xs sm:text-sm text-gray-500">{t('categories.by')} </span>
+                      <span className="text-xs sm:text-sm text-gray-500">{t('guestCategoriesMeta.by')} </span>
                       <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">
                         {service.providerId?.businessName}
                       </span>
@@ -357,7 +357,7 @@ const HotelCategoryServicesPage = () => {  const { t, i18n } = useTranslation();
                   <div className="space-y-1 sm:space-y-2 mb-4">
                     <div className="flex items-center text-xs sm:text-sm text-gray-600">
                       <FaClock className={`text-gray-400 ${isRTL ? 'ml-2' : 'mr-2'} text-xs`} />
-                      <span>{t('categories.duration')}: {service.duration || t('categories.varies')}</span>
+                      <span>{t('guestCategoriesMeta.duration')}: {service.duration || t('guestCategoriesMeta.varies')}</span>
                     </div>
                     {service.location && (
                       <div className="flex items-center text-xs sm:text-sm text-gray-600">

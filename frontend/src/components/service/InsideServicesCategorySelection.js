@@ -25,12 +25,70 @@ const categoryIcons = {
 };
 
 const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const navigate = useNavigate();
   const [categories, setCategories] = useState({});
   const [activeCategories, setActiveCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(null);
+
+  // Helper function to translate service names
+  const translateServiceName = (serviceName) => {
+    const serviceMap = {
+      'Room Service': 'roomService',
+      'Hotel Restaurant': 'hotelRestaurant',
+      'Concierge Services': 'conciergeServices',
+      'Housekeeping Requests': 'housekeepingRequests',
+      'Housekeeping Services': 'housekeepingRequests'
+    };
+
+    const serviceKey = serviceMap[serviceName];
+    if (serviceKey) {
+      return t(`serviceProvider.insideHotelServices.defaultServices.${serviceKey}.name`);
+    }
+    return serviceName;
+  };
+
+  // Helper function to translate service descriptions
+  const translateServiceDescription = (description) => {
+    const descriptionMap = {
+      'In-room dining and service requests': 'roomService',
+      'Main dining facilities and reservations': 'hotelRestaurant',
+      'Guest assistance and recommendations': 'conciergeServices',
+      'Room cleaning and maintenance requests': 'housekeepingRequests'
+    };
+
+    const serviceKey = descriptionMap[description];
+    if (serviceKey) {
+      return t(`serviceProvider.insideHotelServices.defaultServices.${serviceKey}.description`);
+    }
+    return description;
+  };
+
+  // Helper function to translate feature names
+  const translateFeature = (feature) => {
+    const featureMap = {
+      '24/7 availability option': 'roomService.features.availability',
+      'Menu customization': 'roomService.features.menuCustomization',
+      'Special dietary accommodations': 'roomService.features.dietaryAccommodations',
+      'Table reservations': 'hotelRestaurant.features.tableReservations',
+      'Private dining': 'hotelRestaurant.features.privateDining',
+      'Event catering': 'hotelRestaurant.features.eventCatering',
+      'Local recommendations': 'conciergeServices.features.localRecommendations',
+      'Booking assistance': 'conciergeServices.features.bookingAssistance',
+      'Special requests': 'conciergeServices.features.specialRequests',
+      'Extra cleaning': 'housekeepingRequests.features.extraCleaning',
+      'Amenity requests': 'housekeepingRequests.features.amenityRequests',
+      'Maintenance issues': 'housekeepingRequests.features.maintenanceIssues'
+    };
+
+    const featureKey = featureMap[feature];
+    if (featureKey) {
+      return t(`serviceProvider.insideHotelServices.defaultServices.${featureKey}`);
+    }
+    return feature;
+  };
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -210,7 +268,7 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="w-full p-6">
         {/* Modern Header Section */}
         <div className="bg-gradient-to-r from-[#67BAE0] to-[#3B5787] rounded-2xl shadow-2xl p-8 mb-8 text-white relative overflow-hidden">
@@ -221,9 +279,9 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
 
           <div className="relative flex items-center justify-between">
             <div className="max-w-4xl">
-              <h1 className="text-4xl font-bold mb-4">Inside Hotel Services</h1>
+              <h1 className="text-4xl font-bold mb-4">{t('serviceProvider.insideServicesCategorySelection.title')}</h1>
               <p className="text-xl text-white/90 leading-relaxed">
-                Select and activate the inside hotel services you want to offer. These services are provided within the hotel premises.
+                {t('serviceProvider.insideServicesCategorySelection.subtitle')}
               </p>
             </div>
             {onBackToCategories && (
@@ -231,7 +289,7 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
                 onClick={onBackToCategories}
                 className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 border border-white/20"
               >
-                Back to Categories
+                {t('serviceProvider.insideServicesCategorySelection.backToCategories')}
               </button>
             )}
           </div>
@@ -241,16 +299,16 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
           <div className="mb-8 p-6 bg-white rounded-2xl shadow-xl border border-gray-100">
             <div className="flex items-center mb-4">
               <div className="w-1 h-8 bg-gradient-to-b from-[#67BAE0] to-[#3B5787] rounded-full mr-4"></div>
-              <h3 className="text-xl font-bold text-gray-900">Active Inside Services</h3>
+              <h3 className="text-xl font-bold text-gray-900">{t('serviceProvider.insideServicesCategorySelection.activeInsideServices')}</h3>
             </div>
             <div className="flex flex-wrap gap-3">
               {activeCategories.map(categoryKey => {
                 const IconComponent = categoryIcons[categoryKey];
                 return (
                   <div key={categoryKey} className="flex items-center bg-gradient-to-r from-green-50 to-green-100 text-green-800 px-4 py-2 rounded-xl text-sm font-medium border border-green-200 shadow-sm">
-                    {IconComponent && <IconComponent className="mr-2 text-green-600" />}
-                    {categories[categoryKey]?.name}
-                    <FaCheck className="ml-2 text-green-600" />
+                    {IconComponent && <IconComponent className={`${isRTL ? 'ml-2' : 'mr-2'} text-green-600`} />}
+                    {translateServiceName(categories[categoryKey]?.name)}
+                    <FaCheck className={`${isRTL ? 'mr-2' : 'ml-2'} text-green-600`} />
                   </div>
                 );
               })}
@@ -265,16 +323,16 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
               <div className="mb-8">
                 <FaTimes className="text-6xl text-gray-400 mx-auto mb-4" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">No Inside Hotel Services Available</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('serviceProvider.insideServicesCategorySelection.noServicesAvailable')}</h3>
               <p className="text-gray-600 mb-8 leading-relaxed">
-                No inside hotel service categories are currently enabled for your account. Please contact your hotel administrator to enable the required service categories such as dining or housekeeping.
+                {t('serviceProvider.insideServicesCategorySelection.noServicesDescription')}
               </p>
               {onBackToCategories && (
                 <button
                   onClick={onBackToCategories}
                   className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                 >
-                  Back to Categories
+                  {t('serviceProvider.insideServicesCategorySelection.backToCategories')}
                 </button>
               )}
             </div>
@@ -330,11 +388,11 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
                   </div>
 
                   <h3 className="text-xl font-bold text-center mb-3 text-gray-900">
-                    {category.name}
+                    {translateServiceName(category.name)}
                   </h3>
 
                   <p className="text-gray-600 text-center text-sm mb-6 leading-relaxed">
-                    {category.description}
+                    {translateServiceDescription(category.description)}
                   </p>
 
                   {isActive ? (
@@ -386,8 +444,8 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
                         }}
                       >
                         <div className="flex items-center justify-center">
-                          <FaTimes className="mr-2" />
-                          Deactivate
+                          <FaTimes className={`${isRTL ? 'ml-2' : 'mr-2'}`} />
+                          {t('serviceProvider.insideServicesCategorySelection.deactivate')}
                         </div>
                       </button>
                     </div>
@@ -408,13 +466,13 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
                     >
                       {isActivating ? (
                         <div className="flex items-center justify-center">
-                          <FaSpinner className="animate-spin mr-2" />
-                          Activating...
+                          <FaSpinner className={`animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                          {t('serviceProvider.insideServicesCategorySelection.activating')}
                         </div>
                       ) : (
                         <div className="flex items-center justify-center">
-                          <FaPlus className="mr-2" />
-                          Activate
+                          <FaPlus className={`${isRTL ? 'ml-2' : 'mr-2'}`} />
+                          {t('serviceProvider.insideServicesCategorySelection.activate')}
                         </div>
                       )}
                     </button>
@@ -423,19 +481,19 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
                   {/* Modern Sample Services Preview */}
                   {category.items && (
                     <div className="mt-6 pt-6 border-t border-gray-100">
-                      <p className="text-sm font-medium text-gray-700 mb-3">Sample Services:</p>
+                      <p className="text-sm font-medium text-gray-700 mb-3">{t('serviceProvider.insideServicesCategorySelection.sampleServices')}</p>
                       <div className="flex flex-wrap gap-2">
                         {category.items.slice(0, 3).map((item, index) => (
                           <span
                             key={index}
                             className="bg-gradient-to-r from-[#67BAE0]/5 to-[#3B5787]/5 text-[#3B5787] px-3 py-1 rounded-full text-xs font-medium border border-[#67BAE0]/20"
                           >
-                            {item.name}
+                            {translateFeature(item.name)}
                           </span>
                         ))}
                         {category.items.length > 3 && (
                           <span className="text-gray-500 text-xs font-medium bg-gray-100 px-3 py-1 rounded-full">
-                            +{category.items.length - 3} more
+                            +{category.items.length - 3} {t('serviceProvider.categorySelection.more')}
                           </span>
                         )}
                       </div>
@@ -451,14 +509,16 @@ const InsideServicesCategorySelection = ({ onCategorySelect, onBackToCategories 
           <div className="mt-8 text-center bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
             <div className="max-w-2xl mx-auto">
               <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-                🏨 Excellent! You have activated {activeCategories.length} inside hotel service{activeCategories.length === 1 ? '' : 's'}!
-                Guests can now book these services directly within the hotel premises.
+                {activeCategories.length === 1
+                  ? t('serviceProvider.insideServicesCategorySelection.successMessage', { count: activeCategories.length })
+                  : t('serviceProvider.insideServicesCategorySelection.successMessagePlural', { count: activeCategories.length })
+                }
               </p>
               <button
                 onClick={() => window.location.href = '/service/inside-services/manage'}
                 className="bg-gradient-to-r from-[#67BAE0] to-[#3B5787] hover:from-[#3B5787] hover:to-[#2A4065] text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
-                Manage Service Details
+                {t('serviceProvider.insideServicesCategorySelection.manageServiceDetails')}
               </button>
             </div>
           </div>

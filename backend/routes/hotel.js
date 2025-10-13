@@ -2591,6 +2591,13 @@ router.get('/bookings', catchAsync(async (req, res) => {
       status: b.status || b.bookingStatus || b.status || 'processing'
     }));
 
+    // Sort all bookings by createdAt descending (most recent first)
+    allBookings.sort((a, b) => {
+      const dateA = new Date(a.createdAt || 0);
+      const dateB = new Date(b.createdAt || 0);
+      return dateB - dateA; // Descending order (newest first)
+    });
+
     // Search filtering (in-memory for now)
     if (search) {
       const term = search.toLowerCase();

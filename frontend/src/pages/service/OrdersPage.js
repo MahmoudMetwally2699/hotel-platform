@@ -31,28 +31,28 @@ const OrdersPage = () => {
   // Laundry service types mapping (from category templates)
   const laundryServiceTypes = {
     'wash_only': {
-      name: 'Wash Only',
-      description: 'Machine wash with appropriate detergent',
-      duration: { value: 24, unit: 'hours' },
+      name: t('serviceProvider.orders.washOnly') || 'Wash Only',
+      description: t('serviceProvider.orders.washOnlyDesc') || 'Machine wash with appropriate detergent',
+      duration: { value: 24, unit: t('serviceProvider.orders.hours') || 'hours' },
       icon: '🧼'
     },
     'iron_only': {
-      name: 'Iron Only',
-      description: 'Professional ironing and pressing',
-      duration: { value: 12, unit: 'hours' },
+      name: t('serviceProvider.orders.ironOnly') || 'Iron Only',
+      description: t('serviceProvider.orders.ironOnlyDesc') || 'Professional ironing and pressing',
+      duration: { value: 12, unit: t('serviceProvider.orders.hours') || 'hours' },
       icon: '👔'
     },
     'wash_iron': {
-      name: 'Wash + Iron',
-      description: 'Complete wash and iron service',
-      duration: { value: 24, unit: 'hours' },
+      name: t('serviceProvider.orders.washIron') || 'Wash + Iron',
+      description: t('serviceProvider.orders.washIronDesc') || 'Complete wash and iron service',
+      duration: { value: 24, unit: t('serviceProvider.orders.hours') || 'hours' },
       isPopular: true,
       icon: '🧺'
     },
     'dry_cleaning': {
-      name: 'Dry Cleaning',
-      description: 'Professional dry cleaning service',
-      duration: { value: 48, unit: 'hours' },
+      name: t('serviceProvider.orders.dryCleaning') || 'Dry Cleaning',
+      description: t('serviceProvider.orders.dryCleaningDesc') || 'Professional dry cleaning service',
+      duration: { value: 48, unit: t('serviceProvider.orders.hours') || 'hours' },
       icon: '🧥'
     }
   };
@@ -133,13 +133,13 @@ const OrdersPage = () => {
       switch (category) {
         case 'cleaning':
         case 'room cleaning':
-          return 'Room Cleaning';
+          return t('serviceProvider.orders.roomCleaning');
         case 'amenities':
-          return 'Amenities Request';
+          return t('serviceProvider.orders.amenitiesRequest');
         case 'maintenance':
-          return 'Maintenance Request';
+          return t('serviceProvider.orders.maintenanceRequest');
         default:
-          return 'Housekeeping Service';
+          return t('serviceProvider.orders.housekeepingService');
       }
     }
 
@@ -148,11 +148,14 @@ const OrdersPage = () => {
       const serviceType = order.serviceType || 'regular';
       switch (serviceType) {
         case 'laundry':
-          return 'Laundry Service';
+          return t('serviceProvider.orders.laundryService');
         case 'transportation':
-          return 'Transportation Service';
+          return t('serviceProvider.orders.transportationService');
+        case 'dining':
+        case 'restaurant':
+          return t('services.dining');
         default:
-          return `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} Service`;
+          return `${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} ${t('common.service') || 'Service'}`;
       }
     } else {
       // For online payments, show the specific service name
@@ -164,22 +167,33 @@ const OrdersPage = () => {
   const getHousekeepingCategoryName = (specificCategory) => {
     const categoryNames = {
       // Maintenance categories
-      'electrical_issues': 'Electrical Issues',
-      'plumbing_issues': 'Plumbing Issues',
-      'ac_heating': 'AC & Heating',
-      'furniture_repair': 'Furniture Repair',
-      'electronics_issues': 'Electronics Issues',
+      'electrical_issues': t('serviceProvider.orders.electricalIssues'),
+      'plumbing_issues': t('serviceProvider.orders.plumbingIssues'),
+      'ac_heating': t('serviceProvider.orders.acHeating'),
+      'furniture_repair': t('serviceProvider.orders.furnitureRepair'),
+      'electronics_issues': t('serviceProvider.orders.electronicsIssues'),
       // Room cleaning categories
-      'general_cleaning': 'General Room Cleaning',
-      'deep_cleaning': 'Deep Cleaning',
-      'stain_removal': 'Stain Removal',
+      'general_cleaning': t('serviceProvider.orders.generalCleaning'),
+      'deep_cleaning': t('serviceProvider.orders.deepCleaning'),
+      'stain_removal': t('serviceProvider.orders.stainRemoval'),
       // Amenities categories
-      'bathroom_amenities': 'Bathroom Amenities',
-      'room_supplies': 'Room Supplies',
-      'cleaning_supplies': 'Cleaning Supplies'
+      'bathroom_amenities': t('serviceProvider.orders.bathroomAmenities'),
+      'room_supplies': t('serviceProvider.orders.roomSupplies'),
+      'cleaning_supplies': t('serviceProvider.orders.cleaningSupplies')
     };
 
-    return categoryNames[specificCategory] || specificCategory?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Not specified';
+    // If it's in the mapping, return the mapped name
+    if (categoryNames[specificCategory]) {
+      return categoryNames[specificCategory];
+    }
+
+    // If it's a string, format it
+    if (typeof specificCategory === 'string' && specificCategory) {
+      return specificCategory.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    // Otherwise return default
+    return t('serviceProvider.orders.notSpecifiedCategory');
   };
 
   const getStatusColor = (status) => {
@@ -346,7 +360,7 @@ const OrdersPage = () => {
               {t('serviceProvider.orders.title')}
             </h1>
             <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">
-              Manage and track all your service orders in one place
+              {t('serviceProvider.orders.manageTrackOrders')}
             </p>
           </div>
         </div>
@@ -363,11 +377,11 @@ const OrdersPage = () => {
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <div className="flex items-center">
                 <div className="w-1 h-6 bg-gradient-to-b from-[#3B5787] to-[#67BAE0] rounded-full mr-3" />
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900">Filter Orders</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('serviceProvider.orders.filterOrders')}</h3>
               </div>
               {/* Page size selector (top-right) */}
               <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm text-gray-600">Rows:</span>
+                <span className="text-xs sm:text-sm text-gray-600">{t('serviceProvider.orders.rows')}:</span>
                 <select
                   value={pageSize}
                   onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
@@ -380,7 +394,7 @@ const OrdersPage = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{t('serviceProvider.orders.statusLabel')}</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
@@ -396,36 +410,37 @@ const OrdersPage = () => {
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{t('serviceProvider.orders.dateRange')}</label>
                 <select
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
                   className="block w-full pl-3 pr-8 py-2.5 text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] rounded-lg bg-white shadow-sm"
                 >
-                  <option value="all">All Time</option>
-                  <option value="today">Today</option>
-                  <option value="yesterday">Yesterday</option>
-                  <option value="week">Last 7 Days</option>
-                  <option value="month">Last 30 Days</option>
+                  <option value="all">{t('serviceProvider.orders.allTime')}</option>
+                  <option value="today">{t('serviceProvider.orders.today')}</option>
+                  <option value="yesterday">{t('serviceProvider.orders.yesterday')}</option>
+                  <option value="week">{t('serviceProvider.orders.last7Days')}</option>
+                  <option value="month">{t('serviceProvider.orders.last30Days')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Service Type</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">{t('serviceProvider.orders.serviceType')}</label>
                 <select
                   value={serviceTypeFilter}
                   onChange={(e) => setServiceTypeFilter(e.target.value)}
                   className="block w-full pl-3 pr-8 py-2.5 text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] rounded-lg bg-white shadow-sm"
                 >
-                  <option value="all">All Services</option>
-                  <option value="regular">Regular Services</option>
-                  <option value="housekeeping">Housekeeping</option>
+                  <option value="all">{t('serviceProvider.orders.allServices')}</option>
+                  <option value="laundry">{t('serviceProvider.orders.laundryService')}</option>
+                  <option value="dining">{t('services.dining')}</option>
+                  <option value="housekeeping">{t('serviceProvider.orders.housekeeping')}</option>
                 </select>
               </div>
 
               <div className="flex items-end">
                 <div className="bg-gradient-to-r from-[#3B5787]/10 to-[#67BAE0]/10 rounded-lg px-4 py-2.5 border border-[#67BAE0]/20 w-full">
-                  <div className="text-xs font-medium text-[#3B5787] mb-1">Total Results</div>
+                  <div className="text-xs font-medium text-[#3B5787] mb-1">{t('serviceProvider.orders.totalResults')}</div>
                   <div className="text-lg font-bold text-[#3B5787]">{totalResults}</div>
                 </div>
               </div>
@@ -456,8 +471,8 @@ const OrdersPage = () => {
                         </svg>
                       </div>
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">Loading Orders</h3>
-                    <p className="text-white/90 text-sm sm:text-base">Please wait while we fetch your latest orders and bookings.</p>
+                    <h3 className="text-xl font-bold text-white mb-2">{t('serviceProvider.orders.loadingOrders')}</h3>
+                    <p className="text-white/90 text-sm sm:text-base">{t('serviceProvider.orders.fetchingOrders')}</p>
                   </div>
                 </div>
               </div>
@@ -571,7 +586,7 @@ const OrdersPage = () => {
                         </div>
                       </th>
                       <th className="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-[#3B5787] uppercase tracking-wider">
-                        Payment Method
+                        {t('serviceProvider.orders.paymentMethod')}
                       </th>
                       <th
                         className="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-[#3B5787] uppercase tracking-wider cursor-pointer hover:bg-[#67BAE0]/10"
@@ -620,10 +635,10 @@ const OrdersPage = () => {
                           {order.hotel?.name || order.hotelId?.name || order.hotelName || 'N/A'}
                         </td>
                         <td className="px-4 lg:px-6 py-4 text-sm font-semibold text-[#3B5787]">
-                          ${(order.pricing?.totalAmount || order.totalAmount || 0).toFixed(2)}
+                          {order.serviceType === 'housekeeping' ? '---' : `$${(order.pricing?.totalAmount || order.totalAmount || 0).toFixed(2)}`}
                         </td>
                         <td className="px-4 lg:px-6 py-4 text-sm text-gray-700">
-                          {order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card'}
+                          {order.serviceType === 'housekeeping' ? '---' : (order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card')}
                         </td>
                         <td className="px-4 lg:px-6 py-4">
                           <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border ${getStatusColor(order.status)}`}>
@@ -670,8 +685,8 @@ const OrdersPage = () => {
               {/* Pagination footer */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-4 border-t bg-gray-50">
                 <div className="text-xs sm:text-sm text-gray-600">
-                  Showing <span className="font-semibold">{totalResults === 0 ? 0 : startIdx + 1}</span>–
-                  <span className="font-semibold">{Math.min(endIdx, totalResults)}</span> of{' '}
+                  {t('serviceProvider.orders.showing')} <span className="font-semibold">{totalResults === 0 ? 0 : startIdx + 1}</span>–
+                  <span className="font-semibold">{Math.min(endIdx, totalResults)}</span> {t('serviceProvider.orders.of')}{' '}
                   <span className="font-semibold">{totalResults}</span>
                 </div>
 
@@ -685,7 +700,7 @@ const OrdersPage = () => {
                         : 'bg-white text-[#3B5787] border-gray-200 hover:bg-gray-50'
                     }`}
                   >
-                    Prev
+                    {t('serviceProvider.orders.prev')}
                   </button>
 
                   {/* Hide number buttons on very small screens to avoid crowding */}
@@ -702,7 +717,7 @@ const OrdersPage = () => {
                         : 'bg-white text-[#3B5787] border-gray-200 hover:bg-gray-50'
                     }`}
                   >
-                    Next
+                    {t('serviceProvider.orders.next')}
                   </button>
                 </div>
               </div>
@@ -1252,12 +1267,20 @@ const OrdersPage = () => {
                         )}
                         <div className="border-t pt-2 flex justify-between font-semibold text-[#3B5787]">
                           <span>Total Amount:</span>
-                          <span>${(currentOrder.pricing?.totalAmount || currentOrder.totalAmount || 0).toFixed(2)}</span>
+                          <span>
+                            {currentOrder.serviceType === 'housekeeping'
+                              ? '---'
+                              : `$${(currentOrder.pricing?.totalAmount || currentOrder.totalAmount || 0).toFixed(2)}`
+                            }
+                          </span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Payment Method:</span>
                           <span className="font-medium">
-                            {currentOrder.payment?.paymentMethod === 'cash' ? 'Cash at Hotel' : 'Online Payment'}
+                            {currentOrder.serviceType === 'housekeeping'
+                              ? '---'
+                              : (currentOrder.payment?.paymentMethod === 'cash' ? 'Cash at Hotel' : 'Online Payment')
+                            }
                           </span>
                         </div>
                       </div>

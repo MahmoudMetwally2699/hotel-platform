@@ -503,13 +503,13 @@ const TransportationServiceCreator = () => {
               </div>
               <div>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
-                  Transportation Services
+                  {t('serviceProvider.transportation.title')}
                 </h1>
                 <div className="h-1 w-20 bg-gradient-to-r from-white/60 to-transparent rounded-full mt-2"></div>
               </div>
             </div>
             <p className="text-lg sm:text-xl text-white/90 max-w-2xl leading-relaxed">
-              Create vehicle offerings, enable service types, and keep your catalog sharp.
+              {t('serviceProvider.transportation.description')}
             </p>
 
             {/* Stats Quick View */}
@@ -517,13 +517,13 @@ const TransportationServiceCreator = () => {
               <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-2">
                 <VehicleIcon vehicleType="car" size="small" className="w-5 h-5 mr-2" inverse={true} />
                 <span className="text-sm font-medium">
-                  {existingServices.length} Services
+                  {existingServices.length} {t('serviceProvider.transportation.stats.services')}
                 </span>
               </div>
               <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-2">
                 <Icon type="stats" className="text-xl mr-2" />
                 <span className="text-sm font-medium">
-                  Active: {existingServices.filter(s => s.isActive).length}
+                  {t('serviceProvider.transportation.stats.active')}: {existingServices.filter(s => s.isActive).length}
                 </span>
               </div>
             </div>
@@ -543,7 +543,7 @@ const TransportationServiceCreator = () => {
               }
             >
               <Icon type="list" className="mr-2" />
-              Manage Services
+              {t('serviceProvider.transportation.tabs.manageServices')}
             </button>
             <button
               onClick={() => setActiveTab("add")}
@@ -555,7 +555,7 @@ const TransportationServiceCreator = () => {
               }
             >
               <Icon type="plus" className="mr-2" />
-              Add New Service
+              {t('serviceProvider.transportation.tabs.addNewService')}
             </button>
           </div>
         </div>
@@ -572,7 +572,7 @@ const TransportationServiceCreator = () => {
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search services..."
+                    placeholder={t('serviceProvider.transportation.toolbar.search')}
                     className={INPUT + " pl-12 bg-white border-[#67BAE0]/30 focus:border-[#3B5787]"}
                   />
                 </div>
@@ -580,33 +580,33 @@ const TransportationServiceCreator = () => {
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-semibold text-[#3B5787] shrink-0 flex items-center">
                     <Icon type="filter" className="mr-2" />
-                    Status
+                    {t('serviceProvider.transportation.toolbar.status')}
                   </span>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className={INPUT + " bg-white border-[#67BAE0]/30 focus:border-[#3B5787]"}
                   >
-                    <option value="all">All Services</option>
-                    <option value="active">Active Only</option>
-                    <option value="inactive">Inactive Only</option>
+                    <option value="all">{t('serviceProvider.transportation.toolbar.statusAll')}</option>
+                    <option value="active">{t('serviceProvider.transportation.toolbar.statusActive')}</option>
+                    <option value="inactive">{t('serviceProvider.transportation.toolbar.statusInactive')}</option>
                   </select>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-semibold text-[#3B5787] shrink-0 flex items-center">
                     <Icon type="sort" className="mr-2" />
-                    Sort
+                    {t('serviceProvider.transportation.toolbar.sort')}
                   </span>
                   <select
                     value={sortKey}
                     onChange={(e) => setSortKey(e.target.value)}
                     className={INPUT + " bg-white border-[#67BAE0]/30 focus:border-[#3B5787]"}
                   >
-                    <option value="updated">Recently Updated</option>
-                    <option value="name">Name A-Z</option>
-                    <option value="bookings">Most Bookings</option>
-                    <option value="revenue">Highest Revenue</option>
+                    <option value="updated">{t('serviceProvider.transportation.toolbar.sortUpdated')}</option>
+                    <option value="name">{t('serviceProvider.transportation.toolbar.sortName')}</option>
+                    <option value="bookings">{t('serviceProvider.transportation.toolbar.sortBookings')}</option>
+                    <option value="revenue">{t('serviceProvider.transportation.toolbar.sortRevenue')}</option>
                   </select>
                 </div>
 
@@ -617,7 +617,7 @@ const TransportationServiceCreator = () => {
                     title="Toggle sort direction"
                   >
                     <Icon type="sort" />
-                    {sortDir === "asc" ? "↑ Ascending" : "↓ Descending"}
+                    {sortDir === "asc" ? t('serviceProvider.transportation.toolbar.ascending') : t('serviceProvider.transportation.toolbar.descending')}
                   </button>
                 </div>
               </div>
@@ -712,8 +712,8 @@ const ManageTab = ({
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
           <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
           <div className="relative flex flex-col items-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Transportation Services</h1>
-            <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">Loading available transportation services...</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">{t('serviceProvider.transportation.title')}</h1>
+            <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">{t('serviceProvider.transportation.service.loadingServices')}</p>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
@@ -738,10 +738,10 @@ const ManageTab = ({
           </div>
         </div>
         <h3 className="text-2xl font-bold text-gray-900 mb-4">
-          No Transportation Services Found
+          {t('serviceProvider.transportation.service.noServicesFound')}
         </h3>
         <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
-          Ready to get started? Create your first transportation service and start managing your fleet.
+          {t('serviceProvider.transportation.service.noServicesDescription')}
         </p>
       </div>
     );
@@ -752,10 +752,10 @@ const ManageTab = ({
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h3 className="text-2xl font-bold text-gray-900 mb-2">
-            Your Transportation Services
+            {t('serviceProvider.transportation.service.yourServices')}
           </h3>
           <p className="text-gray-600">
-            {pageData.length} of {totalPages > 1 ? `${totalPages} pages` : 'total services'}
+            {pageData.length} of {totalPages > 1 ? `${totalPages} ${t('serviceProvider.transportation.service.pages')}` : t('serviceProvider.transportation.service.totalServices')}
           </p>
         </div>
       </div>
@@ -1089,10 +1089,10 @@ const AddTab = ({
             </div>
             <div>
               <h3 className="text-xl font-bold text-[#3B5787]">
-                Create New Transportation Service
+                {t('serviceProvider.transportation.messages.createService')}
               </h3>
               <p className="text-gray-600 text-sm mt-1">
-                Set up your transportation service details and vehicle options
+                {t('serviceProvider.transportation.form.serviceInformationDesc')}
               </p>
             </div>
           </div>
@@ -1102,39 +1102,39 @@ const AddTab = ({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-1">
               <label className="block text-sm font-semibold text-[#3B5787] mb-2">
-                Service Name *
+                {t('serviceProvider.transportation.form.serviceName')} *
               </label>
               <input
                 value={serviceDetails.name}
                 onChange={(e) => setServiceDetails((p) => ({ ...p, name: e.target.value }))}
-                placeholder="e.g., Airport Transfer Service"
+                placeholder={t('serviceProvider.transportation.form.serviceNamePlaceholder')}
                 className={INPUT + " bg-white border-[#67BAE0]/30 focus:border-[#3B5787] focus:ring-[#3B5787]/20"}
               />
               <p className="text-xs text-gray-500 mt-1">
-                💡 Tip: Use unique names for each service to avoid conflicts
+                💡 {t('common.tip')}: {t('serviceProvider.transportation.form.uniqueNameTip')}
               </p>
             </div>
 
             <div className="space-y-1">
               <label className="block text-sm font-semibold text-[#3B5787] mb-2">
-                Short Description
+                {t('serviceProvider.transportation.form.shortDescription')}
               </label>
               <input
                 value={serviceDetails.description}
                 onChange={(e) => setServiceDetails((p) => ({ ...p, description: e.target.value }))}
-                placeholder="Brief service description..."
+                placeholder={t('serviceProvider.transportation.form.shortDescriptionPlaceholder')}
                 className={INPUT + " bg-white border-[#67BAE0]/30 focus:border-[#3B5787] focus:ring-[#3B5787]/20"}
               />
             </div>
 
             <div className="lg:col-span-2 space-y-1">
               <label className="block text-sm font-semibold text-[#3B5787] mb-2">
-                Service Details
+                {t('serviceProvider.transportation.form.serviceDetails')}
               </label>
               <textarea
                 value={serviceDetails.details}
                 onChange={(e) => setServiceDetails((p) => ({ ...p, details: e.target.value }))}
-                placeholder="Provide detailed information about your transportation service..."
+                placeholder={t('serviceProvider.transportation.form.serviceDetailsPlaceholder')}
                 rows={4}
                 className={INPUT + " bg-white border-[#67BAE0]/30 focus:border-[#3B5787] focus:ring-[#3B5787]/20 resize-none"}
               />
@@ -1153,10 +1153,10 @@ const AddTab = ({
               </div>
               <div>
                 <h4 className="text-lg font-bold text-[#3B5787]">
-                  Available Vehicle Types
+                  {t('serviceProvider.transportation.form.availableVehicles')}
                 </h4>
                 <p className="text-gray-600 text-sm">
-                  Add and configure vehicle options for your service
+                  {t('serviceProvider.transportation.form.availableVehiclesDesc')}
                 </p>
               </div>
             </div>
@@ -1167,10 +1167,10 @@ const AddTab = ({
                 className={INPUT + " bg-white border-[#67BAE0]/30 focus:border-[#3B5787] focus:ring-[#3B5787]/20"}
                 value=""
               >
-                <option value="">Add Vehicle Type</option>
+                <option value="">{t('serviceProvider.transportation.form.addVehicleType')}</option>
                 {availableVehicles.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.name} ({typeof v.capacity === "object" ? v.capacity.passengers : v.capacity} passengers)
+                    {v.name} ({typeof v.capacity === "object" ? v.capacity.passengers : v.capacity} {t('serviceProvider.transportation.form.capacityUnit')})
                   </option>
                 ))}
               </select>
@@ -1182,11 +1182,10 @@ const AddTab = ({
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 mb-6">
             <div className="flex items-center gap-3 text-[#3B5787] font-semibold mb-2">
               <Icon type="info" className="text-lg" />
-              Quote-Based Pricing System
+              {t('serviceProvider.transportation.form.quoteBasedPricing')}
             </div>
             <p className="text-sm text-gray-700">
-              Transportation services use quote-based pricing. Customers will request quotes for their specific trips,
-              and you can provide customized pricing based on distance, duration, and service type.
+              {t('serviceProvider.transportation.form.quoteBasedPricingDesc')}
             </p>
           </div>
 
@@ -1274,10 +1273,10 @@ const AddTab = ({
               <span className="text-3xl">🚗</span>
             </div>
             <div className="font-bold text-[#3B5787] text-lg mb-2">
-              No Vehicle Types Added Yet
+              {t('serviceProvider.transportation.form.noVehiclesAdded')}
             </div>
             <div className="text-gray-600 text-sm">
-              Use the dropdown above to add vehicle types to your transportation service
+              {t('serviceProvider.transportation.form.addVehiclesPrompt')}
             </div>
           </div>
         )}
@@ -1298,8 +1297,8 @@ const AddTab = ({
         >
           <Icon type="save" className="text-lg" />
           {loading
-            ? "Creating Service..."
-            : "Create Transportation Service"}
+            ? t('serviceProvider.transportation.services.messages.creatingService')
+            : t('serviceProvider.transportation.services.messages.createService')}
         </button>
       </div>
     </div>

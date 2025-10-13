@@ -30,11 +30,41 @@ const categoryIcons = {
 };
 
 const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const [categories, setCategories] = useState({});
   const [activeCategories, setActiveCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(null);
+
+  // Helper function to get translated category name and description
+  const getCategoryTranslation = (categoryKey) => {
+    const translationKey = `categorySelection.categories.${categoryKey}`;
+    return {
+      name: t(`${translationKey}.name`, { defaultValue: categoryKey }),
+      description: t(`${translationKey}.description`, { defaultValue: '' })
+    };
+  };
+
+  // Helper function to translate item names (laundry items, vehicle types, etc.)
+  const translateItemName = (itemName) => {
+    // Try laundry items first
+    const laundryKey = `categorySelection.laundryItems.${itemName}`;
+    const laundryTranslation = t(laundryKey, { defaultValue: null });
+    if (laundryTranslation && laundryTranslation !== laundryKey) {
+      return laundryTranslation;
+    }
+
+    // Try vehicle type names
+    const vehicleKey = `categorySelection.vehicleTypeNames.${itemName}`;
+    const vehicleTranslation = t(vehicleKey, { defaultValue: null });
+    if (vehicleTranslation && vehicleTranslation !== vehicleKey) {
+      return vehicleTranslation;
+    }
+
+    // Return original if no translation found
+    return itemName;
+  };
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -196,7 +226,7 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="w-full px-2 sm:px-3 lg:px-4">
         {/* Modern Header Section - Mobile Responsive */}
         <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden">
@@ -207,9 +237,9 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
 
           <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
             <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Service Categories</h1>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">{t('serviceProvider.categorySelection.title')}</h1>
               <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">
-                Select the service categories you want to offer. You can activate multiple categories and manage them independently.
+                {t('serviceProvider.categorySelection.subtitle')}
               </p>
             </div>
             {onBackToCategories && (
@@ -217,7 +247,7 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                 onClick={onBackToCategories}
                 className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-medium transition-all duration-300 border border-white/20 text-sm sm:text-base shrink-0"
               >
-                Back to Categories
+                {t('serviceProvider.categorySelection.backToCategories')}
               </button>
             )}
           </div>
@@ -227,17 +257,17 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
           <div className="mb-4 sm:mb-6 lg:mb-8 p-4 sm:p-6 bg-white rounded-xl sm:rounded-2xl shadow-xl border border-gray-100">
             <div className="flex items-center mb-3 sm:mb-4">
               <div className="w-1 h-6 sm:h-8 bg-gradient-to-b from-[#3B5787] to-[#67BAE0] rounded-full mr-3 sm:mr-4"></div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Active Categories</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('serviceProvider.categorySelection.activeCategories')}</h3>
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               {activeCategories.map(categoryKey => {
                 const IconComponent = categoryIcons[categoryKey];
-                const categoryName = categories[categoryKey]?.name || categoryKey;
+                const categoryTranslation = getCategoryTranslation(categoryKey);
                 return (
                   <div key={categoryKey} className="flex items-center bg-gradient-to-r from-green-50 to-green-100 text-green-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium border border-green-200 shadow-sm">
-                    {IconComponent && <IconComponent className="mr-1.5 sm:mr-2 text-green-600 text-sm sm:text-base" />}
-                    <span className="truncate max-w-[120px] sm:max-w-none">{categoryName}</span>
-                    <FaCheck className="ml-1.5 sm:ml-2 text-green-600 text-xs sm:text-sm shrink-0" />
+                    {IconComponent && <IconComponent className={`text-green-600 text-sm sm:text-base ${isRTL ? 'ml-1.5 sm:ml-2' : 'mr-1.5 sm:mr-2'}`} />}
+                    <span className="truncate max-w-[120px] sm:max-w-none">{categoryTranslation.name}</span>
+                    <FaCheck className={`text-green-600 text-xs sm:text-sm shrink-0 ${isRTL ? 'mr-1.5 sm:mr-2' : 'ml-1.5 sm:ml-2'}`} />
                   </div>
                 );
               })}
@@ -253,18 +283,10 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                 <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FaTimes className="w-8 h-8 text-yellow-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3">No Service Categories Available</h3>
+                <h3 className="text-xl font-bold text-gray-800 mb-3">{t('serviceProvider.categorySelection.noCategories')}</h3>
                 <p className="text-gray-600 mb-4 leading-relaxed">
-                  No service categories are currently enabled for your account. Please contact your hotel admin to enable service categories for your provider account.
+                  {t('serviceProvider.categorySelection.noCategoriesDescription')}
                 </p>
-                <div className="text-sm text-gray-500">
-                  <p>Contact your hotel administrator to:</p>
-                  <ul className="mt-2 space-y-1 text-left">
-                    <li>• Enable service categories</li>
-                    <li>• Configure your service permissions</li>
-                    <li>• Set up your provider account</li>
-                  </ul>
-                </div>
               </div>
             </div>
           </div>
@@ -319,13 +341,13 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                 </div>
 
                 <h3 className="text-lg sm:text-xl font-bold text-center mb-2 sm:mb-3 text-gray-900">
-                  {category.name}
+                  {getCategoryTranslation(categoryKey).name}
                 </h3>
 
                 <p className={`text-center text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed ${
                   isComingSoon ? 'text-gray-500' : 'text-gray-600'
                 }`}>
-                  {category.description}
+                  {getCategoryTranslation(categoryKey).description}
                 </p>
 
                 {isActive ? (
@@ -346,12 +368,12 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                     {isActivating ? (
                       <div className="flex items-center justify-center">
                         <FaSpinner className="animate-spin mr-1.5 sm:mr-2 text-sm" />
-                        <span>Deactivate</span>
+                        <span>{t('serviceProvider.categorySelection.activating')}</span>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center">
                         <FaTimes className="mr-1.5 sm:mr-2 text-sm" />
-                        <span>Deactivate</span>
+                        <span>{t('common.deactivate')}</span>
                       </div>
                     )}
                   </button>
@@ -375,16 +397,16 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                     {isActivating ? (
                       <div className="flex items-center justify-center">
                         <FaSpinner className="animate-spin mr-1.5 sm:mr-2 text-sm" />
-                        <span>Activate</span>
+                        <span>{t('serviceProvider.categorySelection.activating')}</span>
                       </div>
                     ) : isComingSoon ? (
                       <div className="flex items-center justify-center">
-                        <span>Coming Soon</span>
+                        <span>{t('common.comingSoon')}</span>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center">
                         <FaPlus className="mr-1.5 sm:mr-2 text-sm" />
-                        <span>Activate</span>
+                        <span>{t('serviceProvider.categorySelection.activate')}</span>
                       </div>
                     )}
                   </button>
@@ -393,19 +415,22 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                 {/* Modern Sample Services Preview */}
                 {category.items && (
                   <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
-                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">Sample Services:</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">{t('categorySelection.sampleServices')}</p>
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                      {category.items.slice(0, 3).map((item, index) => (
-                        <span
-                          key={index}
-                          className="bg-gradient-to-r from-[#3B5787]/5 to-[#67BAE0]/5 text-[#3B5787] px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium border border-[#67BAE0]/20"
-                        >
-                          {item.name}
-                        </span>
-                      ))}
+                      {category.items.slice(0, 3).map((item, index) => {
+                        const translatedName = translateItemName(item.name);
+                        return (
+                          <span
+                            key={index}
+                            className="bg-gradient-to-r from-[#3B5787]/5 to-[#67BAE0]/5 text-[#3B5787] px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium border border-[#67BAE0]/20"
+                          >
+                            {translatedName}
+                          </span>
+                        );
+                      })}
                       {category.items.length > 3 && (
                         <span className="text-gray-500 text-xs font-medium bg-gray-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                          +{category.items.length - 3} more
+                          +{category.items.length - 3} {t('categorySelection.more')}
                         </span>
                       )}
                     </div>
@@ -414,19 +439,22 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
 
                 {category.vehicleTypes && (
                   <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
-                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">Vehicle Types:</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">{t('categorySelection.vehicleTypes')}</p>
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                      {category.vehicleTypes.slice(0, 2).map((vehicle, index) => (
-                        <span
-                          key={index}
-                          className="bg-gradient-to-r from-[#67BAE0]/5 to-[#3B5787]/5 text-[#3B5787] px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium border border-[#3B5787]/20"
-                        >
-                          {vehicle.name}
-                        </span>
-                      ))}
+                      {category.vehicleTypes.slice(0, 2).map((vehicle, index) => {
+                        const translatedName = translateItemName(vehicle.name);
+                        return (
+                          <span
+                            key={index}
+                            className="bg-gradient-to-r from-[#67BAE0]/5 to-[#3B5787]/5 text-[#3B5787] px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium border border-[#3B5787]/20"
+                          >
+                            {translatedName}
+                          </span>
+                        );
+                      })}
                       {category.vehicleTypes.length > 2 && (
                         <span className="text-gray-500 text-xs font-medium bg-gray-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                          +{category.vehicleTypes.length - 2} more
+                          +{category.vehicleTypes.length - 2} {t('categorySelection.more')}
                         </span>
                       )}
                     </div>
@@ -435,7 +463,7 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
 
                 {category.tourTypes && (
                   <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
-                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">Tour Types:</p>
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">{t('categorySelection.tourTypes')}</p>
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {category.tourTypes.slice(0, 2).map((tour, index) => (
                         <span
@@ -470,7 +498,7 @@ const CategorySelectionDashboard = ({ onCategorySelect, onBackToCategories }) =>
                 onClick={() => window.location.href = '/service/services'}
                 className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#2A4065] hover:to-[#3B5787] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base lg:text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform sm:hover:scale-105 w-full sm:w-auto"
               >
-                Manage Services
+                {t('serviceProvider.categorySelection.manage')}
               </button>
             </div>
           </div>

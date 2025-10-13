@@ -472,7 +472,7 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     currency: {
   type: String,
   default: 'USD',
-  enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
+  enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'EGP', 'SAR']
     },
 
     // Revenue distribution
@@ -608,7 +608,7 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     currency: {
   type: String,
   default: 'USD',
-  enum: ['USD', 'EUR', 'GBP', 'SAR']
+  enum: ['USD', 'EUR', 'GBP', 'SAR', 'EGP']
     },
 
     paymentDate: Date,

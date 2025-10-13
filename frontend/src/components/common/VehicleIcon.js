@@ -17,12 +17,12 @@ const VehicleIcon = ({ vehicleType, className = "w-16 h-16", size = "medium" }) 
   const getVehicleImage = (type) => {
     const vehicleImageMap = {
       // Economy types
-      'economy': '/car-image/EconomyCompact Car.png',
-      'compact': '/car-image/EconomyCompact Car.png',
-      'economy_sedan': '/car-image/EconomyCompact Car.png',
-      'eco_vehicle': '/car-image/EconomyCompact Car.png',
-      'local_taxi': '/car-image/EconomyCompact Car.png',
-      'taxi': '/car-image/EconomyCompact Car.png',
+      'economy': '/car-image/EconomyCompact Car.jpg',
+      'compact': '/car-image/EconomyCompact Car.jpg',
+      'economy_sedan': '/car-image/EconomyCompact Car.jpg',
+      'eco_vehicle': '/car-image/EconomyCompact Car.jpg',
+      'local_taxi': '/car-image/EconomyCompact Car.jpg',
+      'taxi': '/car-image/EconomyCompact Car.jpg',
 
       // Sedan types
       'sedan': '/car-image/SedanMidsize.png',
@@ -33,10 +33,10 @@ const VehicleIcon = ({ vehicleType, className = "w-16 h-16", size = "medium" }) 
       'car': '/car-image/SedanMidsize.png', // default fallback
 
       // SUV types
-      'suv': '/car-image/SUVCrossover.png',
-      'crossover': '/car-image/SUVCrossover.png',
-      'economy_suv': '/car-image/SUVCrossover.png',
-      'comfort_suv': '/car-image/SUVCrossover.png',
+      'suv': '/car-image/SUVCrossover.jpg',
+      'crossover': '/car-image/SUVCrossover.jpg',
+      'economy_suv': '/car-image/SUVCrossover.jpg',
+      'comfort_suv': '/car-image/SUVCrossover.jpg',
 
       // Premium SUV types
       'premium_suv': '/car-image/Premium Suv.png',
@@ -52,14 +52,14 @@ const VehicleIcon = ({ vehicleType, className = "w-16 h-16", size = "medium" }) 
       'convertible': '/car-image/LuxuryPremium.png',
       'sports': '/car-image/LuxuryPremium.png',
 
-      // Van/MPV types
-      'van': '/car-image/VanMPV.png',
-      'minivan': '/car-image/VanMPV.png',
-      'mpv': '/car-image/VanMPV.png',
-      'van_large': '/car-image/VanMPV.png',
-      'passenger_van': '/car-image/VanMPV.png',
-      'accessible_vehicle': '/car-image/VanMPV.png',
-      'wheelchair': '/car-image/VanMPV.png',
+      // Van/MPV types - Updated to use new van.jpg
+      'van': '/car-image/van.jpg',
+      'minivan': '/car-image/van.jpg',
+      'mpv': '/car-image/van.jpg',
+      'van_large': '/car-image/LargeVan.jpg',
+      'passenger_van': '/car-image/LargeVan.jpg',
+      'accessible_vehicle': '/car-image/van.jpg',
+      'wheelchair': '/car-image/van.jpg',
 
       // Large vehicle types
       'bus': '/car-image/Large Vehicle.png',

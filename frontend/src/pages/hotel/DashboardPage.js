@@ -214,14 +214,42 @@ const DashboardPage = () => {
                               </div>
                               <div className="ml-4">
                                 <div className="text-sm font-semibold text-gray-900">
-                                  {order.guestId?.firstName && order.guestId?.lastName
-                                    ? `${order.guestId.firstName} ${order.guestId.lastName}`
-                                    : order.guestDetails?.firstName && order.guestDetails?.lastName
-                                    ? `${order.guestDetails.firstName} ${order.guestDetails.lastName}`
-                                    : t('hotelAdmin.dashboard.recentOrders.unknownGuest')}
+                                  {(() => {
+                                    // Try fullGuestName first (most common case)
+                                    if (order.fullGuestName && order.fullGuestName !== 'undefined' && !order.fullGuestName.includes('undefined')) {
+                                      return order.fullGuestName;
+                                    }
+
+                                    // Try guestId with validation
+                                    if (order.guestId?.firstName && order.guestId?.lastName && order.guestId.lastName !== 'undefined') {
+                                      return `${order.guestId.firstName} ${order.guestId.lastName}`;
+                                    }
+                                    if (order.guestId?.firstName) {
+                                      return order.guestId.firstName;
+                                    }
+
+                                    // Try guestDetails with validation
+                                    if (order.guestDetails?.firstName && order.guestDetails?.lastName && order.guestDetails.lastName !== 'undefined') {
+                                      return `${order.guestDetails.firstName} ${order.guestDetails.lastName}`;
+                                    }
+                                    if (order.guestDetails?.firstName) {
+                                      return order.guestDetails.firstName;
+                                    }
+
+                                    // Try other name fields
+                                    if (order.guest?.firstName && order.guest?.lastName && order.guest.lastName !== 'undefined') {
+                                      return `${order.guest.firstName} ${order.guest.lastName}`;
+                                    }
+                                    if (order.guest?.name) return order.guest.name;
+                                    if (order.customerName) return order.customerName;
+                                    if (order.guestName) return order.guestName;
+
+                                    // Fallback
+                                    return t('hotelAdmin.dashboard.recentOrders.unknownGuest');
+                                  })()}
                                 </div>
                                 <div className="text-sm text-modern-darkGray">
-                                  {order.guestId?.email || order.guestDetails?.email || t('hotelAdmin.dashboard.recentOrders.noEmail')}
+                                  {order.guestId?.email || order.guestDetails?.email || order.guest?.email || t('hotelAdmin.dashboard.recentOrders.noEmail')}
                                 </div>
                               </div>
                             </div>
@@ -267,13 +295,30 @@ const DashboardPage = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full
-                                ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                  order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                  order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                  order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                                ${(order.status === 'completed' || order.bookingStatus === 'completed') ? 'bg-green-100 text-green-800' :
+                                  (order.status === 'cancelled' || order.bookingStatus === 'cancelled') ? 'bg-red-100 text-red-800' :
+                                  (order.status === 'pending' || order.bookingStatus === 'pending_quote' || order.bookingStatus === 'quote_sent' || order.bookingStatus === 'payment_pending') ? 'bg-yellow-100 text-yellow-800' :
+                                  (order.status === 'confirmed' || order.bookingStatus === 'quote_accepted' || order.bookingStatus === 'payment_completed') ? 'bg-blue-100 text-blue-800' :
+                                  (order.bookingStatus === 'service_active') ? 'bg-indigo-100 text-indigo-800' :
                                   'bg-gray-100 text-gray-800'}`}
                             >
-                              {order.status || 'processing'}
+                              {(() => {
+                                // Map transportation booking statuses to display names
+                                const bookingStatus = order.bookingStatus || order.status;
+                                const statusMap = {
+                                  'pending_quote': 'pending',
+                                  'quote_sent': 'pending',
+                                  'payment_pending': 'pending',
+                                  'quote_accepted': 'confirmed',
+                                  'payment_completed': 'confirmed',
+                                  'service_active': 'in progress',
+                                  'completed': 'completed',
+                                  'cancelled': 'cancelled',
+                                  'quote_rejected': 'cancelled',
+                                  'quote_expired': 'cancelled'
+                                };
+                                return statusMap[bookingStatus] || bookingStatus || 'processing';
+                              })()}
                             </span>
                           </td>
                         </tr>
