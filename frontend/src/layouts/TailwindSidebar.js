@@ -400,9 +400,16 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 />
               </div>
               <div className={`flex flex-col ${isRTL ? 'mr-5 items-end' : 'ml-5 items-start'}`}>
-                <span className={`text-lg font-bold text-white leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
-                  Qickroom
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-lg font-bold text-white leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
+                    Qickroom
+                  </span>
+                  {(role === 'hotel' || role === 'service') && (
+                    <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-md shadow-lg animate-pulse">
+                      DEMO
+                    </span>
+                  )}
+                </div>
                 <span className={`text-sm font-medium text-white/75 leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
                   {role === 'service' ? t('platform.servicePlatform') : t('platform.hotelPlatform')}
                 </span>

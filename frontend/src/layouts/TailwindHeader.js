@@ -96,12 +96,17 @@ const TailwindHeader = () => {
       <div className="max-w-full mx-auto px-2 sm:px-3 lg:px-4">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
+            <div className="flex-shrink-0 flex items-center gap-2">
               <img
                 className="block h-8 w-auto"
                 src={logoInfo.src}
                 alt={logoInfo.alt}
               />
+              {(user?.role === 'hotel' || user?.role === 'service') && (
+                <span className="px-2 py-1 text-[10px] font-bold tracking-wider bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-md shadow-lg animate-pulse">
+                  DEMO
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-center">
