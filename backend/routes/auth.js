@@ -22,22 +22,32 @@ const router = express.Router();
  * Generate JWT token
  * @param {string} id - User ID
  * @param {string} role - User role
+ * @param {boolean} rememberMe - Whether to use extended expiration
  * @returns {string} JWT token
  */
-const signToken = (id, role) => {
+const signToken = (id, role, rememberMe = false) => {
+  const expiresIn = rememberMe
+    ? (process.env.JWT_REMEMBER_EXPIRE || '30d') // 30 days for remember me
+    : (process.env.JWT_EXPIRE || '24h'); // 24 hours default
+
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || '24h'
+    expiresIn
   });
 };
 
 /**
  * Generate refresh token
  * @param {string} id - User ID
+ * @param {boolean} rememberMe - Whether to use extended expiration
  * @returns {string} Refresh token
  */
-const signRefreshToken = (id) => {
+const signRefreshToken = (id, rememberMe = false) => {
+  const expiresIn = rememberMe
+    ? (process.env.JWT_REFRESH_REMEMBER_EXPIRE || '90d') // 90 days for remember me
+    : (process.env.JWT_REFRESH_EXPIRE || '7d'); // 7 days default
+
   return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: process.env.JWT_REFRESH_EXPIRE || '7d'
+    expiresIn
   });
 };
 
@@ -47,12 +57,18 @@ const signRefreshToken = (id) => {
  * @param {number} statusCode - HTTP status code
  * @param {Object} res - Express response object
  * @param {string} message - Response message
+ * @param {boolean} rememberMe - Whether to use extended token expiration
  */
-const createSendToken = (user, statusCode, res, message = 'Success') => {
-  const token = signToken(user._id, user.role);
-  const refreshToken = signRefreshToken(user._id);
+const createSendToken = (user, statusCode, res, message = 'Success', rememberMe = false) => {
+  const token = signToken(user._id, user.role, rememberMe);
+  const refreshToken = signRefreshToken(user._id, rememberMe);
+
+  // Calculate cookie expiration based on rememberMe
+  const tokenExpireDays = rememberMe ? 30 : 1; // 30 days or 1 day
+  const refreshExpireDays = rememberMe ? 90 : 7; // 90 days or 7 days
+
   const cookieOptions = {
-    expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+    expires: new Date(Date.now() + tokenExpireDays * 24 * 60 * 60 * 1000),
     httpOnly: process.env.NODE_ENV === 'production', // Allow JS access in development
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
@@ -61,7 +77,7 @@ const createSendToken = (user, statusCode, res, message = 'Success') => {
   res.cookie('jwt', token, cookieOptions);
   res.cookie('refreshToken', refreshToken, {
     ...cookieOptions,
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+    expires: new Date(Date.now() + refreshExpireDays * 24 * 60 * 60 * 1000)
   });
 
   // Remove password from output
@@ -210,7 +226,7 @@ router.post('/register', catchAsync(async (req, res, next) => {
  * @access  Public
  */
 router.post('/login', catchAsync(async (req, res, next) => {
-  const { email, password, role, hotelId } = req.body;
+  const { email, password, role, hotelId, rememberMe } = req.body;
 
   // Check if email and password are provided
   if (!email || !password) {
@@ -303,7 +319,7 @@ router.post('/login', catchAsync(async (req, res, next) => {
   user.lastLogin = new Date();
   await user.save({ validateBeforeSave: false });
 
-  const logData = { hotelId };
+  const logData = { hotelId, rememberMe: !!rememberMe };
   if (hotelId) {
     logger.logAuth('USER_LOGIN_VIA_QR', user, req, logData);
   } else {
@@ -331,7 +347,7 @@ router.post('/login', catchAsync(async (req, res, next) => {
   // Login response user data (output removed)
 
   const message = hotelId ? 'Hotel-scoped login successful' : 'Login successful';
-  createSendToken(userForToken, 200, res, message);
+  createSendToken(userForToken, 200, res, message, rememberMe || false);
 }));
 
 /**

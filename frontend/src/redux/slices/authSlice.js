@@ -177,9 +177,9 @@ const initialState = getInitialAuthState();
 // Async thunks for auth actions
 export const login = createAsyncThunk(
   'auth/login',
-  async ({ email, password, role, hotelId }, { rejectWithValue }) => {
+  async ({ email, password, role, hotelId, rememberMe }, { rejectWithValue }) => {
     try {
-      const response = await authService.login(email, password, role, hotelId);
+      const response = await authService.login(email, password, role, hotelId, rememberMe);
 
       // Ensure the role is set correctly in the response
       // This fixes potential mismatches between the selected role in the form
@@ -402,11 +402,20 @@ const authSlice = createSlice({
       state.error = null;
 
       // Clear all local storage data to ensure complete logout
+      // But keep remembered email if "remember me" was checked
+      const rememberMe = localStorage.getItem('rememberMe') === 'true';
+
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('isAuthenticated');
       localStorage.removeItem('role');
+
+      // Only clear remembered email if remember me was not checked
+      if (!rememberMe) {
+        localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem('rememberMe');
+      }
     });
 
     builder.addCase(logout.rejected, (state) => {
@@ -416,11 +425,20 @@ const authSlice = createSlice({
       state.role = null;
 
       // Even if logout request failed, clear local state for security
+      // But keep remembered email if "remember me" was checked
+      const rememberMe = localStorage.getItem('rememberMe') === 'true';
+
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('isAuthenticated');
       localStorage.removeItem('role');
+
+      // Only clear remembered email if remember me was not checked
+      if (!rememberMe) {
+        localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem('rememberMe');
+      }
     });
 
     // Fetch profile cases

@@ -21,9 +21,10 @@ class AuthService {
    * @param {string} password - User's password
    * @param {string} role - User's role (guest, hotel, service, superadmin)
    * @param {string} hotelId - Optional hotel ID for hotel-scoped authentication
+   * @param {boolean} rememberMe - Whether to remember the user for extended session
    * @returns {Promise} - Response from API
    */
-  async login(email, password, role = 'guest', hotelId = null) {
+  async login(email, password, role = 'guest', hotelId = null, rememberMe = false) {
     try {
       let endpoint = AUTH_API.LOGIN;
 
@@ -34,10 +35,13 @@ class AuthService {
 
   // ...existing code...
 
-      // Include hotelId in request if provided
+      // Include hotelId and rememberMe in request if provided
       const loginData = { email, password, role };
       if (hotelId) {
         loginData.hotelId = hotelId;
+      }
+      if (rememberMe) {
+        loginData.rememberMe = rememberMe;
       }
 
       const response = await apiClient.post(endpoint, loginData);

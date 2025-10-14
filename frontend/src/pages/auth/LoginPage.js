@@ -204,11 +204,21 @@ const LoginPage = () => {
 
   // Initial form values
   const initialValues = {
-    email: '',
+    email: localStorage.getItem('rememberedEmail') || '',
     password: '',
     role: 'guest', // Fixed role for client login
+    rememberMe: localStorage.getItem('rememberMe') === 'true',
   };  // Handle form submission
   const handleSubmit = (values) => {
+    // Handle "Remember me" functionality
+    if (values.rememberMe) {
+      localStorage.setItem('rememberedEmail', values.email);
+      localStorage.setItem('rememberMe', 'true');
+    } else {
+      localStorage.removeItem('rememberedEmail');
+      localStorage.removeItem('rememberMe');
+    }
+
     // Include hotelId from QR info if available
     const loginData = {
       ...values,
@@ -292,7 +302,7 @@ const LoginPage = () => {
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          {({ isSubmitting }) => (
+          {({ isSubmitting, values, setFieldValue }) => (
             <Form>
               {/* QR Code Hotel Info Display */}
               {qrHotelInfo ? (
@@ -386,9 +396,9 @@ const LoginPage = () => {
 
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
-                  <input
+                  <Field
                     id="remember-me"
-                    name="remember-me"
+                    name="rememberMe"
                     type="checkbox"
                     disabled={!qrHotelInfo}
                     className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${!qrHotelInfo ? 'cursor-not-allowed opacity-60' : ''}`}

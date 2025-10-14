@@ -696,10 +696,17 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       setBookingStep('confirmation');
       toast.success('Housekeeping service booked successfully!');
 
-      // Show feedback modal after a brief delay
-      setTimeout(() => {
-        setShowFeedbackModal(true);
-      }, 1500);
+      // Check if feedback was already given or skipped for this booking
+      const bookingId = bookingData._id || bookingData.id || ('demo-booking-' + Date.now());
+      const feedbackStatus = localStorage.getItem(`feedback_${bookingId}`);
+
+      // Only show feedback modal if user hasn't submitted or skipped feedback
+      if (!feedbackStatus) {
+        // Show feedback modal after a brief delay
+        setTimeout(() => {
+          setShowFeedbackModal(true);
+        }, 1500);
+      }
 
     } catch (error) {
       console.error('Error booking service:', error);
@@ -719,10 +726,16 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       setBookingStep('confirmation');
       toast.success('Housekeeping service booked successfully!');
 
-      // Show feedback modal after a brief delay
-      setTimeout(() => {
-        setShowFeedbackModal(true);
-      }, 1500);
+      // Check if feedback was already given or skipped for this booking
+      const feedbackStatus = localStorage.getItem(`feedback_${demoBooking._id}`);
+
+      // Only show feedback modal if user hasn't submitted or skipped feedback
+      if (!feedbackStatus) {
+        // Show feedback modal after a brief delay
+        setTimeout(() => {
+          setShowFeedbackModal(true);
+        }, 1500);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -748,6 +761,10 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       const response = await apiClient.post('/client/feedback', feedbackData);
 
       if (response.data.success) {
+        // Store in localStorage that feedback was submitted for this booking
+        const bookingId = completedBooking._id || completedBooking.id;
+        localStorage.setItem(`feedback_${bookingId}`, 'submitted');
+
         toast.success('Thank you for your feedback!');
         setShowFeedbackModal(false);
         // Reset feedback form
@@ -762,6 +779,19 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
     } finally {
       setSubmittingFeedback(false);
     }
+  };
+
+  const handleFeedbackSkipped = () => {
+    // Store in localStorage that feedback was skipped for this booking
+    const bookingId = completedBooking?._id || completedBooking?.id;
+    if (bookingId) {
+      localStorage.setItem(`feedback_${bookingId}`, 'skipped');
+    }
+
+    setShowFeedbackModal(false);
+    // Reset feedback form
+    setFeedbackRating(0);
+    setFeedbackComment('');
   };
 
   const resetBooking = () => {
@@ -1428,7 +1458,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
               >
                 <h2 className="text-xl font-semibold text-white">Share your feedback</h2>
                 <button
-                  onClick={() => setShowFeedbackModal(false)}
+                  onClick={handleFeedbackSkipped}
                   className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
                 >
                   <FaTimes size={16} />
@@ -1505,7 +1535,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                   <div className="flex gap-3">
                     <button
                       type="button"
-                      onClick={() => setShowFeedbackModal(false)}
+                      onClick={handleFeedbackSkipped}
                       className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all duration-200"
                       disabled={submittingFeedback}
                     >

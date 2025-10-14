@@ -227,11 +227,31 @@ const PaymentSuccess = () => {
 
   const handleFeedbackSubmitted = (feedbackData) => {
     setFeedbackSubmitted(true);
+    // Store in localStorage that feedback was submitted for this booking
+    if (booking?._id) {
+      localStorage.setItem(`feedback_${booking._id}`, 'submitted');
+    }
+  };
+
+  const handleFeedbackSkipped = () => {
+    setShowFeedbackModal(false);
+    setFeedbackSubmitted(true); // Treat skip as "done" so it won't show again
+    // Store in localStorage that feedback was skipped for this booking
+    if (booking?._id) {
+      localStorage.setItem(`feedback_${booking._id}`, 'skipped');
+    }
   };
 
   // Auto-show feedback modal after booking is loaded and payment is confirmed
   useEffect(() => {
     if (booking && !feedbackSubmitted && !showFeedbackModal) {
+      // Check if feedback was already given or skipped for this booking
+      const feedbackStatus = localStorage.getItem(`feedback_${booking._id}`);
+      if (feedbackStatus === 'submitted' || feedbackStatus === 'skipped') {
+        setFeedbackSubmitted(true);
+        return;
+      }
+
       // Check if this is a cash payment from URL params
       const paymentMethod = searchParams.get('paymentMethod');
       const isCashPayment = paymentMethod === 'cash' || booking.payment?.paymentMethod === 'cash';
@@ -766,7 +786,7 @@ const PaymentSuccess = () => {
         {/* Feedback Modal */}
         <FeedbackModal
           isOpen={showFeedbackModal}
-          onClose={() => setShowFeedbackModal(false)}
+          onClose={handleFeedbackSkipped}
           booking={booking}
           onFeedbackSubmitted={handleFeedbackSubmitted}
         />

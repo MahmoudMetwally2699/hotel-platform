@@ -68,6 +68,11 @@ const FeedbackModal = ({
       const response = await apiClient.post('/client/feedback', feedbackData);
 
       if (response.data.success) {
+        // Store in localStorage that feedback was submitted for this booking
+        if (booking._id) {
+          localStorage.setItem(`feedback_${booking._id}`, 'submitted');
+        }
+
         // Call parent callback to handle success
         if (onFeedbackSubmitted) {
           onFeedbackSubmitted(response.data.data);
