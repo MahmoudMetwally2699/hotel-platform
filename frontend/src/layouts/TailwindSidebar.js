@@ -91,6 +91,8 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           { name: t('navigation.feedback'), path: '/hotel/feedback', icon: 'feedback' },
           { name: t('navigation.revenue'), path: '/hotel/revenue', icon: 'cash' },
           { name: t('navigation.qrCodes'), path: '/hotel/qr-codes', icon: 'qr-code' },
+          { name: t('navigation.loyaltyProgram'), path: '/hotel/loyalty-program', icon: 'gift', comingSoon: true },
+          { name: t('navigation.performanceAnalytics'), path: '/hotel/performance-analytics', icon: 'chart-line', comingSoon: true },
           { name: t('navigation.settings'), path: '/hotel/settings', icon: 'cog' }
         ];
       case 'service':
@@ -360,6 +362,18 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
           </svg>
         );
+      case 'gift':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+          </svg>
+        );
+      case 'chart-line':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+          </svg>
+        );
       default:
         return (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -510,7 +524,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                     className={() => {
                       const isActive = isPathActive(item.path);
                       return `
-                        flex items-center ${collapsed ? 'justify-center' : ''} px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px] group
+                        flex items-center ${collapsed ? 'justify-center' : 'justify-between'} px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px] group
                         ${isActive
                           ? 'text-white shadow-lg'
                           : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -522,10 +536,17 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                       return isActive ? { backgroundColor: '#48ACDA' } : {};
                     }}
                   >
-                    <span className={`${collapsed ? '' : (isRTL ? 'ml-3' : 'mr-3')} transition-transform group-hover:scale-110`}>
-                      {getIcon(item.icon)}
-                    </span>
-                    <span className={`${collapsed ? 'hidden' : ''} font-medium`}>{item.name}</span>
+                    <div className="flex items-center">
+                      <span className={`${collapsed ? '' : (isRTL ? 'ml-3' : 'mr-3')} transition-transform group-hover:scale-110`}>
+                        {getIcon(item.icon)}
+                      </span>
+                      <span className={`${collapsed ? 'hidden' : ''} font-medium`}>{item.name}</span>
+                    </div>
+                    {item.comingSoon && !collapsed && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-yellow-500 text-white rounded-md shadow-sm">
+                        {t('common.comingSoon') || 'COMING SOON'}
+                      </span>
+                    )}
                   </NavLink>
                 )}
               </li>
@@ -564,7 +585,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 className={() => {
                   const isActive = isPathActive(item.path);
                   return `
-                    flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[120px]
+                    flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[120px] relative
                     ${isActive
                       ? 'text-white shadow-lg'
                       : 'text-white/80 hover:bg-white/10 hover:text-white'
@@ -580,6 +601,11 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 <span className="text-xs text-center leading-tight w-full font-medium break-words">
                   {item.name}
                 </span>
+                {item.comingSoon && (
+                  <span className="absolute top-0 right-0 px-1 py-0.5 text-[8px] font-bold bg-yellow-500 text-white rounded-md">
+                    SOON
+                  </span>
+                )}
               </NavLink>
             );
           })}
@@ -772,7 +798,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                     className={() => {
                       const isActive = isPathActive(item.path);
                       return `
-                        flex items-center px-4 py-3 rounded-xl transition-all duration-200
+                        flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200
                         ${isActive
                           ? 'text-white shadow-lg'
                           : 'text-white/80 hover:bg-white/10 hover:text-white'
@@ -784,8 +810,15 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                       return isActive ? { backgroundColor: '#48ACDA' } : {};
                     }}
                   >
-                    <span className={`${isRTL ? 'ml-3' : 'mr-3'}`}>{getIcon(item.icon)}</span>
-                    <span className="font-medium">{item.name}</span>
+                    <div className="flex items-center">
+                      <span className={`${isRTL ? 'ml-3' : 'mr-3'}`}>{getIcon(item.icon)}</span>
+                      <span className="font-medium">{item.name}</span>
+                    </div>
+                    {item.comingSoon && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-yellow-500 text-white rounded-md shadow-sm">
+                        {t('common.comingSoon') || 'COMING SOON'}
+                      </span>
+                    )}
                   </NavLink>
                 ))}
               </div>

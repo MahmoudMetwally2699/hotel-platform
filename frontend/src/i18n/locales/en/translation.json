@@ -116,8 +116,63 @@
     "housekeepingBookings": "Housekeeping",
     "feedback": "Feedback",
     "scheduleNotSet": "Schedule not set",
-    "notAvailable": "Not available"
-  },"auth": {
+    "notAvailable": "Not available",
+    "loyaltyProgram": "Loyalty Program",
+    "performanceAnalytics": "Performance Analytics"
+  },
+  "loyaltyProgram": {
+    "subtitle": "Guest rewards and loyalty management system",
+    "description": "We're working on an exciting loyalty program feature that will help you reward your most valued guests and build long-lasting relationships.",
+    "pointsSystem": {
+      "title": "Points System",
+      "description": "Track and manage guest loyalty points earned through bookings and services"
+    },
+    "rewardTiers": {
+      "title": "Reward Tiers",
+      "description": "Create multiple membership tiers with exclusive benefits and perks"
+    },
+    "specialOffers": {
+      "title": "Special Offers",
+      "description": "Design and deploy targeted promotions for loyal guests"
+    },
+    "analyticsReports": {
+      "title": "Analytics & Reports",
+      "description": "Monitor program effectiveness and guest engagement metrics"
+    },
+    "stayTuned": "Stay tuned for updates! This feature will be available soon.",
+    "underDevelopment": "Feature Under Development"
+  },
+  "performanceAnalytics": {
+    "subtitle": "Advanced analytics and performance insights for your hotel",
+    "description": "Get ready for comprehensive performance analytics that will provide deep insights into your hotel's operations, helping you make data-driven decisions.",
+    "realtimeDashboards": {
+      "title": "Real-time Dashboards",
+      "description": "Monitor key performance indicators with live updating dashboards"
+    },
+    "trendAnalysis": {
+      "title": "Trend Analysis",
+      "description": "Identify patterns and trends in bookings, revenue, and guest behavior"
+    },
+    "revenueForecasting": {
+      "title": "Revenue Forecasting",
+      "description": "Predict future revenue based on historical data and market trends"
+    },
+    "customReports": {
+      "title": "Custom Reports",
+      "description": "Generate detailed reports tailored to your specific business needs"
+    },
+    "staffPerformance": {
+      "title": "Staff Performance",
+      "description": "Track and analyze service provider and staff performance metrics"
+    },
+    "serviceAnalytics": {
+      "title": "Service Analytics",
+      "description": "Detailed breakdown of service category performance and popularity"
+    },
+    "stayTuned": "Stay tuned for updates! This feature will be available soon.",
+    "underDevelopment": "Feature Under Development"
+  },
+  "auth": {
     "signIn": "Sign In",
     "signUp": "Sign Up",
     "signOut": "Sign Out",
