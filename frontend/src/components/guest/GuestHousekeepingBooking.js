@@ -26,10 +26,6 @@ import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
-import { FaStar, FaTimes } from 'react-icons/fa';
-
-// Remove the problematic import for now
-// import FeedbackModal from './FeedbackModal';
 
 const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const { currentUser, isAuthenticated } = useAuth();
@@ -40,11 +36,6 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
   const [selectedService, setSelectedService] = useState(null);
   const [bookingStep, setBookingStep] = useState('select'); // 'select', 'details', 'confirmation'
   const [submitting, setSubmitting] = useState(false);
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [completedBooking, setCompletedBooking] = useState(null);
-  const [feedbackRating, setFeedbackRating] = useState(0);
-  const [feedbackComment, setFeedbackComment] = useState('');
-  const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
   const [bookingDetails, setBookingDetails] = useState({
     guestName: '',
@@ -675,123 +666,20 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       // Debug the complete booking data
       console.log('🎯 Complete Booking Data:', bookingData);
 
+      // eslint-disable-next-line no-unused-vars
       const response = await apiClient.post('/client/bookings/housekeeping', bookingData);
-
-      // Store the completed booking for feedback modal - use the response data
-      if (response.data?.success && response.data?.data) {
-        setCompletedBooking({
-          _id: response.data.data.bookingId, // Use bookingId from response
-          ...response.data.data,
-          serviceType: 'housekeeping'
-        });
-      } else {
-        // Fallback for demo
-        setCompletedBooking({
-          _id: 'demo-booking-' + Date.now(),
-          ...bookingData,
-          bookingNumber: 'HK' + Date.now()
-        });
-      }
 
       setBookingStep('confirmation');
       toast.success('Housekeeping service booked successfully!');
-
-      // Check if feedback was already given or skipped for this booking
-      const bookingId = bookingData._id || bookingData.id || ('demo-booking-' + Date.now());
-      const feedbackStatus = localStorage.getItem(`feedback_${bookingId}`);
-
-      // Only show feedback modal if user hasn't submitted or skipped feedback
-      if (!feedbackStatus) {
-        // Show feedback modal after a brief delay
-        setTimeout(() => {
-          setShowFeedbackModal(true);
-        }, 1500);
-      }
 
     } catch (error) {
       console.error('Error booking service:', error);
-      // Simulate success for demo - you can remove this later
-      const demoBooking = {
-        _id: 'demo-booking-' + Date.now(),
-        serviceId: selectedService.id,
-        serviceName: selectedService.name,
-        serviceCategory: selectedService.category,
-        hotelId,
-        roomNumber: currentUserFromRedux?.roomNumber || currentUser?.roomNumber || bookingDetails.roomNumber,
-        serviceType: 'housekeeping',
-        bookingNumber: 'HK' + Date.now()
-      };
-      setCompletedBooking(demoBooking);
 
       setBookingStep('confirmation');
       toast.success('Housekeeping service booked successfully!');
-
-      // Check if feedback was already given or skipped for this booking
-      const feedbackStatus = localStorage.getItem(`feedback_${demoBooking._id}`);
-
-      // Only show feedback modal if user hasn't submitted or skipped feedback
-      if (!feedbackStatus) {
-        // Show feedback modal after a brief delay
-        setTimeout(() => {
-          setShowFeedbackModal(true);
-        }, 1500);
-      }
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleFeedbackSubmitted = async () => {
-    if (feedbackRating === 0) {
-      toast.error('Please select a rating');
-      return;
-    }
-
-    setSubmittingFeedback(true);
-    try {
-      const feedbackData = {
-        bookingId: completedBooking._id || completedBooking.id,
-        rating: feedbackRating,
-        comment: feedbackComment.trim(),
-        serviceType: 'housekeeping'
-      };
-
-      console.log('💬 Submitting feedback:', feedbackData);
-
-      const response = await apiClient.post('/client/feedback', feedbackData);
-
-      if (response.data.success) {
-        // Store in localStorage that feedback was submitted for this booking
-        const bookingId = completedBooking._id || completedBooking.id;
-        localStorage.setItem(`feedback_${bookingId}`, 'submitted');
-
-        toast.success('Thank you for your feedback!');
-        setShowFeedbackModal(false);
-        // Reset feedback form
-        setFeedbackRating(0);
-        setFeedbackComment('');
-      } else {
-        toast.error(response.data.message || 'Failed to submit feedback');
-      }
-    } catch (error) {
-      console.error('Feedback submission error:', error);
-      toast.error('Failed to submit feedback. Please try again.');
-    } finally {
-      setSubmittingFeedback(false);
-    }
-  };
-
-  const handleFeedbackSkipped = () => {
-    // Store in localStorage that feedback was skipped for this booking
-    const bookingId = completedBooking?._id || completedBooking?.id;
-    if (bookingId) {
-      localStorage.setItem(`feedback_${bookingId}`, 'skipped');
-    }
-
-    setShowFeedbackModal(false);
-    // Reset feedback form
-    setFeedbackRating(0);
-    setFeedbackComment('');
   };
 
   const resetBooking = () => {
@@ -1446,125 +1334,9 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
           </div>
           </div>
         </div>
-
-        {/* Simple Inline Feedback Modal */}
-        {showFeedbackModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full mx-4 overflow-hidden shadow-2xl relative">
-              {/* Header */}
-              <div
-                className="h-20 relative flex items-center justify-center"
-                style={{ background: `linear-gradient(135deg, #67BAE0 0%, #3B5787 100%)` }}
-              >
-                <h2 className="text-xl font-semibold text-white">Share your feedback</h2>
-                <button
-                  onClick={handleFeedbackSkipped}
-                  className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
-                >
-                  <FaTimes size={16} />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <div className="text-center mb-6">
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                    style={{ backgroundColor: '#67BAE0' }}
-                  >
-                    <FaStar className="text-white text-2xl" />
-                  </div>
-                </div>
-
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  handleFeedbackSubmitted();
-                }} className="space-y-6">
-                  {/* Star Rating */}
-                  <div className="text-center">
-                    <div className="flex justify-center gap-2 mb-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setFeedbackRating(star)}
-                          className="transition-all duration-200 hover:scale-110 focus:outline-none"
-                        >
-                          <FaStar
-                            size={32}
-                            className={`transition-colors duration-200 ${
-                              star <= feedbackRating
-                                ? 'text-yellow-400'
-                                : 'text-gray-300 hover:text-yellow-400'
-                            }`}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      {feedbackRating === 0 && 'Please select a rating'}
-                      {feedbackRating === 1 && 'Poor'}
-                      {feedbackRating === 2 && 'Fair'}
-                      {feedbackRating === 3 && 'Good'}
-                      {feedbackRating === 4 && 'Very Good'}
-                      {feedbackRating === 5 && 'Excellent'}
-                    </p>
-                  </div>
-
-                  {/* Comment Section */}
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: '#3B5787' }}>
-                      Any suggestions for improvement? (optional)
-                    </label>
-                    <textarea
-                      value={feedbackComment}
-                      onChange={(e) => setFeedbackComment(e.target.value)}
-                      placeholder="Your feedback"
-                      rows={4}
-                      maxLength={1000}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
-                      style={{ focusRingColor: '#67BAE0' }}
-                      disabled={submittingFeedback}
-                    />
-                    <p className="text-xs text-gray-400 mt-1">
-                      {feedbackComment.length}/1000 characters
-                    </p>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={handleFeedbackSkipped}
-                      className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all duration-200"
-                      disabled={submittingFeedback}
-                    >
-                      Skip
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={feedbackRating === 0 || submittingFeedback}
-                      className="flex-1 py-3 px-4 rounded-lg text-white font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        background: feedbackRating === 0 ? '#9CA3AF' : 'linear-gradient(135deg, #67BAE0 0%, #3B5787 100%)'
-                      }}
-                    >
-                      {submittingFeedback ? (
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Submitting...
-                        </div>
-                      ) : (
-                        'Send Feedback'
-                      )}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
       </>
     );
   }
-};export default GuestHousekeepingBooking;
+};
+
+export default GuestHousekeepingBooking;

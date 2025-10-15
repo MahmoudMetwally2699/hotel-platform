@@ -1147,7 +1147,7 @@ router.put('/bookings/:id/cancel', protect, restrictTo('guest'), async (req, res
 
     const booking = await Booking.findOne({
       _id: req.params.id,
-      guest: req.user.id
+      guestId: req.user.id // Changed from 'guest' to 'guestId'
     }).populate('service', 'name').populate('hotel', 'name');
 
     if (!booking) {
@@ -1218,7 +1218,7 @@ router.post('/bookings/:id/review', protect, restrictTo('guest'), async (req, re
 
     const booking = await Booking.findOne({
       _id: req.params.id,
-      guest: req.user.id,
+      guestId: req.user.id, // Changed from 'guest' to 'guestId'
       status: 'completed'
     });
 
@@ -1263,6 +1263,153 @@ router.post('/bookings/:id/review', protect, restrictTo('guest'), async (req, re
     });
   } catch (error) {
     logger.error('Add review error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+/**
+ * @desc    Get pending feedback requests for guest
+ * @route   GET /api/client/pending-feedback
+ * @access  Private (Guest)
+ */
+router.get('/pending-feedback', protect, restrictTo('guest'), async (req, res) => {
+  try {
+    logger.info(`Checking pending feedback for guest: ${req.user.id}`);
+
+    const pendingFeedback = await Booking.find({
+      guestId: req.user.id, // Changed from 'guest' to 'guestId'
+      status: 'completed',
+      'feedbackRequest.isRequested': true,
+      'feedbackRequest.isSkipped': false,
+      'feedbackRequest.isFeedbackSubmitted': false
+    })
+    .populate('serviceId', 'name category images')
+    .populate('hotelId', 'name')
+    .sort({ 'feedbackRequest.requestedAt': -1 })
+    .limit(1); // Only get the most recent pending feedback
+
+    logger.info(`Found ${pendingFeedback.length} pending feedback requests`);
+    if (pendingFeedback[0]) {
+      logger.info(`Pending feedback booking: ${pendingFeedback[0].bookingNumber}, feedbackRequest:`, pendingFeedback[0].feedbackRequest);
+    }
+
+    res.json({
+      success: true,
+      data: pendingFeedback[0] || null
+    });
+  } catch (error) {
+    logger.error('Get pending feedback error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+/**
+ * @desc    Debug endpoint - Check booking feedback request status
+ * @route   GET /api/client/bookings/:id/feedback-status
+ * @access  Private (Guest)
+ */
+router.get('/bookings/:id/feedback-status', protect, async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        bookingId: booking._id,
+        bookingNumber: booking.bookingNumber,
+        status: booking.status,
+        guest: booking.guest,
+        feedbackRequest: booking.feedbackRequest || 'NOT SET'
+      }
+    });
+  } catch (error) {
+    logger.error('Get feedback status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+/**
+ * @desc    Debug endpoint - Check booking feedback request status
+ * @route   GET /api/client/bookings/:id/feedback-status
+ * @access  Private
+ */
+router.get('/bookings/:id/feedback-status', protect, async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        bookingId: booking._id,
+        bookingNumber: booking.bookingNumber,
+        status: booking.status,
+        guest: booking.guest,
+        feedbackRequest: booking.feedbackRequest || 'NOT SET'
+      }
+    });
+  } catch (error) {
+    logger.error('Get feedback status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
+/**
+ * @desc    Skip feedback request
+ * @route   POST /api/client/bookings/:id/skip-feedback
+ * @access  Private (Guest)
+ */
+router.post('/bookings/:id/skip-feedback', protect, restrictTo('guest'), async (req, res) => {
+  try {
+    const booking = await Booking.findOne({
+      _id: req.params.id,
+      guestId: req.user.id, // Changed from 'guest' to 'guestId'
+      status: 'completed'
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    booking.feedbackRequest.isSkipped = true;
+    booking.feedbackRequest.skippedAt = new Date();
+    await booking.save();
+
+    res.json({
+      success: true,
+      message: 'Feedback request skipped',
+      data: booking
+    });
+  } catch (error) {
+    logger.error('Skip feedback error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
@@ -1716,6 +1863,10 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
 
     // Get user details
     const user = await User.findById(req.user.id);
+
+    // DEBUG: Log user info
+    logger.info(`Creating laundry booking for user: ${req.user.id}, user object:`, user ? 'found' : 'NOT FOUND');
+    logger.info(`req.user:`, req.user);
 
     // Create booking
     const booking = await Booking.create({

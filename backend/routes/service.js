@@ -2976,6 +2976,9 @@ router.put('/housekeeping-bookings/:bookingId/status', catchAsync(async (req, re
 
   if (status === 'completed') {
     booking.completedAt = new Date();
+    // Set feedback request flag
+    booking.feedbackRequest.isRequested = true;
+    booking.feedbackRequest.requestedAt = new Date();
   }
 
   await booking.save();

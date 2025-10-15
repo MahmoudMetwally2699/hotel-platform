@@ -790,6 +790,29 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     }
   },
 
+  // Feedback Tracking
+  feedbackRequest: {
+    isRequested: {
+      type: Boolean,
+      default: false
+    },
+    requestedAt: Date,
+    isSkipped: {
+      type: Boolean,
+      default: false
+    },
+    skippedAt: Date,
+    isFeedbackSubmitted: {
+      type: Boolean,
+      default: false
+    },
+    submittedAt: Date,
+    feedbackId: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Feedback'
+    }
+  },
+
   // Cancellation and Refund
   cancellation: {
     reason: String,
@@ -937,6 +960,12 @@ bookingSchema.methods.updateStatus = function(newStatus, updatedBy = null, notes
     notes,
     automaticUpdate: false
   });
+
+  // If status is being changed to completed, set feedback request flag
+  if (newStatus === 'completed' && oldStatus !== 'completed') {
+    this.feedbackRequest.isRequested = true;
+    this.feedbackRequest.requestedAt = new Date();
+  }
 
   return this.save();
 };

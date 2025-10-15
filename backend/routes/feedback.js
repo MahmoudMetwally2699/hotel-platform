@@ -164,6 +164,12 @@ router.post('/feedback', protect, restrictTo('guest'), async (req, res) => {
     const feedback = new Feedback(feedbackData);
     await feedback.save();
 
+    // Update booking's feedback request status
+    booking.feedbackRequest.isFeedbackSubmitted = true;
+    booking.feedbackRequest.submittedAt = new Date();
+    booking.feedbackRequest.feedbackId = feedback._id;
+    await booking.save();
+
     // Populate references for response
     await feedback.populate([
       { path: 'hotelId', select: 'name' },

@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import TailwindHeader from './TailwindHeader';
 import TailwindSidebar from './TailwindSidebar';
+import FeedbackPrompt from '../components/guest/FeedbackPrompt';
 
 const TailwindLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -34,6 +35,9 @@ const TailwindLayout = ({ children }) => {
           </div>
         </main>
       </div>
+
+      {/* Feedback Prompt - Shows automatically for guests with pending feedback */}
+      <FeedbackPrompt />
     </div>
   );
 };

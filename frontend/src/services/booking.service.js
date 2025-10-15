@@ -132,6 +132,33 @@ class BookingService {
       throw error;
     }
   }
+
+  /**
+   * Get pending feedback requests
+   * @returns {Promise} - Response from API
+   */
+  async getPendingFeedback() {
+    try {
+      const response = await apiClient.get(`/client/pending-feedback`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Skip feedback request
+   * @param {string} bookingId - Booking ID
+   * @returns {Promise} - Response from API
+   */
+  async skipFeedback(bookingId) {
+    try {
+      const response = await apiClient.post(`${CLIENT_API.BOOKINGS}/${bookingId}/skip-feedback`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 const bookingService = new BookingService();

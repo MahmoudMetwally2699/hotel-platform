@@ -6,8 +6,9 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FaStar, FaTimes } from 'react-icons/fa';
+import { FaStar, FaTimes, FaTshirt, FaCar, FaUtensils, FaCalendarAlt, FaMapMarkerAlt, FaReceipt } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 const FeedbackModal = ({
   isOpen,
@@ -149,6 +150,130 @@ const FeedbackModal = ({
               {t('feedback.title', 'Share your feedback')}
             </h2>
           </div>
+
+          {/* Booking Details Section */}
+          {booking && (
+            <div className="mb-6 bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="flex items-start gap-3">
+                {/* Service Icon */}
+                <div className="flex-shrink-0">
+                  {booking.bookingType === 'laundry' || booking.serviceType === 'laundry' ? (
+                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <FaTshirt className="text-blue-600 text-xl" />
+                    </div>
+                  ) : booking.bookingType === 'transportation' || booking.serviceType === 'transportation' ? (
+                    <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                      <FaCar className="text-green-600 text-xl" />
+                    </div>
+                  ) : booking.bookingType === 'restaurant' || booking.serviceType === 'restaurant' ? (
+                    <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                      <FaUtensils className="text-orange-600 text-xl" />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                      <FaReceipt className="text-purple-600 text-xl" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Booking Info */}
+                <div className="flex-1 min-w-0">
+                  {/* Service Type */}
+                  <h3 className="font-semibold text-gray-900 mb-1 capitalize">
+                    {booking.serviceId?.category ||
+                     booking.serviceType ||
+                     booking.bookingType ||
+                     booking.category ||
+                     booking.serviceDetails?.category ||
+                     'Service'} Service
+                  </h3>
+
+                  {/* Booking Number */}
+                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                    <FaReceipt className="text-gray-400" />
+                    <span className="font-mono">
+                      {booking.bookingNumber || booking.bookingReference || booking._id?.slice(-8)}
+                    </span>
+                  </div>
+
+                  {/* Service-specific details */}
+                  <div className="text-sm text-gray-600 space-y-1">
+                    {/* Laundry Details */}
+                    {(booking.bookingType === 'laundry' || booking.serviceType === 'laundry') && (
+                      <>
+                        {(booking.bookingConfig?.laundryItems?.length || booking.laundryItems?.length) && (
+                          <div className="flex items-center gap-2">
+                            <FaTshirt className="text-gray-400 text-xs" />
+                            <span>
+                              {booking.bookingConfig?.laundryItems?.length || booking.laundryItems?.length} {t('feedback.items', 'items')}
+                            </span>
+                          </div>
+                        )}
+                        {(booking.schedule?.preferredDate || booking.scheduledDate) && (
+                          <div className="flex items-center gap-2">
+                            <FaCalendarAlt className="text-gray-400 text-xs" />
+                            <span>
+                              {booking.schedule?.preferredDate || booking.scheduledDate}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Transportation Details */}
+                    {(booking.bookingType === 'transportation' || booking.serviceType === 'transportation') && (
+                      <>
+                        {booking.tripDetails?.destination && (
+                          <div className="flex items-center gap-2">
+                            <FaMapMarkerAlt className="text-gray-400 text-xs" />
+                            <span className="truncate">
+                              {booking.tripDetails.destination}
+                            </span>
+                          </div>
+                        )}
+                        {booking.tripDetails?.scheduledDateTime && (
+                          <div className="flex items-center gap-2">
+                            <FaCalendarAlt className="text-gray-400 text-xs" />
+                            <span>
+                              {new Date(booking.tripDetails.scheduledDateTime).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Restaurant Details */}
+                    {(booking.bookingType === 'restaurant' || booking.serviceType === 'restaurant') && (
+                      <>
+                        {(booking.reservationDetails?.date || booking.bookingDate) && (
+                          <div className="flex items-center gap-2">
+                            <FaCalendarAlt className="text-gray-400 text-xs" />
+                            <span>
+                              {booking.reservationDetails?.date || booking.bookingDate}
+                              {(booking.reservationDetails?.time || booking.bookingTime) &&
+                                ` at ${booking.reservationDetails?.time || booking.bookingTime}`}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Total Amount */}
+                    {(booking.payment?.totalAmount || booking.pricing?.total) && (
+                      <div className="mt-2 pt-2 border-t border-gray-200">
+                        <span className="font-semibold text-gray-900">
+                          {formatPriceByLanguage(
+                            booking.payment?.totalAmount || booking.pricing?.total,
+                            'en'
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Star Rating */}

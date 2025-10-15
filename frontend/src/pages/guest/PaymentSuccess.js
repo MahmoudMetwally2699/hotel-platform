@@ -9,7 +9,6 @@ import { useTranslation } from 'react-i18next';
 import { FaCheckCircle, FaCar, FaCalendarAlt, FaMapMarkerAlt, FaMoneyBillWave, FaReceipt, FaHome, FaTshirt, FaUtensils } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { formatPriceByLanguage } from '../../utils/currency';
-import FeedbackModal from '../../components/guest/FeedbackModal';
 
 const PaymentSuccess = () => {
   const { t } = useTranslation();
@@ -18,8 +17,6 @@ const PaymentSuccess = () => {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
 
   const bookingId = searchParams.get('booking') || searchParams.get('bookingRef') || searchParams.get('merchantOrderId');
 
@@ -224,54 +221,6 @@ const PaymentSuccess = () => {
   const handleGoHome = () => {
     navigate('/');
   };
-
-  const handleFeedbackSubmitted = (feedbackData) => {
-    setFeedbackSubmitted(true);
-    // Store in localStorage that feedback was submitted for this booking
-    if (booking?._id) {
-      localStorage.setItem(`feedback_${booking._id}`, 'submitted');
-    }
-  };
-
-  const handleFeedbackSkipped = () => {
-    setShowFeedbackModal(false);
-    setFeedbackSubmitted(true); // Treat skip as "done" so it won't show again
-    // Store in localStorage that feedback was skipped for this booking
-    if (booking?._id) {
-      localStorage.setItem(`feedback_${booking._id}`, 'skipped');
-    }
-  };
-
-  // Auto-show feedback modal after booking is loaded and payment is confirmed
-  useEffect(() => {
-    if (booking && !feedbackSubmitted && !showFeedbackModal) {
-      // Check if feedback was already given or skipped for this booking
-      const feedbackStatus = localStorage.getItem(`feedback_${booking._id}`);
-      if (feedbackStatus === 'submitted' || feedbackStatus === 'skipped') {
-        setFeedbackSubmitted(true);
-        return;
-      }
-
-      // Check if this is a cash payment from URL params
-      const paymentMethod = searchParams.get('paymentMethod');
-      const isCashPayment = paymentMethod === 'cash' || booking.payment?.paymentMethod === 'cash';
-
-      // Check if payment is completed/confirmed OR if it's a cash payment
-      const isPaymentCompleted =
-        ['completed', 'confirmed'].includes(booking.status) ||
-        ['paid', 'completed'].includes(booking.payment?.status) ||
-        isCashPayment; // Cash payments should always show feedback
-
-      if (isPaymentCompleted) {
-        // Show feedback modal after a short delay for better UX
-        const timer = setTimeout(() => {
-          setShowFeedbackModal(true);
-        }, 2000);
-
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [booking, feedbackSubmitted, showFeedbackModal, searchParams]);
 
   if (loading) {
     return (
@@ -782,14 +731,6 @@ const PaymentSuccess = () => {
             {t('paymentSuccess.needHelp', { email: 'support@hotelplatform.com' })}
           </p>
         </div>
-
-        {/* Feedback Modal */}
-        <FeedbackModal
-          isOpen={showFeedbackModal}
-          onClose={handleFeedbackSkipped}
-          booking={booking}
-          onFeedbackSubmitted={handleFeedbackSubmitted}
-        />
       </div>
     </div>
   );
