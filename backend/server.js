@@ -65,12 +65,10 @@ try {
           return;
         }
 
-        // In production, check allowed origins
         const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
           'http://localhost:3000',
           'https://qickroom.cloud',
-          'https://www.qickroom.cloud',
-          'https://hotel-platform-teud.vercel.app' // Keep for backup
+          'https://www.qickroom.cloud'
         ];
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
