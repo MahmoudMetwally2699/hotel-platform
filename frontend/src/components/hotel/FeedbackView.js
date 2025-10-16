@@ -102,7 +102,7 @@ const HotelFeedbackView = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -154,20 +154,6 @@ const HotelFeedbackView = () => {
               </p>
             </div>
             <div className="text-yellow-500">
-              <FaStar size={24} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Needs Attention</p>
-              <p className="text-2xl font-bold text-red-500">
-                {((statistics.ratingDistribution && statistics.ratingDistribution[1]) || 0) + ((statistics.ratingDistribution && statistics.ratingDistribution[2]) || 0)}
-              </p>
-            </div>
-            <div className="text-red-500">
               <FaStar size={24} />
             </div>
           </div>
@@ -296,19 +282,13 @@ const HotelFeedbackView = () => {
                 )}
 
                 {/* Quick Actions for Hotel Admin */}
-                <div className="mt-3 flex gap-2">
-                  <button className="text-sm px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors">
-                    View Service
-                  </button>
-                  <button className="text-sm px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors">
-                    Contact Provider
-                  </button>
-                  {item.rating <= 2 && (
+                {item.rating <= 2 && (
+                  <div className="mt-3 flex gap-2">
                     <button className="text-sm px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
                       Follow Up
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

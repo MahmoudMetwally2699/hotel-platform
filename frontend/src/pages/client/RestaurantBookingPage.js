@@ -429,9 +429,9 @@ const RestaurantBookingPage = () => {
                         { value: 'desserts', label: t('guest.restaurant.desserts'), icon: '🍰' },
                         { value: 'beverages', label: t('guest.restaurant.beverages'), icon: '🥤' },
                         { value: 'breakfast', label: t('common.breakfast'), icon: '🍳' },
-                        { value: 'lunch', label: 'Lunch', icon: '🍱' },
-                        { value: 'dinner', label: 'Dinner', icon: '🍴' },
-                        { value: 'snacks', label: 'Snacks', icon: '🍿' }
+                        { value: 'lunch', label: t('guest.restaurant.lunch'), icon: '🍱' },
+                        { value: 'dinner', label: t('guest.restaurant.dinner'), icon: '🍴' },
+                        { value: 'snacks', label: t('guest.restaurant.snacks'), icon: '🍿' }
                       ].map((category) => (
                         <button
                           key={category.value}

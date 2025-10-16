@@ -86,6 +86,14 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     },
     subcategory: String,
     description: String,
+    // Resolved housekeeping type (for easy querying and display)
+    housekeepingType: {
+      type: String,
+      enum: ['maintenance', 'cleaning', 'amenities'],
+      required: function() {
+        return this.serviceType === 'housekeeping' && this.serviceDetails?.specificCategory?.length > 0;
+      }
+    },
     // Specific category for housekeeping services (required for analysis)
     specificCategory: {
       type: [String], // Changed to array of strings to support multiple category selection
@@ -324,9 +332,12 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
       required: [true, 'Preferred time is required'],
       validate: {
         validator: function(v) {
-          return /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+          // Allow ASAP/now/asap or HH:MM format
+          const isASAP = /^(ASAP|now|asap)$/i.test(v);
+          const isTimeFormat = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+          return isASAP || isTimeFormat;
         },
-        message: 'Preferred time must be in HH:MM format'
+        message: 'Preferred time must be in HH:MM format or "ASAP"'
       }
     },
 

@@ -179,7 +179,8 @@ feedbackSchema.statics.getAverageRating = async function(query = {}) {
         totalFeedbacks: { $sum: 1 },
         ratingsDistribution: {
           $push: '$rating'
-        }
+        },
+        serviceProviders: { $addToSet: '$serviceProviderId' }
       }
     }
   ];
@@ -190,7 +191,10 @@ feedbackSchema.statics.getAverageRating = async function(query = {}) {
     return {
       averageRating: 0,
       totalFeedbacks: 0,
-      ratingsDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+      totalCount: 0,
+      ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      ratingsDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      serviceProvidersCount: 0
     };
   }
 
@@ -203,7 +207,10 @@ feedbackSchema.statics.getAverageRating = async function(query = {}) {
   return {
     averageRating: Math.round(data.averageRating * 10) / 10,
     totalFeedbacks: data.totalFeedbacks,
-    ratingsDistribution: distribution
+    totalCount: data.totalFeedbacks, // Alias for frontend compatibility
+    ratingDistribution: distribution, // For frontend compatibility
+    ratingsDistribution: distribution, // Keep original name for backward compatibility
+    serviceProvidersCount: data.serviceProviders.length
   };
 };
 

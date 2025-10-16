@@ -25,6 +25,16 @@ const FeedbackModal = ({
 
   if (!isOpen || !booking) return null;
 
+  // Debug: Log booking data to understand structure
+  console.log('📋 FeedbackModal - Booking data:', {
+    serviceId: booking.serviceId,
+    serviceType: booking.serviceType,
+    bookingType: booking.bookingType,
+    category: booking.category,
+    serviceDetails: booking.serviceDetails,
+    fullBooking: booking
+  });
+
   const handleStarClick = (starRating) => {
     setRating(starRating);
   };
@@ -179,16 +189,87 @@ const FeedbackModal = ({
                 {/* Booking Info */}
                 <div className="flex-1 min-w-0">
                   {/* Service Type */}
-                  <h3 className="font-semibold text-gray-900 mb-1 capitalize">
-                    {booking.serviceId?.category ||
-                     booking.serviceType ||
-                     booking.bookingType ||
-                     booking.category ||
-                     booking.serviceDetails?.category ||
-                     'Service'} Service
-                  </h3>
+                  <h3 className="font-semibold text-gray-900 mb-1">
+                    {(() => {
+                      // Get the base category
+                      const baseCategory = booking.serviceCategory ||
+                                         booking.serviceId?.category ||
+                                         booking.category ||
+                                         booking.serviceDetails?.category ||
+                                         booking.serviceType ||
+                                         booking.bookingType;
 
-                  {/* Booking Number */}
+                      console.log('🔍 Base service category:', baseCategory);
+                      console.log('🔍 Housekeeping type field:', booking.serviceDetails?.housekeepingType);
+
+                      // For housekeeping services, check the resolved housekeepingType field first
+                      if (baseCategory === 'housekeeping') {
+                        const housekeepingType = booking.serviceDetails?.housekeepingType;
+
+                        if (housekeepingType) {
+                          // Use the pre-determined housekeeping type with translation
+                          const translationKey = `feedback.serviceTypes.${housekeepingType}`;
+                          console.log('✅ Using housekeepingType field:', housekeepingType);
+                          return `${t(translationKey)} ${t('feedback.serviceTypes.service')}`;
+                        }
+
+                        // Fallback: Determine from specificCategory if housekeepingType is not set
+                        if (booking.serviceDetails?.specificCategory) {
+                          const specificCategories = Array.isArray(booking.serviceDetails.specificCategory)
+                            ? booking.serviceDetails.specificCategory
+                            : [booking.serviceDetails.specificCategory];
+
+                          console.log('🔍 Specific categories found:', specificCategories);
+
+                          // Determine the type based on specificCategory values
+                          const hasMaintenanceIssues = specificCategories.some(cat =>
+                            ['electrical_issues', 'plumbing_issues', 'ac_heating', 'furniture_repair', 'electronics_issues'].includes(cat)
+                          );
+
+                          const hasCleaningIssues = specificCategories.some(cat =>
+                            ['general_cleaning', 'deep_cleaning', 'stain_removal'].includes(cat)
+                          );
+
+                          const hasAmenitiesIssues = specificCategories.some(cat =>
+                            ['bathroom_amenities', 'room_supplies', 'cleaning_supplies'].includes(cat)
+                          );
+
+                          let typeKey = 'housekeeping';
+
+                          if (hasMaintenanceIssues) {
+                            typeKey = 'maintenance';
+                          } else if (hasCleaningIssues) {
+                            typeKey = 'cleaning';
+                          } else if (hasAmenitiesIssues) {
+                            typeKey = 'amenities';
+                          }
+
+                          console.log('✅ Displaying specific housekeeping type from specificCategory:', typeKey);
+                          return `${t(`feedback.serviceTypes.${typeKey}`)} ${t('feedback.serviceTypes.service')}`;
+                        }
+
+                        // Default fallback for housekeeping
+                        return `${t('feedback.serviceTypes.housekeeping')} ${t('feedback.serviceTypes.service')}`;
+                      }
+
+                      // For non-housekeeping services or when no specific category
+                      if (['cleaning', 'amenities', 'maintenance'].includes(baseCategory)) {
+                        return `${t(`feedback.serviceTypes.${baseCategory}`)} ${t('feedback.serviceTypes.service')}`;
+                      }
+
+                      // For other known service types
+                      if (['laundry', 'transportation', 'restaurant'].includes(baseCategory)) {
+                        return `${t(`feedback.serviceTypes.${baseCategory}`)} ${t('feedback.serviceTypes.service')}`;
+                      }
+
+                      // For unknown service types
+                      const displayCategory = baseCategory ?
+                        baseCategory.charAt(0).toUpperCase() + baseCategory.slice(1) :
+                        t('feedback.serviceTypes.service');
+
+                      return `${displayCategory} ${t('feedback.serviceTypes.service')}`;
+                    })()}
+                  </h3>                  {/* Booking Number */}
                   <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                     <FaReceipt className="text-gray-400" />
                     <span className="font-mono">

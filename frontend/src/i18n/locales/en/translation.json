@@ -399,6 +399,7 @@
         "phone": "Phone",
         "preferredDate": "Preferred Date",
         "preferredTime": "Preferred Time",
+        "asap": "As soon as possible",
         "urgency": "Urgency",
         "noDescription": "No description",
         "markup": "Markup",
@@ -3261,10 +3262,11 @@
       "desserts": "Desserts",
       "beverages": "Beverages",
       "other": "Other",
+      "snacks": "Snacks",
       "selectTime": "Select time",
       "breakfast": "Breakfast (7:00 - 10:00)",
-      "lunch": "Lunch (12:00 - 15:00)",
-      "dinner": "Dinner (18:00 - 22:00)",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
       "anytime": "Anytime (11:00 - 23:00)",
       "deliveryLocation": "Delivery Location",
       "roomNumberOrAddress": "Room number or delivery address",
@@ -3327,7 +3329,18 @@
     "rating2": "Fair",
     "rating3": "Good",
     "rating4": "Very Good",
-    "rating5": "Excellent"
+    "rating5": "Excellent",
+    "items": "items",
+    "serviceTypes": {
+      "laundry": "Laundry",
+      "transportation": "Transportation",
+      "restaurant": "Restaurant",
+      "housekeeping": "Housekeeping",
+      "maintenance": "Maintenance Request",
+      "cleaning": "Room Cleaning",
+      "amenities": "Amenities Request",
+      "service": "Service"
+    }
   },
   "restaurant": {
     "bookingDetails": "Booking Details",

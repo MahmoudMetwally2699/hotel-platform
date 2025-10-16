@@ -2831,6 +2831,32 @@ router.post('/bookings/housekeeping', async (req, res) => {
       selectionPattern: []
     };
 
+    // Determine housekeeping type from specificCategory
+    const determineHousekeepingType = (specificCategories) => {
+      if (!Array.isArray(specificCategories) || specificCategories.length === 0) {
+        return null;
+      }
+
+      // Define category mappings
+      const maintenanceCategories = ['electrical_issues', 'plumbing_issues', 'ac_heating', 'furniture_repair', 'electronics_issues'];
+      const cleaningCategories = ['general_cleaning', 'deep_cleaning', 'stain_removal'];
+      const amenitiesCategories = ['bathroom_amenities', 'room_supplies', 'cleaning_supplies'];
+
+      // Check which type the specific categories belong to
+      const hasMaintenanceIssues = specificCategories.some(cat => maintenanceCategories.includes(cat));
+      const hasCleaningIssues = specificCategories.some(cat => cleaningCategories.includes(cat));
+      const hasAmenitiesIssues = specificCategories.some(cat => amenitiesCategories.includes(cat));
+
+      // Return the primary type (priority: maintenance > cleaning > amenities)
+      if (hasMaintenanceIssues) return 'maintenance';
+      if (hasCleaningIssues) return 'cleaning';
+      if (hasAmenitiesIssues) return 'amenities';
+
+      return null;
+    };
+
+    const housekeepingType = determineHousekeepingType(specificCategory);
+
     // Create booking with all required fields for housekeeping services
     const bookingData = {
       // Core booking fields - handle both custom and real services
@@ -2858,6 +2884,7 @@ router.post('/bookings/housekeeping', async (req, res) => {
       serviceDetails: {
         name: service ? service.name : serviceName,
         category: 'housekeeping', // Use 'housekeeping' since that's what the Booking model expects
+        housekeepingType: housekeepingType, // Add the resolved housekeeping type
         specificCategory: specificCategory, // Add the specific category for analysis
         // Analytics data for dashboard insights
         selectedQuickIssues: selectedQuickIssues || [],
@@ -2878,16 +2905,16 @@ router.post('/bookings/housekeeping', async (req, res) => {
       schedule: {
         preferredDate: scheduledDateTime ? new Date(scheduledDateTime) : new Date(),
         preferredTime: (() => {
-          // Convert special time values to valid HH:MM format
-          if (preferredTime === 'now' || preferredTime === 'ASAP') {
-            return '09:00'; // Default to 9 AM for ASAP requests
+          // Keep special time values as-is for display purposes
+          if (preferredTime === 'now' || preferredTime === 'ASAP' || preferredTime === 'asap') {
+            return 'ASAP'; // Store as ASAP for consistent display
           }
           // If preferredTime is already in HH:MM format, use it
           if (preferredTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(preferredTime)) {
             return preferredTime;
           }
           // Default fallback
-          return '09:00';
+          return 'ASAP';
         })()
       },
 

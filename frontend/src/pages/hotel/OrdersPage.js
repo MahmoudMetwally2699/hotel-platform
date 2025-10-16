@@ -20,7 +20,7 @@ import apiClient from '../../services/api.service';
  */
 const OrdersPage = () => {
   const { t } = useTranslation();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -1167,7 +1167,13 @@ const OrdersPage = () => {
                       {selectedOrder.schedule.preferredTime && (
                         <div>
                           <span className="text-gray-600">{t('hotelAdmin.orders.details.preferredTime')}:</span>
-                          <p className="font-medium">{selectedOrder.schedule.preferredTime}</p>
+                          <p className="font-medium">
+                            {selectedOrder.schedule.preferredTime === 'ASAP' ||
+                             selectedOrder.schedule.preferredTime === 'now' ||
+                             selectedOrder.schedule.preferredTime === 'asap'
+                              ? t('hotelAdmin.orders.details.asap', 'As soon as possible')
+                              : selectedOrder.schedule.preferredTime}
+                          </p>
                         </div>
                       )}
                       {selectedOrder.schedule.urgencyLevel && (

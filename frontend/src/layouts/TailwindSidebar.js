@@ -419,7 +419,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                     Qickroom
                   </span>
                   {(role === 'hotel' || role === 'service') && (
-                    <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-md shadow-lg animate-pulse">
+                    <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider bg-white/20 text-white/90 rounded-md">
                       DEMO
                     </span>
                   )}
@@ -543,7 +543,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                       <span className={`${collapsed ? 'hidden' : ''} font-medium`}>{item.name}</span>
                     </div>
                     {item.comingSoon && !collapsed && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-yellow-500 text-white rounded-md shadow-sm">
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-white/20 text-white/90 rounded-md">
                         {t('common.comingSoon') || 'COMING SOON'}
                       </span>
                     )}
@@ -602,7 +602,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                   {item.name}
                 </span>
                 {item.comingSoon && (
-                  <span className="absolute top-0 right-0 px-1 py-0.5 text-[8px] font-bold bg-yellow-500 text-white rounded-md">
+                  <span className="absolute top-0 right-0 px-1 py-0.5 text-[8px] font-bold bg-white/20 text-white/90 rounded-md">
                     SOON
                   </span>
                 )}
@@ -815,7 +815,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                       <span className="font-medium">{item.name}</span>
                     </div>
                     {item.comingSoon && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-yellow-500 text-white rounded-md shadow-sm">
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-white/20 text-white/90 rounded-md">
                         {t('common.comingSoon') || 'COMING SOON'}
                       </span>
                     )}

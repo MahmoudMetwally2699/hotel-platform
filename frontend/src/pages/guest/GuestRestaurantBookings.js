@@ -130,6 +130,11 @@ const GuestRestaurantBookings = () => {
       // First, find the booking in the current bookings list to show something immediately
       const currentBooking = bookings.find(b => b._id === bookingId);
       if (currentBooking) {
+        console.log('Current booking data:', currentBooking);
+        console.log('Pricing:', currentBooking.pricing);
+        console.log('Payment:', currentBooking.payment);
+        console.log('TotalAmount:', currentBooking.totalAmount);
+        console.log('Amount:', currentBooking.amount);
         setSelectedBooking(currentBooking);
       } else {
         toast.error('Booking not found');
@@ -269,7 +274,8 @@ const GuestRestaurantBookings = () => {
             </div>
             <span className="text-base font-bold text-emerald-600 bg-white/70 px-2 py-0.5 rounded-md">
               {(() => {
-                const total = booking.pricing?.total ||
+                const total = booking.pricing?.totalAmount ||
+                             booking.pricing?.total ||
                              booking.pricing?.basePrice ||
                              booking.payment?.paidAmount ||
                              booking.payment?.amount ||
@@ -518,12 +524,21 @@ const GuestRestaurantBookings = () => {
                         <span className="text-lg sm:text-xl font-bold text-emerald-600 truncate">
                           {(() => {
                             // Try multiple potential locations for the total amount
-                            const total = selectedBooking.pricing?.total ||
+                            const total = selectedBooking.pricing?.totalAmount ||
+                                         selectedBooking.pricing?.total ||
                                          selectedBooking.pricing?.basePrice ||
                                          selectedBooking.payment?.paidAmount ||
                                          selectedBooking.payment?.amount ||
                                          selectedBooking.totalAmount ||
                                          selectedBooking.amount;
+
+                            console.log('Modal - checking total amount:', {
+                              'pricing.totalAmount': selectedBooking.pricing?.totalAmount,
+                              'pricing.total': selectedBooking.pricing?.total,
+                              'pricing.basePrice': selectedBooking.pricing?.basePrice,
+                              'final total': total,
+                              'condition check': total && total > 0
+                            });
 
                             return total && total > 0 ? formatPriceByLanguage(total, i18n.language) : t('common.notAvailable', 'N/A');
                           })()}
@@ -648,32 +663,6 @@ const GuestRestaurantBookings = () => {
                       </h3>
                       <div className="bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 rounded-xl p-6 border border-[#67BAE0]/20">
                         <p className="text-gray-700">{selectedBooking.guestDetails.specialRequests}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Payment Information */}
-                  {selectedBooking.payment?.status === 'completed' && (
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <div className="w-5 h-5 bg-gradient-to-br from-emerald-500 to-green-600 rounded-md"></div>
-                        {t('restaurant.paymentInformation', 'Payment Information')}
-                      </h3>
-                      <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-6 space-y-4 border border-emerald-200">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-700 font-medium">{t('restaurant.amountPaid', 'Amount Paid')}:</span>
-                          <span className="font-medium">
-                            {(() => {
-                              // For amount paid, if payment.paidAmount is 0 (cash payment), show actual total
-                              const amount = selectedBooking.payment?.paidAmount > 0
-                                ? selectedBooking.payment?.paidAmount
-                                : selectedBooking.payment?.amount > 0
-                                  ? selectedBooking.payment?.amount
-                                  : selectedBooking.pricing?.total || selectedBooking.pricing?.basePrice;
-                              return amount && amount > 0 ? formatPriceByLanguage(amount, i18n.language) : t('common.notAvailable', 'N/A');
-                            })()}
-                          </span>
-                        </div>
                       </div>
                     </div>
                   )}

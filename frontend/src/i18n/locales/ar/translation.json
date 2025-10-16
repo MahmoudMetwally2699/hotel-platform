@@ -350,6 +350,7 @@
         "phone": "الهاتف",
         "preferredDate": "التاريخ المفضل",
         "preferredTime": "الوقت المفضل",
+        "asap": "في أقرب وقت ممكن",
         "urgency": "الأولوية",
         "noDescription": "لا يوجد وصف",
         "markup": "هامش الربح",
@@ -3285,10 +3286,11 @@
       "desserts": "الحلويات",
       "beverages": "المشروبات",
       "other": "أخرى",
+      "snacks": "وجبات خفيفة",
       "selectTime": "اختر الوقت",
       "breakfast": "الإفطار (7:00 - 10:00)",
-      "lunch": "الغداء (12:00 - 15:00)",
-      "dinner": "العشاء (18:00 - 22:00)",
+      "lunch": "الغداء",
+      "dinner": "العشاء",
       "anytime": "أي وقت (11:00 - 23:00)",
       "deliveryLocation": "موقع التسليم",
       "roomNumberOrAddress": "رقم الغرفة أو عنوان التسليم",
@@ -3377,6 +3379,17 @@
     "rating2": "مقبول",
     "rating3": "جيد",
     "rating4": "جيد جداً",
-    "rating5": "ممتاز"
+    "rating5": "ممتاز",
+    "items": "عناصر",
+    "serviceTypes": {
+      "laundry": "خدمة الغسيل",
+      "transportation": "خدمة النقل",
+      "restaurant": "خدمة المطعم",
+      "housekeeping": "خدمه الغرف",
+      "maintenance": "طلب صيانة",
+      "cleaning": "تنظيف الغرفة",
+      "amenities": "طلب مستلزمات",
+      "service": "خدمة"
+    }
   }
 }
