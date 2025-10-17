@@ -244,7 +244,7 @@ try {
 
   // Serve React app in production
   if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../frontend/build')));
+    //app.use(express.static(path.join(__dirname, '../frontend/build')));
   }  // 404 handler for API routes - temporarily disabled
   // app.use('/api', (req, res, next) => {
   //   if (req.url.startsWith('/')) {
@@ -258,9 +258,9 @@ try {
 
   // Handle React routing in production - serve index.html for non-API routes
   if (process.env.NODE_ENV === 'production') {
-    app.use((req, res) => {
-      res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
-    });
+    //app.use((req, res) => {
+      //res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+    //});
   }
 
   console.log('✅ Server setup completed successfully');
