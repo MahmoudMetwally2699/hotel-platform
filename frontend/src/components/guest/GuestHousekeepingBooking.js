@@ -238,9 +238,24 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
         ]
       },
       {
+        title: t('housekeeping.quickIssues.amenities.cleaningSupplies.title'),
+        icon: FaSprayCan,
+        color: "bg-gradient-to-r from-green-400 to-teal-400",
+        items: [
+          t('housekeeping.quickIssues.amenities.cleaningSupplies.items.vacuumBags'),
+          t('housekeeping.quickIssues.amenities.cleaningSupplies.items.cleaningRestock'),
+          t('housekeeping.quickIssues.amenities.cleaningSupplies.items.airFreshener'),
+          t('housekeeping.quickIssues.amenities.cleaningSupplies.items.tissueBox'),
+          t('housekeeping.quickIssues.amenities.cleaningSupplies.items.handSanitizer'),
+          t('housekeeping.quickIssues.amenities.cleaningSupplies.items.disinfectant'),
+          t('housekeeping.quickIssues.amenities.cleaningSupplies.items.laundryBags'),
+          t('housekeeping.quickIssues.amenities.cleaningSupplies.items.cleaningCloths')
+        ]
+      },
+      {
         title: t('housekeeping.quickIssues.amenities.comfort.title'),
         icon: FaCheck,
-        color: "bg-gradient-to-r from-green-400 to-teal-400",
+        color: "bg-gradient-to-r from-amber-400 to-orange-400",
         items: [
           t('housekeeping.quickIssues.amenities.comfort.items.adjustTemp'),
           t('housekeeping.quickIssues.amenities.comfort.items.blackoutCurtains'),
@@ -248,7 +263,6 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
           t('housekeeping.quickIssues.amenities.comfort.items.restock'),
           t('housekeeping.quickIssues.amenities.comfort.items.newspaper'),
           t('housekeeping.quickIssues.amenities.comfort.items.extensionCord'),
-          t('housekeeping.quickIssues.amenities.comfort.items.airFreshener'),
           t('housekeeping.quickIssues.amenities.comfort.items.extraLighting')
         ]
       }
@@ -349,8 +363,8 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       'deep_cleaning': ['deepCleaning', 'deep cleaning'],
       'stain_removal': ['stains'],
       'bathroom_amenities': ['bathroom'],
-      'room_supplies': ['room'],
-      'cleaning_supplies': ['cleaning']
+      'room_supplies': ['room', 'roomsupplies'],
+      'cleaning_supplies': ['cleaning', 'cleaningsupplies']
     };
 
     const allowedCategoryTypes = [];
@@ -370,6 +384,7 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
       return allowedCategoryTypes.some(allowedType => {
         const type = allowedType.toLowerCase();
         return (categoryTitle.includes(type) ||
+               // Arabic translations for matching
                (categoryTitle.includes('كهربائية') && type === 'electrical') ||
                (categoryTitle.includes('سباكة') && type === 'plumbing') ||
                (categoryTitle.includes('تكييف') && (type === 'ac' || type === 'acheating')) ||
@@ -378,7 +393,9 @@ const GuestHousekeepingBooking = ({ onBack, hotelId }) => {
                (categoryTitle.includes('تنظيف الغرفة') && type === 'room cleaning') ||
                (categoryTitle.includes('تنظيف عميق') && type === 'deep cleaning') ||
                (categoryTitle.includes('البقع') && type === 'stains') ||
-               (categoryTitle.includes('الحمام') && type === 'bathroom'));
+               (categoryTitle.includes('الحمام') && type === 'bathroom') ||
+               (categoryTitle.includes('مستلزمات الغرفة') && (type === 'room' || type === 'roomsupplies')) ||
+               (categoryTitle.includes('مستلزمات التنظيف') && (type === 'cleaning' || type === 'cleaningsupplies')));
       });
     });
   };

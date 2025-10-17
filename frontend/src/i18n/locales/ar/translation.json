@@ -3178,6 +3178,19 @@
             "slippers": "أحتاج شباشب غرفة"
           }
         },
+        "cleaningSupplies": {
+          "title": "مستلزمات التنظيف",
+          "items": {
+            "vacuumBags": "أحتاج أكياس مكنسة كهربائية",
+            "cleaningRestock": "إعادة تعبئة مستلزمات التنظيف",
+            "airFreshener": "أحتاج معطر جو",
+            "tissueBox": "استبدال علبة المناديل",
+            "handSanitizer": "إعادة تعبئة معقم اليدين",
+            "disinfectant": "أحتاج مواد تعقيم",
+            "laundryBags": "أحتاج أكياس غسيل",
+            "cleaningCloths": "أحتاج قطع تنظيف"
+          }
+        },
         "comfort": {
           "title": "راحة الضيف",
           "items": {
@@ -3187,7 +3200,6 @@
             "restock": "أحتاج إعادة تعبئة الثلاجة الصغيرة",
             "newspaper": "طلب توصيل الجريدة",
             "extensionCord": "أحتاج سلك تمديد",
-            "airFreshener": "طلب معطر جو للغرفة",
             "extraLighting": "أحتاج إضاءة إضافية"
           }
         }

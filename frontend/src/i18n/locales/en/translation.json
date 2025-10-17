@@ -3161,6 +3161,19 @@
             "slippers": "Need room slippers"
           }
         },
+        "cleaningSupplies": {
+          "title": "Cleaning Supplies",
+          "items": {
+            "vacuumBags": "Need vacuum cleaner bags",
+            "cleaningRestock": "Restock cleaning supplies",
+            "airFreshener": "Need air freshener",
+            "tissueBox": "Replace tissue box",
+            "handSanitizer": "Refill hand sanitizer",
+            "disinfectant": "Need disinfectant supplies",
+            "laundryBags": "Need laundry bags",
+            "cleaningCloths": "Need cleaning cloths"
+          }
+        },
         "comfort": {
           "title": "Guest Comfort",
           "items": {
@@ -3170,7 +3183,6 @@
             "restock": "Need mini-fridge restocking",
             "newspaper": "Request newspaper delivery",
             "extensionCord": "Need extension cord",
-            "airFreshener": "Request room air freshener",
             "extraLighting": "Need extra lighting"
           }
         }
