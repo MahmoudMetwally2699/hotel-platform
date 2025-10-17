@@ -2857,6 +2857,23 @@ router.post('/bookings/housekeeping', async (req, res) => {
 
     const housekeepingType = determineHousekeepingType(specificCategory);
 
+    // Build service details object - only include housekeepingType if it's not null
+    const serviceDetailsObj = {
+      name: service ? service.name : serviceName,
+      category: 'housekeeping', // Use 'housekeeping' since that's what the Booking model expects
+      specificCategory: specificCategory, // Add the specific category for analysis
+      // Only add housekeepingType if it has a valid value (not null)
+      ...(housekeepingType && { housekeepingType }),
+      // Analytics data for dashboard insights
+      selectedQuickIssues: selectedQuickIssues || [],
+      quickIssueAnalytics: quickIssueAnalytics || {
+        totalQuickIssuesSelected: 0,
+        issuesByCategory: {},
+        mostCommonIssues: []
+      },
+      issueClassification: sanitizedIssueClassification
+    };
+
     // Create booking with all required fields for housekeeping services
     const bookingData = {
       // Core booking fields - handle both custom and real services
@@ -2880,21 +2897,8 @@ router.post('/bookings/housekeeping', async (req, res) => {
         roomNumber: roomNumber
       },
 
-      // Service Details - store the actual housekeeping category
-      serviceDetails: {
-        name: service ? service.name : serviceName,
-        category: 'housekeeping', // Use 'housekeeping' since that's what the Booking model expects
-        housekeepingType: housekeepingType, // Add the resolved housekeeping type
-        specificCategory: specificCategory, // Add the specific category for analysis
-        // Analytics data for dashboard insights
-        selectedQuickIssues: selectedQuickIssues || [],
-        quickIssueAnalytics: quickIssueAnalytics || {
-          totalQuickIssuesSelected: 0,
-          issuesByCategory: {},
-          mostCommonIssues: []
-        },
-        issueClassification: sanitizedIssueClassification
-      },
+      // Service Details - use the service details object created above
+      serviceDetails: serviceDetailsObj,
 
       // Booking Configuration
       bookingConfig: {

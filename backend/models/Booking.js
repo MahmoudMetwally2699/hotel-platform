@@ -91,7 +91,17 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
       type: String,
       enum: ['maintenance', 'cleaning', 'amenities'],
       required: function() {
-        return this.serviceType === 'housekeeping' && this.serviceDetails?.specificCategory?.length > 0;
+        // Only require if serviceType is housekeeping AND specificCategory has valid mappable categories
+        if (this.serviceType !== 'housekeeping') return false;
+        if (!this.serviceDetails?.specificCategory?.length) return false;
+
+        // Check if any specificCategory can be mapped to a housekeepingType
+        const maintenanceCategories = ['electrical_issues', 'plumbing_issues', 'ac_heating', 'furniture_repair', 'electronics_issues'];
+        const cleaningCategories = ['general_cleaning', 'deep_cleaning', 'stain_removal'];
+        const amenitiesCategories = ['bathroom_amenities', 'room_supplies', 'cleaning_supplies'];
+        const allMappableCategories = [...maintenanceCategories, ...cleaningCategories, ...amenitiesCategories];
+
+        return this.serviceDetails.specificCategory.some(cat => allMappableCategories.includes(cat));
       }
     },
     // Specific category for housekeeping services (required for analysis)
