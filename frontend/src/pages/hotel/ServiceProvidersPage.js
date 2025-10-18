@@ -51,6 +51,12 @@ const ServiceProvidersPage = () => {
   });
   // Handle setting markup for a service provider
   const handleSetMarkup = (provider) => {
+    // Prevent setting markup for internal providers
+    if (provider.providerType === 'internal') {
+      toast.error('Cannot set markup for internal providers. Internal providers always have 0% markup as all revenue goes directly to the hotel.');
+      return;
+    }
+
     setSelectedProvider(provider);
     setMarkupValue(provider.markup?.percentage || '');
     setMarkupNotes(provider.markup?.notes || '');
@@ -280,6 +286,7 @@ const ServiceProvidersPage = () => {
                   <table className="min-w-full divide-y divide-gray-200">                    <thead className="bg-modern-gray">
                       <tr>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[200px]">{t('hotelAdmin.serviceProviders.table.businessName')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">Provider Type</th>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[180px]">{t('hotelAdmin.serviceProviders.table.contact')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.serviceProviders.table.status')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">{t('hotelAdmin.serviceProviders.table.markup')}</th>
@@ -303,6 +310,15 @@ const ServiceProvidersPage = () => {
                                 </div>
                               </div>
                             </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full ${
+                              provider.providerType === 'internal'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {provider.providerType === 'internal' ? 'Internal' : 'External'}
+                            </span>
                           </td>
                           <td className="px-4 py-4">
                             <div className="text-sm font-medium text-gray-900 truncate max-w-[150px]">
@@ -336,18 +352,26 @@ const ServiceProvidersPage = () => {
                             </span>
                           </td>
                           <td className="px-4 py-4">
-                            <span className="text-sm font-medium text-gray-900">
-                              {provider.markup?.percentage ? `${provider.markup.percentage}%` : t('hotelAdmin.serviceProviders.markupNotSet')}
-                            </span>
+                            {provider.providerType === 'internal' ? (
+                              <span className="text-sm font-medium text-gray-500">
+                                No Markup (0%)
+                              </span>
+                            ) : (
+                              <span className="text-sm font-medium text-gray-900">
+                                {provider.markup?.percentage ? `${provider.markup.percentage}%` : t('hotelAdmin.serviceProviders.markupNotSet')}
+                              </span>
+                            )}
                           </td>
                           <td className="px-4 py-4 text-center">
                             <div className="flex space-x-2 justify-center">
-                              <button
-                                onClick={() => handleSetMarkup(provider)}
-                                className="text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-blue-50 text-sm"
-                              >
-                                {t('hotelAdmin.serviceProviders.actions.setMarkup')}
-                              </button>
+                              {provider.providerType !== 'internal' && (
+                                <button
+                                  onClick={() => handleSetMarkup(provider)}
+                                  className="text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-blue-50 text-sm"
+                                >
+                                  {t('hotelAdmin.serviceProviders.actions.setMarkup')}
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleManageCategories(provider)}
                                 className="text-[#3B5787] hover:text-[#2A4065] font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-[#67BAE0]/10 text-sm"
@@ -411,6 +435,16 @@ const ServiceProvidersPage = () => {
 
                     <div className="space-y-2">
                       <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Provider Type</span>
+                        <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                          provider.providerType === 'internal'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {provider.providerType === 'internal' ? 'Internal' : 'External'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
                         <span className="text-sm text-gray-600">{t('hotelAdmin.serviceProviders.mobile.contact')}</span>
                         <span className="text-sm font-medium text-gray-900">{provider.email || t('hotelAdmin.serviceProviders.notAvailable')}</span>
                       </div>
@@ -421,17 +455,22 @@ const ServiceProvidersPage = () => {
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">{t('hotelAdmin.serviceProviders.mobile.markup')}</span>
                         <span className="text-sm font-medium text-gray-900">
-                          {provider.markup?.percentage ? `${provider.markup.percentage}%` : t('hotelAdmin.serviceProviders.markupNotSet')}
+                          {provider.providerType === 'internal'
+                            ? 'No Markup (0%)'
+                            : provider.markup?.percentage ? `${provider.markup.percentage}%` : t('hotelAdmin.serviceProviders.markupNotSet')
+                          }
                         </span>
                       </div>
 
                       <div className="flex space-x-2 mt-4">
-                        <button
-                          onClick={() => handleSetMarkup(provider)}
-                          className="flex-1 text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 py-2 rounded hover:bg-blue-50 text-sm text-center border border-modern-blue"
-                        >
-                          {t('hotelAdmin.serviceProviders.actions.setMarkup')}
-                        </button>
+                        {provider.providerType !== 'internal' && (
+                          <button
+                            onClick={() => handleSetMarkup(provider)}
+                            className="flex-1 text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 py-2 rounded hover:bg-blue-50 text-sm text-center border border-modern-blue"
+                          >
+                            {t('hotelAdmin.serviceProviders.actions.setMarkup')}
+                          </button>
+                        )}
                         <button
                           onClick={() => handleResetPassword(provider)}
                           className="flex-1 text-red-600 hover:text-red-800 font-medium transition-colors duration-200 py-2 rounded hover:bg-red-50 text-sm text-center border border-red-600"

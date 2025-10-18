@@ -600,6 +600,13 @@ router.get('/service-providers', protect, restrictToOwnHotel, catchAsync(async (
     filter.category = req.query.category;
   }
 
+  // Filter by provider type if specified
+  if (req.query.providerType) {
+    if (['internal', 'external'].includes(req.query.providerType)) {
+      filter.providerType = req.query.providerType;
+    }
+  }
+
   // Get service providers with pagination
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -735,6 +742,7 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
     staff,
     services,
     selectedCategories = [], // Array of service categories to activate
+    providerType = 'internal', // Provider type: 'internal' or 'external' (default: internal)
     userId,
     userCredentials,
     sendEmail = true // Optional: Whether to send credentials via email (default: true)
@@ -748,7 +756,14 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
     email = userCredentials.email;
     phone = userCredentials.phone;
     password = userCredentials.password;
-  }  // Validate provided dates if businessLicense or insurance are provided
+  }
+
+  // Validate provider type
+  if (providerType && !['internal', 'external'].includes(providerType)) {
+    return next(new AppError('Provider type must be either "internal" or "external"', 400));
+  }
+
+  // Validate provided dates if businessLicense or insurance are provided
   if (businessLicense && businessLicense.expiryDate) {
     const licenseExpiryDate = new Date(businessLicense.expiryDate);
     if (licenseExpiryDate <= new Date()) {
@@ -975,6 +990,9 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
         email: contactEmail || user.email,
         phone: contactPhone || user.phone,
 
+        // Provider Type Classification
+        providerType: providerType || 'internal',
+
         // Address - use structured address data
         address: address || {
           street: 'Not specified',
@@ -1025,6 +1043,20 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
           totalEmployees: 1
         },
 
+        // Markup - initialized based on provider type (pre-save middleware handles internal providers)
+        markup: providerType === 'internal' ? {
+          percentage: 0,
+          setBy: req.user.id,
+          setAt: new Date(),
+          notes: 'Internal provider - No markup',
+          reason: 'Internal provider - All revenue goes directly to hotel'
+        } : {
+          percentage: 0,
+          setAt: new Date(),
+          notes: 'Awaiting markup configuration',
+          reason: 'External provider - Markup to be configured by hotel admin'
+        },
+
         // Status fields
         isVerified: req.body.isVerified || false,
         verificationStatus: req.body.isVerified ? 'approved' : 'pending',
@@ -1056,7 +1088,9 @@ router.post('/service-providers', restrictProviderToHotelAdmin, catchAsync(async
       throw error;
     }    logger.info(`New service provider created: ${businessName}`, {
       hotelId,
-      serviceProviderId: serviceProvider._id
+      serviceProviderId: serviceProvider._id,
+      providerType: serviceProvider.providerType,
+      markupPercentage: serviceProvider.markup?.percentage
     });
 
     res.status(201).json({
@@ -1229,12 +1263,25 @@ router.put('/service-providers/:id/markup', catchAsync(async (req, res, next) =>
     return next(new AppError('No service provider found with that ID in your hotel', 404));
   }
 
-  // Update markup
+  // Prevent markup changes for internal providers
+  if (serviceProvider.providerType === 'internal') {
+    logger.warn(`Attempted to set markup on internal provider: ${serviceProvider.businessName}`, {
+      hotelId,
+      serviceProviderId: serviceProvider._id,
+      attemptedBy: req.user.id,
+      attemptedMarkup: percentage
+    });
+
+    return next(new AppError('Cannot set markup for internal service providers. Internal providers always have 0% markup as all revenue goes directly to the hotel.', 400));
+  }
+
+  // Update markup for external providers
   serviceProvider.markup = {
     percentage: percentage,
     setBy: req.user.id,
     setAt: new Date(),
-    notes: notes || ''
+    notes: notes || '',
+    reason: 'External provider markup configured by hotel admin'
   };
 
   await serviceProvider.save();
@@ -1242,6 +1289,7 @@ router.put('/service-providers/:id/markup', catchAsync(async (req, res, next) =>
   logger.info(`Service provider markup updated: ${serviceProvider.businessName}`, {
     hotelId,
     serviceProviderId: serviceProvider._id,
+    providerType: serviceProvider.providerType,
     markupPercentage: percentage
   });
 
@@ -2316,6 +2364,139 @@ router.get('/analytics/service-providers', catchAsync(async (req, res) => {
       topProviders,
       growthTrends,
       timeRange: parseInt(timeRange)
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/hotel/analytics/revenue-by-provider-type
+ * @desc    Get revenue analytics separated by provider type (internal vs external)
+ * @access  Private/HotelAdmin
+ */
+router.get('/analytics/revenue-by-provider-type', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate } = req.query;
+
+  // Build date filter
+  const dateFilter = { hotelId: new mongoose.Types.ObjectId(hotelId) };
+
+  if (startDate || endDate) {
+    dateFilter.createdAt = {};
+    if (startDate) {
+      dateFilter.createdAt.$gte = new Date(startDate);
+    }
+    if (endDate) {
+      dateFilter.createdAt.$lte = new Date(endDate);
+    }
+  }
+
+  // Get revenue analytics separated by provider type
+  const revenueByProviderType = await Booking.aggregate([
+    { $match: dateFilter },
+    {
+      $lookup: {
+        from: 'serviceproviders',
+        localField: 'serviceProviderId',
+        foreignField: '_id',
+        as: 'provider'
+      }
+    },
+    { $unwind: '$provider' },
+    {
+      $group: {
+        _id: '$provider.providerType',
+        totalBookings: { $sum: 1 },
+        totalRevenue: { $sum: '$pricing.totalAmount' },
+        providerEarnings: { $sum: '$pricing.providerAmount' },
+        hotelCommission: { $sum: '$pricing.hotelMarkupAmount' },
+        avgOrderValue: { $avg: '$pricing.totalAmount' },
+        providers: { $addToSet: '$provider._id' }
+      }
+    },
+    {
+      $project: {
+        providerType: '$_id',
+        totalBookings: 1,
+        totalRevenue: 1,
+        providerEarnings: 1,
+        hotelCommission: 1,
+        avgOrderValue: 1,
+        uniqueProvidersCount: { $size: '$providers' }
+      }
+    }
+  ]);
+
+  // Format results to ensure both internal and external are present
+  const results = {
+    internal: {
+      providerType: 'internal',
+      totalBookings: 0,
+      totalRevenue: 0,
+      providerEarnings: 0,
+      hotelCommission: 0,
+      avgOrderValue: 0,
+      uniqueProvidersCount: 0
+    },
+    external: {
+      providerType: 'external',
+      totalBookings: 0,
+      totalRevenue: 0,
+      providerEarnings: 0,
+      hotelCommission: 0,
+      avgOrderValue: 0,
+      uniqueProvidersCount: 0
+    }
+  };
+
+  // Populate with actual data
+  revenueByProviderType.forEach(item => {
+    const type = item.providerType || 'internal'; // Default to internal if not specified
+    if (results[type]) {
+      results[type] = {
+        providerType: type,
+        totalBookings: item.totalBookings,
+        totalRevenue: item.totalRevenue,
+        providerEarnings: item.providerEarnings,
+        hotelCommission: item.hotelCommission,
+        avgOrderValue: item.avgOrderValue,
+        uniqueProvidersCount: item.uniqueProvidersCount
+      };
+    }
+  });
+
+  // Calculate overall totals
+  const totalRevenue = results.internal.totalRevenue + results.external.totalRevenue;
+  const totalBookings = results.internal.totalBookings + results.external.totalBookings;
+  const totalHotelCommission = results.internal.hotelCommission + results.external.hotelCommission;
+
+  // Calculate percentages
+  const internalPercentage = totalRevenue > 0 ? (results.internal.totalRevenue / totalRevenue) * 100 : 0;
+  const externalPercentage = totalRevenue > 0 ? (results.external.totalRevenue / totalRevenue) * 100 : 0;
+
+  logger.info('Revenue analytics by provider type retrieved', {
+    hotelId,
+    totalRevenue,
+    totalBookings,
+    internalRevenue: results.internal.totalRevenue,
+    externalRevenue: results.external.totalRevenue
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      internal: results.internal,
+      external: results.external,
+      summary: {
+        totalRevenue,
+        totalBookings,
+        totalHotelCommission,
+        internalPercentage: Math.round(internalPercentage * 100) / 100,
+        externalPercentage: Math.round(externalPercentage * 100) / 100
+      },
+      dateRange: {
+        startDate: startDate || 'All time',
+        endDate: endDate || 'Present'
+      }
     }
   });
 }));

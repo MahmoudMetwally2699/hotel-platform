@@ -37,6 +37,9 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
     // Tax Information
     taxId: '',
 
+    // Provider Type
+    providerType: 'internal', // Default to internal
+
     // Service Categories
     selectedCategories: [],
 
@@ -184,6 +187,9 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
 
+        // Provider type
+        providerType: formData.providerType,
+
         // Service categories selection
         selectedCategories: formData.selectedCategories,
 
@@ -245,7 +251,8 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
         licenseIssuedDate: '',
         licenseExpiryDate: '',
         taxId: '',
-        selectedCategories: [], // Add this missing field
+        providerType: 'internal', // Reset to internal default
+        selectedCategories: [],
         userEmail: '',
         userPassword: '',
         firstName: '',
@@ -758,6 +765,143 @@ const AddServiceProviderModal = ({ isOpen, onClose, onSuccess }) => {
                     </svg>
                     {errors.taxId}
                   </p>
+                )}
+              </div>
+            </div>
+
+            {/* Provider Type Section */}
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-200">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-modern-darkGray">Provider Type</h3>
+                  <p className="text-sm text-modern-gray">Select whether this is an internal or external provider</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Provider Type Options */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Internal Provider Option */}
+                  <div
+                    className={`border-2 rounded-xl p-5 cursor-pointer transition-all duration-200 ${
+                      formData.providerType === 'internal'
+                        ? 'border-green-500 bg-green-50 shadow-md'
+                        : 'border-gray-200 bg-white hover:border-green-300'
+                    }`}
+                    onClick={() => setFormData(prev => ({ ...prev, providerType: 'internal' }))}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <input
+                        type="radio"
+                        name="providerType"
+                        value="internal"
+                        checked={formData.providerType === 'internal'}
+                        onChange={(e) => setFormData(prev => ({ ...prev, providerType: e.target.value }))}
+                        className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                        disabled={isLoading}
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          <label className="text-base font-bold text-modern-darkGray cursor-pointer">
+                            Internal Provider
+                          </label>
+                        </div>
+                        <p className="text-sm text-modern-darkGray mt-2 leading-relaxed">
+                          Hotel-managed service. No markup will be applied. All revenue goes directly to the hotel.
+                        </p>
+                        <div className="mt-3 flex items-center space-x-2 text-xs text-green-700 bg-green-100 px-3 py-2 rounded-lg">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>No commission split - 100% hotel revenue</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* External Provider Option */}
+                  <div
+                    className={`border-2 rounded-xl p-5 cursor-pointer transition-all duration-200 ${
+                      formData.providerType === 'external'
+                        ? 'border-modern-blue bg-blue-50 shadow-md'
+                        : 'border-gray-200 bg-white hover:border-modern-lightBlue'
+                    }`}
+                    onClick={() => setFormData(prev => ({ ...prev, providerType: 'external' }))}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <input
+                        type="radio"
+                        name="providerType"
+                        value="external"
+                        checked={formData.providerType === 'external'}
+                        onChange={(e) => setFormData(prev => ({ ...prev, providerType: e.target.value }))}
+                        className="mt-1 h-4 w-4 text-modern-blue focus:ring-modern-blue border-gray-300"
+                        disabled={isLoading}
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-5 h-5 text-modern-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                          <label className="text-base font-bold text-modern-darkGray cursor-pointer">
+                            External Provider
+                          </label>
+                        </div>
+                        <p className="text-sm text-modern-darkGray mt-2 leading-relaxed">
+                          Third-party service provider. Markup can be configured after creation. Revenue will be split based on markup percentage.
+                        </p>
+                        <div className="mt-3 flex items-center space-x-2 text-xs text-blue-700 bg-blue-100 px-3 py-2 rounded-lg">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Markup percentage can be set later</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Informational Message Based on Selection */}
+                {formData.providerType === 'external' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start">
+                      <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <h4 className="font-semibold text-blue-800">External Provider Selected</h4>
+                        <p className="text-sm text-blue-700 mt-1">
+                          This is a third-party service provider. You can configure the markup percentage after creation to determine revenue split between hotel and provider.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {formData.providerType === 'internal' && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-start">
+                      <svg className="w-5 h-5 text-green-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <h4 className="font-semibold text-green-800">Internal Provider Selected</h4>
+                        <p className="text-sm text-green-700 mt-1">
+                          This provider will be managed directly by your hotel. All service revenue will be attributed to your hotel without any commission deductions.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

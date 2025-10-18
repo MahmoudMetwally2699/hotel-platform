@@ -519,6 +519,17 @@ const serviceProviderSchema = new mongoose.Schema({
     }
   },
 
+  // Provider Type Classification
+  providerType: {
+    type: String,
+    enum: {
+      values: ['internal', 'external'],
+      message: 'Provider type must be either internal or external'
+    },
+    default: 'internal',
+    required: [true, 'Provider type is required']
+  },
+
   // Hotel Markup Settings
   markup: {
     percentage: {
@@ -537,6 +548,10 @@ const serviceProviderSchema = new mongoose.Schema({
     notes: {
       type: String,
       maxlength: [200, 'Markup notes cannot exceed 200 characters']
+    },
+    reason: {
+      type: String,
+      maxlength: [300, 'Markup reason cannot exceed 300 characters']
     }
   },
 
@@ -683,6 +698,25 @@ serviceProviderSchema.pre('save', function(next) {
       .toLowerCase()
       .replace(/[^\w ]+/g, '')
       .replace(/ +/g, '-');
+  }
+
+  // Enforce markup rules for internal providers
+  if (this.providerType === 'internal') {
+    // Internal providers must have 0% markup
+    if (!this.markup) {
+      this.markup = {};
+    }
+    this.markup.percentage = 0;
+
+    // Set reason if not already set
+    if (!this.markup.reason) {
+      this.markup.reason = 'Internal provider - No markup applied (all revenue goes to hotel)';
+    }
+
+    // Set setAt timestamp if not already set
+    if (!this.markup.setAt) {
+      this.markup.setAt = new Date();
+    }
   }
 
   next();
