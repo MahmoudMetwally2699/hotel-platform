@@ -51,6 +51,15 @@ const feedbackSchema = new mongoose.Schema({
     default: 'regular'
   },
 
+  // Housekeeping Sub-category (for detailed housekeeping analytics)
+  housekeepingType: {
+    type: String,
+    enum: ['maintenance', 'amenities', 'cleaning'],
+    required: function() {
+      return this.serviceType === 'housekeeping';
+    }
+  },
+
   // Feedback Content
   rating: {
     type: Number,
@@ -162,6 +171,8 @@ feedbackSchema.index({ serviceProviderId: 1, createdAt: -1 });
 feedbackSchema.index({ rating: 1, status: 1 });
 feedbackSchema.index({ bookingId: 1 }, { unique: true }); // One feedback per booking
 feedbackSchema.index({ serviceType: 1, rating: -1 });
+feedbackSchema.index({ hotelId: 1, serviceType: 1, createdAt: -1 }); // For analytics queries
+feedbackSchema.index({ hotelId: 1, housekeepingType: 1, createdAt: -1 }); // For housekeeping analytics
 
 // Virtual for average rating calculation helper
 feedbackSchema.virtual('ratingStars').get(function() {

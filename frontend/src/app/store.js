@@ -5,6 +5,8 @@ import serviceReducer from '../redux/slices/serviceSlice';
 import bookingReducer from '../redux/slices/bookingSlice';
 import notificationReducer from '../redux/slices/notificationSlice';
 import userReducer from '../redux/slices/userSlice';
+import hotelAnalyticsReducer from '../redux/slices/hotelAnalyticsSlice';
+import hotelOperationalReducer from '../redux/slices/hotelOperationalSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +16,7 @@ export const store = configureStore({
     booking: bookingReducer,
     notification: notificationReducer,
     user: userReducer,
+    hotelAnalytics: hotelAnalyticsReducer,
+    hotelOperational: hotelOperationalReducer,
   },
 });

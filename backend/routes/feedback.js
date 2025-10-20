@@ -118,14 +118,15 @@ router.post('/feedback', protect, restrictTo('guest'), async (req, res) => {
     let feedbackData;
 
     if (bookingType === 'transportation') {
-      // For transportation bookings
+      // For transportation bookings (TransportationBooking model)
       feedbackData = {
         bookingId: booking._id,
         guestId: req.user.id,
         hotelId: booking.hotelId,
         serviceProviderId: booking.serviceProviderId,
         serviceId: booking.serviceId,
-        serviceType: serviceType || 'transportation',
+        serviceType: 'transportation', // Transportation bookings are always 'transportation'
+        // No housekeepingType for transportation bookings
         rating,
         comment: comment ? comment.trim() : '',
         guestName: `${req.user.firstName} ${req.user.lastName || ''}`.trim(),
@@ -147,6 +148,8 @@ router.post('/feedback', protect, restrictTo('guest'), async (req, res) => {
         serviceProviderId: booking.serviceProviderId,
         serviceId: booking.serviceId,
         serviceType: serviceType || booking.serviceType || 'regular',
+        // Add housekeepingType if serviceType is housekeeping
+        housekeepingType: booking.serviceType === 'housekeeping' ? booking.serviceDetails?.housekeepingType : undefined,
         rating,
         comment: comment ? comment.trim() : '',
         guestName: `${req.user.firstName} ${req.user.lastName || ''}`.trim(),

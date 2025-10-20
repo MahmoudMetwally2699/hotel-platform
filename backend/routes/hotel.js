@@ -16,6 +16,7 @@ const ServiceProvider = require('../models/ServiceProvider');
 const Service = require('../models/Service');
 const Booking = require('../models/Booking');
 const TransportationBooking = require('../models/TransportationBooking');
+const Feedback = require('../models/Feedback');
 const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
 const qrUtils = require('../utils/qr');
@@ -3432,6 +3433,1384 @@ router.patch('/bookings/:id/status', protect, restrictTo('hotel'), restrictToOwn
         status: booking.status,
         statusHistory: booking.statusHistory
       }
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/hotel/analytics/ratings/summary
+ * @desc    Get rating summary metrics for hotel (average rating, total reviews, highest rated service)
+ * @access  Private/HotelAdmin
+ */
+router.get('/analytics/ratings/summary', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate, serviceType } = req.query;
+
+  // Build date filter
+  const dateFilter = { hotelId: new mongoose.Types.ObjectId(hotelId), status: 'active' };
+  if (startDate && endDate) {
+    dateFilter.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    };
+  }
+
+  // Add service type filter
+  if (serviceType) {
+    // Handle housekeeping subcategories
+    if (['maintenance', 'cleaning', 'amenities'].includes(serviceType)) {
+      dateFilter.serviceType = 'housekeeping';
+      dateFilter.housekeepingType = serviceType;
+    } else {
+      dateFilter.serviceType = serviceType;
+    }
+  }
+
+  // Calculate current period metrics
+  const currentPeriodStats = await Feedback.aggregate([
+    { $match: dateFilter },
+    {
+      $group: {
+        _id: null,
+        avgRating: { $avg: '$rating' },
+        totalReviews: { $sum: 1 }
+      }
+    }
+  ]);
+
+  // Calculate previous period for trend comparison
+  let previousPeriodStats = [];
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const periodLength = end - start;
+    const prevStart = new Date(start.getTime() - periodLength);
+    const prevEnd = new Date(start);
+
+    const prevFilter = {
+      hotelId: new mongoose.Types.ObjectId(hotelId),
+      status: 'active',
+      createdAt: { $gte: prevStart, $lt: prevEnd }
+    };
+
+    // Apply service type filter to previous period too
+    if (serviceType) {
+      if (['maintenance', 'cleaning', 'amenities'].includes(serviceType)) {
+        prevFilter.serviceType = 'housekeeping';
+        prevFilter.housekeepingType = serviceType;
+      } else {
+        prevFilter.serviceType = serviceType;
+      }
+    }
+
+    previousPeriodStats = await Feedback.aggregate([
+      {
+        $match: prevFilter
+      },
+      {
+        $group: {
+          _id: null,
+          avgRating: { $avg: '$rating' },
+          totalReviews: { $sum: 1 }
+        }
+      }
+    ]);
+  }
+
+  // Calculate highest rated service
+  const highestRatedService = await Feedback.aggregate([
+    { $match: { ...dateFilter, serviceType: { $ne: null } } },
+    {
+      $group: {
+        _id: {
+          serviceType: '$serviceType',
+          housekeepingType: '$housekeepingType'
+        },
+        avgRating: { $avg: '$rating' },
+        totalReviews: { $sum: 1 }
+      }
+    },
+    { $sort: { avgRating: -1, totalReviews: -1 } },
+    { $limit: 1 }
+  ]);
+
+  const current = currentPeriodStats[0] || { avgRating: 0, totalReviews: 0 };
+  const previous = previousPeriodStats[0] || { avgRating: 0, totalReviews: 0 };
+
+  // Calculate trends
+  const ratingTrend = previous.avgRating > 0
+    ? ((current.avgRating - previous.avgRating) / previous.avgRating) * 100
+    : 0;
+  const reviewsTrend = previous.totalReviews > 0
+    ? ((current.totalReviews - previous.totalReviews) / previous.totalReviews) * 100
+    : 0;
+
+  // Format highest rated service name
+  let highestRatedName = 'N/A';
+  if (highestRatedService.length > 0) {
+    const service = highestRatedService[0]._id;
+    if (service.serviceType === 'housekeeping' && service.housekeepingType) {
+      highestRatedName = `Housekeeping - ${service.housekeepingType.charAt(0).toUpperCase() + service.housekeepingType.slice(1)}`;
+    } else {
+      highestRatedName = service.serviceType.charAt(0).toUpperCase() + service.serviceType.slice(1);
+    }
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      avgRating: Math.round(current.avgRating * 10) / 10,
+      totalReviews: current.totalReviews,
+      ratingTrend: Math.round(ratingTrend * 10) / 10,
+      reviewsTrend: Math.round(reviewsTrend * 10) / 10,
+      highestRatedService: {
+        name: highestRatedName,
+        rating: highestRatedService.length > 0 ? Math.round(highestRatedService[0].avgRating * 10) / 10 : 0,
+        totalReviews: highestRatedService.length > 0 ? highestRatedService[0].totalReviews : 0
+      }
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/hotel/analytics/ratings/breakdown
+ * @desc    Get detailed ratings breakdown by service type with star distribution
+ * @access  Private/HotelAdmin
+ */
+router.get('/analytics/ratings/breakdown', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate, serviceType } = req.query;
+
+  // Build date filter
+  const dateFilter = { hotelId: new mongoose.Types.ObjectId(hotelId), status: 'active' };
+  if (startDate && endDate) {
+    dateFilter.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    };
+  }
+
+  // Add service type filter
+  if (serviceType) {
+    if (['maintenance', 'cleaning', 'amenities'].includes(serviceType)) {
+      dateFilter.serviceType = 'housekeeping';
+      dateFilter.housekeepingType = serviceType;
+    } else {
+      dateFilter.serviceType = serviceType;
+    }
+  }
+
+  let breakdownData = [];
+
+  // If a specific service is selected
+  if (serviceType) {
+    // Query for the specific service
+    breakdownData = await Feedback.aggregate([
+      { $match: dateFilter },
+      {
+        $group: {
+          _id: '$serviceType',
+          totalRequests: { $sum: 1 },
+          avgRating: { $avg: '$rating' },
+          ratings: { $push: '$rating' }
+        }
+      },
+      {
+        $project: {
+          serviceType: '$_id',
+          totalRequests: 1,
+          avgRating: 1,
+          star5: {
+            $size: {
+              $filter: {
+                input: '$ratings',
+                as: 'rating',
+                cond: { $eq: ['$$rating', 5] }
+              }
+            }
+          },
+          star4: {
+            $size: {
+              $filter: {
+                input: '$ratings',
+                as: 'rating',
+                cond: { $eq: ['$$rating', 4] }
+              }
+            }
+          },
+          star3: {
+            $size: {
+              $filter: {
+                input: '$ratings',
+                as: 'rating',
+                cond: { $eq: ['$$rating', 3] }
+              }
+            }
+          },
+          star1_2: {
+            $size: {
+              $filter: {
+                input: '$ratings',
+                as: 'rating',
+                cond: { $lte: ['$$rating', 2] }
+              }
+            }
+          }
+        }
+      },
+      { $sort: { avgRating: -1 } }
+    ]);
+
+    // If it's a housekeeping subcategory, also get the sub-breakdown
+    if (['maintenance', 'cleaning', 'amenities'].includes(serviceType)) {
+      const housekeepingSubBreakdown = await Feedback.aggregate([
+        { $match: dateFilter },
+        {
+          $group: {
+            _id: '$housekeepingType',
+            totalRequests: { $sum: 1 },
+            avgRating: { $avg: '$rating' },
+            ratings: { $push: '$rating' }
+          }
+        },
+        {
+          $project: {
+            housekeepingType: '$_id',
+            totalRequests: 1,
+            avgRating: 1,
+            star5: {
+              $size: {
+                $filter: {
+                  input: '$ratings',
+                  as: 'rating',
+                  cond: { $eq: ['$$rating', 5] }
+                }
+              }
+            },
+            star4: {
+              $size: {
+                $filter: {
+                  input: '$ratings',
+                  as: 'rating',
+                  cond: { $eq: ['$$rating', 4] }
+                }
+              }
+            },
+            star3: {
+              $size: {
+                $filter: {
+                  input: '$ratings',
+                  as: 'rating',
+                  cond: { $eq: ['$$rating', 3] }
+                }
+              }
+            },
+            star1_2: {
+              $size: {
+                $filter: {
+                  input: '$ratings',
+                  as: 'rating',
+                  cond: { $lte: ['$$rating', 2] }
+                }
+              }
+            }
+          }
+        }
+      ]);
+
+      if (breakdownData.length > 0) {
+        breakdownData[0].subCategories = housekeepingSubBreakdown;
+      }
+    }
+  } else {
+    // Get all services when no filter is applied
+    // Get breakdown by service type (excluding housekeeping)
+    const serviceTypeBreakdown = await Feedback.aggregate([
+      { $match: { ...dateFilter, serviceType: { $ne: 'housekeeping' } } },
+      {
+        $group: {
+          _id: '$serviceType',
+          totalRequests: { $sum: 1 },
+          avgRating: { $avg: '$rating' },
+          ratings: { $push: '$rating' }
+        }
+      },
+      {
+        $project: {
+          serviceType: '$_id',
+          totalRequests: 1,
+          avgRating: 1,
+          star5: {
+            $size: {
+              $filter: {
+                input: '$ratings',
+                as: 'rating',
+                cond: { $eq: ['$$rating', 5] }
+              }
+            }
+          },
+          star4: {
+            $size: {
+              $filter: {
+                input: '$ratings',
+                as: 'rating',
+                cond: { $eq: ['$$rating', 4] }
+              }
+            }
+          },
+          star3: {
+            $size: {
+              $filter: {
+                input: '$ratings',
+                as: 'rating',
+                cond: { $eq: ['$$rating', 3] }
+              }
+            }
+          },
+          star1_2: {
+            $size: {
+              $filter: {
+                input: '$ratings',
+                as: 'rating',
+                cond: { $lte: ['$$rating', 2] }
+              }
+            }
+          }
+        }
+      },
+      { $sort: { avgRating: -1 } }
+    ]);
+
+    // Get housekeeping breakdown with sub-categories
+    const housekeepingBreakdown = await Feedback.aggregate([
+      { $match: { ...dateFilter, serviceType: 'housekeeping' } },
+      {
+        $group: {
+          _id: '$housekeepingType',
+          totalRequests: { $sum: 1 },
+          avgRating: { $avg: '$rating' },
+          ratings: { $push: '$rating' }
+        }
+      },
+      {
+        $project: {
+          housekeepingType: '$_id',
+          totalRequests: 1,
+          avgRating: 1,
+          star5: {
+            $size: {
+              $filter: {
+                input: '$ratings',
+                as: 'rating',
+                cond: { $eq: ['$$rating', 5] }
+              }
+            }
+          },
+          star4: {
+            $size: {
+              $filter: {
+                input: '$ratings',
+                as: 'rating',
+                cond: { $eq: ['$$rating', 4] }
+              }
+            }
+          },
+          star3: {
+            $size: {
+              $filter: {
+                input: '$ratings',
+                as: 'rating',
+                cond: { $eq: ['$$rating', 3] }
+              }
+            }
+          },
+          star1_2: {
+            $size: {
+              $filter: {
+                input: '$ratings',
+                as: 'rating',
+                cond: { $lte: ['$$rating', 2] }
+              }
+            }
+          }
+        }
+      },
+      { $sort: { avgRating: -1 } }
+    ]);
+
+    // Calculate housekeeping overall stats
+    const housekeepingOverall = {
+      serviceType: 'housekeeping',
+      totalRequests: housekeepingBreakdown.reduce((sum, item) => sum + item.totalRequests, 0),
+      avgRating: housekeepingBreakdown.length > 0
+        ? housekeepingBreakdown.reduce((sum, item) => sum + (item.avgRating * item.totalRequests), 0) /
+          housekeepingBreakdown.reduce((sum, item) => sum + item.totalRequests, 0)
+        : 0,
+      star5: housekeepingBreakdown.reduce((sum, item) => sum + item.star5, 0),
+      star4: housekeepingBreakdown.reduce((sum, item) => sum + item.star4, 0),
+      star3: housekeepingBreakdown.reduce((sum, item) => sum + item.star3, 0),
+      star1_2: housekeepingBreakdown.reduce((sum, item) => sum + item.star1_2, 0),
+      subCategories: housekeepingBreakdown
+    };
+
+    breakdownData = [...serviceTypeBreakdown, housekeepingOverall];
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      breakdown: breakdownData
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/hotel/analytics/ratings/by-type
+ * @desc    Get ratings grouped by service type for chart visualization
+ * @access  Private/HotelAdmin
+ */
+router.get('/analytics/ratings/by-type', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate, serviceType } = req.query;
+
+  // Build date filter
+  const dateFilter = { hotelId: new mongoose.Types.ObjectId(hotelId), status: 'active' };
+  if (startDate && endDate) {
+    dateFilter.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    };
+  }
+
+  // Add service type filter
+  if (serviceType) {
+    if (['maintenance', 'cleaning', 'amenities'].includes(serviceType)) {
+      dateFilter.serviceType = 'housekeeping';
+      dateFilter.housekeepingType = serviceType;
+    } else {
+      dateFilter.serviceType = serviceType;
+    }
+  }
+
+  let chartData = [];
+
+  // If a specific service is selected, only query that service
+  if (serviceType) {
+    // Query for the specific service type
+    const specificServiceData = await Feedback.aggregate([
+      { $match: dateFilter },
+      {
+        $group: {
+          _id: serviceType === 'housekeeping'
+            ? { $ifNull: ['$housekeepingType', 'housekeeping'] }
+            : '$serviceType',
+          avgRating: { $avg: '$rating' },
+          requestCount: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          name: '$_id',
+          avgRating: { $round: ['$avgRating', 2] },
+          requestCount: 1
+        }
+      }
+    ]);
+
+    chartData = specificServiceData;
+  } else {
+    // Get all service types when no filter is applied
+    // Get service types (excluding housekeeping)
+    const serviceTypes = await Feedback.aggregate([
+      { $match: { ...dateFilter, serviceType: { $nin: ['housekeeping', null] } } },
+      {
+        $group: {
+          _id: '$serviceType',
+          avgRating: { $avg: '$rating' },
+          requestCount: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          name: '$_id',
+          avgRating: { $round: ['$avgRating', 2] },
+          requestCount: 1
+        }
+      }
+    ]);
+
+    // Get housekeeping sub-types
+    const housekeepingTypes = await Feedback.aggregate([
+      { $match: { ...dateFilter, serviceType: 'housekeeping' } },
+      {
+        $group: {
+          _id: { $ifNull: ['$housekeepingType', 'housekeeping'] },
+          avgRating: { $avg: '$rating' },
+          requestCount: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          name: '$_id',
+          avgRating: { $round: ['$avgRating', 2] },
+          requestCount: 1
+        }
+      }
+    ]);
+
+    chartData = [...serviceTypes, ...housekeepingTypes];
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      chartData
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/hotel/analytics/ratings/trend
+ * @desc    Get rating trends over time by service type
+ * @access  Private/HotelAdmin
+ */
+router.get('/analytics/ratings/trend', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate, period = 'week', serviceType } = req.query;
+
+  // Build date filter
+  const dateFilter = { hotelId: new mongoose.Types.ObjectId(hotelId), status: 'active' };
+
+  // Default to last 4 weeks if no dates provided
+  let start, end;
+  if (startDate && endDate) {
+    start = new Date(startDate);
+    end = new Date(endDate);
+  } else {
+    end = new Date();
+    start = new Date();
+    start.setDate(start.getDate() - 28); // 4 weeks back
+  }
+
+  dateFilter.createdAt = { $gte: start, $lte: end };
+
+  // Add service type filter
+  if (serviceType) {
+    if (['maintenance', 'cleaning', 'amenities'].includes(serviceType)) {
+      dateFilter.serviceType = 'housekeeping';
+      dateFilter.housekeepingType = serviceType;
+    } else {
+      dateFilter.serviceType = serviceType;
+    }
+  }
+
+  // Determine grouping based on period
+  let groupBy;
+  if (period === 'week') {
+    groupBy = {
+      year: { $year: '$createdAt' },
+      week: { $week: '$createdAt' }
+    };
+  } else if (period === 'month') {
+    groupBy = {
+      year: { $year: '$createdAt' },
+      month: { $month: '$createdAt' }
+    };
+  } else {
+    groupBy = {
+      year: { $year: '$createdAt' },
+      month: { $month: '$createdAt' },
+      day: { $dayOfMonth: '$createdAt' }
+    };
+  }
+
+  // Get trends based on service filter
+  let serviceTrends = [];
+  let housekeepingTrends = [];
+
+  if (serviceType) {
+    // If specific service type is selected, query only that service
+    if (serviceType === 'housekeeping') {
+      // Query all housekeeping sub-categories
+      housekeepingTrends = await Feedback.aggregate([
+        { $match: dateFilter },
+        {
+          $group: {
+            _id: {
+              ...groupBy,
+              housekeepingType: '$housekeepingType'
+            },
+            avgRating: { $avg: '$rating' },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id.year': 1, '_id.week': 1, '_id.month': 1, '_id.day': 1 } }
+      ]);
+    } else if (['maintenance', 'cleaning', 'amenities'].includes(serviceType)) {
+      // Query specific housekeeping sub-category
+      housekeepingTrends = await Feedback.aggregate([
+        { $match: dateFilter },
+        {
+          $group: {
+            _id: {
+              ...groupBy,
+              housekeepingType: '$housekeepingType'
+            },
+            avgRating: { $avg: '$rating' },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id.year': 1, '_id.week': 1, '_id.month': 1, '_id.day': 1 } }
+      ]);
+    } else {
+      // Query other specific service type (laundry, transportation, etc.)
+      serviceTrends = await Feedback.aggregate([
+        { $match: dateFilter },
+        {
+          $group: {
+            _id: {
+              ...groupBy,
+              serviceType: '$serviceType'
+            },
+            avgRating: { $avg: '$rating' },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id.year': 1, '_id.week': 1, '_id.month': 1, '_id.day': 1 } }
+      ]);
+    }
+  } else {
+    // No filter - query all services
+    serviceTrends = await Feedback.aggregate([
+      { $match: { ...dateFilter, serviceType: { $nin: ['housekeeping', null] } } },
+      {
+        $group: {
+          _id: {
+            ...groupBy,
+            serviceType: '$serviceType'
+          },
+          avgRating: { $avg: '$rating' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.week': 1, '_id.month': 1, '_id.day': 1 } }
+    ]);
+
+    housekeepingTrends = await Feedback.aggregate([
+      { $match: { ...dateFilter, serviceType: 'housekeeping' } },
+      {
+        $group: {
+          _id: {
+            ...groupBy,
+            housekeepingType: '$housekeepingType'
+          },
+          avgRating: { $avg: '$rating' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.week': 1, '_id.month': 1, '_id.day': 1 } }
+    ]);
+  }
+
+  // Format the data for frontend consumption
+  const formatTrendData = (trends, typeField) => {
+    const periodMap = new Map();
+
+    trends.forEach(trend => {
+      let periodLabel;
+      if (period === 'week') {
+        periodLabel = `Week ${trend._id.week}, ${trend._id.year}`;
+      } else if (period === 'month') {
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        periodLabel = `${monthNames[trend._id.month - 1]} ${trend._id.year}`;
+      } else {
+        periodLabel = `${trend._id.year}-${String(trend._id.month).padStart(2, '0')}-${String(trend._id.day).padStart(2, '0')}`;
+      }
+
+      if (!periodMap.has(periodLabel)) {
+        periodMap.set(periodLabel, {});
+      }
+
+      const typeName = trend._id[typeField];
+      if (typeName) {
+        periodMap.get(periodLabel)[typeName] = Math.round(trend.avgRating * 10) / 10;
+      }
+    });
+
+    return Array.from(periodMap.entries()).map(([period, ratings]) => ({
+      period,
+      ...ratings
+    }));
+  };
+
+  const serviceData = formatTrendData(serviceTrends, 'serviceType');
+  const housekeepingData = formatTrendData(housekeepingTrends, 'housekeepingType');
+
+  // Merge the data
+  const mergedData = [...serviceData];
+  housekeepingData.forEach(hkData => {
+    const existingPeriod = mergedData.find(d => d.period === hkData.period);
+    if (existingPeriod) {
+      Object.assign(existingPeriod, hkData);
+    } else {
+      mergedData.push(hkData);
+    }
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      trendData: mergedData.sort((a, b) => a.period.localeCompare(b.period))
+    }
+  });
+}));
+
+// ==================== OPERATIONAL EFFICIENCY ANALYTICS ENDPOINTS ====================
+
+/**
+ * @route   GET /api/hotel/analytics/operational/summary
+ * @desc    Get operational efficiency summary metrics
+ * @access  Private (Hotel Admin)
+ */
+router.get('/analytics/operational/summary', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId || req.user._id;
+  const { startDate, endDate, serviceType } = req.query;
+
+  // Build date filter
+  const dateFilter = { hotelId: new mongoose.Types.ObjectId(hotelId) };
+
+  if (startDate && endDate) {
+    dateFilter.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    };
+  }
+
+  // Add service type filter
+  if (serviceType && serviceType !== 'all') {
+    if (['maintenance', 'cleaning', 'amenities'].includes(serviceType)) {
+      dateFilter.serviceType = 'housekeeping';
+      dateFilter['serviceDetails.housekeepingType'] = serviceType;
+    } else {
+      dateFilter.serviceType = serviceType;
+    }
+  }
+
+  // Query both Booking and TransportationBooking collections
+  const [regularBookings, transportationBookings] = await Promise.all([
+    Booking.find({
+      ...dateFilter,
+      status: { $in: ['completed', 'in-progress', 'confirmed', 'assigned'] }
+    }).lean(),
+    TransportationBooking.find({
+      hotelId: new mongoose.Types.ObjectId(hotelId),
+      bookingStatus: { $in: ['completed', 'service_active', 'confirmed', 'payment_completed'] },
+      ...(startDate && endDate ? {
+        createdAt: {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate)
+        }
+      } : {})
+    }).lean()
+  ]);
+
+  // Combine bookings
+  const allBookings = [...regularBookings, ...transportationBookings];
+
+  // Calculate metrics
+  let totalResponseTime = 0;
+  let responseCount = 0;
+  let totalCompletionTime = 0;
+  let completionCount = 0;
+  let totalDelayed = 0;
+  let slaCompliantCount = 0;
+  let slaTotal = 0;
+
+  allBookings.forEach(booking => {
+    // Response time calculation
+    if (booking.sla?.actualResponseTime != null) {
+      totalResponseTime += booking.sla.actualResponseTime;
+      responseCount++;
+    }
+
+    // Completion time calculation
+    if (booking.sla?.actualCompletionTime != null) {
+      totalCompletionTime += booking.sla.actualCompletionTime;
+      completionCount++;
+
+      // SLA compliance
+      slaTotal++;
+      if (booking.sla.isCompletionOnTime === true) {
+        slaCompliantCount++;
+      }
+    }
+
+    // Delayed requests
+    if (booking.sla?.isCompletionOnTime === false) {
+      totalDelayed++;
+    }
+  });
+
+  const avgResponseTime = responseCount > 0 ? Math.round(totalResponseTime / responseCount) : 0;
+  const avgCompletionTime = completionCount > 0 ? Math.round(totalCompletionTime / completionCount) : 0;
+  const slaComplianceRate = slaTotal > 0 ? ((slaCompliantCount / slaTotal) * 100).toFixed(1) : 0;
+
+  // Calculate trends (compare with previous period)
+  const periodLength = startDate && endDate
+    ? new Date(endDate).getTime() - new Date(startDate).getTime()
+    : 7 * 24 * 60 * 60 * 1000; // Default 7 days
+
+  const previousDateFilter = { hotelId: new mongoose.Types.ObjectId(hotelId) };
+  if (startDate && endDate) {
+    const previousStart = new Date(new Date(startDate).getTime() - periodLength);
+    const previousEnd = new Date(startDate);
+    previousDateFilter.createdAt = {
+      $gte: previousStart,
+      $lte: previousEnd
+    };
+  }
+
+  const [previousRegular, previousTransportation] = await Promise.all([
+    Booking.find({
+      ...previousDateFilter,
+      status: { $in: ['completed', 'in-progress', 'confirmed', 'assigned'] }
+    }).lean(),
+    TransportationBooking.find({
+      ...previousDateFilter,
+      bookingStatus: { $in: ['completed', 'service_active', 'confirmed', 'payment_completed'] }
+    }).lean()
+  ]);
+
+  const previousBookings = [...previousRegular, ...previousTransportation];
+
+  // Calculate previous period metrics
+  let prevResponseTime = 0;
+  let prevResponseCount = 0;
+  let prevCompletionTime = 0;
+  let prevCompletionCount = 0;
+  let prevSlaCompliant = 0;
+  let prevSlaTotal = 0;
+
+  previousBookings.forEach(booking => {
+    if (booking.sla?.actualResponseTime != null) {
+      prevResponseTime += booking.sla.actualResponseTime;
+      prevResponseCount++;
+    }
+    if (booking.sla?.actualCompletionTime != null) {
+      prevCompletionTime += booking.sla.actualCompletionTime;
+      prevCompletionCount++;
+      prevSlaTotal++;
+      if (booking.sla.isCompletionOnTime === true) {
+        prevSlaCompliant++;
+      }
+    }
+  });
+
+  const prevAvgResponse = prevResponseCount > 0 ? prevResponseTime / prevResponseCount : avgResponseTime;
+  const prevAvgCompletion = prevCompletionCount > 0 ? prevCompletionTime / prevCompletionCount : avgCompletionTime;
+  const prevSlaRate = prevSlaTotal > 0 ? (prevSlaCompliant / prevSlaTotal) * 100 : parseFloat(slaComplianceRate);
+
+  // Calculate percentage changes
+  const responseTrend = prevAvgResponse > 0
+    ? (((prevAvgResponse - avgResponseTime) / prevAvgResponse) * 100).toFixed(1)
+    : 0;
+  const completionTrend = prevAvgCompletion > 0
+    ? (((prevAvgCompletion - avgCompletionTime) / prevAvgCompletion) * 100).toFixed(1)
+    : 0;
+  const slaTrend = prevSlaRate > 0
+    ? ((parseFloat(slaComplianceRate) - prevSlaRate) / prevSlaRate * 100).toFixed(1)
+    : 0;
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      avgResponseTime,
+      responseTrend: parseFloat(responseTrend),
+      avgCompletionTime,
+      completionTrend: parseFloat(completionTrend),
+      slaComplianceRate: parseFloat(slaComplianceRate),
+      slaTrend: parseFloat(slaTrend),
+      delayedRequests: totalDelayed,
+      totalRequests: allBookings.length
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/hotel/analytics/operational/completion-by-service
+ * @desc    Get average completion time by service type
+ * @access  Private (Hotel Admin)
+ */
+router.get('/analytics/operational/completion-by-service', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId || req.user._id;
+  const { startDate, endDate, serviceType } = req.query;
+
+  // Build match stage
+  const matchStage = {
+    hotelId: new mongoose.Types.ObjectId(hotelId),
+    status: { $in: ['completed', 'in-progress', 'confirmed', 'assigned'] },
+    'sla.actualCompletionTime': { $exists: true, $ne: null }
+  };
+
+  if (startDate && endDate) {
+    matchStage.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    };
+  }
+
+  if (serviceType && serviceType !== 'all') {
+    if (['maintenance', 'cleaning', 'amenities'].includes(serviceType)) {
+      matchStage.serviceType = 'housekeeping';
+      matchStage['serviceDetails.housekeepingType'] = serviceType;
+    } else {
+      matchStage.serviceType = serviceType;
+    }
+  }
+
+  // Aggregate by service type
+  const completionData = await Booking.aggregate([
+    { $match: matchStage },
+    {
+      $group: {
+        _id: {
+          $cond: {
+            if: { $eq: ['$serviceType', 'housekeeping'] },
+            then: { $ifNull: ['$serviceDetails.housekeepingType', 'housekeeping'] },
+            else: '$serviceType'
+          }
+        },
+        avgCompletionTime: { $avg: '$sla.actualCompletionTime' },
+        minCompletionTime: { $min: '$sla.actualCompletionTime' },
+        maxCompletionTime: { $max: '$sla.actualCompletionTime' },
+        count: { $sum: 1 }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        serviceType: '$_id',
+        avgCompletionTime: { $round: ['$avgCompletionTime', 0] },
+        minCompletionTime: { $round: ['$minCompletionTime', 0] },
+        maxCompletionTime: { $round: ['$maxCompletionTime', 0] },
+        count: 1
+      }
+    },
+    { $sort: { avgCompletionTime: -1 } }
+  ]);
+
+  // Also get transportation bookings
+  const transportationMatch = {
+    hotelId: new mongoose.Types.ObjectId(hotelId),
+    bookingStatus: { $in: ['completed', 'service_active', 'confirmed', 'payment_completed'] },
+    'sla.actualCompletionTime': { $exists: true, $ne: null }
+  };
+
+  if (startDate && endDate) {
+    transportationMatch.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    };
+  }
+
+  if (!serviceType || serviceType === 'all' || serviceType === 'transportation') {
+    const transportationData = await TransportationBooking.aggregate([
+      { $match: transportationMatch },
+      {
+        $group: {
+          _id: 'transportation',
+          avgCompletionTime: { $avg: '$sla.actualCompletionTime' },
+          minCompletionTime: { $min: '$sla.actualCompletionTime' },
+          maxCompletionTime: { $max: '$sla.actualCompletionTime' },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          serviceType: '$_id',
+          avgCompletionTime: { $round: ['$avgCompletionTime', 0] },
+          minCompletionTime: { $round: ['$minCompletionTime', 0] },
+          maxCompletionTime: { $round: ['$maxCompletionTime', 0] },
+          count: 1
+        }
+      }
+    ]);
+
+    completionData.push(...transportationData);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      completionByService: completionData
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/hotel/analytics/operational/sla-by-service
+ * @desc    Get SLA performance by service type (on-time vs delayed)
+ * @access  Private (Hotel Admin)
+ */
+router.get('/analytics/operational/sla-by-service', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId || req.user._id;
+  const { startDate, endDate, serviceType } = req.query;
+
+  const matchStage = {
+    hotelId: new mongoose.Types.ObjectId(hotelId),
+    status: 'completed',
+    'sla.isCompletionOnTime': { $ne: null }
+  };
+
+  if (startDate && endDate) {
+    matchStage.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    };
+  }
+
+  if (serviceType && serviceType !== 'all') {
+    if (['maintenance', 'cleaning', 'amenities'].includes(serviceType)) {
+      matchStage.serviceType = 'housekeeping';
+      matchStage['serviceDetails.housekeepingType'] = serviceType;
+    } else {
+      matchStage.serviceType = serviceType;
+    }
+  }
+
+  const slaData = await Booking.aggregate([
+    { $match: matchStage },
+    {
+      $group: {
+        _id: {
+          $cond: {
+            if: { $eq: ['$serviceType', 'housekeeping'] },
+            then: { $ifNull: ['$serviceDetails.housekeepingType', 'housekeeping'] },
+            else: '$serviceType'
+          }
+        },
+        totalBookings: { $sum: 1 },
+        onTimeBookings: {
+          $sum: {
+            $cond: [{ $eq: ['$sla.isCompletionOnTime', true] }, 1, 0]
+          }
+        },
+        delayedBookings: {
+          $sum: {
+            $cond: [{ $eq: ['$sla.isCompletionOnTime', false] }, 1, 0]
+          }
+        },
+        avgDelay: {
+          $avg: {
+            $cond: [
+              { $gt: ['$sla.completionDelay', 0] },
+              '$sla.completionDelay',
+              0
+            ]
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        serviceType: '$_id',
+        totalBookings: 1,
+        onTimeBookings: 1,
+        delayedBookings: 1,
+        onTimePercentage: {
+          $multiply: [
+            { $divide: ['$onTimeBookings', '$totalBookings'] },
+            100
+          ]
+        },
+        avgDelay: { $round: ['$avgDelay', 0] }
+      }
+    },
+    { $sort: { onTimePercentage: -1 } }
+  ]);
+
+  // Transportation bookings
+  const transportationMatch = {
+    hotelId: new mongoose.Types.ObjectId(hotelId),
+    bookingStatus: 'completed',
+    'sla.isCompletionOnTime': { $ne: null }
+  };
+
+  if (startDate && endDate) {
+    transportationMatch.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    };
+  }
+
+  if (!serviceType || serviceType === 'all' || serviceType === 'transportation') {
+    const transportationSLA = await TransportationBooking.aggregate([
+      { $match: transportationMatch },
+      {
+        $group: {
+          _id: 'transportation',
+          totalBookings: { $sum: 1 },
+          onTimeBookings: {
+            $sum: {
+              $cond: [{ $eq: ['$sla.isCompletionOnTime', true] }, 1, 0]
+            }
+          },
+          delayedBookings: {
+            $sum: {
+              $cond: [{ $eq: ['$sla.isCompletionOnTime', false] }, 1, 0]
+            }
+          },
+          avgDelay: {
+            $avg: {
+              $cond: [
+                { $gt: ['$sla.completionDelay', 0] },
+                '$sla.completionDelay',
+                0
+              ]
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          serviceType: '$_id',
+          totalBookings: 1,
+          onTimeBookings: 1,
+          delayedBookings: 1,
+          onTimePercentage: {
+            $multiply: [
+              { $divide: ['$onTimeBookings', '$totalBookings'] },
+              100
+            ]
+          },
+          avgDelay: { $round: ['$avgDelay', 0] }
+        }
+      }
+    ]);
+
+    slaData.push(...transportationSLA);
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      slaByService: slaData
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/hotel/analytics/operational/sla-distribution
+ * @desc    Get overall SLA distribution (on-time, delayed, pending)
+ * @access  Private (Hotel Admin)
+ */
+router.get('/analytics/operational/sla-distribution', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId || req.user._id;
+  const { startDate, endDate, serviceType } = req.query;
+
+  const matchStage = {
+    hotelId: new mongoose.Types.ObjectId(hotelId)
+  };
+
+  if (startDate && endDate) {
+    matchStage.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    };
+  }
+
+  if (serviceType && serviceType !== 'all') {
+    if (['maintenance', 'cleaning', 'amenities'].includes(serviceType)) {
+      matchStage.serviceType = 'housekeeping';
+      matchStage['serviceDetails.housekeepingType'] = serviceType;
+    } else {
+      matchStage.serviceType = serviceType;
+    }
+  }
+
+  const [regularBookings, transportationBookings] = await Promise.all([
+    Booking.find(matchStage).lean(),
+    TransportationBooking.find({
+      hotelId: new mongoose.Types.ObjectId(hotelId),
+      ...(startDate && endDate ? {
+        createdAt: {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate)
+        }
+      } : {})
+    }).lean()
+  ]);
+
+  const allBookings = [...regularBookings, ...transportationBookings];
+
+  let onTime = 0;
+  let delayed = 0;
+  let pending = 0;
+  let atRisk = 0;
+
+  allBookings.forEach(booking => {
+    if (booking.sla?.slaStatus === 'met' || booking.sla?.isCompletionOnTime === true) {
+      onTime++;
+    } else if (booking.sla?.slaStatus === 'missed' || booking.sla?.isCompletionOnTime === false) {
+      delayed++;
+    } else if (booking.sla?.slaStatus === 'at-risk') {
+      atRisk++;
+    } else {
+      pending++;
+    }
+  });
+
+  const total = allBookings.length;
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      distribution: [
+        {
+          name: 'On Time',
+          value: onTime,
+          percentage: total > 0 ? ((onTime / total) * 100).toFixed(1) : 0
+        },
+        {
+          name: 'Delayed',
+          value: delayed,
+          percentage: total > 0 ? ((delayed / total) * 100).toFixed(1) : 0
+        },
+        {
+          name: 'At Risk',
+          value: atRisk,
+          percentage: total > 0 ? ((atRisk / total) * 100).toFixed(1) : 0
+        },
+        {
+          name: 'Pending',
+          value: pending,
+          percentage: total > 0 ? ((pending / total) * 100).toFixed(1) : 0
+        }
+      ],
+      total
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/hotel/analytics/operational/service-details
+ * @desc    Get detailed timing analysis for all service requests
+ * @access  Private (Hotel Admin)
+ */
+router.get('/analytics/operational/service-details', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId || req.user._id;
+  const { startDate, endDate, serviceType } = req.query;
+
+  const matchStage = {
+    hotelId: new mongoose.Types.ObjectId(hotelId),
+    status: { $in: ['completed', 'in-progress', 'confirmed', 'assigned'] }
+  };
+
+  if (startDate && endDate) {
+    matchStage.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    };
+  }
+
+  if (serviceType && serviceType !== 'all') {
+    if (['maintenance', 'cleaning', 'amenities'].includes(serviceType)) {
+      matchStage.serviceType = 'housekeeping';
+      matchStage['serviceDetails.housekeepingType'] = serviceType;
+    } else {
+      matchStage.serviceType = serviceType;
+    }
+  }
+
+  const serviceDetails = await Booking.aggregate([
+    { $match: matchStage },
+    {
+      $project: {
+        serviceType: {
+          $cond: {
+            if: { $eq: ['$serviceType', 'housekeeping'] },
+            then: { $ifNull: ['$serviceDetails.housekeepingType', 'housekeeping'] },
+            else: '$serviceType'
+          }
+        },
+        serviceName: '$serviceDetails.name',
+        bookingNumber: 1,
+        guestName: {
+          $concat: ['$guestDetails.firstName', ' ', '$guestDetails.lastName']
+        },
+        status: 1,
+        createdAt: 1,
+        targetResponseTime: '$sla.targetResponseTime',
+        actualResponseTime: '$sla.actualResponseTime',
+        targetCompletionTime: '$sla.targetCompletionTime',
+        actualCompletionTime: '$sla.actualCompletionTime',
+        actualServiceTime: '$sla.actualServiceTime',
+        isResponseOnTime: '$sla.isResponseOnTime',
+        isCompletionOnTime: '$sla.isCompletionOnTime',
+        responseDelay: '$sla.responseDelay',
+        completionDelay: '$sla.completionDelay',
+        slaStatus: '$sla.slaStatus'
+      }
+    },
+    { $sort: { createdAt: -1 } },
+    { $limit: 100 } // Limit to most recent 100 for performance
+  ]);
+
+  // Get transportation bookings
+  const transportationMatch = {
+    hotelId: new mongoose.Types.ObjectId(hotelId),
+    bookingStatus: { $in: ['completed', 'service_active', 'confirmed', 'payment_completed'] }
+  };
+
+  if (startDate && endDate) {
+    transportationMatch.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    };
+  }
+
+  if (!serviceType || serviceType === 'all' || serviceType === 'transportation') {
+    const transportationDetails = await TransportationBooking.aggregate([
+      { $match: transportationMatch },
+      {
+        $project: {
+          serviceType: { $literal: 'transportation' },
+          serviceName: '$vehicleDetails.vehicleType',
+          bookingNumber: '$bookingReference',
+          guestName: {
+            $concat: ['$guestDetails.firstName', ' ', '$guestDetails.lastName']
+          },
+          status: '$bookingStatus',
+          createdAt: 1,
+          targetResponseTime: '$sla.targetResponseTime',
+          actualResponseTime: '$sla.actualResponseTime',
+          targetCompletionTime: '$sla.targetCompletionTime',
+          actualCompletionTime: '$sla.actualCompletionTime',
+          actualServiceTime: '$sla.actualServiceTime',
+          isResponseOnTime: '$sla.isResponseOnTime',
+          isCompletionOnTime: '$sla.isCompletionOnTime',
+          responseDelay: '$sla.responseDelay',
+          completionDelay: '$sla.completionDelay',
+          slaStatus: '$sla.slaStatus'
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      { $limit: 100 }
+    ]);
+
+    serviceDetails.push(...transportationDetails);
+  }
+
+  // Sort combined results by date
+  serviceDetails.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      serviceDetails: serviceDetails.slice(0, 100) // Ensure max 100
     }
   });
 }));

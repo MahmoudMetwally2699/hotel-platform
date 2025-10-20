@@ -553,6 +553,50 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     }
   }],
 
+  // SLA and Performance Tracking
+  sla: {
+    // Target SLA times in minutes
+    targetResponseTime: {
+      type: Number,
+      default: 15 // 15 minutes default response time
+    },
+    targetCompletionTime: {
+      type: Number,
+      default: 120 // 120 minutes (2 hours) default completion time
+    },
+
+    // Actual timestamps for performance tracking
+    acceptedAt: Date, // When service provider accepts the booking
+    startedAt: Date, // When service work actually starts
+    completedAt: Date, // When service is completed
+
+    // Calculated times (in minutes)
+    actualResponseTime: Number, // Time from creation to acceptance
+    actualCompletionTime: Number, // Time from creation to completion
+    actualServiceTime: Number, // Time from start to completion
+
+    // SLA compliance flags
+    isResponseOnTime: {
+      type: Boolean,
+      default: null
+    },
+    isCompletionOnTime: {
+      type: Boolean,
+      default: null
+    },
+
+    // Delay tracking
+    responseDelay: Number, // Minutes delayed in response (negative if early)
+    completionDelay: Number, // Minutes delayed in completion (negative if early)
+
+    // SLA status
+    slaStatus: {
+      type: String,
+      enum: ['pending', 'met', 'missed', 'at-risk'],
+      default: 'pending'
+    }
+  },
+
   // Payment Information
   payment: {
     // Payment method selection
@@ -899,6 +943,10 @@ bookingSchema.index({ 'schedule.preferredDate': 1, status: 1 });
 bookingSchema.index({ 'payment.status': 1, 'payment.paymentDate': -1 });
 bookingSchema.index({ 'payment.kashier.sessionId': 1 });
 bookingSchema.index({ 'payment.kashier.transactionId': 1 });
+// SLA and Performance indexes
+bookingSchema.index({ hotelId: 1, 'sla.slaStatus': 1, createdAt: -1 });
+bookingSchema.index({ hotelId: 1, 'sla.isCompletionOnTime': 1 });
+bookingSchema.index({ serviceType: 1, 'sla.actualCompletionTime': 1 });
 
 // Virtual fields
 bookingSchema.virtual('guest', {
@@ -972,20 +1020,93 @@ bookingSchema.pre('save', function(next) {
 // Instance methods
 bookingSchema.methods.updateStatus = function(newStatus, updatedBy = null, notes = '') {
   const oldStatus = this.status;
+  const now = new Date();
   this.status = newStatus;
 
   this.statusHistory.push({
     status: newStatus,
-    timestamp: new Date(),
+    timestamp: now,
     updatedBy,
     notes,
     automaticUpdate: false
   });
 
-  // If status is being changed to completed, set feedback request flag
+  // Update SLA timestamps based on status changes
+  if (!this.sla) {
+    this.sla = {};
+  }
+
+  // When booking is accepted/confirmed (service provider accepts)
+  if ((newStatus === 'confirmed' || newStatus === 'assigned') && !this.sla.acceptedAt) {
+    this.sla.acceptedAt = now;
+
+    // Calculate response time in minutes
+    const createdTime = this.createdAt.getTime();
+    const acceptedTime = now.getTime();
+    this.sla.actualResponseTime = Math.round((acceptedTime - createdTime) / (1000 * 60));
+
+    // Check if response was on time
+    const targetResponse = this.sla.targetResponseTime || 15;
+    this.sla.isResponseOnTime = this.sla.actualResponseTime <= targetResponse;
+    this.sla.responseDelay = this.sla.actualResponseTime - targetResponse;
+  }
+
+  // When service starts
+  if ((newStatus === 'in-progress' || newStatus === 'in-service' || newStatus === 'picked-up') && !this.sla.startedAt) {
+    this.sla.startedAt = now;
+  }
+
+  // When service is completed
   if (newStatus === 'completed' && oldStatus !== 'completed') {
+    this.sla.completedAt = now;
+
+    // If acceptedAt was never set (direct completion), set it to createdAt
+    // This happens in housekeeping when bookings go straight from pending to completed
+    if (!this.sla.acceptedAt) {
+      this.sla.acceptedAt = this.createdAt;
+
+      // Calculate response time (should be 0 or near 0 for instant acceptance)
+      const createdTime = this.createdAt.getTime();
+      const acceptedTime = this.createdAt.getTime();
+      this.sla.actualResponseTime = Math.round((acceptedTime - createdTime) / (1000 * 60));
+
+      // Check if response was on time
+      const targetResponse = this.sla.targetResponseTime || 15;
+      this.sla.isResponseOnTime = this.sla.actualResponseTime <= targetResponse;
+      this.sla.responseDelay = this.sla.actualResponseTime - targetResponse;
+    }
+
+    // If startedAt was never set (direct completion), set it to acceptedAt
+    if (!this.sla.startedAt) {
+      this.sla.startedAt = this.sla.acceptedAt;
+    }
+
+    // Calculate completion time in minutes (from creation to completion)
+    const createdTime = this.createdAt.getTime();
+    const completedTime = now.getTime();
+    this.sla.actualCompletionTime = Math.round((completedTime - createdTime) / (1000 * 60));
+
+    // Calculate service time in minutes (from start to completion)
+    if (this.sla.startedAt) {
+      const startedTime = this.sla.startedAt.getTime();
+      this.sla.actualServiceTime = Math.round((completedTime - startedTime) / (1000 * 60));
+    }
+
+    // Check if completion was on time
+    const targetCompletion = this.sla.targetCompletionTime || 120;
+    this.sla.isCompletionOnTime = this.sla.actualCompletionTime <= targetCompletion;
+    this.sla.completionDelay = this.sla.actualCompletionTime - targetCompletion;
+
+    // Set overall SLA status
+    if (this.sla.isCompletionOnTime) {
+      this.sla.slaStatus = 'met';
+    } else {
+      this.sla.slaStatus = 'missed';
+    }
+
+    // Set feedback request flag
     this.feedbackRequest.isRequested = true;
-    this.feedbackRequest.requestedAt = new Date();
+    this.feedbackRequest.requestedAt = now;
   }
 
   return this.save();
