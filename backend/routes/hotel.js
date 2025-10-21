@@ -4815,6 +4815,747 @@ router.get('/analytics/operational/service-details', catchAsync(async (req, res)
   });
 }));
 
+// ============================================================================
+// REVENUE ANALYTICS ENDPOINTS
+// ============================================================================
+
+/**
+ * GET /api/hotel/analytics/revenue/summary
+ * Get revenue summary with internal vs external breakdown
+ */
+router.get('/analytics/revenue/summary', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate } = req.query;
+
+  const dateFilter = {};
+  if (startDate || endDate) {
+    dateFilter.createdAt = {};
+    if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+    if (endDate) dateFilter.createdAt.$lte = new Date(endDate);
+  }
+
+  // Aggregate regular bookings with provider type
+  const regularBookings = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $lookup: {
+        from: 'serviceproviders',
+        localField: 'serviceProviderId',
+        foreignField: '_id',
+        as: 'provider'
+      }
+    },
+    { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+    {
+      $group: {
+        _id: '$provider.providerType',
+        totalRevenue: { $sum: '$pricing.totalAmount' },
+        basePrice: { $sum: '$pricing.providerEarnings' },
+        markupAmount: { $sum: '$pricing.hotelEarnings' },
+        bookingCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  // Aggregate transportation bookings with provider type
+  const transportationBookings = await TransportationBooking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        bookingStatus: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $lookup: {
+        from: 'serviceproviders',
+        localField: 'serviceProviderId',
+        foreignField: '_id',
+        as: 'provider'
+      }
+    },
+    { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+    {
+      $group: {
+        _id: '$provider.providerType',
+        totalRevenue: { $sum: '$quote.finalPrice' },
+        basePrice: { $sum: '$quote.basePrice' },
+        markupAmount: { $sum: '$hotelMarkup.amount' },
+        bookingCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  // Calculate totals
+  let totalRevenue = 0;
+  let internalRevenue = 0;
+  let externalRevenue = 0;
+  let externalCommission = 0;
+
+  // Process regular bookings by provider type
+  regularBookings.forEach(provider => {
+    totalRevenue += provider.totalRevenue || 0;
+
+    if (provider._id === 'internal') {
+      internalRevenue += provider.totalRevenue || 0;
+    } else if (provider._id === 'external') {
+      externalRevenue += provider.basePrice || 0;
+      externalCommission += provider.markupAmount || 0;
+    }
+  });
+
+  // Process transportation by provider type
+  transportationBookings.forEach(provider => {
+    totalRevenue += provider.totalRevenue || 0;
+
+    if (provider._id === 'internal') {
+      internalRevenue += provider.totalRevenue || 0;
+    } else if (provider._id === 'external') {
+      externalRevenue += provider.basePrice || 0;
+      externalCommission += provider.markupAmount || 0;
+    }
+  });
+
+  // Calculate previous period for comparison
+  const previousPeriodFilter = {};
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const duration = end - start;
+
+    previousPeriodFilter.createdAt = {
+      $gte: new Date(start - duration),
+      $lt: start
+    };
+  }
+
+  // Get previous period totals
+  let previousTotalRevenue = 0;
+  if (Object.keys(previousPeriodFilter).length > 0) {
+    const prevRegular = await Booking.aggregate([
+      {
+        $match: {
+          hotelId: new mongoose.Types.ObjectId(hotelId),
+          status: 'completed',
+          ...previousPeriodFilter
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$pricing.totalAmount' }
+        }
+      }
+    ]);
+
+    const prevTransport = await TransportationBooking.aggregate([
+      {
+        $match: {
+          hotelId: new mongoose.Types.ObjectId(hotelId),
+          bookingStatus: 'completed',
+          ...previousPeriodFilter
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$quote.finalPrice' }
+        }
+      }
+    ]);
+
+    previousTotalRevenue = (prevRegular[0]?.total || 0) + (prevTransport[0]?.total || 0);
+  }
+
+  // Calculate trend
+  const trend = previousTotalRevenue > 0
+    ? ((totalRevenue - previousTotalRevenue) / previousTotalRevenue) * 100
+    : 0;
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      totalRevenue,
+      internalRevenue,
+      externalRevenue,
+      externalCommission,
+      trend: Math.round(trend * 10) / 10
+    }
+  });
+}));
+
+/**
+ * GET /api/hotel/analytics/revenue/comparison
+ * Get revenue comparison between internal and external services over time
+ */
+router.get('/analytics/revenue/comparison', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate } = req.query;
+
+  const dateFilter = {};
+  if (startDate || endDate) {
+    dateFilter.createdAt = {};
+    if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+    if (endDate) dateFilter.createdAt.$lte = new Date(endDate);
+  }
+
+  // Aggregate by day with provider type
+  const regularRevenue = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $lookup: {
+        from: 'serviceproviders',
+        localField: 'serviceProviderId',
+        foreignField: '_id',
+        as: 'provider'
+      }
+    },
+    { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          providerType: '$provider.providerType'
+        },
+        revenue: { $sum: '$pricing.totalAmount' }
+      }
+    },
+    { $sort: { '_id.date': 1 } }
+  ]);
+
+  const transportRevenue = await TransportationBooking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        bookingStatus: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $lookup: {
+        from: 'serviceproviders',
+        localField: 'serviceProviderId',
+        foreignField: '_id',
+        as: 'provider'
+      }
+    },
+    { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          providerType: '$provider.providerType'
+        },
+        revenue: { $sum: '$quote.finalPrice' }
+      }
+    },
+    { $sort: { '_id.date': 1 } }
+  ]);
+
+  // Combine and format data
+  const revenueByDate = {};
+
+  regularRevenue.forEach(item => {
+    const date = item._id.date;
+    if (!revenueByDate[date]) {
+      revenueByDate[date] = { date, internal: 0, external: 0 };
+    }
+
+    if (item._id.providerType === 'internal') {
+      revenueByDate[date].internal += item.revenue;
+    } else if (item._id.providerType === 'external') {
+      revenueByDate[date].external += item.revenue;
+    }
+  });
+
+  transportRevenue.forEach(item => {
+    const date = item._id.date;
+    if (!revenueByDate[date]) {
+      revenueByDate[date] = { date, internal: 0, external: 0 };
+    }
+
+    if (item._id.providerType === 'internal') {
+      revenueByDate[date].internal += item.revenue;
+    } else if (item._id.providerType === 'external') {
+      revenueByDate[date].external += item.revenue;
+    }
+  });
+
+  const comparisonData = Object.values(revenueByDate).sort((a, b) =>
+    new Date(a.date) - new Date(b.date)
+  );
+
+  res.status(200).json({
+    status: 'success',
+    data: { comparisonData }
+  });
+}));
+
+/**
+ * GET /api/hotel/analytics/revenue/by-category
+ * Get revenue distribution by service category
+ */
+router.get('/analytics/revenue/by-category', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate } = req.query;
+
+  const dateFilter = {};
+  if (startDate || endDate) {
+    dateFilter.createdAt = {};
+    if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+    if (endDate) dateFilter.createdAt.$lte = new Date(endDate);
+  }
+
+  // Regular bookings by category
+  const categoryRevenue = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $group: {
+        _id: '$serviceType',
+        totalRevenue: { $sum: '$pricing.totalAmount' },
+        bookingCount: { $sum: 1 },
+        avgRevenue: { $avg: '$pricing.totalAmount' }
+      }
+    },
+    { $sort: { totalRevenue: -1 } }
+  ]);
+
+  // Transportation revenue
+  const transportationRevenue = await TransportationBooking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        bookingStatus: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $group: {
+        _id: 'transportation',
+        totalRevenue: { $sum: '$quote.finalPrice' },
+        bookingCount: { $sum: 1 },
+        avgRevenue: { $avg: '$quote.finalPrice' }
+      }
+    }
+  ]);
+
+  const allCategories = [...categoryRevenue, ...transportationRevenue];
+
+  // Calculate total for percentages
+  const totalRevenue = allCategories.reduce((sum, cat) => sum + cat.totalRevenue, 0);
+
+  const categoryData = allCategories.map(cat => ({
+    category: cat._id,
+    revenue: Math.round(cat.totalRevenue * 100) / 100,
+    bookingCount: cat.bookingCount,
+    avgRevenue: Math.round(cat.avgRevenue * 100) / 100,
+    percentage: totalRevenue > 0 ? Math.round((cat.totalRevenue / totalRevenue) * 1000) / 10 : 0
+  }));
+
+  res.status(200).json({
+    status: 'success',
+    data: { categoryData }
+  });
+}));
+
+/**
+ * GET /api/hotel/analytics/revenue/internal-services
+ * Get detailed revenue breakdown for internal (hotel-operated) services
+ */
+router.get('/analytics/revenue/internal-services', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate } = req.query;
+
+  const dateFilter = {};
+  if (startDate || endDate) {
+    dateFilter.createdAt = {};
+    if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+    if (endDate) dateFilter.createdAt.$lte = new Date(endDate);
+  }
+
+  // Get internal services (provider type = internal)
+  const internalRegularBookings = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $lookup: {
+        from: 'serviceproviders',
+        localField: 'serviceProviderId',
+        foreignField: '_id',
+        as: 'provider'
+      }
+    },
+    { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+    {
+      $match: {
+        'provider.providerType': 'internal'
+      }
+    },
+    {
+      $group: {
+        _id: '$serviceType',
+        totalRevenue: { $sum: '$pricing.totalAmount' },
+        bookingCount: { $sum: 1 },
+        avgRevenue: { $avg: '$pricing.totalAmount' },
+        minRevenue: { $min: '$pricing.totalAmount' },
+        maxRevenue: { $max: '$pricing.totalAmount' }
+      }
+    },
+    { $sort: { totalRevenue: -1 } }
+  ]);
+
+  // Get internal transportation bookings
+  const internalTransportBookings = await TransportationBooking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        bookingStatus: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $lookup: {
+        from: 'serviceproviders',
+        localField: 'serviceProviderId',
+        foreignField: '_id',
+        as: 'provider'
+      }
+    },
+    { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+    {
+      $match: {
+        'provider.providerType': 'internal'
+      }
+    },
+    {
+      $group: {
+        _id: 'transportation',
+        totalRevenue: { $sum: '$quote.finalPrice' },
+        bookingCount: { $sum: 1 },
+        avgRevenue: { $avg: '$quote.finalPrice' },
+        minRevenue: { $min: '$quote.finalPrice' },
+        maxRevenue: { $max: '$quote.finalPrice' }
+      }
+    }
+  ]);
+
+  const internalServices = [...internalRegularBookings, ...internalTransportBookings];
+
+  const totalInternalRevenue = internalServices.reduce((sum, service) =>
+    sum + service.totalRevenue, 0
+  );
+
+  const serviceData = internalServices.map(service => ({
+    serviceType: service._id,
+    totalRevenue: Math.round(service.totalRevenue * 100) / 100,
+    bookingCount: service.bookingCount,
+    avgRevenue: Math.round(service.avgRevenue * 100) / 100,
+    minRevenue: Math.round(service.minRevenue * 100) / 100,
+    maxRevenue: Math.round(service.maxRevenue * 100) / 100,
+    percentage: totalInternalRevenue > 0
+      ? Math.round((service.totalRevenue / totalInternalRevenue) * 1000) / 10
+      : 0
+  }));
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      totalInternalRevenue: Math.round(totalInternalRevenue * 100) / 100,
+      services: serviceData
+    }
+  });
+}));
+
+/**
+ * GET /api/hotel/analytics/revenue/external-providers
+ * Get detailed analysis of external service providers and hotel profit margins
+ */
+router.get('/analytics/revenue/external-providers', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate } = req.query;
+
+  const dateFilter = {};
+  if (startDate || endDate) {
+    dateFilter.createdAt = {};
+    if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+    if (endDate) dateFilter.createdAt.$lte = new Date(endDate);
+  }
+
+  // External regular services (provider type = external)
+  const externalServices = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $lookup: {
+        from: 'serviceproviders',
+        localField: 'serviceProviderId',
+        foreignField: '_id',
+        as: 'provider'
+      }
+    },
+    { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+    {
+      $match: {
+        'provider.providerType': 'external'
+      }
+    },
+    {
+      $group: {
+        _id: {
+          providerId: '$serviceProviderId',
+          providerName: '$provider.businessName',
+          serviceType: '$serviceType'
+        },
+        totalRevenue: { $sum: '$pricing.totalAmount' },
+        basePrice: { $sum: '$pricing.providerEarnings' },
+        hotelCommission: { $sum: '$pricing.hotelEarnings' },
+        bookingCount: { $sum: 1 },
+        avgMarkup: { $avg: '$pricing.markup.percentage' }
+      }
+    },
+    { $sort: { totalRevenue: -1 } }
+  ]);
+
+  // External transportation services
+  const transportationServices = await TransportationBooking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        bookingStatus: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $lookup: {
+        from: 'serviceproviders',
+        localField: 'serviceProviderId',
+        foreignField: '_id',
+        as: 'provider'
+      }
+    },
+    { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+    {
+      $match: {
+        'provider.providerType': 'external'
+      }
+    },
+    {
+      $group: {
+        _id: {
+          providerId: '$serviceProviderId',
+          providerName: '$provider.businessName',
+          serviceType: 'transportation'
+        },
+        totalRevenue: { $sum: '$quote.finalPrice' },
+        basePrice: { $sum: '$quote.basePrice' },
+        hotelCommission: { $sum: '$hotelMarkup.amount' },
+        bookingCount: { $sum: 1 },
+        avgMarkup: { $avg: '$hotelMarkup.percentage' }
+      }
+    },
+    { $sort: { totalRevenue: -1 } }
+  ]);
+
+  const allProviders = [...externalServices, ...transportationServices];
+
+  const providerData = allProviders.map(provider => ({
+    providerId: provider._id.providerId,
+    providerName: provider._id.providerName || 'Unknown Provider',
+    serviceType: provider._id.serviceType,
+    totalRevenue: Math.round(provider.totalRevenue * 100) / 100,
+    providerEarnings: Math.round(provider.basePrice * 100) / 100,
+    hotelCommission: Math.round(provider.hotelCommission * 100) / 100,
+    bookingCount: provider.bookingCount,
+    avgMarkupPercentage: Math.round((provider.avgMarkup || 0) * 10) / 10,
+    profitMargin: provider.totalRevenue > 0
+      ? Math.round((provider.hotelCommission / provider.totalRevenue) * 1000) / 10
+      : 0
+  }));
+
+  // Calculate totals
+  const totals = {
+    totalRevenue: providerData.reduce((sum, p) => sum + p.totalRevenue, 0),
+    totalProviderEarnings: providerData.reduce((sum, p) => sum + p.providerEarnings, 0),
+    totalHotelCommission: providerData.reduce((sum, p) => sum + p.hotelCommission, 0),
+    totalBookings: providerData.reduce((sum, p) => sum + p.bookingCount, 0)
+  };
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      providers: providerData,
+      totals: {
+        totalRevenue: Math.round(totals.totalRevenue * 100) / 100,
+        totalProviderEarnings: Math.round(totals.totalProviderEarnings * 100) / 100,
+        totalHotelCommission: Math.round(totals.totalHotelCommission * 100) / 100,
+        totalBookings: totals.totalBookings,
+        avgProfitMargin: totals.totalRevenue > 0
+          ? Math.round((totals.totalHotelCommission / totals.totalRevenue) * 1000) / 10
+          : 0
+      }
+    }
+  });
+}));
+
+/**
+ * GET /api/hotel/analytics/revenue/complete-summary
+ * Get complete revenue summary with all services and comparative analysis
+ */
+router.get('/analytics/revenue/complete-summary', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate } = req.query;
+
+  const dateFilter = {};
+  if (startDate || endDate) {
+    dateFilter.createdAt = {};
+    if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+    if (endDate) dateFilter.createdAt.$lte = new Date(endDate);
+  }
+
+  // Get all regular bookings with provider type
+  const regularBookings = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $lookup: {
+        from: 'serviceproviders',
+        localField: 'serviceProviderId',
+        foreignField: '_id',
+        as: 'provider'
+      }
+    },
+    { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+    {
+      $group: {
+        _id: {
+          serviceType: '$serviceType',
+          providerType: '$provider.providerType'
+        },
+        totalRevenue: { $sum: '$pricing.totalAmount' },
+        basePrice: { $sum: '$pricing.providerEarnings' },
+        markupAmount: { $sum: '$pricing.hotelEarnings' },
+        bookingCount: { $sum: 1 },
+        avgRevenue: { $avg: '$pricing.totalAmount' },
+        avgMarkup: { $avg: '$pricing.markup.percentage' }
+      }
+    },
+    { $sort: { totalRevenue: -1 } }
+  ]);
+
+  // Get transportation bookings with provider type
+  const transportationBookings = await TransportationBooking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        bookingStatus: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $lookup: {
+        from: 'serviceproviders',
+        localField: 'serviceProviderId',
+        foreignField: '_id',
+        as: 'provider'
+      }
+    },
+    { $unwind: { path: '$provider', preserveNullAndEmptyArrays: true } },
+    {
+      $group: {
+        _id: {
+          serviceType: 'transportation',
+          providerType: '$provider.providerType'
+        },
+        totalRevenue: { $sum: '$quote.finalPrice' },
+        basePrice: { $sum: '$quote.basePrice' },
+        markupAmount: { $sum: '$hotelMarkup.amount' },
+        bookingCount: { $sum: 1 },
+        avgRevenue: { $avg: '$quote.finalPrice' },
+        avgMarkup: { $avg: '$hotelMarkup.percentage' }
+      }
+    }
+  ]);
+
+  const allServices = [...regularBookings, ...transportationBookings];
+
+  // Calculate grand totals
+  const grandTotal = allServices.reduce((sum, service) => sum + service.totalRevenue, 0);
+  const totalBasePrice = allServices.reduce((sum, service) => sum + (service.basePrice || 0), 0);
+  const totalMarkup = allServices.reduce((sum, service) => sum + (service.markupAmount || 0), 0);
+
+  const summaryData = allServices.map(service => {
+    const providerType = service._id.providerType || 'unknown';
+    const category = providerType === 'internal' ? 'Internal' : 'External';
+
+    return {
+      serviceType: service._id.serviceType,
+      category: category,
+      providerType: providerType,
+      totalRevenue: Math.round(service.totalRevenue * 100) / 100,
+      basePrice: Math.round((service.basePrice || service.totalRevenue) * 100) / 100,
+      hotelProfit: Math.round((service.markupAmount || 0) * 100) / 100,
+      bookingCount: service.bookingCount,
+      avgRevenue: Math.round(service.avgRevenue * 100) / 100,
+      avgMarkupPercentage: Math.round((service.avgMarkup || 0) * 10) / 10,
+      revenueShare: grandTotal > 0
+        ? Math.round((service.totalRevenue / grandTotal) * 1000) / 10
+        : 0,
+      profitMargin: service.totalRevenue > 0 && service.markupAmount
+        ? Math.round((service.markupAmount / service.totalRevenue) * 1000) / 10
+        : 0
+    };
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      services: summaryData,
+      totals: {
+        grandTotalRevenue: Math.round(grandTotal * 100) / 100,
+        totalBasePrice: Math.round(totalBasePrice * 100) / 100,
+        totalHotelProfit: Math.round(totalMarkup * 100) / 100,
+        totalBookings: allServices.reduce((sum, s) => sum + s.bookingCount, 0),
+        overallProfitMargin: grandTotal > 0
+          ? Math.round((totalMarkup / grandTotal) * 1000) / 10
+          : 0
+      }
+    }
+  });
+}));
+
 // Import and use feedback routes for hotel
 const feedbackRoutes = require('./feedback');
 router.use('/', feedbackRoutes);

@@ -17,6 +17,12 @@ import SLAByServiceTable from '../../components/hotel/operational/SLAByServiceTa
 import SLADistributionChart from '../../components/hotel/operational/SLADistributionChart';
 import ServiceDetailsTable from '../../components/hotel/operational/ServiceDetailsTable';
 import ServicePerformanceSummary from '../../components/hotel/operational/ServicePerformanceSummary';
+import RevenueSummaryCards from '../../components/hotel/revenue/RevenueSummaryCards';
+import RevenueComparisonChart from '../../components/hotel/revenue/RevenueComparisonChart';
+import RevenueByCategoryChart from '../../components/hotel/revenue/RevenueByCategoryChart';
+import InternalServicesTable from '../../components/hotel/revenue/InternalServicesTable';
+import ExternalProvidersTable from '../../components/hotel/revenue/ExternalProvidersTable';
+import CompleteSummaryTable from '../../components/hotel/revenue/CompleteSummaryTable';
 import {
   fetchRatingSummary,
   fetchRatingsBreakdown,
@@ -35,6 +41,14 @@ import {
   fetchSLADistribution,
   fetchServiceDetails
 } from '../../redux/slices/hotelOperationalSlice';
+import {
+  fetchRevenueSummary,
+  fetchRevenueComparison,
+  fetchRevenueByCategory,
+  fetchInternalServices,
+  fetchExternalProviders,
+  fetchCompleteSummary
+} from '../../redux/slices/hotelRevenueSlice';
 
 const PerformanceAnalyticsPage = () => {
   const dispatch = useDispatch();
@@ -53,6 +67,16 @@ const PerformanceAnalyticsPage = () => {
     slaDistribution,
     serviceDetails
   } = useSelector((state) => state.hotelOperational);
+
+  // Redux state - Revenue
+  const {
+    summary: revenueSummary,
+    comparison: revenueComparison,
+    byCategory: revenueByCategory,
+    internalServices,
+    externalProviders,
+    completeSummary
+  } = useSelector((state) => state.hotelRevenue);
 
   // Local state
   const [activeTab, setActiveTab] = useState('ratings');
@@ -148,6 +172,15 @@ const PerformanceAnalyticsPage = () => {
           dispatch(fetchSLADistribution(params)).unwrap(),
           dispatch(fetchServiceDetails(params)).unwrap()
         ]);
+      } else if (activeTab === 'revenue') {
+        await Promise.all([
+          dispatch(fetchRevenueSummary(params)).unwrap(),
+          dispatch(fetchRevenueComparison(params)).unwrap(),
+          dispatch(fetchRevenueByCategory(params)).unwrap(),
+          dispatch(fetchInternalServices(params)).unwrap(),
+          dispatch(fetchExternalProviders(params)).unwrap(),
+          dispatch(fetchCompleteSummary(params)).unwrap()
+        ]);
       }
 
       dispatch(setDateRange({ startDate, endDate }));
@@ -231,7 +264,7 @@ const PerformanceAnalyticsPage = () => {
   const tabs = [
     { id: 'ratings', label: 'Customer Ratings', active: true },
     { id: 'operational', label: 'Operational Efficiency', active: true },
-    { id: 'revenue', label: 'Revenue Analysis', active: false },
+    { id: 'revenue', label: 'Revenue Analysis', active: true },
     { id: 'spending', label: 'Customer Spending', active: false }
   ];
 
@@ -434,14 +467,49 @@ const PerformanceAnalyticsPage = () => {
         )}
 
         {activeTab === 'revenue' && (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <div className="max-w-md mx-auto">
-              <div className="text-6xl mb-4">💰</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon</h3>
-              <p className="text-gray-600">
-                Revenue analysis and financial insights will be available in a future update.
-              </p>
+          <div className="space-y-6">
+            {/* Revenue Summary Cards */}
+            <RevenueSummaryCards
+              data={revenueSummary.data}
+              loading={revenueSummary.loading}
+              error={revenueSummary.error}
+            />
+
+            {/* Revenue Comparison Chart */}
+            <RevenueComparisonChart
+              data={revenueComparison.data}
+              loading={revenueComparison.loading}
+              error={revenueComparison.error}
+            />
+
+            {/* Revenue by Category Chart */}
+            <RevenueByCategoryChart
+              data={revenueByCategory.data}
+              loading={revenueByCategory.loading}
+              error={revenueByCategory.error}
+            />
+
+            {/* Internal Services and External Providers */}
+            <div className="grid grid-cols-1 gap-6">
+              <InternalServicesTable
+                data={internalServices.data}
+                loading={internalServices.loading}
+                error={internalServices.error}
+              />
+
+              <ExternalProvidersTable
+                data={externalProviders.data}
+                loading={externalProviders.loading}
+                error={externalProviders.error}
+              />
             </div>
+
+            {/* Complete Revenue Summary */}
+            <CompleteSummaryTable
+              data={completeSummary.data}
+              loading={completeSummary.loading}
+              error={completeSummary.error}
+            />
           </div>
         )}
 
