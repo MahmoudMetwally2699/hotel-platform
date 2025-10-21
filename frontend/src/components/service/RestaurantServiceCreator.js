@@ -156,7 +156,6 @@ const RestaurantServiceCreator = ({ onBack }) => {
   const fetchExistingServices = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching existing services...');
 
       const response = await apiClient.get('/service/services?category=dining');
 
@@ -168,7 +167,6 @@ const RestaurantServiceCreator = ({ onBack }) => {
       }
 
       setExistingServices(services);
-      console.log('✅ Restaurant services loaded:', services.length, 'services');
     } catch (error) {
       console.error('❌ Error fetching restaurant services:', error);
       toast.error(t('serviceProvider.restaurant.messages.failedToLoad'));
@@ -269,8 +267,6 @@ const RestaurantServiceCreator = ({ onBack }) => {
    * Update service menu item
    */
   const updateServiceMenuItem = async (serviceId, itemIndex, updatedItem) => {
-    console.log('🔄 Starting updateServiceMenuItem:', { serviceId, itemIndex, updatedItem });
-
     try {
       // Show loading toast
       toast.info('Updating menu item...');
@@ -283,16 +279,8 @@ const RestaurantServiceCreator = ({ onBack }) => {
         return;
       }
 
-      console.log('✅ Service found:', service.name);
-
       const updatedMenuItems = [...service.menuItems];
       updatedMenuItems[itemIndex] = updatedItem;
-
-      console.log('🔄 Sending update request with:', {
-        serviceId,
-        menuItemsCount: updatedMenuItems.length,
-        updatedItem
-      });
 
       // Only send the menuItems array, not the entire service object
       // This prevents the service.category from overriding menu item categories
@@ -300,13 +288,8 @@ const RestaurantServiceCreator = ({ onBack }) => {
         menuItems: updatedMenuItems
       });
 
-      console.log('📥 Response received:', response.data);
-      console.log('📥 Response status:', response.status);
-      console.log('📥 Response data status:', response.data.status);
-
       if (response.data.status === 'success') {
         toast.success('✅ Menu item updated successfully!');
-        console.log('✅ Update successful, refreshing services...');
 
         // Refresh the services list first
         await fetchExistingServices();
@@ -318,16 +301,14 @@ const RestaurantServiceCreator = ({ onBack }) => {
             const updatedServiceResponse = await apiClient.get(`/service/services/${serviceId}`);
             if (updatedServiceResponse.data.status === 'success') {
               setEditFormData(updatedServiceResponse.data.data);
-              console.log('✅ Edit form data refreshed with latest menu items');
             }
           } catch (err) {
             console.error('Error refreshing edit form data:', err);
           }
         }
 
-        console.log('✅ About to close edit form...');
         setEditingServiceMenuItem(null);
-        console.log('✅ Edit form should be closed now');
+
         return true; // Indicate success
       } else {
         console.error('❌ Update failed - response not successful:', response.data);
@@ -414,21 +395,15 @@ const RestaurantServiceCreator = ({ onBack }) => {
 
       const response = await apiClient.post('/service/services', serviceData);
 
-      console.log('📥 Create restaurant service response:', response.data);
-
       if (response.data.status === 'success') {
         toast.success(t('serviceProvider.restaurant.messages.serviceCreated'));
-        console.log('✅ Service created successfully, resetting form...');
         // Reset form
         setServiceDetails({ name: '', description: '', cuisineType: '', mealTypes: [] });
         setMenuItems([]);
-        console.log('✅ Form reset, refreshing services list...');
         // Refresh the services list to show the new service
         await fetchExistingServices();
-        console.log('✅ Services list refreshed, switching to manage tab...');
         // Switch to manage tab to see the created service
         setActiveTab('manage');
-        console.log('✅ Switched to manage tab');
       } else {
         throw new Error(response.data.message || 'Failed to create service');
       }
@@ -451,13 +426,6 @@ const RestaurantServiceCreator = ({ onBack }) => {
       cuisineType: service.cuisineType,
       menuItems: service.menuItems || []
     });
-    console.log('🔄 Starting to edit service:', service);
-    console.log('🔄 Edit form data set to:', {
-      name: service.name,
-      description: service.description,
-      cuisineType: service.cuisineType,
-      menuItems: service.menuItems || []
-    });
   };
 
   /**
@@ -475,18 +443,13 @@ const RestaurantServiceCreator = ({ onBack }) => {
     try {
       setLoading(true);
 
-      console.log('🔄 Saving edited service:', { serviceId, editFormData });
-
       const response = await apiClient.put(`/service/services/${serviceId}`, editFormData);
-
-      console.log('📥 Save response:', response.data);
 
       if (response.data.status === 'success') {
         toast.success(t('serviceProvider.restaurant.messages.serviceUpdated'));
         setEditingService(null);
         setEditFormData({});
         await fetchExistingServices();
-        console.log('✅ Service updated and form closed');
       } else {
         throw new Error(response.data.message || 'Failed to update service');
       }
@@ -503,16 +466,11 @@ const RestaurantServiceCreator = ({ onBack }) => {
    */
   const toggleServiceAvailability = async (serviceId, currentStatus) => {
     try {
-      console.log('🔄 Toggling service availability:', { serviceId, currentStatus });
-
       const response = await apiClient.patch(`/service/services/${serviceId}/toggle-availability`);
-
-      console.log('📥 Toggle response:', response.data);
 
       if (response.data.status === 'success') {
         toast.success(t(`serviceProvider.restaurant.messages.service${currentStatus ? 'Deactivated' : 'Activated'}`));
         await fetchExistingServices();
-        console.log('✅ Service availability toggled successfully');
       } else {
         throw new Error(response.data.message || 'Failed to toggle service availability');
       }
@@ -531,17 +489,11 @@ const RestaurantServiceCreator = ({ onBack }) => {
     }
 
     try {
-      console.log('🔄 Deleting service:', serviceId);
-
       const response = await apiClient.delete(`/service/services/${serviceId}`);
-
-      console.log('📥 Delete response:', response.data);
 
       if (response.data.status === 'success') {
         toast.success(t('serviceProvider.restaurant.messages.serviceDeleted'));
-        console.log('✅ Service deleted, refreshing services...');
         await fetchExistingServices();
-        console.log('✅ Services list refreshed');
       } else {
         throw new Error(response.data.message || 'Failed to delete service');
       }
@@ -1373,9 +1325,6 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
   const uploadImageToCloudinary = async () => {
     if (!imageFile) return null;
 
-    console.log('🔴 Starting uploadImageToCloudinary');
-    console.log('🔴 imageFile:', imageFile);
-
     try {
       setUploadingImage(true);
 
@@ -1384,19 +1333,12 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
       const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
       const apiKey = process.env.REACT_APP_CLOUDINARY_API_KEY;
 
-      console.log('🔴 Environment variables:', {
-        cloudName,
-        uploadPreset,
-        hasApiKey: !!apiKey
-      });
-
       if (!cloudName || cloudName === 'hotel-platform-demo' || cloudName === 'your_cloud_name_here') {
         console.warn('🔴 Cloudinary not configured properly. Using local preview for testing.');
         toast.warning('Cloudinary not configured, using local preview');
 
         // Create a local blob URL for testing
         const localUrl = URL.createObjectURL(imageFile);
-        console.log('🔴 Created local URL:', localUrl);
         return localUrl;
       }
 
@@ -1410,8 +1352,6 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
 
       formData.append('folder', 'hotel-platform/menu-items');
 
-      console.log('🔴 Uploading to Cloudinary:', { cloudName, uploadPreset: uploadPreset || 'none' });
-
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
         {
@@ -1419,8 +1359,6 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
           body: formData
         }
       );
-
-      console.log('🔴 Upload response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -1433,7 +1371,6 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
 
           // Create a local blob URL for testing
           const localUrl = URL.createObjectURL(imageFile);
-          console.log('🔴 Created local URL for fallback:', localUrl);
           toast.info('Using local preview for now. Image will be saved when upload preset is configured.');
           return localUrl;
         }
@@ -1442,7 +1379,6 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
       }
 
       const data = await response.json();
-      console.log('🔴 Cloudinary upload success:', data.secure_url);
       toast.success('Image uploaded successfully to Cloudinary!');
       return data.secure_url;
     } catch (error) {
@@ -1450,7 +1386,6 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
 
       // As fallback, always provide local preview
       if (imageFile) {
-        console.log('🔴 Creating local preview as fallback');
         toast.warning('Upload failed, using local preview');
         const localUrl = URL.createObjectURL(imageFile);
         return localUrl;
@@ -1489,10 +1424,6 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log('🟡 handleSubmit called');
-    console.log('🟡 imageFile:', imageFile);
-    console.log('🟡 formData.imageUrl:', formData.imageUrl);
-
     // Validation
     if (!formData.name.trim()) {
       toast.error(t('serviceProvider.restaurant.messages.itemRequired'));
@@ -1508,16 +1439,12 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
 
     // Upload image if selected
     if (imageFile) {
-      console.log('🟡 Starting image upload...');
       toast.info(t('serviceProvider.restaurant.messages.uploadingImage'));
       imageUrl = await uploadImageToCloudinary();
-      console.log('🟡 Upload result:', imageUrl);
       if (!imageUrl) {
         toast.error(t('serviceProvider.restaurant.messages.imageUploadFailed'));
         return;
       }
-    } else {
-      console.log('🟡 No image file selected');
     }
 
     const newItem = {
@@ -1527,8 +1454,6 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
       isAvailable: true,
       imageUrl: imageUrl || formData.imageUrl
     };
-
-    console.log('🟡 Final menu item to add:', newItem);
 
     const success = onAddItem(newItem);
     if (success) {
@@ -2139,6 +2064,26 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel, t }) => {
   const [imagePreview, setImagePreview] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  // Reset image states when item changes (when editing different items)
+  React.useEffect(() => {
+    setImageFile(null);
+    setImagePreview('');
+    setFormData({
+      name: item.name || '',
+      category: item.category || 'mains',
+      description: item.description || '',
+      price: item.price || '',
+      imageUrl: item.imageUrl || '',
+      preparationTime: item.preparationTime || 15,
+      isVegetarian: item.isVegetarian || false,
+      isVegan: item.isVegan || false,
+      spicyLevel: item.spicyLevel || 'normal',
+      allergens: item.allergens || [],
+      notes: item.notes || '',
+      isAvailable: item.isAvailable !== undefined ? item.isAvailable : true
+    });
+  }, [item]);
+
   const categoryOptions = [
     { value: 'appetizers', label: 'Appetizers' },
     { value: 'mains', label: 'Main Courses' },
@@ -2165,41 +2110,100 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel, t }) => {
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
         toast.error('Image size should be less than 5MB');
         return;
       }
+
       setImageFile(file);
+
+      // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target.result);
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const uploadImageToCloudinary = async () => {
-    if (!imageFile) return null;
+  };  const uploadImageToCloudinary = async () => {
+    if (!imageFile) {
+      return null;
+    }
 
     try {
       setUploadingImage(true);
+
+      // Check if Cloudinary is properly configured
+      const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+      const apiKey = process.env.REACT_APP_CLOUDINARY_API_KEY;
+
+      if (!cloudName || cloudName === 'hotel-platform-demo' || cloudName === 'your_cloud_name_here') {
+        console.warn('⚠️ Cloudinary not configured properly. Using local preview for testing.');
+        toast.warning('Cloudinary not configured, using local preview');
+
+        // Create a local blob URL for testing
+        const localUrl = URL.createObjectURL(imageFile);
+        return localUrl;
+      }
+
+      // Prepare form data for upload
       const formData = new FormData();
       formData.append('file', imageFile);
-      formData.append('upload_preset', 'hotel-services');
+
+      if (uploadPreset) {
+        formData.append('upload_preset', uploadPreset);
+      }
+
+      formData.append('folder', 'hotel-platform/menu-items');
 
       const response = await fetch(
-        'https://api.cloudinary.com/v1_1/dwa8at7tv/image/upload',
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
         {
           method: 'POST',
           body: formData,
         }
       );
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ Cloudinary response error:', errorData);
+
+        // If upload preset failed, provide helpful error and use local preview
+        if (errorData.error?.message?.includes('Upload preset') || errorData.error?.message?.includes('API key')) {
+          console.warn('⚠️ Upload preset or API key issue. Need to configure Cloudinary properly.');
+          toast.error(`Cloudinary configuration issue: ${errorData.error?.message}. Using local preview.`);
+
+          // Create a local blob URL for testing
+          const localUrl = URL.createObjectURL(imageFile);
+          toast.info('Using local preview. Please contact admin to configure Cloudinary upload preset.');
+          return localUrl;
+        }
+
+        throw new Error(`Upload failed: ${errorData.error?.message || 'Unknown error'}`);
+      }
+
       const data = await response.json();
+      toast.success('Image uploaded successfully!');
+
       return data.secure_url;
     } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+      console.error('❌ Error uploading image to Cloudinary:', error);
+
+      // As fallback, always provide local preview
+      if (imageFile) {
+        toast.warning('Upload failed, using local preview');
+        const localUrl = URL.createObjectURL(imageFile);
+        return localUrl;
+      }
+
+      toast.error('Failed to upload image: ' + error.message);
       return null;
     } finally {
       setUploadingImage(false);
@@ -2232,7 +2236,6 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel, t }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log('🔄 Form submitted with data:', formData);
     setIsSaving(true);
 
     // Validation
@@ -2250,43 +2253,44 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel, t }) => {
 
     let imageUrl = formData.imageUrl;
 
-    // Upload image if selected
+    // Upload image if a new file is selected
     if (imageFile) {
-      console.log('🟡 Starting image upload...');
       toast.info('Uploading image...');
-      imageUrl = await uploadImageToCloudinary();
-      console.log('🟡 Upload result:', imageUrl);
-      if (!imageUrl) {
+
+      const uploadedUrl = await uploadImageToCloudinary();
+
+      if (!uploadedUrl) {
         toast.error('Failed to upload image. Please try again.');
         setIsSaving(false);
         return;
       }
+
+      imageUrl = uploadedUrl;
     }
 
     const updatedItem = {
       ...formData,
       price: parseFloat(formData.price),
       preparationTime: parseInt(formData.preparationTime) || 15,
-      imageUrl: imageUrl || formData.imageUrl
+      imageUrl: imageUrl
     };
 
-    console.log('✅ Validation passed, calling onSave with:', updatedItem);
-
     try {
-      console.log('🔄 About to call onSave...');
-      await onSave(updatedItem);
-      console.log('✅ onSave completed successfully');
-      toast.success('Menu item saved!');
+      const result = await onSave(updatedItem);
+
+      // Only show success toast and reset if save was successful
+      if (result !== false) {
+        toast.success('Menu item updated successfully!');
+        // Reset image states after successful save
+        setImageFile(null);
+        setImagePreview('');
+      }
     } catch (error) {
-      console.error('❌ Error in onSave:', error);
       toast.error('Error saving changes');
     } finally {
-      console.log('🔄 Setting isSaving to false');
       setIsSaving(false);
     }
-  };
-
-  return (
+  };  return (
     <div className="bg-blue-50 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <h6 className="font-bold text-blue-800 flex items-center">
@@ -2424,6 +2428,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel, t }) => {
           <div className="flex items-center gap-3">
             <label className="relative cursor-pointer bg-blue-50 hover:bg-blue-100 border-2 border-dashed border-blue-300 rounded-lg px-4 py-3 text-center transition-colors">
               <input
+                key={imageFile ? imageFile.name : 'file-input-' + Date.now()}
                 type="file"
                 accept="image/*"
                 onChange={handleImageSelect}
