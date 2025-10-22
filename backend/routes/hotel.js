@@ -5556,6 +5556,517 @@ router.get('/analytics/revenue/complete-summary', catchAsync(async (req, res) =>
   });
 }));
 
+// ============================================================================
+// CUSTOMER SPENDING ANALYTICS ENDPOINTS
+// ============================================================================
+
+/**
+ * GET /api/hotel/analytics/spending/summary
+ * Get customer spending summary with key metrics
+ */
+router.get('/analytics/spending/summary', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate, serviceType } = req.query;
+
+  const dateFilter = {};
+  if (startDate || endDate) {
+    dateFilter.createdAt = {};
+    if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+    if (endDate) dateFilter.createdAt.$lte = new Date(endDate);
+  }
+
+  const serviceFilter = serviceType && serviceType !== 'all' ? { serviceType } : {};
+
+  // Regular bookings analytics
+  const regularStats = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...dateFilter,
+        ...serviceFilter
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalSpending: { $sum: '$pricing.totalAmount' },
+        totalBookings: { $sum: 1 },
+        uniqueCustomers: { $addToSet: '$guestId' },
+        avgSpending: { $avg: '$pricing.totalAmount' }
+      }
+    }
+  ]);
+
+  // Transportation bookings analytics
+  const transportStats = await TransportationBooking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        bookingStatus: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalSpending: { $sum: '$quote.finalPrice' },
+        totalBookings: { $sum: 1 },
+        uniqueCustomers: { $addToSet: '$guestId' }
+      }
+    }
+  ]);
+
+  // Most popular service
+  const popularService = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $group: {
+        _id: '$serviceType',
+        count: { $sum: 1 },
+        revenue: { $sum: '$pricing.totalAmount' }
+      }
+    },
+    { $sort: { count: -1 } },
+    { $limit: 1 }
+  ]);
+
+  const regular = regularStats[0] || { totalSpending: 0, totalBookings: 0, uniqueCustomers: [], avgSpending: 0 };
+  const transport = transportStats[0] || { totalSpending: 0, totalBookings: 0, uniqueCustomers: [] };
+
+  const totalSpending = regular.totalSpending + transport.totalSpending;
+  const totalBookings = regular.totalBookings + transport.totalBookings;
+  const uniqueCustomerIds = [...new Set([...regular.uniqueCustomers, ...transport.uniqueCustomers])];
+  const avgCustomerSpending = uniqueCustomerIds.length > 0 ? totalSpending / uniqueCustomerIds.length : 0;
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      avgCustomerSpending: Math.round(avgCustomerSpending * 100) / 100,
+      totalCustomers: uniqueCustomerIds.length,
+      totalServiceRequests: totalBookings,
+      mostPopularService: popularService[0]?._id || 'N/A',
+      mostPopularServiceCount: popularService[0]?.count || 0,
+      mostPopularServiceRevenue: popularService[0]?.revenue || 0
+    }
+  });
+}));
+
+/**
+ * GET /api/hotel/analytics/spending/trend
+ * Get spending trends over time with customer count
+ */
+router.get('/analytics/spending/trend', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate, period = 'week' } = req.query;
+
+  const dateFilter = {};
+  if (startDate || endDate) {
+    dateFilter.createdAt = {};
+    if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+    if (endDate) dateFilter.createdAt.$lte = new Date(endDate);
+  }
+
+  // Determine grouping format based on period
+  let dateFormat, sortField;
+  switch (period) {
+    case 'day':
+      dateFormat = '%Y-%m-%d';
+      sortField = '_id';
+      break;
+    case 'week':
+      dateFormat = '%Y-W%V';
+      sortField = '_id';
+      break;
+    case 'month':
+      dateFormat = '%Y-%m';
+      sortField = '_id';
+      break;
+    case 'year':
+      dateFormat = '%Y';
+      sortField = '_id';
+      break;
+    default:
+      dateFormat = '%Y-W%V';
+      sortField = '_id';
+  }
+
+  // Regular bookings trend
+  const regularTrend = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $group: {
+        _id: { $dateToString: { format: dateFormat, date: '$createdAt' } },
+        totalSpending: { $sum: '$pricing.totalAmount' },
+        avgSpending: { $avg: '$pricing.totalAmount' },
+        customerCount: { $addToSet: '$guestId' },
+        bookingCount: { $sum: 1 }
+      }
+    },
+    { $sort: { [sortField]: 1 } }
+  ]);
+
+  // Transportation trend
+  const transportTrend = await TransportationBooking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        bookingStatus: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $group: {
+        _id: { $dateToString: { format: dateFormat, date: '$createdAt' } },
+        totalSpending: { $sum: '$quote.finalPrice' },
+        customerCount: { $addToSet: '$guestId' },
+        bookingCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  // Combine trends
+  const trendMap = {};
+  regularTrend.forEach(item => {
+    trendMap[item._id] = {
+      period: item._id,
+      totalSpending: item.totalSpending,
+      avgSpending: item.avgSpending,
+      customerCount: item.customerCount.length,
+      bookingCount: item.bookingCount
+    };
+  });
+
+  transportTrend.forEach(item => {
+    if (trendMap[item._id]) {
+      trendMap[item._id].totalSpending += item.totalSpending;
+      trendMap[item._id].bookingCount += item.bookingCount;
+      trendMap[item._id].customerCount += item.customerCount.length;
+    } else {
+      trendMap[item._id] = {
+        period: item._id,
+        totalSpending: item.totalSpending,
+        avgSpending: 0,
+        customerCount: item.customerCount.length,
+        bookingCount: item.bookingCount
+      };
+    }
+  });
+
+  const trendData = Object.values(trendMap).map(item => ({
+    ...item,
+    totalSpending: Math.round(item.totalSpending * 100) / 100,
+    avgSpending: Math.round((item.totalSpending / item.bookingCount) * 100) / 100
+  }));
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      trendData,
+      period
+    }
+  });
+}));
+
+/**
+ * GET /api/hotel/analytics/spending/service-requests
+ * Get service request volume by service type over time
+ */
+router.get('/analytics/spending/service-requests', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate } = req.query;
+
+  const dateFilter = {};
+  if (startDate || endDate) {
+    dateFilter.createdAt = {};
+    if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+    if (endDate) dateFilter.createdAt.$lte = new Date(endDate);
+  }
+
+  const serviceRequests = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          serviceType: '$serviceType'
+        },
+        requestCount: { $sum: 1 },
+        revenue: { $sum: '$pricing.totalAmount' }
+      }
+    },
+    { $sort: { '_id.date': 1, '_id.serviceType': 1 } }
+  ]);
+
+  const transportRequests = await TransportationBooking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        bookingStatus: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          serviceType: 'transportation'
+        },
+        requestCount: { $sum: 1 },
+        revenue: { $sum: '$quote.finalPrice' }
+      }
+    }
+  ]);
+
+  const allRequests = [...serviceRequests, ...transportRequests];
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      requestData: allRequests
+    }
+  });
+}));
+
+/**
+ * GET /api/hotel/analytics/spending/service-popularity
+ * Get service popularity with revenue analysis
+ */
+router.get('/analytics/spending/service-popularity', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate } = req.query;
+
+  const dateFilter = {};
+  if (startDate || endDate) {
+    dateFilter.createdAt = {};
+    if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+    if (endDate) dateFilter.createdAt.$lte = new Date(endDate);
+  }
+
+  // Regular services
+  const regularServices = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $group: {
+        _id: '$serviceType',
+        totalRequests: { $sum: 1 },
+        totalRevenue: { $sum: '$pricing.totalAmount' },
+        avgSpending: { $avg: '$pricing.totalAmount' },
+        uniqueCustomers: { $addToSet: '$guestId' }
+      }
+    },
+    { $sort: { totalRequests: -1 } }
+  ]);
+
+  // Transportation
+  const transportService = await TransportationBooking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        bookingStatus: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $group: {
+        _id: 'transportation',
+        totalRequests: { $sum: 1 },
+        totalRevenue: { $sum: '$quote.finalPrice' },
+        avgSpending: { $avg: '$quote.finalPrice' },
+        uniqueCustomers: { $addToSet: '$guestId' }
+      }
+    }
+  ]);
+
+  const allServices = [...regularServices, ...transportService];
+  const totalRequests = allServices.reduce((sum, s) => sum + s.totalRequests, 0);
+
+  const popularityData = allServices.map(service => ({
+    serviceType: service._id,
+    totalRequests: service.totalRequests,
+    totalRevenue: Math.round(service.totalRevenue * 100) / 100,
+    avgSpending: Math.round(service.avgSpending * 100) / 100,
+    uniqueCustomers: service.uniqueCustomers.length,
+    popularityPercentage: totalRequests > 0
+      ? Math.round((service.totalRequests / totalRequests) * 1000) / 10
+      : 0
+  }));
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      services: popularityData,
+      totalRequests
+    }
+  });
+}));
+
+/**
+ * GET /api/hotel/analytics/spending/comprehensive
+ * Get comprehensive service performance with growth trends
+ */
+router.get('/analytics/spending/comprehensive', catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+  const { startDate, endDate } = req.query;
+
+  const dateFilter = {};
+  if (startDate || endDate) {
+    dateFilter.createdAt = {};
+    if (startDate) dateFilter.createdAt.$gte = new Date(startDate);
+    if (endDate) dateFilter.createdAt.$lte = new Date(endDate);
+  }
+
+  // Calculate previous period for growth comparison
+  let prevDateFilter = {};
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const duration = end - start;
+
+    prevDateFilter.createdAt = {
+      $gte: new Date(start - duration),
+      $lt: start
+    };
+  }
+
+  // Current period data
+  const currentRegular = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $group: {
+        _id: '$serviceType',
+        totalRequests: { $sum: 1 },
+        totalRevenue: { $sum: '$pricing.totalAmount' },
+        avgSpending: { $avg: '$pricing.totalAmount' },
+        uniqueCustomers: { $addToSet: '$guestId' }
+      }
+    }
+  ]);
+
+  const currentTransport = await TransportationBooking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        bookingStatus: 'completed',
+        ...dateFilter
+      }
+    },
+    {
+      $group: {
+        _id: 'transportation',
+        totalRequests: { $sum: 1 },
+        totalRevenue: { $sum: '$quote.finalPrice' },
+        avgSpending: { $avg: '$quote.finalPrice' },
+        uniqueCustomers: { $addToSet: '$guestId' }
+      }
+    }
+  ]);
+
+  // Previous period data for growth calculation
+  const prevRegular = await Booking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        status: 'completed',
+        ...prevDateFilter
+      }
+    },
+    {
+      $group: {
+        _id: '$serviceType',
+        totalRequests: { $sum: 1 },
+        totalRevenue: { $sum: '$pricing.totalAmount' }
+      }
+    }
+  ]);
+
+  const prevTransport = await TransportationBooking.aggregate([
+    {
+      $match: {
+        hotelId: new mongoose.Types.ObjectId(hotelId),
+        bookingStatus: 'completed',
+        ...prevDateFilter
+      }
+    },
+    {
+      $group: {
+        _id: 'transportation',
+        totalRequests: { $sum: 1 },
+        totalRevenue: { $sum: '$quote.finalPrice' }
+      }
+    }
+  ]);
+
+  // Create previous period map
+  const prevMap = {};
+  [...prevRegular, ...prevTransport].forEach(service => {
+    prevMap[service._id] = service;
+  });
+
+  // Combine current data with growth metrics
+  const allServices = [...currentRegular, ...currentTransport];
+
+  const comprehensiveData = allServices.map(service => {
+    const prev = prevMap[service._id];
+    const requestGrowth = prev
+      ? ((service.totalRequests - prev.totalRequests) / prev.totalRequests) * 100
+      : 0;
+    const revenueGrowth = prev
+      ? ((service.totalRevenue - prev.totalRevenue) / prev.totalRevenue) * 100
+      : 0;
+
+    return {
+      serviceType: service._id,
+      totalRequests: service.totalRequests,
+      totalRevenue: Math.round(service.totalRevenue * 100) / 100,
+      avgSpending: Math.round(service.avgSpending * 100) / 100,
+      uniqueCustomers: service.uniqueCustomers.length,
+      requestGrowth: Math.round(requestGrowth * 10) / 10,
+      revenueGrowth: Math.round(revenueGrowth * 10) / 10,
+      repeatCustomerRate: service.uniqueCustomers.length > 0
+        ? Math.round((service.totalRequests / service.uniqueCustomers.length) * 100) / 100
+        : 0
+    };
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      services: comprehensiveData
+    }
+  });
+}));
+
 // Import and use feedback routes for hotel
 const feedbackRoutes = require('./feedback');
 router.use('/', feedbackRoutes);

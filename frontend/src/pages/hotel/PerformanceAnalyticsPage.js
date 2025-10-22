@@ -23,6 +23,11 @@ import RevenueByCategoryChart from '../../components/hotel/revenue/RevenueByCate
 import InternalServicesTable from '../../components/hotel/revenue/InternalServicesTable';
 import ExternalProvidersTable from '../../components/hotel/revenue/ExternalProvidersTable';
 import CompleteSummaryTable from '../../components/hotel/revenue/CompleteSummaryTable';
+import SpendingSummaryCards from '../../components/hotel/spending/SpendingSummaryCards';
+import SpendingTrendChart from '../../components/hotel/spending/SpendingTrendChart';
+import ServiceRequestChart from '../../components/hotel/spending/ServiceRequestChart';
+import ServicePopularityTable from '../../components/hotel/spending/ServicePopularityTable';
+import ComprehensivePerformanceTable from '../../components/hotel/spending/ComprehensivePerformanceTable';
 import {
   fetchRatingSummary,
   fetchRatingsBreakdown,
@@ -49,6 +54,13 @@ import {
   fetchExternalProviders,
   fetchCompleteSummary
 } from '../../redux/slices/hotelRevenueSlice';
+import {
+  fetchSpendingSummary,
+  fetchSpendingTrend,
+  fetchServiceRequests,
+  fetchServicePopularity,
+  fetchComprehensivePerformance
+} from '../../redux/slices/hotelSpendingSlice';
 
 const PerformanceAnalyticsPage = () => {
   const dispatch = useDispatch();
@@ -78,6 +90,15 @@ const PerformanceAnalyticsPage = () => {
     completeSummary
   } = useSelector((state) => state.hotelRevenue);
 
+  // Redux state - Customer Spending
+  const {
+    summary: spendingSummary,
+    trend: spendingTrend,
+    serviceRequests,
+    servicePopularity,
+    comprehensive
+  } = useSelector((state) => state.hotelSpending);
+
   // Local state
   const [activeTab, setActiveTab] = useState('ratings');
   const [selectedRange, setSelectedRange] = useState('allTime');
@@ -85,6 +106,7 @@ const PerformanceAnalyticsPage = () => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [spendingPeriod, setSpendingPeriod] = useState('weekly');
 
   // Service type options
   const serviceTypes = [
@@ -181,6 +203,14 @@ const PerformanceAnalyticsPage = () => {
           dispatch(fetchExternalProviders(params)).unwrap(),
           dispatch(fetchCompleteSummary(params)).unwrap()
         ]);
+      } else if (activeTab === 'spending') {
+        await Promise.all([
+          dispatch(fetchSpendingSummary(params)).unwrap(),
+          dispatch(fetchSpendingTrend({ ...params, period: spendingPeriod })).unwrap(),
+          dispatch(fetchServiceRequests({ ...params, period: spendingPeriod })).unwrap(),
+          dispatch(fetchServicePopularity(params)).unwrap(),
+          dispatch(fetchComprehensivePerformance(params)).unwrap()
+        ]);
       }
 
       dispatch(setDateRange({ startDate, endDate }));
@@ -260,12 +290,32 @@ const PerformanceAnalyticsPage = () => {
     toast.info('Export functionality coming soon');
   };
 
+  // Handle spending period change
+  const handleSpendingPeriodChange = async (period) => {
+    setSpendingPeriod(period);
+    const range = dateRangePresets[selectedRange].getRange();
+    const { startDate, endDate } = range;
+    const params = { startDate, endDate };
+    if (selectedService && selectedService !== 'all') {
+      params.serviceType = selectedService;
+    }
+
+    try {
+      await Promise.all([
+        dispatch(fetchSpendingTrend({ ...params, period })).unwrap(),
+        dispatch(fetchServiceRequests({ ...params, period })).unwrap()
+      ]);
+    } catch (error) {
+      toast.error(error || 'Failed to update spending analytics');
+    }
+  };
+
   // Tab content
   const tabs = [
     { id: 'ratings', label: 'Customer Ratings', active: true },
     { id: 'operational', label: 'Operational Efficiency', active: true },
     { id: 'revenue', label: 'Revenue Analysis', active: true },
-    { id: 'spending', label: 'Customer Spending', active: false }
+    { id: 'spending', label: 'Customer Spending', active: true }
   ];
 
   return (
@@ -514,14 +564,67 @@ const PerformanceAnalyticsPage = () => {
         )}
 
         {activeTab === 'spending' && (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <div className="max-w-md mx-auto">
-              <div className="text-6xl mb-4">📊</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Coming Soon</h3>
-              <p className="text-gray-600">
-                Customer spending patterns and trends will be available in a future update.
-              </p>
+          <div className="space-y-6">
+            {/* Period Selector for Spending Tab */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">View Period:</span>
+                <div className="flex gap-2">
+                  {['weekly', 'monthly', 'annual'].map((period) => (
+                    <button
+                      key={period}
+                      onClick={() => handleSpendingPeriodChange(period)}
+                      className={`
+                        px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                        ${spendingPeriod === period
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }
+                      `}
+                    >
+                      {period.charAt(0).toUpperCase() + period.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
+
+            {/* Spending Summary Cards */}
+            <SpendingSummaryCards
+              data={spendingSummary.data}
+              loading={spendingSummary.loading}
+              error={spendingSummary.error}
+            />
+
+            {/* Spending Trend Chart */}
+            <SpendingTrendChart
+              data={spendingTrend.data}
+              loading={spendingTrend.loading}
+              error={spendingTrend.error}
+              period={spendingPeriod}
+            />
+
+            {/* Service Request Chart */}
+            <ServiceRequestChart
+              data={serviceRequests.data}
+              loading={serviceRequests.loading}
+              error={serviceRequests.error}
+              period={spendingPeriod}
+            />
+
+            {/* Service Popularity Table with Pie Chart */}
+            <ServicePopularityTable
+              data={servicePopularity.data}
+              loading={servicePopularity.loading}
+              error={servicePopularity.error}
+            />
+
+            {/* Comprehensive Performance Table */}
+            <ComprehensivePerformanceTable
+              data={comprehensive.data}
+              loading={comprehensive.loading}
+              error={comprehensive.error}
+            />
           </div>
         )}
       </div>
