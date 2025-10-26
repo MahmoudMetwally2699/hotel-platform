@@ -33,7 +33,7 @@ const loyaltyProgramSchema = new mongoose.Schema({
     }],
     discountPercentage: {
       type: Number,
-      required: true,
+      required: false,
       min: 0,
       max: 100,
       default: 0

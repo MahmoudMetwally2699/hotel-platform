@@ -54,12 +54,15 @@ exports.createOrUpdateProgram = async (req, res) => {
 
     // Validate tier configuration
     if (tierConfiguration) {
+      console.log('Validating tier configuration:', JSON.stringify(tierConfiguration, null, 2));
       const validation = validateTierConfiguration(tierConfiguration);
       if (!validation.valid) {
+        console.error('Tier configuration validation failed:', validation.errors);
         return res.status(400).json({
           success: false,
           message: 'Invalid tier configuration',
-          errors: validation.errors
+          errors: validation.errors,
+          receivedConfig: tierConfiguration
         });
       }
     }

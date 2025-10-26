@@ -268,20 +268,30 @@ const validateTierConfiguration = (tierConfiguration) => {
     if (!tier.name) {
       errors.push(`Tier at index ${index} is missing name`);
     }
-    if (tier.minPoints === undefined || tier.minPoints < 0) {
-      errors.push(`Tier ${tier.name || index} has invalid minPoints`);
+    if (tier.minPoints === undefined || tier.minPoints === null) {
+      errors.push(`Tier ${tier.name || index} is missing minPoints`);
+    } else if (tier.minPoints < 0) {
+      errors.push(`Tier ${tier.name || index} has invalid minPoints (must be >= 0)`);
     }
-    if (tier.maxPoints === undefined || tier.maxPoints < 0) {
-      errors.push(`Tier ${tier.name || index} has invalid maxPoints`);
+    if (tier.maxPoints === undefined || tier.maxPoints === null) {
+      errors.push(`Tier ${tier.name || index} is missing maxPoints`);
+    } else if (tier.maxPoints < 0) {
+      errors.push(`Tier ${tier.name || index} has invalid maxPoints (must be >= 0)`);
     }
-    if (tier.minPoints >= tier.maxPoints) {
-      errors.push(`Tier ${tier.name || index}: minPoints must be less than maxPoints`);
+    if (tier.minPoints !== undefined && tier.maxPoints !== undefined && tier.minPoints >= tier.maxPoints) {
+      errors.push(`Tier ${tier.name || index}: minPoints (${tier.minPoints}) must be less than maxPoints (${tier.maxPoints})`);
     }
 
-    // Check discount percentage (handle both tier.discountPercentage and tier.benefits.discountPercentage)
-    const discountPercentage = tier.discountPercentage || tier.benefits?.discountPercentage;
-    if (discountPercentage === undefined || discountPercentage < 0 || discountPercentage > 100) {
-      errors.push(`Tier ${tier.name || index} has invalid discount percentage`);
+    // Validate discount percentage if provided (optional field)
+    if (tier.discountPercentage !== undefined && tier.discountPercentage !== null) {
+      if (tier.discountPercentage < 0 || tier.discountPercentage > 100) {
+        errors.push(`Tier ${tier.name || index} has invalid discount percentage (${tier.discountPercentage}, must be 0-100)`);
+      }
+    }
+
+    // Validate benefits array if provided
+    if (tier.benefits !== undefined && !Array.isArray(tier.benefits)) {
+      errors.push(`Tier ${tier.name || index} benefits must be an array`);
     }
 
     // Check for gaps between tiers (allow consecutive ranges)
