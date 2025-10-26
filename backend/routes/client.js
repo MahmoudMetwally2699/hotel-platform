@@ -2019,78 +2019,12 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
       // Don't fail the booking if email fails
     }
 
-    // Send WhatsApp notifications
-    try {
-      // Send confirmation to guest via WhatsApp
-      if (user.phone) {
-        await sendLaundryBookingConfirmation({
-          guestName: `${user.firstName} ${user.lastName || ''}`,
-          guestPhone: user.phone,
-          bookingNumber,
-          hotelName: hotel.name,
-          serviceProviderName: service.providerId.businessName,
-          serviceType: service.name,
-          pickupDate: schedule.preferredDate,
-          pickupTime: schedule.preferredTime || 'سيتم التأكيد',
-          roomNumber: location.pickupLocation,
-          totalAmount: totalAmount,
-          paymentStatus: paymentMethod === 'cash' ? 'تم الدفع نقداً' : 'في انتظار الدفع'
-        });
-        logger.info('WhatsApp laundry booking confirmation sent to guest', {
-          bookingNumber,
-          guestPhone: user.phone
-        });
-      }
-
-      // Send notification to service provider via WhatsApp
-      if (service.providerId.phone) {
-        logger.info('Attempting to send WhatsApp to provider', {
-          providerPhone: service.providerId.phone,
-          bookingNumber,
-          guestName: `${user.firstName} ${user.lastName || ''}`,
-          serviceType: service.name
-        });
-
-        await sendNewLaundryOrderToProvider({
-          providerPhone: service.providerId.phone,
-          bookingNumber,
-          guestName: `${user.firstName} ${user.lastName || ''}`,
-          hotelName: hotel.name,
-          roomNumber: location.pickupLocation,
-          guestPhone: user.phone,
-          pickupDate: schedule.preferredDate,
-          pickupTime: schedule.preferredTime || 'سيتم التأكيد',
-          serviceType: 'Laundry Service',
-          specialNotes: guestDetails?.specialRequests || 'لا توجد ملاحظات خاصة',
-          baseAmount: providerEarnings
-        });
-        logger.info('WhatsApp laundry order notification sent to provider', {
-          bookingNumber,
-          providerPhone: service.providerId.phone
-        });
-      } else {
-        logger.warn('No provider phone found for WhatsApp notification', {
-          bookingNumber,
-          providerId: service.providerId._id,
-          providerBusinessName: service.providerId.businessName
-        });
-      }
-    } catch (whatsappError) {
-      logger.error('Failed to send WhatsApp notifications for laundry booking', {
-        error: whatsappError.message,
-        stack: whatsappError.stack,
-        bookingNumber,
-        userPhone: user.phone,
-        providerPhone: service.providerId?.phone
-      });
-      // Don't fail the booking if WhatsApp fails
-    }
-
     // Create appropriate response message based on payment method
     const successMessage = paymentMethod === 'cash'
       ? 'Laundry booking created successfully. Payment will be collected at the hotel. The service provider has been notified.'
       : 'Laundry booking created successfully. Please proceed to payment. The service provider has been notified.';
 
+    // Send response FIRST before sending notifications
     res.status(201).json({
       success: true,
       message: successMessage,
@@ -2106,6 +2040,75 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
           paymentMethod,
           requiresPayment: paymentMethod === 'online'
         }
+      }
+    });
+
+    // Send WhatsApp notifications AFTER response (asynchronously)
+    setImmediate(async () => {
+      try {
+        // Send confirmation to guest via WhatsApp
+        if (user.phone) {
+          await sendLaundryBookingConfirmation({
+            guestName: `${user.firstName} ${user.lastName || ''}`,
+            guestPhone: user.phone,
+            bookingNumber,
+            hotelName: hotel.name,
+            serviceProviderName: service.providerId.businessName,
+            serviceType: service.name,
+            pickupDate: schedule.preferredDate,
+            pickupTime: schedule.preferredTime || 'سيتم التأكيد',
+            roomNumber: location.pickupLocation,
+            totalAmount: totalAmount,
+            paymentStatus: paymentMethod === 'cash' ? 'تم الدفع نقداً' : 'في انتظار الدفع'
+          });
+          logger.info('WhatsApp laundry booking confirmation sent to guest', {
+            bookingNumber,
+            guestPhone: user.phone
+          });
+        }
+
+        // Send notification to service provider via WhatsApp
+        if (service.providerId.phone) {
+          logger.info('Attempting to send WhatsApp to provider', {
+            providerPhone: service.providerId.phone,
+            bookingNumber,
+            guestName: `${user.firstName} ${user.lastName || ''}`,
+            serviceType: service.name
+          });
+
+          await sendNewLaundryOrderToProvider({
+            providerPhone: service.providerId.phone,
+            bookingNumber,
+            guestName: `${user.firstName} ${user.lastName || ''}`,
+            hotelName: hotel.name,
+            roomNumber: location.pickupLocation,
+            guestPhone: user.phone,
+            pickupDate: schedule.preferredDate,
+            pickupTime: schedule.preferredTime || 'سيتم التأكيد',
+            serviceType: 'Laundry Service',
+            specialNotes: guestDetails?.specialRequests || 'لا توجد ملاحظات خاصة',
+            baseAmount: providerEarnings
+          });
+          logger.info('WhatsApp laundry order notification sent to provider', {
+            bookingNumber,
+            providerPhone: service.providerId.phone
+          });
+        } else {
+          logger.warn('No provider phone found for WhatsApp notification', {
+            bookingNumber,
+            providerId: service.providerId._id,
+            providerBusinessName: service.providerId.businessName
+          });
+        }
+      } catch (whatsappError) {
+        logger.error('Failed to send WhatsApp notifications for laundry booking', {
+          error: whatsappError.message,
+          stack: whatsappError.stack,
+          bookingNumber,
+          userPhone: user.phone,
+          providerPhone: service.providerId?.phone
+        });
+        // Don't fail the booking if WhatsApp fails
       }
     });
 

@@ -207,6 +207,20 @@ try {
     console.error('❌ Super Hotel admin routes failed:', error.message);
   }
 
+  try {
+    app.use('/api/loyalty', require('./routes/loyalty'));
+    console.log('✅ Loyalty routes loaded');
+  } catch (error) {
+    console.error('❌ Loyalty routes failed:', error.message);
+  }
+
+  try {
+    app.use('/api/feedback', require('./routes/feedback'));
+    console.log('✅ Feedback routes loaded');
+  } catch (error) {
+    console.error('❌ Feedback routes failed:', error.message);
+  }
+
   console.log('✅ All routes configured');
 
   // Socket.io connection handling

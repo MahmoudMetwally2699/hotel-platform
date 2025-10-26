@@ -21,6 +21,7 @@ const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
 const qrUtils = require('../utils/qr');
 const crypto = require('crypto');
+const { awardLoyaltyPoints, getOrCreateLoyaltyMember } = require('../utils/loyaltyIntegration');
 
 const router = express.Router();
 
@@ -3402,7 +3403,7 @@ router.patch('/bookings/:id/status', protect, restrictTo('hotel'), restrictToOwn
   const booking = await Booking.findOne({
     _id: bookingId,
     hotelId: req.user.hotelId
-  });
+  }).populate('serviceId', 'type');
 
   if (!booking) {
     return next(new AppError('Booking not found or access denied', 404));
@@ -3414,7 +3415,103 @@ router.patch('/bookings/:id/status', protect, restrictTo('hotel'), restrictToOwn
   // Update booking status using the model method
   await booking.updateStatus(status, req.user._id, notes);
 
-  logger.info(`Booking ${bookingId} status updated from ${oldStatus} to ${status}`, {
+  // Award loyalty points if booking is completed
+  if (status === 'completed') {
+    try {
+      // Determine the service type for loyalty points calculation
+      let serviceType = 'laundry'; // Default to laundry
+
+      if (booking.serviceId) {
+        if (typeof booking.serviceId === 'object' && booking.serviceId.type) {
+          serviceType = booking.serviceId.type;
+        } else if (typeof booking.serviceId === 'string') {
+          // If not populated, we'll use laundry as default
+          serviceType = 'laundry';
+        }
+      }
+
+      // Get the final price - use totalAmount from pricing
+      const finalPrice = booking.pricing?.totalAmount || 0;
+
+      // Calculate number of nights if applicable
+      let numberOfNights = 0;
+
+      // First, try to get from booking schedule
+      if (booking.schedule?.checkIn && booking.schedule?.checkOut) {
+        const checkIn = new Date(booking.schedule.checkIn);
+        const checkOut = new Date(booking.schedule.checkOut);
+        const timeDiff = checkOut - checkIn;
+        numberOfNights = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+        numberOfNights = Math.max(0, numberOfNights);
+      }
+      // If not in booking, try to get from guest's user profile
+      else {
+        try {
+          const User = require('../models/User');
+          const guest = await User.findById(booking.guestId).select('checkInDate checkOutDate');
+
+          if (guest && guest.checkInDate && guest.checkOutDate) {
+            const checkIn = new Date(guest.checkInDate);
+            const checkOut = new Date(guest.checkOutDate);
+            const timeDiff = checkOut - checkIn;
+            numberOfNights = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+            numberOfNights = Math.max(0, numberOfNights);
+
+            logger.info(`Using check-in/check-out from guest profile for nights calculation`, {
+              guestId: booking.guestId,
+              checkInDate: guest.checkInDate,
+              checkOutDate: guest.checkOutDate,
+              nights: numberOfNights
+            });
+          }
+        } catch (userError) {
+          logger.error(`Error fetching guest check-in/check-out dates:`, {
+            error: userError.message,
+            guestId: booking.guestId
+          });
+        }
+      }
+
+      const result = await awardLoyaltyPoints(
+        booking._id,
+        booking.guestId,
+        booking.hotelId,
+        finalPrice,
+        serviceType,
+        'regular',
+        numberOfNights
+      );
+
+      if (result.success) {
+        logger.info(`Loyalty points awarded for completed booking ${bookingId}`, {
+          hotelId: req.user.hotelId,
+          bookingId,
+          pointsAwarded: result.pointsAwarded,
+          pointsFromSpending: result.pointsFromSpending,
+          pointsFromNights: result.pointsFromNights,
+          numberOfNights,
+          guestId: booking.guestId,
+          finalPrice,
+          serviceType
+        });
+      } else {
+        logger.warn(`Loyalty points not awarded for booking ${bookingId}: ${result.message}`, {
+          hotelId: req.user.hotelId,
+          bookingId,
+          finalPrice,
+          serviceType
+        });
+      }
+    } catch (loyaltyError) {
+      // Log error but don't fail the booking status update
+      logger.error(`Failed to award loyalty points for booking ${bookingId}:`, {
+        error: loyaltyError.message,
+        stack: loyaltyError.stack,
+        hotelId: req.user.hotelId,
+        bookingId
+      });
+    }
+  }  logger.info(`Booking ${bookingId} status updated from ${oldStatus} to ${status}`, {
     hotelId: req.user.hotelId,
     userId: req.user._id,
     bookingId,

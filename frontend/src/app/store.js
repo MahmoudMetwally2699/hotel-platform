@@ -9,6 +9,7 @@ import hotelAnalyticsReducer from '../redux/slices/hotelAnalyticsSlice';
 import hotelOperationalReducer from '../redux/slices/hotelOperationalSlice';
 import hotelRevenueReducer from '../redux/slices/hotelRevenueSlice';
 import hotelSpendingReducer from '../redux/slices/hotelSpendingSlice';
+import loyaltyReducer from '../redux/slices/loyaltySlice';
 
 export const store = configureStore({
   reducer: {
@@ -22,5 +23,6 @@ export const store = configureStore({
     hotelOperational: hotelOperationalReducer,
     hotelRevenue: hotelRevenueReducer,
     hotelSpending: hotelSpendingReducer,
+    loyalty: loyaltyReducer,
   },
 });
