@@ -163,6 +163,18 @@ const OrdersPage = () => {
     }).length;
   };
 
+  // Get tier badge color and style
+  const getTierBadgeColor = (tier) => {
+    if (!tier) return 'bg-gray-100 text-gray-600';
+    const colors = {
+      BRONZE: 'bg-orange-100 text-orange-700',
+      SILVER: 'bg-gray-200 text-gray-700',
+      GOLD: 'bg-yellow-100 text-yellow-700',
+      PLATINUM: 'bg-purple-100 text-purple-700'
+    };
+    return colors[tier.toUpperCase()] || 'bg-gray-100 text-gray-600';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-modern-gray to-white">
       {/* Modern Header Section */}
@@ -366,6 +378,13 @@ const OrdersPage = () => {
                                 <div className="text-xs text-modern-darkGray truncate max-w-[150px]">
                                   {order.guestId?.email || order.guestDetails?.email || order.guest?.email || t('hotelAdmin.dashboard.recentOrders.noEmail')}
                                 </div>
+                                {(order.guestDetails?.loyaltyTier || order.guestId?.loyaltyTier) && (
+                                  <div className="mt-1">
+                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getTierBadgeColor(order.guestDetails?.loyaltyTier || order.guestId?.loyaltyTier)}`}>
+                                      {(order.guestDetails?.loyaltyTier || order.guestId?.loyaltyTier).toUpperCase()}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </td>
@@ -506,6 +525,13 @@ const OrdersPage = () => {
                           <div className="text-xs text-modern-darkGray">
                             {order.guestId?.email || order.guestDetails?.email || order.guest?.email || t('hotelAdmin.dashboard.recentOrders.noEmail')}
                           </div>
+                          {(order.guestDetails?.loyaltyTier || order.guestId?.loyaltyTier) && (
+                            <div className="mt-1">
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${getTierBadgeColor(order.guestDetails?.loyaltyTier || order.guestId?.loyaltyTier)}`}>
+                                {(order.guestDetails?.loyaltyTier || order.guestId?.loyaltyTier).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
 

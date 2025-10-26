@@ -17,6 +17,7 @@ const Service = require('../models/Service');
 const Booking = require('../models/Booking');
 const TransportationBooking = require('../models/TransportationBooking');
 const Feedback = require('../models/Feedback');
+const LoyaltyMember = require('../models/LoyaltyMember');
 const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
 const qrUtils = require('../utils/qr');
@@ -1661,11 +1662,11 @@ router.get('/guests', catchAsync(async (req, res) => {
       User.countDocuments(filter)
     ]);
 
-    // Add last booking date for each guest
+    // Add last booking date and loyalty tier for each guest
     const guestsWithBookings = await Promise.all(
       guests.map(async (guest) => {
         // Check both regular bookings and transportation bookings
-        const [lastBooking, lastTransportationBooking] = await Promise.all([
+        const [lastBooking, lastTransportationBooking, loyaltyMember] = await Promise.all([
           Booking.findOne({
             userId: guest._id,
             hotelId: hotelId
@@ -1680,6 +1681,15 @@ router.get('/guests', catchAsync(async (req, res) => {
           })
             .sort({ createdAt: -1 })
             .select('createdAt')
+            .lean(),
+
+          // Fetch loyalty member info
+          LoyaltyMember.findOne({
+            guest: guest._id,
+            hotel: hotelId,
+            isActive: true
+          })
+            .select('currentTier totalPoints availablePoints')
             .lean()
         ]);
 
@@ -1698,7 +1708,10 @@ router.get('/guests', catchAsync(async (req, res) => {
 
         return {
           ...guest,
-          lastBookingDate
+          lastBookingDate,
+          loyaltyTier: loyaltyMember?.currentTier || null,
+          loyaltyPoints: loyaltyMember?.totalPoints || 0,
+          availableLoyaltyPoints: loyaltyMember?.availablePoints || 0
         };
       })
     );
@@ -2806,10 +2819,34 @@ router.get('/bookings', catchAsync(async (req, res) => {
     const start = (numericPage - 1) * numericLimit;
     const paginated = allBookings.slice(start, start + numericLimit);
 
+    // Add loyalty tier information to paginated bookings
+    const bookingsWithLoyalty = await Promise.all(
+      paginated.map(async (booking) => {
+        if (booking.guestDetails && booking.guestDetails._id) {
+          const loyaltyMember = await LoyaltyMember.findOne({
+            guest: booking.guestDetails._id,
+            hotel: hotelId,
+            isActive: true
+          }).select('currentTier totalPoints availablePoints').lean();
+
+          return {
+            ...booking,
+            guestDetails: {
+              ...booking.guestDetails,
+              loyaltyTier: loyaltyMember?.currentTier || null,
+              loyaltyPoints: loyaltyMember?.totalPoints || 0,
+              availableLoyaltyPoints: loyaltyMember?.availablePoints || 0
+            }
+          };
+        }
+        return booking;
+      })
+    );
+
     res.status(200).json({
       status: 'success',
       data: {
-        bookings: paginated,
+        bookings: bookingsWithLoyalty,
         pagination: {
           page: numericPage,
           limit: numericLimit,

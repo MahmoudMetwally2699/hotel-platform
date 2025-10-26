@@ -216,7 +216,7 @@ exports.getAllMembers = async (req, res) => {
 
     // Get members with guest details
     let members = await LoyaltyMember.find(query)
-      .populate('guest', 'name email phone')
+      .populate('guest', 'firstName lastName name email phone')
       .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
       .skip(skip)
       .limit(Number(limit));
@@ -345,7 +345,7 @@ exports.adjustMemberPoints = async (req, res) => {
   try {
     const hotelId = getHotelId(req.user);
     const { memberId } = req.params;
-    const { points, reason, adminNote } = req.body;
+    const { points, reason, adminNote, generatePDF } = req.body;
 
     if (!points || points === 0) {
       return res.status(400).json({
@@ -364,7 +364,7 @@ exports.adjustMemberPoints = async (req, res) => {
     const member = await LoyaltyMember.findOne({
       _id: memberId,
       hotel: hotelId
-    }).populate('guest', 'name email');
+    }).populate('guest', 'firstName lastName name email phone');
 
     if (!member) {
       return res.status(404).json({
@@ -373,7 +373,7 @@ exports.adjustMemberPoints = async (req, res) => {
       });
     }
 
-    // Get loyalty program
+    // Get loyalty program and hotel details
     const program = await LoyaltyProgram.findOne({ hotel: hotelId });
     if (!program) {
       return res.status(404).json({
@@ -381,6 +381,8 @@ exports.adjustMemberPoints = async (req, res) => {
         message: 'Loyalty program not found'
       });
     }
+
+    const hotel = await Hotel.findById(hotelId).select('name location');
 
     // Adjust points
     const oldPoints = member.totalPoints;
@@ -424,20 +426,121 @@ exports.adjustMemberPoints = async (req, res) => {
       await program.save();
     }
 
-    res.status(200).json({
-      success: true,
-      message: 'Points adjusted successfully',
-      data: {
-        member,
-        adjustment: {
-          oldPoints,
-          newPoints: member.totalPoints,
-          pointsAdjusted: points,
-          oldTier,
-          newTier: member.currentTier
+    // Generate PDF if requested
+    if (generatePDF) {
+      try {
+        const { generatePointsAdjustmentPDF } = require('../utils/pdfGenerator');
+
+        // Build guest display name - handle different name formats
+        let guestDisplayName = 'Guest';
+        if (member.guest?.name) {
+          guestDisplayName = member.guest.name;
+        } else if (member.guest?.firstName || member.guest?.lastName) {
+          const firstName = member.guest.firstName || '';
+          const lastName = member.guest.lastName || '';
+          guestDisplayName = `${firstName} ${lastName}`.trim();
+        } else if (member.guest?.email) {
+          guestDisplayName = member.guest.email.split('@')[0];
+        }
+
+        const pdfData = {
+          member: {
+            guestName: guestDisplayName,
+            email: member.guest?.email || 'no-email@example.com',
+            phone: member.guest?.phone || 'N/A',
+            currentTier: member.currentTier,
+            totalNights: member.totalNightsStayed || 0,
+            lifetimeSpend: member.lifetimeSpending || 0,
+            joinDate: member.joinDate
+          },
+          adjustment: {
+            type: Number(points) > 0 ? 'add' : 'deduct',
+            amount: Math.abs(Number(points)),
+            previousPoints: oldPoints,
+            newPoints: member.totalPoints,
+            reason: reason || 'No reason provided'
+          },
+          hotel: {
+            name: hotel?.name || 'Hotel Management System'
+          }
+        };
+
+        // Generate PDF and collect chunks
+        const chunks = [];
+        const pdfDoc = generatePointsAdjustmentPDF(pdfData);
+
+        let responseHandled = false;
+
+        pdfDoc.on('data', (chunk) => chunks.push(chunk));
+
+        pdfDoc.on('end', () => {
+          if (responseHandled) return;
+          responseHandled = true;
+
+          try {
+            const pdfBuffer = Buffer.concat(chunks);
+
+            // Set response headers for PDF download
+            const fileNameSafe = (guestDisplayName || 'member').replace(/\s+/g, '-');
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename=points-adjustment-${fileNameSafe}-${Date.now()}.pdf`);
+            res.setHeader('Content-Length', pdfBuffer.length);
+
+            // Send the PDF buffer
+            res.send(pdfBuffer);
+          } catch (sendError) {
+            console.error('Error sending PDF:', sendError);
+            if (!res.headersSent) {
+              res.status(500).json({
+                success: false,
+                message: 'Failed to send PDF report',
+                error: sendError.message
+              });
+            }
+          }
+        });
+
+        pdfDoc.on('error', (error) => {
+          if (responseHandled) return;
+          responseHandled = true;
+
+          console.error('PDF Generation Error:', error);
+          if (!res.headersSent) {
+            res.status(500).json({
+              success: false,
+              message: 'Failed to generate PDF report',
+              error: error.message
+            });
+          }
+        });
+
+        pdfDoc.end();
+      } catch (pdfError) {
+        console.error('PDF Setup Error:', pdfError);
+        if (!res.headersSent) {
+          res.status(500).json({
+            success: false,
+            message: 'Failed to initialize PDF generator',
+            error: pdfError.message
+          });
         }
       }
-    });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: 'Points adjusted successfully',
+        data: {
+          member,
+          adjustment: {
+            oldPoints,
+            newPoints: member.totalPoints,
+            pointsAdjusted: points,
+            oldTier,
+            newTier: member.currentTier
+          }
+        }
+      });
+    }
   } catch (error) {
     console.error('Adjust Member Points Error:', error);
     res.status(500).json({
@@ -592,13 +695,13 @@ exports.getLoyaltyAnalytics = async (req, res) => {
     const recentMembers = await LoyaltyMember.find({ hotel: hotelId })
       .sort({ joinDate: -1 })
       .limit(5)
-      .populate('guest', 'name email');
+      .populate('guest', 'firstName lastName name email');
 
     // Top members by spending
     const topMembers = await LoyaltyMember.find({ hotel: hotelId, isActive: true })
       .sort({ lifetimeSpending: -1 })
       .limit(10)
-      .populate('guest', 'name email');
+      .populate('guest', 'firstName lastName name email');
 
     // Calculate ROI
     const totalRevenueFromLoyalMembers = pointsStats[0]?.totalLifetimeSpending || 0;

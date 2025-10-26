@@ -29,6 +29,17 @@ const LoyaltyProgramPage = () => {
   const [adjustmentReason, setAdjustmentReason] = useState('');
   const [adjustmentType, setAdjustmentType] = useState('add'); // 'add' or 'deduct'
 
+  // Helper function to get guest display name
+  const getGuestDisplayName = (guest) => {
+    if (!guest) return 'Guest';
+    if (guest.name) return guest.name;
+    if (guest.firstName || guest.lastName) {
+      return `${guest.firstName || ''} ${guest.lastName || ''}`.trim();
+    }
+    if (guest.email) return guest.email.split('@')[0];
+    return 'Guest';
+  };
+
   useEffect(() => {
     dispatch(fetchLoyaltyAnalytics());
     dispatch(fetchLoyaltyProgram());
@@ -60,14 +71,27 @@ const LoyaltyProgramPage = () => {
         },
         body: JSON.stringify({
           points: finalPoints,
-          reason: adjustmentReason
+          reason: adjustmentReason,
+          generatePDF: true
         })
       });
 
-      const data = await response.json();
+      // Check if response is PDF
+      const contentType = response.headers.get('content-type');
 
-      if (data.success) {
-        alert(`Points ${adjustmentType === 'add' ? 'added' : 'deducted'} successfully!`);
+      if (contentType && contentType.includes('application/pdf')) {
+        // Handle PDF download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `points-adjustment-${getGuestDisplayName(selectedMember.guest).replace(/\s+/g, '-')}-${Date.now()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        alert(`Points ${adjustmentType === 'add' ? 'added' : 'deducted'} successfully! PDF report downloaded.`);
         setSelectedMember(null);
         setPointsAdjustment(0);
         setAdjustmentReason('');
@@ -75,7 +99,20 @@ const LoyaltyProgramPage = () => {
         // Refresh analytics
         dispatch(fetchLoyaltyAnalytics());
       } else {
-        alert(data.message || 'Failed to adjust points');
+        // Handle JSON response (error or success without PDF)
+        const data = await response.json();
+
+        if (data.success) {
+          alert(`Points ${adjustmentType === 'add' ? 'added' : 'deducted'} successfully!`);
+          setSelectedMember(null);
+          setPointsAdjustment(0);
+          setAdjustmentReason('');
+          setAdjustmentType('add');
+          // Refresh analytics
+          dispatch(fetchLoyaltyAnalytics());
+        } else {
+          alert(data.message || 'Failed to adjust points');
+        }
       }
     } catch (error) {
       console.error('Error adjusting points:', error);
@@ -363,7 +400,7 @@ const LoyaltyProgramPage = () => {
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
               >
                 <div>
-                  <p className="font-medium text-gray-900">{member.guest?.name || 'Guest'}</p>
+                  <p className="font-medium text-gray-900">{getGuestDisplayName(member.guest)}</p>
                   <p className="text-sm text-gray-600">{member.guest?.email}</p>
                 </div>
                 <div className="text-right">
@@ -427,7 +464,7 @@ const LoyaltyProgramPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
-                        {member.guest?.name || 'Guest'}
+                        {getGuestDisplayName(member.guest)}
                       </div>
                       <div className="text-sm text-gray-500">
                         {member.guest?.email}
@@ -529,7 +566,7 @@ const LoyaltyProgramPage = () => {
                     <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex-1">
-                          <p className="font-semibold text-gray-900">{member.guest?.name || 'Guest'}</p>
+                          <p className="font-semibold text-gray-900">{getGuestDisplayName(member.guest)}</p>
                           <p className="text-sm text-gray-600">{member.guest?.email || 'No email'}</p>
                           <p className="text-xs text-gray-500 mt-1">
                             Joined: {new Date(member.joinDate).toLocaleDateString()}
@@ -645,7 +682,7 @@ const LoyaltyProgramPage = () => {
             <div className="p-6">
               {/* Member Info */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <p className="font-semibold text-gray-900">{selectedMember.guest?.name || 'Guest'}</p>
+                <p className="font-semibold text-gray-900">{getGuestDisplayName(selectedMember.guest)}</p>
                 <p className="text-sm text-gray-600">{selectedMember.guest?.email}</p>
                 <div className="flex items-center justify-between mt-2">
                   <span

@@ -204,6 +204,18 @@ const GuestsPage = () => {
     return name.substring(0, 2).toUpperCase();
   };
 
+  // Get tier color and style
+  const getTierBadgeColor = (tier) => {
+    if (!tier) return 'bg-gray-100 text-gray-600';
+    const colors = {
+      BRONZE: 'bg-orange-100 text-orange-700 border-orange-200',
+      SILVER: 'bg-gray-200 text-gray-700 border-gray-300',
+      GOLD: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      PLATINUM: 'bg-purple-100 text-purple-700 border-purple-200'
+    };
+    return colors[tier.toUpperCase()] || 'bg-gray-100 text-gray-600';
+  };
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -274,6 +286,9 @@ const GuestsPage = () => {
                   {t('hotelAdmin.guests.table.guest')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Loyalty Tier
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Room & Dates
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -290,7 +305,7 @@ const GuestsPage = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredGuests.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center">
+                  <td colSpan="6" className="px-6 py-12 text-center">
                     <div className="text-gray-500">
                       <HiUserAdd className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                       <h3 className="text-lg font-medium">{t('hotelAdmin.guests.noGuests')}</h3>
@@ -313,6 +328,15 @@ const GuestsPage = () => {
                           <div className="text-sm text-gray-500">{guest.email}</div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {guest.loyaltyTier ? (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTierBadgeColor(guest.loyaltyTier)}`}>
+                          {guest.loyaltyTier.toUpperCase()}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">No tier</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="space-y-1">
@@ -416,6 +440,16 @@ const GuestsPage = () => {
                     <span className="text-gray-500">{t('hotelAdmin.guests.table.joined')}:</span>
                     <div className="font-medium">{formatDate(guest.createdAt)}</div>
                   </div>
+                  {guest.loyaltyTier && (
+                    <div>
+                      <span className="text-gray-500">Loyalty Tier:</span>
+                      <div>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getTierBadgeColor(guest.loyaltyTier)}`}>
+                          {guest.loyaltyTier.toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                   {guest.roomNumber && (
                     <div>
                       <span className="text-gray-500">{t('hotelAdmin.guests.table.room')}:</span>
