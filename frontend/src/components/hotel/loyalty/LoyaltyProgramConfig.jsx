@@ -160,7 +160,10 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/loyalty/hotel/program', {
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+      const cleanApiUrl = apiUrl.endsWith('/api') ? apiUrl : `${apiUrl}/api`;
+
+      const response = await fetch(`${cleanApiUrl}/loyalty/hotel/program`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
