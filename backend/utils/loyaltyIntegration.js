@@ -14,11 +14,12 @@ const {
 const { sendEmail } = require('./email');
 
 /**
- * Get or Create Loyalty Member
- * Automatically enrolls guest in loyalty program on first booking
+ * Get Loyalty Member (Manual Enrollment Only)
+ * Returns existing loyalty member if enrolled by hotel admin
+ * Does NOT automatically enroll guests - enrollment must be done manually by hotel admin
  * @param {String} guestId - Guest user ID
  * @param {String} hotelId - Hotel ID
- * @returns {Object|null} Loyalty member or null if no program exists
+ * @returns {Object|null} Loyalty member or null if not enrolled or no program exists
  */
 const getOrCreateLoyaltyMember = async (guestId, hotelId) => {
   try {
@@ -32,56 +33,17 @@ const getOrCreateLoyaltyMember = async (guestId, hotelId) => {
       return null;
     }
 
-    // Check if member already exists
-    let member = await LoyaltyMember.findOne({
+    // Check if member already exists and is active
+    const member = await LoyaltyMember.findOne({
       guest: guestId,
-      hotel: hotelId
+      hotel: hotelId,
+      isActive: true // Only return active members
     });
 
     if (!member) {
-      // Create new member
-      member = new LoyaltyMember({
-        guest: guestId,
-        hotel: hotelId,
-        currentTier: 'BRONZE',
-        totalPoints: 0,
-        availablePoints: 0,
-        lifetimeSpending: 0,
-        tierHistory: [{
-          tier: 'BRONZE',
-          date: new Date(),
-          reason: 'Initial enrollment'
-        }]
-      });
-
-      // Calculate tier progress
-      member.calculateTierProgress(program.tierConfiguration);
-      await member.save();
-
-      // Update program statistics
-      program.statistics.totalMembers += 1;
-      await program.save();
-
-      // Send welcome email
-      const User = require('../models/User');
-      const guest = await User.findById(guestId).select('name email');
-
-      if (guest && guest.email) {
-        try {
-          await sendEmail({
-            to: guest.email,
-            subject: 'Welcome to Our Loyalty Program!',
-            template: 'loyaltyWelcome',
-            context: {
-              guestName: guest.name,
-              currentTier: 'BRONZE',
-              benefits: program.tierConfiguration[0]?.benefits || []
-            }
-          });
-        } catch (emailError) {
-          console.error('Error sending loyalty welcome email:', emailError);
-        }
-      }
+      // Guest is not enrolled in loyalty program
+      // Return null - no automatic enrollment
+      return null;
     }
 
     return { member, program };

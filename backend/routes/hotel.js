@@ -18,6 +18,7 @@ const Booking = require('../models/Booking');
 const TransportationBooking = require('../models/TransportationBooking');
 const Feedback = require('../models/Feedback');
 const LoyaltyMember = require('../models/LoyaltyMember');
+const LoyaltyProgram = require('../models/LoyaltyProgram');
 const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
 const qrUtils = require('../utils/qr');
@@ -1830,6 +1831,29 @@ router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
     }
   }
 
+  // Save previous stay to history if dates are being changed and guest had previous dates
+  if ((checkInDate || checkOutDate) && guest.checkInDate && guest.checkOutDate) {
+    const previousCheckIn = new Date(guest.checkInDate);
+    const previousCheckOut = new Date(guest.checkOutDate);
+    const diffTime = Math.abs(previousCheckOut - previousCheckIn);
+    const numberOfNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Add to stay history
+    await User.findByIdAndUpdate(guestId, {
+      $push: {
+        stayHistory: {
+          checkInDate: guest.checkInDate,
+          checkOutDate: guest.checkOutDate,
+          roomNumber: guest.roomNumber,
+          numberOfNights: numberOfNights,
+          createdAt: new Date()
+        }
+      }
+    });
+
+    logger.info(`Saved previous stay to history for guest ${guest.email}: ${numberOfNights} nights`);
+  }
+
   // Build update object
   const updateData = {};
   if (roomNumber !== undefined) updateData.roomNumber = roomNumber;
@@ -1861,6 +1885,36 @@ router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
       updateData.deactivationReason = null;
       updateData.autoDeactivatedAt = null;
     } else {
+      // When deactivating, save current stay to history if dates exist
+      if (guest.checkInDate && guest.checkOutDate) {
+        const checkIn = new Date(guest.checkInDate);
+        const checkOut = new Date(guest.checkOutDate);
+        const diffTime = Math.abs(checkOut - checkIn);
+        const numberOfNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // Save to stay history before deactivating
+        await User.findByIdAndUpdate(guestId, {
+          $push: {
+            stayHistory: {
+              checkInDate: guest.checkInDate,
+              checkOutDate: guest.checkOutDate,
+              roomNumber: guest.roomNumber,
+              numberOfNights: numberOfNights,
+              createdAt: new Date()
+            }
+          }
+        });
+
+        logger.info(`Saved stay to history for guest ${guest.email}: ${numberOfNights} nights`);
+
+        // Clear current stay information
+        updateData.checkInDate = null;
+        updateData.checkOutDate = null;
+        updateData.roomNumber = null;
+        updateData.checkoutTime = null;
+        updateData.hasActiveBooking = false; // Clear active booking flag
+      }
+
       updateData.deactivationReason = 'admin_action';
       updateData.autoDeactivatedAt = new Date();
     }
@@ -1895,6 +1949,194 @@ router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
     message: responseMessage,
     data: {
       guest: updatedGuest
+    }
+  });
+}));
+
+/**
+ * @route   POST /api/hotel/guests/:guestId/loyalty/activate
+ * @desc    Manually activate guest in loyalty program
+ * @access  Private/HotelAdmin
+ */
+router.post('/guests/:guestId/loyalty/activate', catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const { guestId } = req.params;
+
+  // Find the guest
+  const guest = await User.findById(guestId);
+  if (!guest) {
+    return next(new AppError('Guest not found', 404));
+  }
+
+  if (guest.role !== 'guest') {
+    return next(new AppError('User is not a guest', 400));
+  }
+
+  // Check if guest is associated with this hotel
+  const hasHotelAssociation = await Booking.findOne({
+    userId: guestId,
+    hotelId: hotelId
+  });
+
+  if (!hasHotelAssociation && guest.selectedHotelId?.toString() !== hotelId.toString()) {
+    return next(new AppError('Guest not associated with this hotel', 403));
+  }
+
+  // Check if loyalty program exists and is active
+  const program = await LoyaltyProgram.findOne({
+    hotel: hotelId,
+    isActive: true
+  });
+
+  if (!program) {
+    return next(new AppError('No active loyalty program found for this hotel', 404));
+  }
+
+  // Check if member already exists
+  let member = await LoyaltyMember.findOne({
+    guest: guestId,
+    hotel: hotelId
+  });
+
+  if (member) {
+    if (member.isActive) {
+      return next(new AppError('Guest is already enrolled in the loyalty program', 400));
+    }
+
+    // Reactivate existing membership
+    member.isActive = true;
+    member.lastActivity = new Date();
+    await member.save();
+
+    logger.info(`Hotel admin ${req.user.email} reactivated loyalty membership for guest ${guest.email}`);
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Guest loyalty membership reactivated successfully',
+      data: {
+        member: {
+          currentTier: member.currentTier,
+          totalPoints: member.totalPoints,
+          availablePoints: member.availablePoints,
+          isActive: member.isActive
+        }
+      }
+    });
+  }
+
+  // Create new loyalty member
+  member = new LoyaltyMember({
+    guest: guestId,
+    hotel: hotelId,
+    currentTier: 'BRONZE',
+    totalPoints: 0,
+    availablePoints: 0,
+    lifetimeSpending: 0,
+    tierHistory: [{
+      tier: 'BRONZE',
+      date: new Date(),
+      reason: 'Manual enrollment by hotel admin'
+    }],
+    isActive: true
+  });
+
+  // Calculate tier progress
+  member.calculateTierProgress(program.tierConfiguration);
+  await member.save();
+
+  // Update program statistics
+  program.statistics.totalMembers += 1;
+  await program.save();
+
+  // Send welcome email
+  if (guest.email) {
+    try {
+      await sendEmail({
+        to: guest.email,
+        subject: 'Welcome to Our Loyalty Program!',
+        template: 'loyaltyWelcome',
+        context: {
+          guestName: guest.name || guest.firstName || 'Guest',
+          currentTier: 'BRONZE',
+          benefits: program.tierConfiguration[0]?.benefits || []
+        }
+      });
+    } catch (emailError) {
+      logger.error('Error sending loyalty welcome email:', emailError);
+    }
+  }
+
+  logger.info(`Hotel admin ${req.user.email} enrolled guest ${guest.email} in loyalty program`);
+
+  res.status(201).json({
+    status: 'success',
+    message: 'Guest successfully enrolled in loyalty program',
+    data: {
+      member: {
+        currentTier: member.currentTier,
+        totalPoints: member.totalPoints,
+        availablePoints: member.availablePoints,
+        isActive: member.isActive,
+        joinDate: member.joinDate
+      }
+    }
+  });
+}));
+
+/**
+ * @route   DELETE /api/hotel/guests/:guestId/loyalty/deactivate
+ * @desc    Deactivate guest from loyalty program
+ * @access  Private/HotelAdmin
+ */
+router.delete('/guests/:guestId/loyalty/deactivate', catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const { guestId } = req.params;
+
+  // Find the guest
+  const guest = await User.findById(guestId);
+  if (!guest) {
+    return next(new AppError('Guest not found', 404));
+  }
+
+  if (guest.role !== 'guest') {
+    return next(new AppError('User is not a guest', 400));
+  }
+
+  // Find loyalty member
+  const member = await LoyaltyMember.findOne({
+    guest: guestId,
+    hotel: hotelId
+  });
+
+  if (!member) {
+    return next(new AppError('Guest is not enrolled in the loyalty program', 404));
+  }
+
+  if (!member.isActive) {
+    return next(new AppError('Guest loyalty membership is already inactive', 400));
+  }
+
+  // Deactivate membership
+  member.isActive = false;
+  member.lastActivity = new Date();
+  await member.save();
+
+  // Update program statistics
+  const program = await LoyaltyProgram.findOne({ hotel: hotelId });
+  if (program) {
+    program.statistics.totalMembers = Math.max(0, program.statistics.totalMembers - 1);
+    await program.save();
+  }
+
+  logger.info(`Hotel admin ${req.user.email} deactivated loyalty membership for guest ${guest.email}`);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Guest loyalty membership deactivated successfully',
+    data: {
+      member: {
+        isActive: member.isActive
+      }
     }
   });
 }));

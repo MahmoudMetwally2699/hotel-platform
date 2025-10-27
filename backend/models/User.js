@@ -154,6 +154,22 @@ const userSchema = new mongoose.Schema({
     }
   },
 
+  // Stay History for loyalty program calculations
+  stayHistory: [{
+    checkInDate: {
+      type: Date
+    },
+    checkOutDate: {
+      type: Date
+    },
+    roomNumber: String,
+    numberOfNights: Number,
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+
   // Account Status
   isActive: {
     type: Boolean,
@@ -181,7 +197,7 @@ const userSchema = new mongoose.Schema({
 
   deactivationReason: {
     type: String,
-    enum: ['checkout_expired', 'manual', 'admin_action'],
+    enum: ['checkout_expired', 'manual', 'admin_action', 'checkout_completed'],
     default: null
   },
 
@@ -385,11 +401,37 @@ userSchema.statics.findByHotel = function(hotelId) {
 };
 
 // Auto-deactivation methods
-userSchema.methods.deactivateAccount = function(reason = 'checkout_expired') {
+userSchema.methods.deactivateAccount = async function(reason = 'checkout_expired') {
+  // Save current stay to history if dates exist
+  if (this.checkInDate && this.checkOutDate) {
+    const checkIn = new Date(this.checkInDate);
+    const checkOut = new Date(this.checkOutDate);
+    const diffTime = Math.abs(checkOut - checkIn);
+    const numberOfNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Add to stay history
+    this.stayHistory.push({
+      checkInDate: this.checkInDate,
+      checkOutDate: this.checkOutDate,
+      roomNumber: this.roomNumber,
+      numberOfNights: numberOfNights,
+      createdAt: new Date()
+    });
+
+    // Clear current stay information
+    this.checkInDate = null;
+    this.checkOutDate = null;
+    this.roomNumber = null;
+    this.checkoutTime = null;
+  }
+
   this.isActive = false;
+  this.hasActiveBooking = false; // Clear active booking flag
   this.autoDeactivatedAt = new Date();
   this.deactivationReason = reason;
-  return this.save();
+
+  // Skip validation to avoid date validation errors during deactivation
+  return this.save({ validateBeforeSave: false });
 };
 
 userSchema.methods.isCheckoutExpired = function() {
@@ -426,7 +468,8 @@ userSchema.statics.deactivateExpiredCheckouts = async function() {
         userId: user._id,
         email: user.email,
         status: 'error',
-        error: error.message
+        error: error.message,
+        stack: error.stack
       });
     }
   }

@@ -79,7 +79,14 @@ class CheckoutScheduler {
       }
 
       if (errors.length > 0) {
-        logger.error('Deactivation errors:', errors);
+        logger.error('Deactivation errors:');
+        console.error('Full error details:', JSON.stringify(errors, null, 2));
+        errors.forEach(err => {
+          console.error(`User: ${err.email}, Error: ${err.error}`);
+          if (err.stack) {
+            console.error('Stack:', err.stack);
+          }
+        });
       }
 
     } catch (error) {

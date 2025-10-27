@@ -525,6 +525,35 @@ class HotelService {
       throw error;
     }
   }
+
+  /**
+   * Activate guest in loyalty program
+   * @param {string} guestId - Guest ID
+   * @returns {Promise} - Response from API
+   */
+  async activateGuestLoyalty(guestId) {
+    try {
+      const response = await apiClient.post(`${HOTEL_ADMIN_API.GUESTS}/${guestId}/loyalty/activate`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Deactivate guest from loyalty program
+   * @param {string} guestId - Guest ID
+   * @returns {Promise} - Response from API
+   */
+  async deactivateGuestLoyalty(guestId) {
+    try {
+      const response = await apiClient.delete(`${HOTEL_ADMIN_API.GUESTS}/${guestId}/loyalty/deactivate`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 }
 
 const hotelService = new HotelService();

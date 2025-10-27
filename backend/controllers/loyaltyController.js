@@ -219,10 +219,38 @@ exports.getAllMembers = async (req, res) => {
 
     // Get members with guest details
     let members = await LoyaltyMember.find(query)
-      .populate('guest', 'firstName lastName name email phone')
+      .populate('guest', 'firstName lastName name email phone checkInDate checkOutDate stayHistory')
       .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
       .skip(skip)
       .limit(Number(limit));
+
+    // Calculate nights stayed from check-in and check-out dates + stay history
+    members = members.map(member => {
+      const memberObj = member.toObject();
+
+      let totalNights = memberObj.totalNightsStayed || 0;
+
+      // Calculate nights from guest's current check-in/check-out dates
+      if (memberObj.guest?.checkInDate && memberObj.guest?.checkOutDate) {
+        const checkIn = new Date(memberObj.guest.checkInDate);
+        const checkOut = new Date(memberObj.guest.checkOutDate);
+        const diffTime = Math.abs(checkOut - checkIn);
+        const currentNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        totalNights = Math.max(totalNights, currentNights);
+      }
+
+      // Add nights from stay history
+      if (memberObj.guest?.stayHistory && Array.isArray(memberObj.guest.stayHistory)) {
+        const historyNights = memberObj.guest.stayHistory.reduce((sum, stay) => {
+          return sum + (stay.numberOfNights || 0);
+        }, 0);
+        totalNights += historyNights;
+      }
+
+      memberObj.totalNightsStayed = totalNights;
+
+      return memberObj;
+    });
 
     // Apply search filter if provided
     if (search) {
@@ -694,17 +722,73 @@ exports.getLoyaltyAnalytics = async (req, res) => {
       }
     ]);
 
-    // Get recent activity
-    const recentMembers = await LoyaltyMember.find({ hotel: hotelId })
+    // Get recent activity (only active members)
+    let recentMembers = await LoyaltyMember.find({ hotel: hotelId, isActive: true })
       .sort({ joinDate: -1 })
       .limit(5)
-      .populate('guest', 'firstName lastName name email');
+      .populate('guest', 'firstName lastName name email phone checkInDate checkOutDate stayHistory');
+
+    // Calculate nights stayed from check-in and check-out dates + stay history for recent members
+    recentMembers = recentMembers.map(member => {
+      const memberObj = member.toObject();
+
+      let totalNights = memberObj.totalNightsStayed || 0;
+
+      // Calculate nights from guest's current check-in/check-out dates
+      if (memberObj.guest?.checkInDate && memberObj.guest?.checkOutDate) {
+        const checkIn = new Date(memberObj.guest.checkInDate);
+        const checkOut = new Date(memberObj.guest.checkOutDate);
+        const diffTime = Math.abs(checkOut - checkIn);
+        const currentNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        totalNights = Math.max(totalNights, currentNights);
+      }
+
+      // Add nights from stay history
+      if (memberObj.guest?.stayHistory && Array.isArray(memberObj.guest.stayHistory)) {
+        const historyNights = memberObj.guest.stayHistory.reduce((sum, stay) => {
+          return sum + (stay.numberOfNights || 0);
+        }, 0);
+        totalNights += historyNights;
+      }
+
+      memberObj.totalNightsStayed = totalNights;
+
+      return memberObj;
+    });
 
     // Top members by spending
-    const topMembers = await LoyaltyMember.find({ hotel: hotelId, isActive: true })
+    let topMembers = await LoyaltyMember.find({ hotel: hotelId, isActive: true })
       .sort({ lifetimeSpending: -1 })
       .limit(10)
-      .populate('guest', 'firstName lastName name email');
+      .populate('guest', 'firstName lastName name email phone checkInDate checkOutDate stayHistory');
+
+    // Calculate nights stayed for top members too
+    topMembers = topMembers.map(member => {
+      const memberObj = member.toObject();
+
+      let totalNights = memberObj.totalNightsStayed || 0;
+
+      // Calculate nights from guest's current check-in/check-out dates
+      if (memberObj.guest?.checkInDate && memberObj.guest?.checkOutDate) {
+        const checkIn = new Date(memberObj.guest.checkInDate);
+        const checkOut = new Date(memberObj.guest.checkOutDate);
+        const diffTime = Math.abs(checkOut - checkIn);
+        const currentNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        totalNights = Math.max(totalNights, currentNights);
+      }
+
+      // Add nights from stay history
+      if (memberObj.guest?.stayHistory && Array.isArray(memberObj.guest.stayHistory)) {
+        const historyNights = memberObj.guest.stayHistory.reduce((sum, stay) => {
+          return sum + (stay.numberOfNights || 0);
+        }, 0);
+        totalNights += historyNights;
+      }
+
+      memberObj.totalNightsStayed = totalNights;
+
+      return memberObj;
+    });
 
     // Calculate ROI
     const totalRevenueFromLoyalMembers = pointsStats[0]?.totalLifetimeSpending || 0;

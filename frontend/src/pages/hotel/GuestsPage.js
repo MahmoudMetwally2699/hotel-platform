@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUsers, selectAllUsers, selectUserLoading } from '../../redux/slices/userSlice';
-import { HiSearch, HiFilter, HiUserAdd, HiCheckCircle, HiXCircle, HiPencil } from 'react-icons/hi';
+import { HiSearch, HiFilter, HiUserAdd, HiCheckCircle, HiXCircle, HiPencil, HiStar, HiBan } from 'react-icons/hi';
 import { useAuth } from '../../hooks/useAuth';
 import hotelService from '../../services/hotel.service';
 
@@ -29,6 +29,7 @@ const GuestsPage = () => {
   const [guests, setGuests] = useState([]);
   const [filteredGuests, setFilteredGuests] = useState([]);
   const [updating, setUpdating] = useState(new Set());
+  const [loyaltyUpdating, setLoyaltyUpdating] = useState(new Set());
 
   // Edit modal state
   const [editModal, setEditModal] = useState({
@@ -49,7 +50,11 @@ const GuestsPage = () => {
         status: statusFilter
       });
 
-      setGuests(response.data.guests || []);
+      const guestsData = response.data.guests || [];
+      console.log('Fetched guests:', guestsData);
+      console.log('Guest with history example:', guestsData.find(g => g.stayHistory && g.stayHistory.length > 0));
+
+      setGuests(guestsData);
       setPagination(prev => ({
         ...prev,
         total: response.data.total || 0,
@@ -97,22 +102,32 @@ const GuestsPage = () => {
 
   // Toggle guest active status
   const toggleGuestStatus = async (guestId, currentStatus) => {
+    // If activating an inactive guest, open modal to enter new dates
+    if (currentStatus === false) {
+      const guest = guests.find(g => g._id === guestId);
+      if (guest) {
+        openEditModal(guest);
+      }
+      return;
+    }
+
+    // If deactivating, proceed with confirmation
+    if (!window.confirm('Are you sure you want to deactivate this guest? Their stay will be saved to history.')) {
+      return;
+    }
+
     setUpdating(prev => new Set(prev).add(guestId));
 
     try {
       await hotelService.updateGuestStatus(guestId, !currentStatus);
 
-      // Update local state
-      setGuests(prev => prev.map(guest =>
-        guest._id === guestId
-          ? { ...guest, isActive: !currentStatus }
-          : guest
-      ));
+      // Refresh guests to get updated data including history
+      await fetchGuests();
 
-      // Show success message (you can implement toast notifications)
+      alert('Guest deactivated successfully. Stay saved to history.');
     } catch (error) {
       console.error('Error updating guest status:', error);
-      // Show error message
+      alert(error.response?.data?.message || 'Failed to update guest status');
     } finally {
       setUpdating(prev => {
         const newSet = new Set(prev);
@@ -157,18 +172,26 @@ const GuestsPage = () => {
         checkOutDate: editModal.checkOutDate
       };
 
+      // If guest is inactive, also activate them
+      if (editModal.guest.isActive === false) {
+        updateData.isActive = true;
+      }
+
       await hotelService.updateGuestInfo(editModal.guest._id, updateData);
 
-      // Update local state
-      setGuests(prev => prev.map(guest =>
-        guest._id === editModal.guest._id
-          ? { ...guest, ...updateData }
-          : guest
-      ));
+      // Refresh guests to get updated data
+      await fetchGuests();
 
       closeEditModal();
+
+      if (editModal.guest.isActive === false) {
+        alert('Guest activated successfully with new stay information!');
+      } else {
+        alert('Guest information updated successfully!');
+      }
     } catch (error) {
       console.error('Error updating guest information:', error);
+      alert(error.response?.data?.message || 'Failed to update guest information');
     } finally {
       setUpdating(prev => {
         const newSet = new Set(prev);
@@ -176,6 +199,78 @@ const GuestsPage = () => {
         return newSet;
       });
     }
+  };
+
+  // Toggle guest loyalty program membership
+  const toggleLoyaltyMembership = async (guestId, isEnrolled) => {
+    setLoyaltyUpdating(prev => new Set(prev).add(guestId));
+
+    try {
+      let response;
+      if (isEnrolled) {
+        // Deactivate loyalty membership
+        response = await hotelService.deactivateGuestLoyalty(guestId);
+      } else {
+        // Activate loyalty membership
+        response = await hotelService.activateGuestLoyalty(guestId);
+      }
+
+      // Update local state to reflect loyalty status change
+      setGuests(prev => prev.map(guest => {
+        if (guest._id === guestId) {
+          // If activating, set loyalty tier to BRONZE, otherwise clear it
+          return {
+            ...guest,
+            loyaltyTier: isEnrolled ? null : 'BRONZE',
+            loyaltyPoints: isEnrolled ? 0 : guest.loyaltyPoints,
+            availableLoyaltyPoints: isEnrolled ? 0 : guest.availableLoyaltyPoints,
+            isLoyaltyActive: !isEnrolled
+          };
+        }
+        return guest;
+      }));
+
+      // Refresh guests to get updated data from server
+      await fetchGuests();
+
+      // Show success message (implement toast if available)
+      console.log(response.message);
+    } catch (error) {
+      console.error('Error toggling loyalty membership:', error);
+      // Show error message
+      alert(error.response?.data?.message || 'Failed to update loyalty membership');
+    } finally {
+      setLoyaltyUpdating(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(guestId);
+        return newSet;
+      });
+    }
+  };
+
+  // View stay history modal
+  const [historyModal, setHistoryModal] = useState({
+    isOpen: false,
+    guest: null,
+    stayHistory: []
+  });
+
+  // Handle view history
+  const handleViewHistory = (guest) => {
+    setHistoryModal({
+      isOpen: true,
+      guest: guest,
+      stayHistory: guest.stayHistory || []
+    });
+  };
+
+  // Close history modal
+  const closeHistoryModal = () => {
+    setHistoryModal({
+      isOpen: false,
+      guest: null,
+      stayHistory: []
+    });
   };
 
   // Format date
@@ -335,19 +430,21 @@ const GuestsPage = () => {
                           {guest.loyaltyTier.toUpperCase()}
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-400">No tier</span>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
+                          Not Enrolled
+                        </span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="space-y-1">
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-gray-900">
-                            {guest.roomNumber ? `Room ${guest.roomNumber}` : 'No room assigned'}
+                            {guest.isActive === false ? '---' : (guest.roomNumber ? `Room ${guest.roomNumber}` : 'No room assigned')}
                           </span>
                         </div>
                         <div className="text-xs text-gray-500">
-                          <div>Check-in: {formatDate(guest.checkInDate)}</div>
-                          <div>Check-out: {formatDate(guest.checkOutDate)}</div>
+                          <div>Check-in: {guest.isActive === false ? '---' : formatDate(guest.checkInDate)}</div>
+                          <div>Check-out: {guest.isActive === false ? '---' : formatDate(guest.checkOutDate)}</div>
                         </div>
                       </div>
                     </td>
@@ -365,15 +462,52 @@ const GuestsPage = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex space-x-2">
+                      <div className="flex flex-wrap gap-2">
+                        {/* Edit Room Button - Only for active guests */}
+                        {guest.isActive !== false && (
+                          <button
+                            onClick={() => openEditModal(guest)}
+                            disabled={updating.has(guest._id)}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <HiPencil className="w-4 h-4 mr-1" />
+                            Edit Room
+                          </button>
+                        )}
+
+                        {/* View History Button - For guests with stay history */}
+                        {guest.stayHistory && guest.stayHistory.length > 0 && (
+                          <button
+                            onClick={() => handleViewHistory(guest)}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors"
+                            title="View stay history"
+                          >
+                            <HiCheckCircle className="w-4 h-4 mr-1" />
+                            View History
+                          </button>
+                        )}
+
+                        {/* Loyalty Program Toggle Button */}
                         <button
-                          onClick={() => openEditModal(guest)}
-                          disabled={updating.has(guest._id)}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => toggleLoyaltyMembership(guest._id, guest.loyaltyTier !== null && guest.loyaltyTier !== undefined)}
+                          disabled={loyaltyUpdating.has(guest._id)}
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                            guest.loyaltyTier
+                              ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                              : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                          title={guest.loyaltyTier ? 'Remove from Loyalty Program' : 'Add to Loyalty Program'}
                         >
-                          <HiPencil className="w-4 h-4 mr-1" />
-                          Edit Room
+                          {loyaltyUpdating.has(guest._id) ? (
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
+                          ) : guest.loyaltyTier ? (
+                            <HiBan className="w-4 h-4 mr-1" />
+                          ) : (
+                            <HiStar className="w-4 h-4 mr-1" />
+                          )}
+                          {guest.loyaltyTier ? 'Remove Loyalty' : 'Add Loyalty'}
                         </button>
+
                         <button
                           onClick={() => toggleGuestStatus(guest._id, guest.isActive !== false)}
                           disabled={updating.has(guest._id)}
@@ -458,24 +592,47 @@ const GuestsPage = () => {
                   )}
                 </div>
 
-                <button
-                  onClick={() => toggleGuestStatus(guest._id, guest.isActive !== false)}
-                  disabled={updating.has(guest._id)}
-                  className={`w-full inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    guest.isActive !== false
-                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                      : 'bg-green-100 text-green-700 hover:bg-green-200'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {updating.has(guest._id) ? (
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                  ) : guest.isActive !== false ? (
-                    <HiXCircle className="w-5 h-5 mr-2" />
-                  ) : (
-                    <HiCheckCircle className="w-5 h-5 mr-2" />
-                  )}
-                  {guest.isActive !== false ? t('hotelAdmin.guests.actions.deactivateGuest') : t('hotelAdmin.guests.actions.activateGuest')}
-                </button>
+                <div className="space-y-2 mt-4">
+                  {/* Loyalty Program Button */}
+                  <button
+                    onClick={() => toggleLoyaltyMembership(guest._id, guest.loyaltyTier !== null && guest.loyaltyTier !== undefined)}
+                    disabled={loyaltyUpdating.has(guest._id)}
+                    className={`w-full inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      guest.loyaltyTier
+                        ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                        : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {loyaltyUpdating.has(guest._id) ? (
+                      <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                    ) : guest.loyaltyTier ? (
+                      <HiBan className="w-5 h-5 mr-2" />
+                    ) : (
+                      <HiStar className="w-5 h-5 mr-2" />
+                    )}
+                    {guest.loyaltyTier ? 'Remove from Loyalty Program' : 'Add to Loyalty Program'}
+                  </button>
+
+                  {/* Guest Status Button */}
+                  <button
+                    onClick={() => toggleGuestStatus(guest._id, guest.isActive !== false)}
+                    disabled={updating.has(guest._id)}
+                    className={`w-full inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      guest.isActive !== false
+                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                        : 'bg-green-100 text-green-700 hover:bg-green-200'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {updating.has(guest._id) ? (
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                    ) : guest.isActive !== false ? (
+                      <HiXCircle className="w-5 h-5 mr-2" />
+                    ) : (
+                      <HiCheckCircle className="w-5 h-5 mr-2" />
+                    )}
+                    {guest.isActive !== false ? t('hotelAdmin.guests.actions.deactivateGuest') : t('hotelAdmin.guests.actions.activateGuest')}
+                  </button>
+                </div>
               </div>
             ))
           )}
@@ -588,7 +745,7 @@ const GuestsPage = () => {
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Edit Guest Information
+                {editModal.guest?.isActive === false ? 'Activate Guest - Enter New Stay Information' : 'Edit Guest Information'}
               </h3>
 
               <div className="space-y-4">
@@ -654,13 +811,87 @@ const GuestsPage = () => {
                   {updating.has(editModal.guest?._id) ? (
                     <div className="flex items-center">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      Updating...
+                      {editModal.guest?.isActive === false ? 'Activating...' : 'Updating...'}
                     </div>
                   ) : (
-                    'Update'
+                    editModal.guest?.isActive === false ? 'Activate Guest' : 'Update'
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stay History Modal */}
+      {historyModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Stay History - {getGuestName(historyModal.guest)}
+              </h3>
+              <button
+                onClick={closeHistoryModal}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+              {historyModal.stayHistory.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No stay history available</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {historyModal.stayHistory.map((stay, index) => (
+                    <div
+                      key={index}
+                      className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Check-in</p>
+                          <p className="font-medium text-gray-900">
+                            {formatDate(stay.checkInDate)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Check-out</p>
+                          <p className="font-medium text-gray-900">
+                            {formatDate(stay.checkOutDate)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Room</p>
+                          <p className="font-medium text-gray-900">
+                            {stay.roomNumber || 'N/A'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Nights</p>
+                          <p className="font-medium text-gray-900">
+                            {stay.numberOfNights || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={closeHistoryModal}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

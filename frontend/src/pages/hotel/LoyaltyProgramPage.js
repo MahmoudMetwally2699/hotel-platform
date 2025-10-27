@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchLoyaltyAnalytics, fetchLoyaltyProgram } from '../../redux/slices/loyaltySlice';
+import { fetchLoyaltyAnalytics, fetchLoyaltyProgram, fetchMembers } from '../../redux/slices/loyaltySlice';
 import LoyaltyProgramConfig from '../../components/hotel/loyalty/LoyaltyProgramConfig';
 import {
   Users,
@@ -20,7 +20,7 @@ import {
 
 const LoyaltyProgramPage = () => {
   const dispatch = useDispatch();
-  const { analytics, loyaltyProgram, loading } = useSelector((state) => state.loyalty);
+  const { analytics, loyaltyProgram, loading, members } = useSelector((state) => state.loyalty);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
@@ -28,6 +28,16 @@ const LoyaltyProgramPage = () => {
   const [pointsAdjustment, setPointsAdjustment] = useState(0);
   const [adjustmentReason, setAdjustmentReason] = useState('');
   const [adjustmentType, setAdjustmentType] = useState('add'); // 'add' or 'deduct'
+
+  // Search and filter states for members modal
+  const [memberSearchTerm, setMemberSearchTerm] = useState('');
+  const [memberTierFilter, setMemberTierFilter] = useState('');
+
+  // Handler to open members modal and fetch all members
+  const handleOpenMembersModal = () => {
+    setShowMembersModal(true);
+    dispatch(fetchMembers({ limit: 1000 })); // Fetch all members
+  };
 
   // Helper function to get guest display name
   const getGuestDisplayName = (guest) => {
@@ -507,7 +517,7 @@ const LoyaltyProgramPage = () => {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
-            onClick={() => setShowMembersModal(true)}
+            onClick={handleOpenMembersModal}
             className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition"
           >
             <Users className="h-8 w-8 text-blue-600 mr-3" />
@@ -546,7 +556,7 @@ const LoyaltyProgramPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-gray-900">Loyalty Members</h2>
                 <button
                   onClick={() => setShowMembersModal(false)}
@@ -555,66 +565,135 @@ const LoyaltyProgramPage = () => {
                   <span className="text-2xl">&times;</span>
                 </button>
               </div>
+
+              {/* Search and Filter Section */}
+              <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                {/* Search Input */}
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search by email or phone..."
+                    value={memberSearchTerm}
+                    onChange={(e) => setMemberSearchTerm(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                </div>
+
+                {/* Tier Filter */}
+                <div className="sm:w-48">
+                  <select
+                    value={memberTierFilter}
+                    onChange={(e) => setMemberTierFilter(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  >
+                    <option value="">All Tiers</option>
+                    <option value="BRONZE">Bronze</option>
+                    <option value="SILVER">Silver</option>
+                    <option value="GOLD">Gold</option>
+                    <option value="PLATINUM">Platinum</option>
+                  </select>
+                </div>
+              </div>
             </div>
+
             <div className="p-6">
               <p className="text-gray-600 mb-4">
-                Total Members: <span className="font-semibold">{analytics?.overview?.totalMembers || 0}</span>
+                Total Members: <span className="font-semibold">
+                  {members?.data?.filter(member => {
+                    const email = member.guest?.email?.toLowerCase() || '';
+                    const phone = member.guest?.phone?.toString().toLowerCase() || '';
+                    const searchLower = memberSearchTerm.toLowerCase();
+                    const matchesSearch = !memberSearchTerm ||
+                      email.includes(searchLower) ||
+                      phone.includes(searchLower);
+                    const matchesTier = !memberTierFilter || member.currentTier === memberTierFilter;
+                    return matchesSearch && matchesTier;
+                  }).length || 0}
+                </span>
+                {(memberSearchTerm || memberTierFilter) && (
+                  <span className="text-sm text-gray-500 ml-2">
+                    (filtered from {members?.data?.length || analytics?.overview?.totalMembers || 0} total)
+                  </span>
+                )}
               </p>
-              {analytics?.recentMembers && analytics.recentMembers.length > 0 ? (
-                <div className="space-y-4">
-                  {analytics.recentMembers.map((member, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">{getGuestDisplayName(member.guest)}</p>
-                          <p className="text-sm text-gray-600">{member.guest?.email || 'No email'}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Joined: {new Date(member.joinDate).toLocaleDateString()}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            Nights stayed: {member.totalNightsStayed || 0}
-                          </p>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <span
-                            className="inline-block px-3 py-1 rounded-full text-sm font-medium"
-                            style={{
-                              backgroundColor: getTierColor(member.currentTier) + '20',
-                              color: getTierColor(member.currentTier)
-                            }}
-                          >
-                            {member.currentTier}
-                          </span>
-                          <p className="text-sm text-gray-600 mt-1">{member.totalPoints || 0} points</p>
-                          <p className="text-xs font-semibold text-green-600 mt-1">
-                            ${calculateRedemptionValue(member.availablePoints || 0).toFixed(2)} redeemable
-                          </p>
-                          <p className="text-xs text-gray-500">Spent: ${member.lifetimeSpending?.toFixed(2) || '0.00'}</p>
-                          <button
-                            onClick={() => {
-                              setSelectedMember(member);
-                              setPointsAdjustment(0);
-                              setAdjustmentReason('');
-                              setAdjustmentType('add');
-                            }}
-                            className="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition"
-                          >
-                            Manage Points
-                          </button>
+
+              {(() => {
+                const allMembers = members?.data || analytics?.recentMembers || [];
+                const filteredMembers = allMembers.filter(member => {
+                  const email = member.guest?.email?.toLowerCase() || '';
+                  const phone = member.guest?.phone?.toString().toLowerCase() || '';
+                  const searchLower = memberSearchTerm.toLowerCase();
+                  const matchesSearch = !memberSearchTerm ||
+                    email.includes(searchLower) ||
+                    phone.includes(searchLower);
+                  const matchesTier = !memberTierFilter || member.currentTier === memberTierFilter;
+                  return matchesSearch && matchesTier;
+                });
+
+                return filteredMembers && filteredMembers.length > 0 ? (
+                  <div className="space-y-4">
+                    {filteredMembers.map((member, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">{getGuestDisplayName(member.guest)}</p>
+                            <p className="text-sm text-gray-600">{member.guest?.email || 'No email'}</p>
+                            {member.guest?.phone && (
+                              <p className="text-sm text-gray-600">{member.guest.phone}</p>
+                            )}
+                            <p className="text-xs text-gray-500 mt-1">
+                              Joined: {new Date(member.joinDate).toLocaleDateString()}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Nights stayed: {member.totalNightsStayed || 0}
+                            </p>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <span
+                              className="inline-block px-3 py-1 rounded-full text-sm font-medium"
+                              style={{
+                                backgroundColor: getTierColor(member.currentTier) + '20',
+                                color: getTierColor(member.currentTier)
+                              }}
+                            >
+                              {member.currentTier}
+                            </span>
+                            <p className="text-sm text-gray-600 mt-1">{member.totalPoints || 0} points</p>
+                            <p className="text-xs font-semibold text-green-600 mt-1">
+                              ${calculateRedemptionValue(member.availablePoints || 0).toFixed(2)} redeemable
+                            </p>
+                            <p className="text-xs text-gray-500">Spent: ${member.lifetimeSpending?.toFixed(2) || '0.00'}</p>
+                            <button
+                              onClick={() => {
+                                setSelectedMember(member);
+                                setPointsAdjustment(0);
+                                setAdjustmentReason('');
+                                setAdjustmentType('add');
+                              }}
+                              className="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition"
+                            >
+                              Manage Points
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">No members yet</p>
-                  <p className="text-sm text-gray-400 mt-2">
-                    Members will appear here when guests complete bookings
-                  </p>
-                </div>
-              )}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">
+                      {memberSearchTerm || memberTierFilter ? 'No members match your filters' : 'No members yet'}
+                    </p>
+                    <p className="text-sm text-gray-400 mt-2">
+                      {memberSearchTerm || memberTierFilter
+                        ? 'Try adjusting your search or filter criteria'
+                        : 'Members will appear here when guests are enrolled in the loyalty program'
+                      }
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
             <div className="p-6 border-t border-gray-200 bg-gray-50">
               <button
