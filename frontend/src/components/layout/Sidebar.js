@@ -36,6 +36,7 @@ import TourIcon from '@mui/icons-material/Tour';
 import LocalLaundryServiceIcon from '@mui/icons-material/LocalLaundryService';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import CloseIcon from '@mui/icons-material/Close';
+import StarIcon from '@mui/icons-material/Star';
 import useAuth from '../../hooks/useAuth';
 
 // Drawer width
@@ -55,6 +56,7 @@ const getNavigationItems = (t) => ({
     { text: t('navigation.orders'), icon: <AssignmentIcon />, path: '/hotel/orders' },
     { text: t('navigation.serviceProviders'), icon: <CategoryIcon />, path: '/hotel/service-providers' },
     { text: t('navigation.feedback'), icon: <FeedbackIcon />, path: '/hotel/feedback' },
+    { text: 'Loyalty Programs', icon: <StarIcon />, path: '/hotel/loyalty/channels' },
     { text: t('navigation.revenue'), icon: <MoneyIcon />, path: '/hotel/revenue' },
     { text: t('navigation.settings'), icon: <SettingsIcon />, path: '/hotel/settings' },
   ],

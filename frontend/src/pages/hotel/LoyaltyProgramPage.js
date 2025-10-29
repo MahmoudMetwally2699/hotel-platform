@@ -140,7 +140,10 @@ const LoyaltyProgramPage = () => {
 
   // Helper function to get tier color dynamically from configuration
   const getTierColor = (tierName) => {
-    if (!loyaltyProgram?.tierConfiguration) {
+    // Get tier configuration from first program (they share the same tier config)
+    const programData = Array.isArray(loyaltyProgram) ? loyaltyProgram[0] : loyaltyProgram;
+
+    if (!programData?.tierConfiguration) {
       // Fallback to default colors if program not loaded
       const defaultColors = {
         BRONZE: '#CD7F32',
@@ -151,14 +154,19 @@ const LoyaltyProgramPage = () => {
       return defaultColors[tierName] || '#718096';
     }
 
-    const tierConfig = loyaltyProgram.tierConfiguration.find(t => t.name === tierName);
+    const tierConfig = programData.tierConfiguration.find(t => t.name === tierName);
     return tierConfig?.color || '#718096';
   };
 
   // Helper function to calculate redemption value
   const calculateRedemptionValue = (points) => {
-    if (!loyaltyProgram?.redemptionRules?.pointsToMoneyRatio) return 0;
-    return points / loyaltyProgram.redemptionRules.pointsToMoneyRatio;
+    // Use Direct channel as default for redemption ratio (or first available)
+    const programData = Array.isArray(loyaltyProgram)
+      ? loyaltyProgram.find(p => p.channel === 'Direct') || loyaltyProgram[0]
+      : loyaltyProgram;
+
+    if (!programData?.redemptionRules?.pointsToMoneyRatio) return 0;
+    return points / programData.redemptionRules.pointsToMoneyRatio;
   };
 
   return (
@@ -188,45 +196,67 @@ const LoyaltyProgramPage = () => {
       </div>
 
       {/* Program Status Alert */}
-      {!loyaltyProgram?.isActive && loyaltyProgram && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <Activity className="h-5 w-5 text-yellow-400" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700">
-                Your loyalty program is currently inactive. Activate it to start enrolling guests.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      {(() => {
+        // Check if loyaltyProgram is an array (channel-based) or single object
+        const hasActiveProgram = Array.isArray(loyaltyProgram)
+          ? loyaltyProgram.some(program => program?.isActive)
+          : loyaltyProgram?.isActive;
 
-      {!loyaltyProgram && !loading && (
-        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <Activity className="h-5 w-5 text-blue-400" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-blue-700">
-                No loyalty program configured yet. Click "Configure Program" to get started!
-              </p>
+        const hasProgramConfigured = Array.isArray(loyaltyProgram)
+          ? loyaltyProgram.length > 0
+          : Boolean(loyaltyProgram);
+
+        return !hasActiveProgram && hasProgramConfigured && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <Activity className="h-5 w-5 text-yellow-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  Your loyalty program is currently inactive. Activate it to start enrolling guests.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
+      {(() => {
+        const hasProgramConfigured = Array.isArray(loyaltyProgram)
+          ? loyaltyProgram.length > 0
+          : Boolean(loyaltyProgram);
+
+        return !hasProgramConfigured && !loading && (
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <Activity className="h-5 w-5 text-blue-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-blue-700">
+                  No loyalty program configured yet. Click "Configure Program" to get started!
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Tier Benefits Section */}
-      {loyaltyProgram?.tierConfiguration && loyaltyProgram.tierConfiguration.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <Award className="h-6 w-6 text-blue-600" />
-            Tier Benefits Overview
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...loyaltyProgram.tierConfiguration]
+      {(() => {
+        // Get tier configuration from first program (shared across all channels)
+        const programData = Array.isArray(loyaltyProgram) ? loyaltyProgram[0] : loyaltyProgram;
+        const hasTierConfig = programData?.tierConfiguration && programData.tierConfiguration.length > 0;
+
+        return hasTierConfig && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Award className="h-6 w-6 text-blue-600" />
+              Tier Benefits Overview
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...programData.tierConfiguration]
               .sort((a, b) => a.minPoints - b.minPoints)
               .map((tier) => (
                 <div
@@ -289,9 +319,10 @@ const LoyaltyProgramPage = () => {
                   </div>
                 </div>
               ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

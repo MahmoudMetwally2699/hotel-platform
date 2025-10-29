@@ -527,6 +527,21 @@ class HotelService {
   }
 
   /**
+   * Update guest channel
+   * @param {string} guestId - Guest ID
+   * @param {string} channel - New channel (Travel Agency, Corporate, Direct)
+   * @returns {Promise} - Response from API
+   */
+  async updateGuestChannel(guestId, channel) {
+    try {
+      const response = await apiClient.patch(`${HOTEL_ADMIN_API.GUESTS}/${guestId}/channel`, { channel });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Activate guest in loyalty program
    * @param {string} guestId - Guest ID
    * @returns {Promise} - Response from API

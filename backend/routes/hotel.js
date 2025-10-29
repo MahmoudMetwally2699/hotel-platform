@@ -1954,6 +1954,93 @@ router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
 }));
 
 /**
+ * @route   PATCH /api/hotel/guests/:guestId/channel
+ * @desc    Update guest channel (Travel Agency, Corporate, Direct)
+ * @access  Private/HotelAdmin
+ */
+router.patch('/guests/:guestId/channel', catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const { guestId } = req.params;
+  const { channel } = req.body;
+
+  // Validate channel
+  const validChannels = ['Travel Agency', 'Corporate', 'Direct'];
+  if (!channel || !validChannels.includes(channel)) {
+    return next(new AppError(`Invalid channel. Must be one of: ${validChannels.join(', ')}`, 400));
+  }
+
+  // Find the guest
+  const guest = await User.findById(guestId);
+  if (!guest) {
+    return next(new AppError('Guest not found', 404));
+  }
+
+  if (guest.role !== 'guest') {
+    return next(new AppError('User is not a guest', 400));
+  }
+
+  // Check if this guest has any association with this hotel
+  const hasHotelAssociation = await Booking.findOne({
+    userId: guestId,
+    hotelId: hotelId
+  });
+
+  if (!hasHotelAssociation && guest.selectedHotelId?.toString() !== hotelId.toString()) {
+    return next(new AppError('Guest not associated with this hotel', 403));
+  }
+
+  // Update guest channel
+  const oldChannel = guest.channel;
+  guest.channel = channel;
+  await guest.save({ validateBeforeSave: false });
+
+  // Check if guest has loyalty membership and update tier based on new channel program
+  const member = await LoyaltyMember.findOne({
+    guest: guestId,
+    hotel: hotelId
+  });
+
+  if (member) {
+    // Get the new channel's loyalty program
+    const newProgram = await LoyaltyProgram.findOne({
+      hotel: hotelId,
+      channel: channel,
+      isActive: true
+    });
+
+    if (newProgram) {
+      // Recalculate tier based on new program's tier configuration
+      const { determineTier } = require('../utils/loyaltyHelper');
+      const newTier = determineTier(member.totalPoints, newProgram.tierConfiguration);
+
+      if (newTier && newTier.name !== member.currentTier) {
+        member.updateTier(newTier.name, `Channel changed from ${oldChannel} to ${channel}`);
+        member.calculateTierProgress(newProgram.tierConfiguration);
+        await member.save();
+
+        logger.info(`Updated loyalty tier for guest ${guest.email} after channel change: ${member.currentTier}`);
+      }
+    }
+  }
+
+  // Log the action
+  logger.info(`Hotel admin ${req.user.email} changed channel for guest ${guest.email} from ${oldChannel} to ${channel}`);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Guest channel updated successfully',
+    data: {
+      guest: {
+        _id: guest._id,
+        email: guest.email,
+        channel: guest.channel,
+        loyaltyTier: member?.currentTier || null
+      }
+    }
+  });
+}));
+
+/**
  * @route   POST /api/hotel/guests/:guestId/loyalty/activate
  * @desc    Manually activate guest in loyalty program
  * @access  Private/HotelAdmin

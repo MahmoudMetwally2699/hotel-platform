@@ -1,16 +1,49 @@
-/**
+﻿/**
  * Loyalty Program Configuration Modal
  * Allows hotel admins to create/update loyalty program settings
  */
 
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { X, Save, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { X, Save, AlertCircle, Users, Building2, UserCheck } from 'lucide-react';
+import { fetchLoyaltyProgram } from '../../../redux/slices/loyaltySlice';
 
 const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
-  const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.loyalty);
+  const dispatch = useDispatch();
 
+  // Channel management
+  const [activeChannel, setActiveChannel] = useState('Direct');
+  const channels = ['Travel Agency', 'Corporate', 'Direct'];
+
+  // Helper to get channel icons
+  const getChannelIcon = (channel) => {
+    switch (channel) {
+      case 'Travel Agency': return <Users className="w-4 h-4" />;
+      case 'Corporate': return <Building2 className="w-4 h-4" />;
+      case 'Direct': return <UserCheck className="w-4 h-4" />;
+      default: return <Users className="w-4 h-4" />;
+    }
+  };
+
+  // Helper to get default channel settings
+  const getDefaultChannelSettings = (channel) => {
+    const defaults = {
+      'Travel Agency': { pointsPerDollar: 1, pointsPerNight: 50, serviceMultipliers: { laundry: 1.2, transportation: 1.5, tourism: 2.0, housekeeping: 1.0 }, pointsToMoneyRatio: 100, minimumRedemption: 500 },
+      'Corporate': { pointsPerDollar: 1.5, pointsPerNight: 75, serviceMultipliers: { laundry: 1.5, transportation: 2.0, tourism: 1.2, housekeeping: 1.3 }, pointsToMoneyRatio: 100, minimumRedemption: 1000 },
+      'Direct': { pointsPerDollar: 2, pointsPerNight: 100, serviceMultipliers: { laundry: 1.5, transportation: 1.5, tourism: 1.5, housekeeping: 1.5 }, pointsToMoneyRatio: 100, minimumRedemption: 500 }
+    };
+    return defaults[channel];
+  };
+
+  // Channel-specific points settings
+  const [channelPointsSettings, setChannelPointsSettings] = useState({
+    'Travel Agency': getDefaultChannelSettings('Travel Agency'),
+    'Corporate': getDefaultChannelSettings('Corporate'),
+    'Direct': getDefaultChannelSettings('Direct')
+  });
+
+  // Shared settings (General + Tiers)
   const [formData, setFormData] = useState({
     isActive: true,
     expirationMonths: 12,
@@ -43,36 +76,76 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
         benefits: ['20% discount on all services', 'Free room upgrade', 'VIP support', 'Complimentary spa access', 'Late checkout'],
         color: '#E5E4E2'
       }
-    ],
-    pointsRules: {
-      pointsPerDollar: 10,
-      pointsPerNight: 50,
-      serviceMultipliers: {
-        laundry: 1,
-        transportation: 1,
-        tourism: 1.5,
-        housekeeping: 1
-      }
-    },
-    redemptionRules: {
-      pointsToMoneyRatio: 100,
-      minimumRedemption: 500
-    }
+    ]
   });
 
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (existingProgram) {
-      setFormData({
-        isActive: existingProgram.isActive,
-        expirationMonths: existingProgram.expirationMonths || 12,
-        tierConfiguration: existingProgram.tierConfiguration,
-        pointsRules: existingProgram.pointsRules,
-        redemptionRules: existingProgram.redemptionRules
-      });
+      // Handle array of programs (channel-based) or single program
+      const programs = Array.isArray(existingProgram) ? existingProgram : [existingProgram];
+
+      if (programs.length > 0) {
+        // Use first program for shared settings (they should all be the same)
+        const firstProgram = programs[0];
+        setFormData(prev => ({
+          ...prev,
+          isActive: firstProgram.isActive !== undefined ? firstProgram.isActive : true,
+          expirationMonths: firstProgram.expirationMonths || 12,
+          tierConfiguration: firstProgram.tierConfiguration || prev.tierConfiguration
+        }));
+
+        // Load channel-specific settings
+        const newChannelSettings = {};
+        programs.forEach(program => {
+          if (program.channel && program.pointsRules && program.redemptionRules) {
+            newChannelSettings[program.channel] = {
+              pointsPerDollar: program.pointsRules.pointsPerDollar,
+              pointsPerNight: program.pointsRules.pointsPerNight,
+              serviceMultipliers: program.pointsRules.serviceMultipliers,
+              pointsToMoneyRatio: program.redemptionRules.pointsToMoneyRatio,
+              minimumRedemption: program.redemptionRules.minimumRedemption
+            };
+          }
+        });
+
+        if (Object.keys(newChannelSettings).length > 0) {
+          setChannelPointsSettings(prev => ({
+            ...prev,
+            ...newChannelSettings
+          }));
+        }
+      }
     }
   }, [existingProgram]);
+
+  // Handler for channel-specific points changes
+  const handleChannelPointsChange = (field, value) => {
+    console.log(`Updating ${activeChannel} - ${field}:`, value);
+    setChannelPointsSettings(prev => ({
+      ...prev,
+      [activeChannel]: {
+        ...prev[activeChannel],
+        [field]: value
+      }
+    }));
+  };
+
+  // Handler for channel-specific service multipliers
+  const handleServiceMultiplierChange = (service, value) => {
+    console.log(`Updating ${activeChannel} service multiplier - ${service}:`, value);
+    setChannelPointsSettings(prev => ({
+      ...prev,
+      [activeChannel]: {
+        ...prev[activeChannel],
+        serviceMultipliers: {
+          ...prev[activeChannel].serviceMultipliers,
+          [service]: parseFloat(value)
+        }
+      }
+    }));
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -87,16 +160,6 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
         return newErrors;
       });
     }
-  };
-
-  const handleNestedChange = (parent, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [parent]: {
-        ...prev[parent],
-        [field]: value
-      }
-    }));
   };
 
   const handleTierChange = (index, field, value) => {
@@ -124,17 +187,18 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
 
   const validateForm = () => {
     const newErrors = {};
+    const currentChannelSettings = channelPointsSettings[activeChannel];
 
     if (formData.expirationMonths < 1 || formData.expirationMonths > 36) {
       newErrors.expirationMonths = 'Expiration must be between 1 and 36 months';
     }
 
-    if (formData.pointsRules.pointsPerDollar < 1) {
+    if (currentChannelSettings.pointsPerDollar < 1) {
       newErrors.pointsPerDollar = 'Points per dollar must be at least 1';
     }
 
-    if (formData.redemptionRules.minimumRedeemablePoints < 1) {
-      newErrors.minimumRedeemablePoints = 'Minimum redeemable points must be at least 1';
+    if (currentChannelSettings.minimumRedemption < 1) {
+      newErrors.minimumRedemption = 'Minimum redemption must be at least 1';
     }
 
     // Validate tier progression
@@ -159,32 +223,62 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
       return;
     }
 
+    console.log('Submitting loyalty program with channel settings:', channelPointsSettings);
+
     try {
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
       const cleanApiUrl = apiUrl.endsWith('/api') ? apiUrl : `${apiUrl}/api`;
 
-      const response = await fetch(`${cleanApiUrl}/loyalty/hotel/program`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(formData)
+      // Save settings for all channels
+      const savePromises = channels.map(async (channel) => {
+        const channelData = channelPointsSettings[channel];
+        const payload = {
+          channel: channel,
+          isActive: formData.isActive,
+          expirationMonths: formData.expirationMonths,
+          tierConfiguration: formData.tierConfiguration,
+          pointsRules: {
+            pointsPerDollar: channelData.pointsPerDollar,
+            pointsPerNight: channelData.pointsPerNight,
+            serviceMultipliers: channelData.serviceMultipliers
+          },
+          redemptionRules: {
+            pointsToMoneyRatio: channelData.pointsToMoneyRatio,
+            minimumRedemption: channelData.minimumRedemption
+          }
+        };
+
+        console.log(`Saving ${channel} program:`, payload);
+
+        const response = await fetch(`${cleanApiUrl}/loyalty/hotel/program`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || `Failed to save ${channel} program`);
+        }
+
+        return response.json();
       });
 
-      const data = await response.json();
+      const results = await Promise.all(savePromises);
+      console.log('All channels saved successfully:', results);
 
-      if (response.ok) {
-        alert('Loyalty program configured successfully!');
-        onClose();
-        // Refresh the page to load the new program
-        window.location.reload();
-      } else {
-        alert(`Error: ${data.message}`);
-      }
+      alert('Loyalty program configured successfully for all channels!');
+
+      // Refetch the loyalty program data to get the updated values
+      await dispatch(fetchLoyaltyProgram());
+
+      onClose();
     } catch (error) {
       console.error('Error saving loyalty program:', error);
-      alert('Failed to save loyalty program. Please try again.');
+      alert(`Failed to save loyalty program: ${error.message}`);
     }
   };
 
@@ -266,7 +360,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
             )}
 
             <div className="space-y-4">
-              {formData.tierConfiguration.map((tier, index) => (
+              {(formData.tierConfiguration || []).map((tier, index) => (
                 <div key={tier.name} className="border rounded-lg p-4 bg-gray-50">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-semibold text-gray-900">{tier.name} Tier</h4>
@@ -296,18 +390,6 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Tier Color
-                      </label>
-                      <input
-                        type="color"
-                        value={tier.color}
-                        onChange={(e) => handleTierChange(index, 'color', e.target.value)}
-                        className="w-full h-10 px-1 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
                   </div>
 
                   <div>
@@ -327,9 +409,38 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
             </div>
           </div>
 
+          {/* Channel Tabs - Before Points Rules */}
+          <div className="border-b border-gray-200 bg-gray-50 rounded-lg">
+            <div className="px-4 py-2">
+              <p className="text-sm font-medium text-gray-700 mb-2">Select Channel to Configure Points Rules:</p>
+            </div>
+            <nav className="flex px-4 pb-0">
+              {channels.map((channel) => (
+                <button
+                  key={channel}
+                  type="button"
+                  onClick={() => setActiveChannel(channel)}
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeChannel === channel
+                      ? 'border-blue-600 text-blue-600 bg-white'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  {getChannelIcon(channel)}
+                  {channel}
+                </button>
+              ))}
+            </nav>
+          </div>
+
           {/* Points Rules */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Points Earning Rules</h3>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              Points Earning Rules
+              <span className="text-sm font-normal text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                {activeChannel}
+              </span>
+            </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -339,8 +450,9 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                 <input
                   type="number"
                   min="1"
-                  value={formData.pointsRules.pointsPerDollar}
-                  onChange={(e) => handleNestedChange('pointsRules', 'pointsPerDollar', parseInt(e.target.value))}
+                  step="0.1"
+                  value={channelPointsSettings[activeChannel].pointsPerDollar}
+                  onChange={(e) => handleChannelPointsChange('pointsPerDollar', parseFloat(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
                 {errors.pointsPerDollar && (
@@ -355,8 +467,8 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                 <input
                   type="number"
                   min="0"
-                  value={formData.pointsRules.pointsPerNight}
-                  onChange={(e) => handleNestedChange('pointsRules', 'pointsPerNight', parseInt(e.target.value))}
+                  value={channelPointsSettings[activeChannel].pointsPerNight}
+                  onChange={(e) => handleChannelPointsChange('pointsPerNight', parseInt(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">Award bonus points for each night guests stay at your hotel</p>
@@ -374,17 +486,8 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                     type="number"
                     step="0.1"
                     min="0"
-                    value={formData.pointsRules.serviceMultipliers.laundry}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      pointsRules: {
-                        ...prev.pointsRules,
-                        serviceMultipliers: {
-                          ...prev.pointsRules.serviceMultipliers,
-                          laundry: parseFloat(e.target.value)
-                        }
-                      }
-                    }))}
+                    value={channelPointsSettings[activeChannel].serviceMultipliers.laundry}
+                    onChange={(e) => handleServiceMultiplierChange('laundry', e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -397,17 +500,8 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                     type="number"
                     step="0.1"
                     min="0"
-                    value={formData.pointsRules.serviceMultipliers.transportation}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      pointsRules: {
-                        ...prev.pointsRules,
-                        serviceMultipliers: {
-                          ...prev.pointsRules.serviceMultipliers,
-                          transportation: parseFloat(e.target.value)
-                        }
-                      }
-                    }))}
+                    value={channelPointsSettings[activeChannel].serviceMultipliers.transportation}
+                    onChange={(e) => handleServiceMultiplierChange('transportation', e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -420,17 +514,8 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                     type="number"
                     step="0.1"
                     min="0"
-                    value={formData.pointsRules.serviceMultipliers.tourism}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      pointsRules: {
-                        ...prev.pointsRules,
-                        serviceMultipliers: {
-                          ...prev.pointsRules.serviceMultipliers,
-                          tourism: parseFloat(e.target.value)
-                        }
-                      }
-                    }))}
+                    value={channelPointsSettings[activeChannel].serviceMultipliers.tourism}
+                    onChange={(e) => handleServiceMultiplierChange('tourism', e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -443,17 +528,8 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                     type="number"
                     step="0.1"
                     min="0"
-                    value={formData.pointsRules.serviceMultipliers.housekeeping}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      pointsRules: {
-                        ...prev.pointsRules,
-                        serviceMultipliers: {
-                          ...prev.pointsRules.serviceMultipliers,
-                          housekeeping: parseFloat(e.target.value)
-                        }
-                      }
-                    }))}
+                    value={channelPointsSettings[activeChannel].serviceMultipliers.housekeeping}
+                    onChange={(e) => handleServiceMultiplierChange('housekeeping', e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -463,7 +539,12 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
 
           {/* Redemption Rules */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Points Redemption Rules</h3>
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              Points Redemption Rules
+              <span className="text-sm font-normal text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                {activeChannel}
+              </span>
+            </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -473,12 +554,12 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                 <input
                   type="number"
                   min="1"
-                  value={formData.redemptionRules.pointsToMoneyRatio}
-                  onChange={(e) => handleNestedChange('redemptionRules', 'pointsToMoneyRatio', parseInt(e.target.value))}
+                  value={channelPointsSettings[activeChannel].pointsToMoneyRatio}
+                  onChange={(e) => handleChannelPointsChange('pointsToMoneyRatio', parseInt(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {formData.redemptionRules.pointsToMoneyRatio} points = $1
+                  {channelPointsSettings[activeChannel].pointsToMoneyRatio} points = $1
                 </p>
               </div>
 
@@ -489,14 +570,17 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                 <input
                   type="number"
                   min="1"
-                  value={formData.redemptionRules.minimumRedemption}
-                  onChange={(e) => handleNestedChange('redemptionRules', 'minimumRedemption', parseInt(e.target.value))}
+                  value={channelPointsSettings[activeChannel].minimumRedemption}
+                  onChange={(e) => handleChannelPointsChange('minimumRedemption', parseInt(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Minimum {formData.redemptionRules.minimumRedemption} points = $
-                  {(formData.redemptionRules.minimumRedemption / formData.redemptionRules.pointsToMoneyRatio).toFixed(2)}
+                  Minimum {channelPointsSettings[activeChannel].minimumRedemption} points = $
+                  {(channelPointsSettings[activeChannel].minimumRedemption / channelPointsSettings[activeChannel].pointsToMoneyRatio).toFixed(2)}
                 </p>
+                {errors.minimumRedemption && (
+                  <p className="text-xs text-red-600 mt-1">{errors.minimumRedemption}</p>
+                )}
               </div>
             </div>
           </div>

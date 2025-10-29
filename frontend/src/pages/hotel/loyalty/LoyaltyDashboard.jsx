@@ -60,23 +60,30 @@ const LoyaltyDashboard = () => {
       </div>
 
       {/* Program Status Alert */}
-      {!loyaltyProgram?.isActive && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <Activity className="h-5 w-5 text-yellow-400" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-yellow-700">
-                Your loyalty program is currently inactive.
-                <Link to="/hotel/loyalty/program-config" className="font-medium underline ml-1">
-                  Activate it here
-                </Link>
-              </p>
+      {(() => {
+        // Check if loyaltyProgram is an array (channel-based) or single object
+        const hasActiveProgram = Array.isArray(loyaltyProgram)
+          ? loyaltyProgram.some(program => program?.isActive)
+          : loyaltyProgram?.isActive;
+
+        return !hasActiveProgram && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <Activity className="h-5 w-5 text-yellow-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  Your loyalty program is currently inactive. Activate it to start enrolling guests.
+                  <Link to="/hotel/loyalty-program" className="font-medium underline ml-1">
+                    Activate it here
+                  </Link>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

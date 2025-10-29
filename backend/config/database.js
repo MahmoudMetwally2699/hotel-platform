@@ -9,6 +9,44 @@ const mongoose = require('mongoose');
 const logger = require('../utils/logger');
 
 /**
+ * Fix LoyaltyProgram indexes to allow multiple programs per hotel (one per channel)
+ */
+const fixLoyaltyProgramIndexes = async () => {
+  try {
+    const db = mongoose.connection.db;
+    const collection = db.collection('loyaltyprograms');
+
+    // Get current indexes
+    const indexes = await collection.indexes();
+
+    // Find the problematic index (hotel_1 without channel)
+    const problematicIndex = indexes.find(
+      idx => idx.name === 'hotel_1' && idx.key.hotel === 1 && !idx.key.channel
+    );
+
+    if (problematicIndex) {
+      logger.info('Dropping old loyalty program index: hotel_1');
+      await collection.dropIndex('hotel_1');
+      logger.info('✓ Old index dropped successfully');
+    }
+
+    // Ensure compound index exists
+    const compoundIndex = indexes.find(
+      idx => idx.key.hotel === 1 && idx.key.channel === 1
+    );
+
+    if (!compoundIndex) {
+      logger.info('Creating compound index { hotel: 1, channel: 1 }');
+      await collection.createIndex({ hotel: 1, channel: 1 }, { unique: true });
+      logger.info('✓ Compound index created successfully');
+    }
+  } catch (error) {
+    // Don't fail server startup if index fix fails
+    logger.warn(`Could not fix loyalty program indexes: ${error.message}`);
+  }
+};
+
+/**
  * Connect to MongoDB database
  * @returns {Promise<void>}
  */
@@ -35,6 +73,9 @@ const connectDB = async () => {
 
     logger.info(`MongoDB Connected: ${conn.connection.host}`);
     logger.info(`Database: ${conn.connection.name}`);
+
+    // Fix loyalty program indexes automatically
+    await fixLoyaltyProgramIndexes();
 
     // Handle connection events
     mongoose.connection.on('connected', () => {

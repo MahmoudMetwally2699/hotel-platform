@@ -29,7 +29,7 @@ const getHotelId = (user) => {
 };
 
 /**
- * Create or Update Loyalty Program Configuration
+ * Create or Update Loyalty Program Configuration (Channel-Based)
  * @route POST /hotel/loyalty/program
  * @access Hotel Admin
  */
@@ -45,12 +45,21 @@ exports.createOrUpdateProgram = async (req, res) => {
     }
 
     const {
+      channel,
       tierConfiguration,
       pointsRules,
       redemptionRules,
       isActive,
       expirationMonths
     } = req.body;
+
+    // Validate channel
+    if (!channel || !['Travel Agency', 'Corporate', 'Direct'].includes(channel)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid channel is required: Travel Agency, Corporate, or Direct'
+      });
+    }
 
     // Validate tier configuration
     if (tierConfiguration) {
@@ -67,28 +76,55 @@ exports.createOrUpdateProgram = async (req, res) => {
       }
     }
 
-    // Check if program exists
-    let program = await LoyaltyProgram.findOne({ hotel: hotelId });
+    // Get default settings for this channel
+    const channelDefaults = LoyaltyProgram.getDefaultChannelSettings(channel);
 
-    if (program) {
-      // Update existing program
-      const tierConfigChanged = tierConfiguration && JSON.stringify(tierConfiguration) !== JSON.stringify(program.tierConfiguration);
+    // Prepare update data
+    const updateData = {
+      hotel: hotelId,
+      channel: channel,
+      tierConfiguration: tierConfiguration || LoyaltyProgram.getDefaultTierConfiguration(),
+      pointsRules: pointsRules || {
+        pointsPerDollar: channelDefaults.pointsPerDollar,
+        pointsPerNight: channelDefaults.pointsPerNight,
+        serviceMultipliers: channelDefaults.serviceMultipliers
+      },
+      redemptionRules: redemptionRules || {
+        pointsToMoneyRatio: channelDefaults.pointsToMoneyRatio,
+        minimumRedemption: channelDefaults.minimumRedemption,
+        maximumRedemption: channelDefaults.maximumRedemption
+      },
+      isActive: isActive !== undefined ? isActive : true,
+      expirationMonths: expirationMonths !== undefined ? expirationMonths : 12
+    };
 
-      if (tierConfiguration) program.tierConfiguration = tierConfiguration;
-      if (pointsRules) program.pointsRules = pointsRules;
-      if (redemptionRules) program.redemptionRules = redemptionRules;
-      if (isActive !== undefined) program.isActive = isActive;
-      if (expirationMonths !== undefined) program.expirationMonths = expirationMonths;
+    // Check if tier configuration changed (for existing programs)
+    const existingProgram = await LoyaltyProgram.findOne({ hotel: hotelId, channel: channel });
+    const tierConfigChanged = existingProgram && tierConfiguration &&
+      JSON.stringify(tierConfiguration) !== JSON.stringify(existingProgram.tierConfiguration);
 
-      await program.save();
+    // Use findOneAndUpdate with upsert to avoid duplicate key errors
+    const program = await LoyaltyProgram.findOneAndUpdate(
+      { hotel: hotelId, channel: channel },
+      { $set: updateData },
+      {
+        upsert: true,
+        new: true,
+        runValidators: true,
+        setDefaultsOnInsert: true
+      }
+    );
 
-      // Recalculate all member tiers if tier configuration changed
-      let tierUpdateCount = 0;
-      if (tierConfigChanged) {
-        console.log('Tier configuration changed, recalculating member tiers...');
-        const members = await LoyaltyMember.find({ hotel: hotelId });
+    // Recalculate all member tiers if tier configuration changed
+    let tierUpdateCount = 0;
+    if (tierConfigChanged) {
+      console.log('Tier configuration changed, recalculating member tiers...');
+      const members = await LoyaltyMember.find({ hotel: hotelId });
 
-        for (const member of members) {
+      for (const member of members) {
+        // Only recalculate if member's guest has matching channel
+        const guest = await User.findById(member.guest).select('channel');
+        if (guest && guest.channel === channel) {
           const newTier = determineTier(member.totalPoints, program.tierConfiguration);
           if (newTier && newTier.name !== member.currentTier) {
             const oldTier = member.currentTier;
@@ -99,47 +135,18 @@ exports.createOrUpdateProgram = async (req, res) => {
             console.log(`Member ${member.guest} tier updated: ${oldTier} → ${newTier.name}`);
           }
         }
-        console.log(`Tier recalculation complete: ${tierUpdateCount} members updated`);
       }
-
-      res.status(200).json({
-        success: true,
-        message: tierUpdateCount > 0
-          ? `Loyalty program updated successfully. ${tierUpdateCount} member(s) had tier changes.`
-          : 'Loyalty program updated successfully',
-        data: program,
-        tierUpdates: tierUpdateCount
-      });
-    } else {
-      // Create new program with defaults
-      program = new LoyaltyProgram({
-        hotel: hotelId,
-        tierConfiguration: tierConfiguration || LoyaltyProgram.getDefaultTierConfiguration(),
-        pointsRules: pointsRules || {
-          pointsPerDollar: 1,
-          serviceMultipliers: {
-            laundry: 1,
-            transportation: 1,
-            tourism: 1.5,
-            housekeeping: 1
-          }
-        },
-        redemptionRules: redemptionRules || {
-          pointsToMoneyRatio: 100,
-          minimumRedemption: 500
-        },
-        isActive: isActive !== undefined ? isActive : true,
-        expirationMonths: expirationMonths || 12
-      });
-
-      await program.save();
-
-      res.status(201).json({
-        success: true,
-        message: 'Loyalty program created successfully',
-        data: program
-      });
+      console.log(`Tier recalculation complete: ${tierUpdateCount} members updated`);
     }
+
+    res.status(existingProgram ? 200 : 201).json({
+      success: true,
+      message: tierUpdateCount > 0
+        ? `Loyalty program for ${channel} ${existingProgram ? 'updated' : 'created'} successfully. ${tierUpdateCount} member(s) had tier changes.`
+        : `Loyalty program for ${channel} ${existingProgram ? 'updated' : 'created'} successfully`,
+      data: program,
+      tierUpdates: tierUpdateCount
+    });
   } catch (error) {
     console.error('Create/Update Loyalty Program Error:', error);
     res.status(500).json({
@@ -158,22 +165,145 @@ exports.createOrUpdateProgram = async (req, res) => {
 exports.getLoyaltyProgram = async (req, res) => {
   try {
     const hotelId = getHotelId(req.user);
+    const { channel } = req.query;
 
-    const program = await LoyaltyProgram.findOne({ hotel: hotelId });
+    if (channel) {
+      // Get specific channel program
+      const program = await LoyaltyProgram.findOne({ hotel: hotelId, channel: channel });
+
+      if (!program) {
+        return res.status(404).json({
+          success: false,
+          message: `No loyalty program found for ${channel} channel`
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        data: program
+      });
+    } else {
+      // Get all channel programs
+      const programs = await LoyaltyProgram.find({ hotel: hotelId });
+
+      res.status(200).json({
+        success: true,
+        data: programs
+      });
+    }
+  } catch (error) {
+    console.error('Get Loyalty Program Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get All Channel Programs for Hotel
+ * @route GET /hotel/loyalty/channels
+ * @access Hotel Admin
+ */
+exports.getAllChannelPrograms = async (req, res) => {
+  try {
+    const hotelId = getHotelId(req.user);
+
+    const programs = await LoyaltyProgram.find({ hotel: hotelId });
+
+    // Create a map of channel to program
+    const channelPrograms = {
+      'Travel Agency': null,
+      'Corporate': null,
+      'Direct': null
+    };
+
+    programs.forEach(program => {
+      channelPrograms[program.channel] = program;
+    });
+
+    // Fill in missing channels with default settings
+    for (const channel in channelPrograms) {
+      if (!channelPrograms[channel]) {
+        channelPrograms[channel] = {
+          channel: channel,
+          exists: false,
+          defaults: LoyaltyProgram.getDefaultChannelSettings(channel)
+        };
+      } else {
+        channelPrograms[channel] = {
+          ...channelPrograms[channel].toObject(),
+          exists: true
+        };
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: channelPrograms
+    });
+  } catch (error) {
+    console.error('Get All Channel Programs Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get Loyalty Program by Channel
+ * @route GET /hotel/loyalty/program/:channel
+ * @access Hotel Admin
+ */
+exports.getProgramByChannel = async (req, res) => {
+  try {
+    const hotelId = getHotelId(req.user);
+    const { channel } = req.params;
+
+    if (!['Travel Agency', 'Corporate', 'Direct'].includes(channel)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid channel. Must be: Travel Agency, Corporate, or Direct'
+      });
+    }
+
+    const program = await LoyaltyProgram.findOne({ hotel: hotelId, channel: channel });
 
     if (!program) {
-      return res.status(404).json({
-        success: false,
-        message: 'No loyalty program found for this hotel'
+      // Return default settings if no program exists
+      const defaults = LoyaltyProgram.getDefaultChannelSettings(channel);
+      return res.status(200).json({
+        success: true,
+        exists: false,
+        data: {
+          channel: channel,
+          tierConfiguration: LoyaltyProgram.getDefaultTierConfiguration(),
+          pointsRules: {
+            pointsPerDollar: defaults.pointsPerDollar,
+            pointsPerNight: defaults.pointsPerNight,
+            serviceMultipliers: defaults.serviceMultipliers
+          },
+          redemptionRules: {
+            pointsToMoneyRatio: defaults.pointsToMoneyRatio,
+            minimumRedemption: defaults.minimumRedemption,
+            maximumRedemption: defaults.maximumRedemption
+          },
+          isActive: true,
+          expirationMonths: 12
+        }
       });
     }
 
     res.status(200).json({
       success: true,
+      exists: true,
       data: program
     });
   } catch (error) {
-    console.error('Get Loyalty Program Error:', error);
+    console.error('Get Program by Channel Error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',
@@ -194,6 +324,7 @@ exports.getAllMembers = async (req, res) => {
       page = 1,
       limit = 20,
       tier,
+      channel,
       minPoints,
       maxPoints,
       sortBy = 'totalPoints',
@@ -219,7 +350,7 @@ exports.getAllMembers = async (req, res) => {
 
     // Get members with guest details
     let members = await LoyaltyMember.find(query)
-      .populate('guest', 'firstName lastName name email phone checkInDate checkOutDate stayHistory')
+      .populate('guest', 'firstName lastName name email phone channel checkInDate checkOutDate stayHistory')
       .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
       .skip(skip)
       .limit(Number(limit));
@@ -251,6 +382,11 @@ exports.getAllMembers = async (req, res) => {
 
       return memberObj;
     });
+
+    // Apply channel filter if provided (filter on populated guest data)
+    if (channel) {
+      members = members.filter(member => member.guest?.channel === channel);
+    }
 
     // Apply search filter if provided
     if (search) {

@@ -124,6 +124,19 @@ const userSchema = new mongoose.Schema({
     required: function() {
       return this.role === 'guest';
     }
+  },
+
+  // Channel for loyalty program segmentation
+  channel: {
+    type: String,
+    enum: {
+      values: ['Travel Agency', 'Corporate', 'Direct'],
+      message: 'Channel must be one of: Travel Agency, Corporate, Direct'
+    },
+    required: function() {
+      return this.role === 'guest';
+    },
+    default: 'Direct'
   },  checkInDate: {
     type: Date,
     required: function() {
@@ -273,6 +286,7 @@ userSchema.index({ role: 1, isActive: 1 });
 userSchema.index({ hotelId: 1, role: 1 });
 userSchema.index({ serviceProviderId: 1, role: 1 });
 userSchema.index({ selectedHotelId: 1, role: 1 });
+userSchema.index({ selectedHotelId: 1, channel: 1, role: 1 });
 
 // Compound unique index for hotel-scoped emails (for guests)
 userSchema.index(

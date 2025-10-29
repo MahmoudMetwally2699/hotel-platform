@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUsers, selectAllUsers, selectUserLoading } from '../../redux/slices/userSlice';
-import { HiSearch, HiFilter, HiUserAdd, HiCheckCircle, HiXCircle, HiPencil, HiStar, HiBan } from 'react-icons/hi';
+import { HiSearch, HiFilter, HiUserAdd, HiCheckCircle, HiXCircle, HiPencil, HiStar, HiBan, HiDotsVertical } from 'react-icons/hi';
 import { useAuth } from '../../hooks/useAuth';
 import hotelService from '../../services/hotel.service';
 
@@ -20,6 +20,7 @@ const GuestsPage = () => {
   // State management
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [channelFilter, setChannelFilter] = useState('');
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -30,6 +31,9 @@ const GuestsPage = () => {
   const [filteredGuests, setFilteredGuests] = useState([]);
   const [updating, setUpdating] = useState(new Set());
   const [loyaltyUpdating, setLoyaltyUpdating] = useState(new Set());
+  const [channelUpdating, setChannelUpdating] = useState(new Set());
+  const [openDropdown, setOpenDropdown] = useState(null); // Track which dropdown is open
+  const dropdownRef = useRef(null); // Ref for dropdown to detect outside clicks
 
   // Edit modal state
   const [editModal, setEditModal] = useState({
@@ -71,6 +75,18 @@ const GuestsPage = () => {
     fetchGuests();
   }, [fetchGuests]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   useEffect(() => {
     // Apply filters locally until backend is updated
     const filtered = guests.filter(guest => {
@@ -82,11 +98,13 @@ const GuestsPage = () => {
 
       const matchesStatus = statusFilter === '' || guest.isActive === (statusFilter === 'ACTIVE');
 
-      return matchesSearch && matchesStatus;
+      const matchesChannel = channelFilter === '' || guest.channel === channelFilter;
+
+      return matchesSearch && matchesStatus && matchesChannel;
     });
 
     setFilteredGuests(filtered);
-  }, [guests, searchTerm, statusFilter]);
+  }, [guests, searchTerm, statusFilter, channelFilter]);
 
   // Handle search with debounce
   const handleSearch = (e) => {
@@ -130,6 +148,30 @@ const GuestsPage = () => {
       alert(error.response?.data?.message || 'Failed to update guest status');
     } finally {
       setUpdating(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(guestId);
+        return newSet;
+      });
+    }
+  };
+
+  // Update guest channel
+  const updateGuestChannel = async (guestId, newChannel) => {
+    if (!window.confirm(`Change guest channel to ${newChannel}?`)) {
+      return;
+    }
+
+    setChannelUpdating(prev => new Set(prev).add(guestId));
+
+    try {
+      await hotelService.updateGuestChannel(guestId, newChannel);
+      await fetchGuests();
+      alert(`Guest channel updated to ${newChannel} successfully.`);
+    } catch (error) {
+      console.error('Error updating guest channel:', error);
+      alert(error.response?.data?.message || 'Failed to update guest channel');
+    } finally {
+      setChannelUpdating(prev => {
         const newSet = new Set(prev);
         newSet.delete(guestId);
         return newSet;
@@ -349,6 +391,23 @@ const GuestsPage = () => {
             </div>
           </div>
 
+          {/* Channel Filter */}
+          <div className="lg:w-48">
+            <select
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-modern-blue focus:border-modern-blue"
+              value={channelFilter}
+              onChange={(e) => {
+                setChannelFilter(e.target.value);
+                setPagination(prev => ({ ...prev, page: 1 }));
+              }}
+            >
+              <option value="">All Channels</option>
+              <option value="Travel Agency">Travel Agency</option>
+              <option value="Corporate">Corporate</option>
+              <option value="Direct">Direct</option>
+            </select>
+          </div>
+
           {/* Status Filter */}
           <div className="lg:w-48">
             <select
@@ -379,6 +438,9 @@ const GuestsPage = () => {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('hotelAdmin.guests.table.guest')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Channel
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Loyalty Tier
@@ -425,6 +487,29 @@ const GuestsPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="relative">
+                        <select
+                          value={guest.channel || 'Direct'}
+                          onChange={(e) => updateGuestChannel(guest._id, e.target.value)}
+                          disabled={channelUpdating.has(guest._id)}
+                          className="appearance-none text-sm font-medium border-2 border-gray-200 rounded-lg px-4 py-2 pr-10 bg-white hover:border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
+                          style={{
+                            minWidth: '160px'
+                          }}
+                        >
+                          <option value="Travel Agency" className="py-2">🏢 Travel Agency</option>
+                          <option value="Corporate" className="py-2">💼 Corporate</option>
+                          <option value="Direct" className="py-2">👤 Direct</option>
+                        </select>
+                        {/* Custom dropdown arrow */}
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       {guest.loyaltyTier ? (
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTierBadgeColor(guest.loyaltyTier)}`}>
                           {guest.loyaltyTier.toUpperCase()}
@@ -462,70 +547,91 @@ const GuestsPage = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex flex-wrap gap-2">
-                        {/* Edit Room Button - Only for active guests */}
-                        {guest.isActive !== false && (
-                          <button
-                            onClick={() => openEditModal(guest)}
-                            disabled={updating.has(guest._id)}
-                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <HiPencil className="w-4 h-4 mr-1" />
-                            Edit Room
-                          </button>
-                        )}
-
-                        {/* View History Button - For guests with stay history */}
-                        {guest.stayHistory && guest.stayHistory.length > 0 && (
-                          <button
-                            onClick={() => handleViewHistory(guest)}
-                            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors"
-                            title="View stay history"
-                          >
-                            <HiCheckCircle className="w-4 h-4 mr-1" />
-                            View History
-                          </button>
-                        )}
-
-                        {/* Loyalty Program Toggle Button */}
+                      <div className="relative">
                         <button
-                          onClick={() => toggleLoyaltyMembership(guest._id, guest.loyaltyTier !== null && guest.loyaltyTier !== undefined)}
-                          disabled={loyaltyUpdating.has(guest._id)}
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                            guest.loyaltyTier
-                              ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                              : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                          title={guest.loyaltyTier ? 'Remove from Loyalty Program' : 'Add to Loyalty Program'}
+                          onClick={() => setOpenDropdown(openDropdown === guest._id ? null : guest._id)}
+                          className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                         >
-                          {loyaltyUpdating.has(guest._id) ? (
-                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
-                          ) : guest.loyaltyTier ? (
-                            <HiBan className="w-4 h-4 mr-1" />
-                          ) : (
-                            <HiStar className="w-4 h-4 mr-1" />
-                          )}
-                          {guest.loyaltyTier ? 'Remove Loyalty' : 'Add Loyalty'}
+                          <HiDotsVertical className="w-5 h-5" />
                         </button>
 
-                        <button
-                          onClick={() => toggleGuestStatus(guest._id, guest.isActive !== false)}
-                          disabled={updating.has(guest._id)}
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                            guest.isActive !== false
-                              ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                              : 'bg-green-100 text-green-700 hover:bg-green-200'
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                        >
-                          {updating.has(guest._id) ? (
-                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-1" />
-                          ) : guest.isActive !== false ? (
-                            <HiXCircle className="w-4 h-4 mr-1" />
-                          ) : (
-                            <HiCheckCircle className="w-4 h-4 mr-1" />
-                          )}
-                          {guest.isActive !== false ? t('hotelAdmin.guests.actions.deactivate') : t('hotelAdmin.guests.actions.activate')}
-                        </button>
+                        {/* Dropdown Menu */}
+                        {openDropdown === guest._id && (
+                          <div
+                            ref={dropdownRef}
+                            className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1"
+                          >
+                            {/* Edit Room Button - Only for active guests */}
+                            {guest.isActive !== false && (
+                              <button
+                                onClick={() => {
+                                  openEditModal(guest);
+                                  setOpenDropdown(null);
+                                }}
+                                disabled={updating.has(guest._id)}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <HiPencil className="w-4 h-4 mr-3 text-blue-600" />
+                                Edit Room
+                              </button>
+                            )}
+
+                            {/* View History Button - For guests with stay history */}
+                            {guest.stayHistory && guest.stayHistory.length > 0 && (
+                              <button
+                                onClick={() => {
+                                  handleViewHistory(guest);
+                                  setOpenDropdown(null);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 flex items-center"
+                              >
+                                <HiCheckCircle className="w-4 h-4 mr-3 text-indigo-600" />
+                                View History
+                              </button>
+                            )}
+
+                            {/* Loyalty Program Toggle Button */}
+                            <button
+                              onClick={() => {
+                                toggleLoyaltyMembership(guest._id, guest.loyaltyTier !== null && guest.loyaltyTier !== undefined);
+                                setOpenDropdown(null);
+                              }}
+                              disabled={loyaltyUpdating.has(guest._id)}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {loyaltyUpdating.has(guest._id) ? (
+                                <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mr-3" />
+                              ) : guest.loyaltyTier ? (
+                                <HiBan className="w-4 h-4 mr-3 text-orange-600" />
+                              ) : (
+                                <HiStar className="w-4 h-4 mr-3 text-purple-600" />
+                              )}
+                              {guest.loyaltyTier ? 'Remove Loyalty' : 'Add Loyalty'}
+                            </button>
+
+                            {/* Divider */}
+                            <div className="border-t border-gray-200 my-1"></div>
+
+                            {/* Deactivate/Activate Button */}
+                            <button
+                              onClick={() => {
+                                toggleGuestStatus(guest._id, guest.isActive !== false);
+                                setOpenDropdown(null);
+                              }}
+                              disabled={updating.has(guest._id)}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {updating.has(guest._id) ? (
+                                <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin mr-3" />
+                              ) : guest.isActive !== false ? (
+                                <HiXCircle className="w-4 h-4 mr-3 text-red-600" />
+                              ) : (
+                                <HiCheckCircle className="w-4 h-4 mr-3 text-green-600" />
+                              )}
+                              {guest.isActive !== false ? t('hotelAdmin.guests.actions.deactivate') : t('hotelAdmin.guests.actions.activate')}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>

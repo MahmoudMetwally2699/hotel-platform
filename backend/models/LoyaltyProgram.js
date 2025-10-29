@@ -3,13 +3,20 @@ const mongoose = require('mongoose');
 /**
  * LoyaltyProgram Schema
  * Manages the loyalty program configuration for each hotel
+ * Now supports channel-based configurations (Travel Agency, Corporate, Direct)
  */
 const loyaltyProgramSchema = new mongoose.Schema({
   hotel: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Hotel',
-    required: true,
-    unique: true
+    required: true
+  },
+
+  // Channel for segmentation (Travel Agency, Corporate, Direct)
+  channel: {
+    type: String,
+    enum: ['Travel Agency', 'Corporate', 'Direct'],
+    required: true
   },
 
   // Tier Configuration
@@ -73,6 +80,11 @@ const loyaltyProgramSchema = new mongoose.Schema({
         default: 1.5,
         min: 0
       },
+      travel: {
+        type: Number,
+        default: 1.5,
+        min: 0
+      },
       housekeeping: {
         type: Number,
         default: 1,
@@ -94,6 +106,15 @@ const loyaltyProgramSchema = new mongoose.Schema({
       required: true,
       default: 500, // Minimum 500 points to redeem
       min: 0
+    },
+    maximumRedemption: {
+      type: Number,
+      default: null, // No maximum by default (null means unlimited)
+      min: 0
+    },
+    restrictions: {
+      type: String,
+      default: ''
     }
   },
 
@@ -143,8 +164,11 @@ const loyaltyProgramSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Compound index for hotel and channel (one program per hotel per channel)
+loyaltyProgramSchema.index({ hotel: 1, channel: 1 }, { unique: true });
+
 // Index for faster queries
-loyaltyProgramSchema.index({ hotel: 1 });
+loyaltyProgramSchema.index({ hotel: 1, isActive: 1 });
 
 // Pre-save middleware to update timestamps
 loyaltyProgramSchema.pre('save', function(next) {
@@ -188,6 +212,56 @@ loyaltyProgramSchema.statics.getDefaultTierConfiguration = function() {
       color: '#E5E4E2'
     }
   ];
+};
+
+// Method to get default channel settings
+loyaltyProgramSchema.statics.getDefaultChannelSettings = function(channel) {
+  const defaults = {
+    'Travel Agency': {
+      pointsPerDollar: 1,
+      pointsPerNight: 50,
+      serviceMultipliers: {
+        laundry: 1.2,
+        transportation: 1.5,
+        tourism: 2.0,
+        travel: 2.0,
+        housekeeping: 1.0
+      },
+      pointsToMoneyRatio: 100,
+      minimumRedemption: 500,
+      maximumRedemption: 10000
+    },
+    'Corporate': {
+      pointsPerDollar: 1.5,
+      pointsPerNight: 75,
+      serviceMultipliers: {
+        laundry: 1.5,
+        transportation: 2.0,
+        tourism: 1.2,
+        travel: 1.2,
+        housekeeping: 1.3
+      },
+      pointsToMoneyRatio: 100,
+      minimumRedemption: 1000,
+      maximumRedemption: 20000
+    },
+    'Direct': {
+      pointsPerDollar: 2,
+      pointsPerNight: 100,
+      serviceMultipliers: {
+        laundry: 1.5,
+        transportation: 1.5,
+        tourism: 1.5,
+        travel: 1.5,
+        housekeeping: 1.5
+      },
+      pointsToMoneyRatio: 100,
+      minimumRedemption: 500,
+      maximumRedemption: null // Unlimited
+    }
+  };
+
+  return defaults[channel] || defaults['Direct'];
 };
 
 // Method to get tier by points

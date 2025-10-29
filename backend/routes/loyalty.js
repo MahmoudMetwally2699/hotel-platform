@@ -3,6 +3,8 @@ const router = express.Router();
 const {
   createOrUpdateProgram,
   getLoyaltyProgram,
+  getAllChannelPrograms,
+  getProgramByChannel,
   getAllMembers,
   getMemberDetails,
   getGuestLoyaltyHistory,
@@ -28,9 +30,11 @@ const { protect, restrictTo } = require('../middleware/auth');
 // HOTEL ADMIN ROUTES - Mounted at /api/loyalty/hotel/*
 // ============================================
 
-// Loyalty Program Configuration
+// Loyalty Program Configuration (Channel-Based)
 router.post('/hotel/program', protect, restrictTo('hotel'), createOrUpdateProgram);
 router.get('/hotel/program', protect, restrictTo('hotel'), getLoyaltyProgram);
+router.get('/hotel/channels', protect, restrictTo('hotel'), getAllChannelPrograms);
+router.get('/hotel/program/:channel', protect, restrictTo('hotel'), getProgramByChannel);
 
 // Member Management
 router.get('/hotel/members', protect, restrictTo('hotel'), getAllMembers);
