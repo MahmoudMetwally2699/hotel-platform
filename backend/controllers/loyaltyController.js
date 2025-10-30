@@ -63,7 +63,6 @@ exports.createOrUpdateProgram = async (req, res) => {
 
     // Validate tier configuration
     if (tierConfiguration) {
-      console.log('Validating tier configuration:', JSON.stringify(tierConfiguration, null, 2));
       const validation = validateTierConfiguration(tierConfiguration);
       if (!validation.valid) {
         console.error('Tier configuration validation failed:', validation.errors);
@@ -118,7 +117,6 @@ exports.createOrUpdateProgram = async (req, res) => {
     // Recalculate all member tiers if tier configuration changed
     let tierUpdateCount = 0;
     if (tierConfigChanged) {
-      console.log('Tier configuration changed, recalculating member tiers...');
       const members = await LoyaltyMember.find({ hotel: hotelId });
 
       for (const member of members) {
@@ -132,11 +130,9 @@ exports.createOrUpdateProgram = async (req, res) => {
             member.calculateTierProgress(program.tierConfiguration);
             await member.save();
             tierUpdateCount++;
-            console.log(`Member ${member.guest} tier updated: ${oldTier} → ${newTier.name}`);
           }
         }
       }
-      console.log(`Tier recalculation complete: ${tierUpdateCount} members updated`);
     }
 
     res.status(existingProgram ? 200 : 201).json({
@@ -541,13 +537,22 @@ exports.adjustMemberPoints = async (req, res) => {
     }
 
     // Get loyalty program and hotel details
-    const program = await LoyaltyProgram.findOne({ hotel: hotelId });
-    if (!program) {
+    const programs = await LoyaltyProgram.find({ hotel: hotelId });
+    if (!programs || programs.length === 0) {
       return res.status(404).json({
         success: false,
         message: 'Loyalty program not found'
       });
     }
+
+    // Use the most recent channel program for tier configuration
+    const channelPrograms = programs.filter(p =>
+      p.channel && ['Travel Agency', 'Corporate', 'Direct'].includes(p.channel)
+    );
+    const sortedPrograms = channelPrograms.sort((a, b) =>
+      new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
+    );
+    const program = sortedPrograms[0] || programs[0];
 
     const hotel = await Hotel.findById(hotelId).select('name location');
 
@@ -587,10 +592,12 @@ exports.adjustMemberPoints = async (req, res) => {
 
     await member.save();
 
-    // Update program statistics
+    // Update program statistics for all channel programs
     if (points > 0) {
-      program.statistics.totalPointsIssued += points;
-      await program.save();
+      for (const prog of channelPrograms) {
+        prog.statistics.totalPointsIssued += points;
+        await prog.save();
+      }
     }
 
     // Generate PDF if requested
@@ -1208,7 +1215,7 @@ exports.getMyMembership = async (req, res) => {
     let member = await LoyaltyMember.findOne({
       guest: guestId,
       hotel: hotelId
-    });
+    }).populate('guest', 'channel');
 
     if (!member) {
       return res.status(404).json({
@@ -1217,13 +1224,33 @@ exports.getMyMembership = async (req, res) => {
       });
     }
 
-    // Get loyalty program
-    const program = await LoyaltyProgram.findOne({ hotel: hotelId });
-    if (!program) {
+    // Get loyalty programs (could be multiple for channels)
+    const programs = await LoyaltyProgram.find({ hotel: hotelId });
+
+    if (!programs || programs.length === 0) {
       return res.status(404).json({
         success: false,
         message: 'Loyalty program not found'
       });
+    }
+
+    // Get guest's channel
+    const guestChannel = member.guest?.channel || 'Direct';
+
+    // Filter to channel-based programs and get the most recent for guest's channel
+    const channelPrograms = programs.filter(p =>
+      p.channel && ['Travel Agency', 'Corporate', 'Direct'].includes(p.channel)
+    );
+
+    // Try to find program matching guest's channel
+    let program = channelPrograms.find(p => p.channel === guestChannel);
+
+    // If no matching channel program, get most recent channel program
+    if (!program) {
+      const sortedPrograms = channelPrograms.sort((a, b) =>
+        new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
+      );
+      program = sortedPrograms[0] || programs[0];
     }
 
     // Check and expire old points

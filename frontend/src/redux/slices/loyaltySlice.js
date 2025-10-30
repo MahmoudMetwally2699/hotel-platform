@@ -387,7 +387,10 @@ const loyaltySlice = createSlice({
       .addCase(fetchMyMembership.fulfilled, (state, action) => {
         state.loading = false;
         state.currentMembership = action.payload.member;
-        state.programDetails = action.payload.program;
+        state.programDetails = {
+          tierDetails: action.payload.tierDetails,
+          program: action.payload.program
+        };
       })
       .addCase(fetchMyMembership.rejected, (state, action) => {
         state.loading = false;

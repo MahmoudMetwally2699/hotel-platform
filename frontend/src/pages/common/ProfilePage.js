@@ -10,6 +10,8 @@ import * as Yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import { fetchProfile, selectCurrentUser, selectAuthRole, selectAuthLoading } from '../../redux/slices/authSlice';
 import authService from '../../services/auth.service';
+import { fetchMyMembership } from '../../redux/slices/loyaltySlice';
+import LoyaltyTierCard from '../../components/loyalty/LoyaltyTierCard';
 
 // Validation schema
 const validationSchema = (t) => Yup.object({
@@ -26,6 +28,9 @@ const ProfilePage = () => {
   const userRole = useSelector(selectAuthRole);
   const isLoading = useSelector(selectAuthLoading);
 
+  // Loyalty state
+  const { currentMembership, programDetails, loading: loyaltyLoading, error: loyaltyError } = useSelector(state => state.loyalty);
+
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState(null);
@@ -35,6 +40,19 @@ const ProfilePage = () => {
   useEffect(() => {
     dispatch(fetchProfile());
   }, [dispatch]);
+
+  // Fetch loyalty membership for guest users
+  useEffect(() => {
+    if (userRole === 'guest' && currentUser?.selectedHotelId) {
+      const hotelId = typeof currentUser.selectedHotelId === 'object'
+        ? currentUser.selectedHotelId._id
+        : currentUser.selectedHotelId;
+
+      if (hotelId) {
+        dispatch(fetchMyMembership(hotelId));
+      }
+    }
+  }, [dispatch, userRole, currentUser?.selectedHotelId]);
 
   // Handle profile update
   const handleSubmit = async (values) => {
@@ -196,6 +214,41 @@ const ProfilePage = () => {
                 <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
               </svg>
             </span>
+          </div>
+        )}
+
+        {/* Loyalty Tier Card for Guest Users */}
+        {userRole === 'guest' && currentMembership && programDetails && (
+          <div className="mt-6">
+            <LoyaltyTierCard
+              membership={currentMembership}
+              tierDetails={programDetails.tierDetails}
+              program={programDetails.program}
+            />
+          </div>
+        )}
+
+        {/* Loyalty Loading State */}
+        {userRole === 'guest' && loyaltyLoading && !currentMembership && (
+          <div className="mt-6 bg-white shadow-lg rounded-2xl p-8">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              <span className="ml-3 text-gray-600">Loading loyalty information...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Loyalty Error or No Membership State */}
+        {userRole === 'guest' && !loyaltyLoading && !currentMembership && currentUser?.selectedHotelId && (
+          <div className="mt-6 bg-blue-50 border border-blue-200 rounded-2xl p-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">Join Our Loyalty Program</h3>
+              <p className="text-blue-700 text-sm">
+                {loyaltyError
+                  ? "You're not enrolled in a loyalty program yet. Complete your first booking to join automatically!"
+                  : "Start earning points and enjoy exclusive benefits with every booking."}
+              </p>
+            </div>
           </div>
         )}
 

@@ -140,8 +140,21 @@ const LoyaltyProgramPage = () => {
 
   // Helper function to get tier color dynamically from configuration
   const getTierColor = (tierName) => {
-    // Get tier configuration from first program (they share the same tier config)
-    const programData = Array.isArray(loyaltyProgram) ? loyaltyProgram[0] : loyaltyProgram;
+    // Get tier configuration from the most recently updated channel program
+    let programData;
+    if (Array.isArray(loyaltyProgram)) {
+      // Filter to only channel-based programs
+      const channelPrograms = loyaltyProgram.filter(p =>
+        p.channel && ['Travel Agency', 'Corporate', 'Direct'].includes(p.channel)
+      );
+      // Sort by updatedAt to get the most recent
+      const sortedPrograms = channelPrograms.sort((a, b) =>
+        new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
+      );
+      programData = sortedPrograms[0] || loyaltyProgram[0];
+    } else {
+      programData = loyaltyProgram;
+    }
 
     if (!programData?.tierConfiguration) {
       // Fallback to default colors if program not loaded
@@ -159,10 +172,10 @@ const LoyaltyProgramPage = () => {
   };
 
   // Helper function to calculate redemption value
-  const calculateRedemptionValue = (points) => {
-    // Use Direct channel as default for redemption ratio (or first available)
+  const calculateRedemptionValue = (points, memberChannel = 'Direct') => {
+    // Use member's channel to get the correct redemption ratio
     const programData = Array.isArray(loyaltyProgram)
-      ? loyaltyProgram.find(p => p.channel === 'Direct') || loyaltyProgram[0]
+      ? loyaltyProgram.find(p => p.channel === memberChannel) || loyaltyProgram.find(p => p.channel === 'Direct') || loyaltyProgram[0]
       : loyaltyProgram;
 
     if (!programData?.redemptionRules?.pointsToMoneyRatio) return 0;
@@ -245,8 +258,22 @@ const LoyaltyProgramPage = () => {
 
       {/* Tier Benefits Section */}
       {(() => {
-        // Get tier configuration from first program (shared across all channels)
-        const programData = Array.isArray(loyaltyProgram) ? loyaltyProgram[0] : loyaltyProgram;
+        // Get tier configuration from the most recently updated channel program
+        let programData;
+        if (Array.isArray(loyaltyProgram)) {
+          // Filter to only channel-based programs
+          const channelPrograms = loyaltyProgram.filter(p =>
+            p.channel && ['Travel Agency', 'Corporate', 'Direct'].includes(p.channel)
+          );
+          // Sort by updatedAt to get the most recent
+          const sortedPrograms = channelPrograms.sort((a, b) =>
+            new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
+          );
+          programData = sortedPrograms[0] || loyaltyProgram[0];
+        } else {
+          programData = loyaltyProgram;
+        }
+
         const hasTierConfig = programData?.tierConfiguration && programData.tierConfiguration.length > 0;
 
         return hasTierConfig && (
@@ -691,7 +718,7 @@ const LoyaltyProgramPage = () => {
                             </span>
                             <p className="text-sm text-gray-600 mt-1">{member.totalPoints || 0} points</p>
                             <p className="text-xs font-semibold text-green-600 mt-1">
-                              ${calculateRedemptionValue(member.availablePoints || 0).toFixed(2)} redeemable
+                              ${calculateRedemptionValue(member.availablePoints || 0, member.guest?.channel).toFixed(2)} redeemable
                             </p>
                             <p className="text-xs text-gray-500">Spent: ${member.lifetimeSpending?.toFixed(2) || '0.00'}</p>
                             <button
@@ -809,7 +836,7 @@ const LoyaltyProgramPage = () => {
                       {selectedMember.totalPoints || 0} points
                     </p>
                     <p className="text-sm font-semibold text-green-600">
-                      ${calculateRedemptionValue(selectedMember.availablePoints || 0).toFixed(2)} redeemable
+                      ${calculateRedemptionValue(selectedMember.availablePoints || 0, selectedMember.guest?.channel).toFixed(2)} redeemable
                     </p>
                   </div>
                 </div>
