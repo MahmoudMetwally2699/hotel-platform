@@ -123,7 +123,7 @@ exports.createOrUpdateProgram = async (req, res) => {
         // Only recalculate if member's guest has matching channel
         const guest = await User.findById(member.guest).select('channel');
         if (guest && guest.channel === channel) {
-          const newTier = determineTier(member.totalPoints, program.tierConfiguration);
+          const newTier = determineTier(member.tierPoints, program.tierConfiguration);
           if (newTier && newTier.name !== member.currentTier) {
             const oldTier = member.currentTier;
             member.updateTier(newTier.name, 'Tier threshold changed by admin');
@@ -563,7 +563,7 @@ exports.adjustMemberPoints = async (req, res) => {
     member.adjustPoints(Number(points), reason, adminNote || '');
 
     // Check for tier change
-    const newTier = determineTier(member.totalPoints, program.tierConfiguration);
+    const newTier = determineTier(member.tierPoints, program.tierConfiguration);
     if (newTier && newTier.name !== member.currentTier) {
       const tierUpdate = member.updateTier(newTier.name, 'Admin adjustment');
 
@@ -717,6 +717,77 @@ exports.adjustMemberPoints = async (req, res) => {
     }
   } catch (error) {
     console.error('Adjust Member Points Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Adjust ONLY Redeemable Points (without affecting tier points)
+ * @route POST /hotel/loyalty/members/:memberId/adjust-redeemable-points
+ * @access Hotel Admin
+ */
+exports.adjustRedeemablePoints = async (req, res) => {
+  try {
+    const hotelId = getHotelId(req.user);
+    const { memberId } = req.params;
+    const { points, reason, adminNote } = req.body;
+
+    if (!points || points === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Points value is required and must be non-zero'
+      });
+    }
+
+    if (!reason) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reason for adjustment is required'
+      });
+    }
+
+    const member = await LoyaltyMember.findOne({
+      _id: memberId,
+      hotel: hotelId
+    }).populate('guest', 'firstName lastName name email phone');
+
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        message: 'Member not found'
+      });
+    }
+
+    // Store old values
+    const oldAvailablePoints = member.availablePoints;
+    const oldTierPoints = member.tierPoints;
+
+    // Adjust ONLY redeemable points
+    member.adjustRedeemablePoints(Number(points), reason, adminNote || '');
+
+    await member.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Redeemable points adjusted successfully (tier points unchanged)',
+      data: {
+        member,
+        adjustment: {
+          oldAvailablePoints,
+          newAvailablePoints: member.availablePoints,
+          pointsAdjusted: points,
+          tierPoints: member.tierPoints,
+          tierPointsUnchanged: oldTierPoints === member.tierPoints,
+          currentTier: member.currentTier
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Adjust Redeemable Points Error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error',

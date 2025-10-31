@@ -31,6 +31,13 @@ const loyaltyMemberSchema = new mongoose.Schema({
     min: 0
   },
 
+  // Tier Points - Used only for tier qualification, never decreases on redemption
+  tierPoints: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+
   availablePoints: {
     type: Number,
     default: 0,
@@ -219,8 +226,15 @@ loyaltyMemberSchema.methods.addPoints = function(points, description, bookingRef
   const expirationDate = new Date();
   expirationDate.setMonth(expirationDate.getMonth() + expirationMonths);
 
+  // Update both totalPoints (for backward compatibility and display)
   this.totalPoints += points;
+
+  // Update tierPoints (for tier qualification - never decreases)
+  this.tierPoints += points;
+
+  // Update availablePoints (for redemption)
   this.availablePoints += points;
+
   this.lifetimePointsEarned += points;
 
   this.pointsHistory.push({
@@ -243,6 +257,8 @@ loyaltyMemberSchema.methods.redeemPoints = function(points, value, rewardName, r
     throw new Error('Insufficient points for redemption');
   }
 
+  // Only deduct from availablePoints, NOT from tierPoints or totalPoints
+  // This ensures users maintain their tier status after redemption
   this.availablePoints -= points;
   this.lifetimePointsRedeemed += points;
 
@@ -272,7 +288,13 @@ loyaltyMemberSchema.methods.adjustPoints = function(points, reason, adminNote = 
   const type = points > 0 ? 'ADJUSTED' : 'ADJUSTED';
 
   this.totalPoints += points;
+  this.tierPoints += points;
   this.availablePoints += points;
+
+  // Ensure tierPoints never goes negative
+  if (this.tierPoints < 0) {
+    this.tierPoints = 0;
+  }
 
   if (points > 0) {
     this.lifetimePointsEarned += points;
@@ -284,6 +306,32 @@ loyaltyMemberSchema.methods.adjustPoints = function(points, reason, adminNote = 
     description: reason,
     date: new Date(),
     adminNote: adminNote
+  });
+
+  this.lastActivity = new Date();
+};
+
+// Method to adjust ONLY redeemable points (without affecting tier points)
+loyaltyMemberSchema.methods.adjustRedeemablePoints = function(points, reason, adminNote = '') {
+  const type = points > 0 ? 'ADJUSTED' : 'ADJUSTED';
+
+  // Only adjust availablePoints - tierPoints remain unchanged
+  this.availablePoints += points;
+
+  // Ensure availablePoints never goes negative
+  if (this.availablePoints < 0) {
+    this.availablePoints = 0;
+  }
+
+  // Don't update totalPoints or tierPoints - this is redeemable-only adjustment
+  // This allows admins to give/remove redeemable points without affecting tier status
+
+  this.pointsHistory.push({
+    type: type,
+    points: points,
+    description: `${reason} (Redeemable only)`,
+    date: new Date(),
+    adminNote: adminNote || 'Redeemable points adjustment only - tier unaffected'
   });
 
   this.lastActivity = new Date();
@@ -316,8 +364,8 @@ loyaltyMemberSchema.methods.calculateTierProgress = function(tierConfiguration) 
 
   if (nextTierIndex < tierConfiguration.length) {
     const nextTier = tierConfiguration[nextTierIndex];
-    const pointsToNextTier = nextTier.minPoints - this.totalPoints;
-    const progressPercentage = Math.min(100, ((this.totalPoints - currentTier.minPoints) / (nextTier.minPoints - currentTier.minPoints)) * 100);
+    const pointsToNextTier = nextTier.minPoints - this.tierPoints;
+    const progressPercentage = Math.min(100, ((this.tierPoints - currentTier.minPoints) / (nextTier.minPoints - currentTier.minPoints)) * 100);
 
     this.tierProgress = {
       pointsToNextTier: Math.max(0, pointsToNextTier),
@@ -355,8 +403,10 @@ loyaltyMemberSchema.methods.expireOldPoints = function() {
   });
 
   if (expiredPoints > 0) {
+    // Only reduce availablePoints when points expire, not tierPoints
     this.availablePoints = Math.max(0, this.availablePoints - expiredPoints);
     this.totalPoints = Math.max(0, this.totalPoints - expiredPoints);
+    // tierPoints remain unchanged - users keep their tier status
   }
 
   return expiredPoints;

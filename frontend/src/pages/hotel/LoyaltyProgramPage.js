@@ -26,8 +26,10 @@ const LoyaltyProgramPage = () => {
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [pointsAdjustment, setPointsAdjustment] = useState(0);
+  const [cashAdjustment, setCashAdjustment] = useState(0);
   const [adjustmentReason, setAdjustmentReason] = useState('');
   const [adjustmentType, setAdjustmentType] = useState('add'); // 'add' or 'deduct'
+  const [adjustmentMode, setAdjustmentMode] = useState('all'); // 'all' or 'redeemable'
 
   // Search and filter states for members modal
   const [memberSearchTerm, setMemberSearchTerm] = useState('');
@@ -73,20 +75,32 @@ const LoyaltyProgramPage = () => {
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
       const cleanApiUrl = apiUrl.endsWith('/api') ? apiUrl : `${apiUrl}/api`;
 
-      const response = await fetch(`${cleanApiUrl}/loyalty/hotel/members/${selectedMember._id}/adjust-points`, {
+      // Choose endpoint based on adjustment mode
+      const endpoint = adjustmentMode === 'redeemable'
+        ? `${cleanApiUrl}/loyalty/hotel/members/${selectedMember._id}/adjust-redeemable-points`
+        : `${cleanApiUrl}/loyalty/hotel/members/${selectedMember._id}/adjust-points`;
+
+      const requestBody = adjustmentMode === 'redeemable'
+        ? {
+            points: finalPoints,
+            reason: adjustmentReason
+          }
+        : {
+            points: finalPoints,
+            reason: adjustmentReason,
+            generatePDF: true
+          };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({
-          points: finalPoints,
-          reason: adjustmentReason,
-          generatePDF: true
-        })
+        body: JSON.stringify(requestBody)
       });
 
-      // Check if response is PDF
+      // Check if response is PDF (only for 'all' mode)
       const contentType = response.headers.get('content-type');
 
       if (contentType && contentType.includes('application/pdf')) {
@@ -104,8 +118,10 @@ const LoyaltyProgramPage = () => {
         alert(`Points ${adjustmentType === 'add' ? 'added' : 'deducted'} successfully! PDF report downloaded.`);
         setSelectedMember(null);
         setPointsAdjustment(0);
+        setCashAdjustment(0);
         setAdjustmentReason('');
         setAdjustmentType('add');
+        setAdjustmentMode('all');
         // Refresh analytics
         dispatch(fetchLoyaltyAnalytics());
       } else {
@@ -113,11 +129,14 @@ const LoyaltyProgramPage = () => {
         const data = await response.json();
 
         if (data.success) {
-          alert(`Points ${adjustmentType === 'add' ? 'added' : 'deducted'} successfully!`);
+          const modeText = adjustmentMode === 'redeemable' ? 'redeemable points' : 'all points (tier + redeemable)';
+          alert(`${modeText} ${adjustmentType === 'add' ? 'added' : 'deducted'} successfully!${adjustmentMode === 'redeemable' ? ' Tier status unchanged.' : ''}`);
           setSelectedMember(null);
           setPointsAdjustment(0);
+          setCashAdjustment(0);
           setAdjustmentReason('');
           setAdjustmentType('add');
+          setAdjustmentMode('all');
           // Refresh analytics
           dispatch(fetchLoyaltyAnalytics());
         } else {
@@ -716,17 +735,20 @@ const LoyaltyProgramPage = () => {
                             >
                               {member.currentTier}
                             </span>
-                            <p className="text-sm text-gray-600 mt-1">{member.totalPoints || 0} points</p>
-                            <p className="text-xs font-semibold text-green-600 mt-1">
-                              ${calculateRedemptionValue(member.availablePoints || 0, member.guest?.channel).toFixed(2)} redeemable
+                            <p className="text-sm text-gray-600 mt-1">
+                              <span className="font-semibold">{member.tierPoints || member.totalPoints || 0}</span> tier pts
                             </p>
-                            <p className="text-xs text-gray-500">Spent: ${member.lifetimeSpending?.toFixed(2) || '0.00'}</p>
+                            <p className="text-lg font-bold text-green-600 mt-1">
+                              ${calculateRedemptionValue(member.availablePoints || 0, member.guest?.channel).toFixed(2)}
+                            </p>
                             <button
                               onClick={() => {
                                 setSelectedMember(member);
                                 setPointsAdjustment(0);
+                                setCashAdjustment(0);
                                 setAdjustmentReason('');
                                 setAdjustmentType('add');
+                                setAdjustmentMode('all');
                               }}
                               className="mt-2 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition"
                             >
@@ -832,14 +854,65 @@ const LoyaltyProgramPage = () => {
                     {selectedMember.currentTier}
                   </span>
                   <div className="text-right">
+                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Tier Points</p>
                     <p className="text-lg font-bold text-gray-900">
-                      {selectedMember.totalPoints || 0} points
+                      {selectedMember.tierPoints || selectedMember.totalPoints || 0}
                     </p>
-                    <p className="text-sm font-semibold text-green-600">
-                      ${calculateRedemptionValue(selectedMember.availablePoints || 0, selectedMember.guest?.channel).toFixed(2)} redeemable
+                    <p className="text-xs text-gray-500 uppercase tracking-wide mt-3 mb-1">Cash Value</p>
+                    <p className="text-xl font-bold text-green-600">
+                      ${calculateRedemptionValue(selectedMember.availablePoints || 0, selectedMember.guest?.channel).toFixed(2)}
                     </p>
                   </div>
                 </div>
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <p className="text-xs text-gray-500">
+                    💡 Tier points never decrease - they determine membership level. Cash value can be used for rewards.
+                  </p>
+                </div>
+              </div>
+
+              {/* Adjustment Mode Selector - NEW */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  What to Adjust
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => {
+                      setAdjustmentMode('all');
+                      setPointsAdjustment(0);
+                      setCashAdjustment(0);
+                    }}
+                    className={`px-4 py-3 rounded-lg border-2 transition text-left ${
+                      adjustmentMode === 'all'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-300 text-gray-700 hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="font-semibold">All Points</div>
+                    <div className="text-xs mt-1">Affects tier & redeemable</div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAdjustmentMode('redeemable');
+                      setPointsAdjustment(0);
+                      setCashAdjustment(0);
+                    }}
+                    className={`px-4 py-3 rounded-lg border-2 transition text-left ${
+                      adjustmentMode === 'redeemable'
+                        ? 'border-purple-500 bg-purple-50 text-purple-700'
+                        : 'border-gray-300 text-gray-700 hover:border-purple-300'
+                    }`}
+                  >
+                    <div className="font-semibold">Redeemable Only</div>
+                    <div className="text-xs mt-1">🔒 Tier status protected</div>
+                  </button>
+                </div>
+                {adjustmentMode === 'redeemable' && (
+                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+                    💡 This will only adjust redeemable points. Tier points and tier status will remain unchanged.
+                  </div>
+                )}
               </div>
 
               {/* Adjustment Type */}
@@ -871,19 +944,74 @@ const LoyaltyProgramPage = () => {
                 </div>
               </div>
 
-              {/* Points Amount */}
+              {/* Amount Input - Changes based on mode */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Points Amount
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={pointsAdjustment}
-                  onChange={(e) => setPointsAdjustment(parseInt(e.target.value) || 0)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter points amount"
-                />
+                {adjustmentMode === 'all' ? (
+                  <>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Points Amount
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={pointsAdjustment}
+                      onChange={(e) => {
+                        const points = parseInt(e.target.value) || 0;
+                        setPointsAdjustment(points);
+                        // Calculate cash value
+                        const channel = selectedMember?.guest?.channel || 'Direct';
+                        const ratios = {
+                          'Travel Agency': 100,
+                          'Corporate': 100,
+                          'Direct': 100
+                        };
+                        const ratio = ratios[channel] || 100;
+                        setCashAdjustment(points / ratio);
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter points amount"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Equivalent to ${cashAdjustment.toFixed(2)} cash value
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cash Value Amount
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">
+                        $
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={cashAdjustment}
+                        onChange={(e) => {
+                          const cash = parseFloat(e.target.value) || 0;
+                          setCashAdjustment(cash);
+                          // Get points to money ratio based on guest channel
+                          const channel = selectedMember?.guest?.channel || 'Direct';
+                          const ratios = {
+                            'Travel Agency': 100,
+                            'Corporate': 100,
+                            'Direct': 100
+                          };
+                          const ratio = ratios[channel] || 100;
+                          // Convert cash to points
+                          setPointsAdjustment(Math.round(cash * ratio));
+                        }}
+                        className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Equivalent to {pointsAdjustment} points
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Reason */}
@@ -901,27 +1029,66 @@ const LoyaltyProgramPage = () => {
               </div>
 
               {/* Preview */}
-              {pointsAdjustment > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-blue-800 mb-2">
-                    New balance will be:{' '}
-                    <span className="font-bold">
-                      {adjustmentType === 'add'
-                        ? (selectedMember.totalPoints || 0) + pointsAdjustment
-                        : Math.max(0, (selectedMember.totalPoints || 0) - pointsAdjustment)}{' '}
-                      points
-                    </span>
-                  </p>
-                  <p className="text-xs text-blue-700">
-                    Redemption value:{' '}
-                    <span className="font-semibold">
-                      ${calculateRedemptionValue(
-                        adjustmentType === 'add'
-                          ? (selectedMember.availablePoints || 0) + pointsAdjustment
-                          : Math.max(0, (selectedMember.availablePoints || 0) - pointsAdjustment)
-                      ).toFixed(2)}
-                    </span>
-                  </p>
+              {(adjustmentMode === 'all' ? pointsAdjustment > 0 : cashAdjustment > 0) && (
+                <div className={`border-2 rounded-lg p-4 mb-4 ${
+                  adjustmentMode === 'redeemable'
+                    ? 'bg-purple-50 border-purple-200'
+                    : 'bg-blue-50 border-blue-200'
+                }`}>
+                  {adjustmentMode === 'all' ? (
+                    <>
+                      <p className="text-sm text-blue-800 mb-2">
+                        <span className="font-semibold">Tier Points:</span>{' '}
+                        {(selectedMember.tierPoints || selectedMember.totalPoints || 0)} → {' '}
+                        <span className="font-bold">
+                          {adjustmentType === 'add'
+                            ? (selectedMember.tierPoints || selectedMember.totalPoints || 0) + pointsAdjustment
+                            : Math.max(0, (selectedMember.tierPoints || selectedMember.totalPoints || 0) - pointsAdjustment)}
+                        </span>
+                      </p>
+                      <p className="text-sm text-blue-800 mb-2">
+                        <span className="font-semibold">Redeemable Points:</span>{' '}
+                        {(selectedMember.availablePoints || 0)} → {' '}
+                        <span className="font-bold">
+                          {adjustmentType === 'add'
+                            ? (selectedMember.availablePoints || 0) + pointsAdjustment
+                            : Math.max(0, (selectedMember.availablePoints || 0) - pointsAdjustment)}
+                        </span>
+                      </p>
+                      <p className="text-xs text-blue-700 mt-2">
+                        Cash value: ${calculateRedemptionValue(
+                          adjustmentType === 'add'
+                            ? (selectedMember.availablePoints || 0) + pointsAdjustment
+                            : Math.max(0, (selectedMember.availablePoints || 0) - pointsAdjustment),
+                          selectedMember.guest?.channel
+                        ).toFixed(2)}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-purple-800 mb-2">
+                        <span className="font-semibold">Tier Points:</span>{' '}
+                        <span className="font-bold">{selectedMember.tierPoints || selectedMember.totalPoints || 0}</span>
+                        {' '}<span className="text-xs">(unchanged 🔒)</span>
+                      </p>
+                      <p className="text-sm text-purple-800 mb-2">
+                        <span className="font-semibold">Cash Value:</span>{' '}
+                        ${calculateRedemptionValue(selectedMember.availablePoints || 0, selectedMember.guest?.channel).toFixed(2)} → {' '}
+                        <span className="font-bold">
+                          ${(adjustmentType === 'add'
+                            ? calculateRedemptionValue(selectedMember.availablePoints || 0, selectedMember.guest?.channel) + cashAdjustment
+                            : Math.max(0, calculateRedemptionValue(selectedMember.availablePoints || 0, selectedMember.guest?.channel) - cashAdjustment)
+                          ).toFixed(2)}
+                        </span>
+                      </p>
+                      <p className="text-xs text-purple-700 mt-2">
+                        Points adjustment: {adjustmentType === 'add' ? '+' : '-'}{pointsAdjustment} points
+                      </p>
+                      <p className="text-xs text-purple-700 mt-1 font-semibold">
+                        ✓ Tier status will remain: {selectedMember.currentTier}
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
             </div>

@@ -185,7 +185,7 @@ const awardLoyaltyPoints = async (bookingId, guestId, hotelId, finalPrice, servi
 
     // Check for tier upgrade
     const oldTier = member.currentTier;
-    const newTier = determineTier(member.totalPoints, program.tierConfiguration);
+    const newTier = determineTier(member.tierPoints, program.tierConfiguration);
 
     let tierUpgraded = false;
     if (newTier && newTier.name !== member.currentTier) {
@@ -344,10 +344,10 @@ const expireOldPoints = async (hotelId = null) => {
       const expiredPoints = member.expireOldPoints();
 
       if (expiredPoints > 0) {
-        // Check for tier downgrade
+        // Check for tier downgrade (Note: With tierPoints system, tier shouldn't downgrade on expiration)
         const program = await LoyaltyProgram.findOne({ hotel: member.hotel });
         if (program) {
-          const newTier = determineTier(member.totalPoints, program.tierConfiguration);
+          const newTier = determineTier(member.tierPoints, program.tierConfiguration);
           if (newTier && newTier.name !== member.currentTier) {
             member.updateTier(newTier.name, 'Points expiration');
           }

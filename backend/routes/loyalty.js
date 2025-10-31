@@ -9,6 +9,7 @@ const {
   getMemberDetails,
   getGuestLoyaltyHistory,
   adjustMemberPoints,
+  adjustRedeemablePoints,
   changeMemberTier,
   getLoyaltyAnalytics,
   createReward,
@@ -41,6 +42,7 @@ router.get('/hotel/members', protect, restrictTo('hotel'), getAllMembers);
 router.get('/hotel/members/:memberId', protect, restrictTo('hotel'), getMemberDetails);
 router.get('/hotel/guest-history/:guestId', protect, restrictTo('hotel'), getGuestLoyaltyHistory);
 router.post('/hotel/members/:memberId/adjust-points', protect, restrictTo('hotel'), adjustMemberPoints);
+router.post('/hotel/members/:memberId/adjust-redeemable-points', protect, restrictTo('hotel'), adjustRedeemablePoints);
 router.post('/hotel/members/:memberId/change-tier', protect, restrictTo('hotel'), changeMemberTier);
 
 // Analytics and Reports

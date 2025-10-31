@@ -126,24 +126,24 @@ const MyLoyalty = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-gray-600 font-medium">Available Points</p>
+            <p className="text-gray-600 font-medium">Redeemable Points</p>
             <Award className="h-6 w-6 text-green-600" />
           </div>
           <p className="text-3xl font-bold text-gray-900">
             {currentMembership.availablePoints?.toLocaleString() || 0}
           </p>
-          <p className="text-sm text-gray-500 mt-1">Ready to redeem</p>
+          <p className="text-sm text-gray-500 mt-1">Available for rewards</p>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-gray-600 font-medium">Total Points</p>
+            <p className="text-gray-600 font-medium">Tier Points</p>
             <Star className="h-6 w-6 text-yellow-600" />
           </div>
           <p className="text-3xl font-bold text-gray-900">
-            {currentMembership.totalPoints?.toLocaleString() || 0}
+            {(currentMembership.tierPoints || currentMembership.totalPoints)?.toLocaleString() || 0}
           </p>
-          <p className="text-sm text-gray-500 mt-1">Lifetime earned</p>
+          <p className="text-sm text-gray-500 mt-1">For tier qualification</p>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">

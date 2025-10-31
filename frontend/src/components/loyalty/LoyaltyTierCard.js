@@ -81,8 +81,10 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium opacity-90">Available Points</p>
-              <p className="text-4xl font-bold">{membership.availablePoints.toLocaleString()}</p>
+              <p className="text-xs font-medium opacity-90">Tier Points</p>
+              <p className="text-2xl font-bold">{(membership.tierPoints || membership.totalPoints).toLocaleString()}</p>
+              <p className="text-xs font-medium opacity-90 mt-2">Redeemable Points</p>
+              <p className="text-3xl font-bold">{membership.availablePoints.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -91,16 +93,19 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
       {/* Points Statistics */}
       <div className="grid grid-cols-3 divide-x divide-gray-200 bg-gray-50 border-b border-gray-200">
         <div className="p-4 text-center">
-          <p className="text-2xl font-bold text-gray-800">{membership.totalPoints.toLocaleString()}</p>
-          <p className="text-xs text-gray-600 mt-1">Total Points</p>
+          <p className="text-2xl font-bold text-gray-800">{(membership.tierPoints || membership.totalPoints).toLocaleString()}</p>
+          <p className="text-xs text-gray-600 mt-1">Tier Points</p>
+          <p className="text-xs text-gray-500 mt-1">🔒 Never decrease</p>
+        </div>
+        <div className="p-4 text-center">
+          <p className="text-2xl font-bold text-blue-600">{membership.availablePoints.toLocaleString()}</p>
+          <p className="text-xs text-gray-600 mt-1">Redeemable Points</p>
+          <p className="text-xs text-gray-500 mt-1">Use for rewards</p>
         </div>
         <div className="p-4 text-center">
           <p className="text-2xl font-bold text-green-600">${redeemableValue.toFixed(2)}</p>
-          <p className="text-xs text-gray-600 mt-1">Redeemable Value</p>
-        </div>
-        <div className="p-4 text-center">
-          <p className="text-2xl font-bold text-gray-800">{membership.totalNightsStayed || 0}</p>
-          <p className="text-xs text-gray-600 mt-1">Nights Stayed</p>
+          <p className="text-xs text-gray-600 mt-1">Cash Value</p>
+          <p className="text-xs text-gray-500 mt-1">Current balance</p>
         </div>
       </div>
 
