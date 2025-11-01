@@ -14,7 +14,7 @@ export const fetchRevenueSummary = createAsyncThunk(
       if (endDate) params.append('endDate', endDate);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/revenue/summary?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/revenue/summary?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -37,7 +37,7 @@ export const fetchRevenueComparison = createAsyncThunk(
       if (endDate) params.append('endDate', endDate);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/revenue/comparison?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/revenue/comparison?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -60,7 +60,7 @@ export const fetchRevenueByCategory = createAsyncThunk(
       if (endDate) params.append('endDate', endDate);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/revenue/by-category?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/revenue/by-category?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -82,7 +82,7 @@ export const fetchInternalServices = createAsyncThunk(
       if (endDate) params.append('endDate', endDate);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/revenue/internal-services?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/revenue/internal-services?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -104,7 +104,7 @@ export const fetchExternalProviders = createAsyncThunk(
       if (endDate) params.append('endDate', endDate);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/revenue/external-providers?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/revenue/external-providers?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -126,7 +126,7 @@ export const fetchCompleteSummary = createAsyncThunk(
       if (endDate) params.append('endDate', endDate);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/revenue/complete-summary?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/revenue/complete-summary?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }

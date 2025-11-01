@@ -15,7 +15,7 @@ export const fetchSpendingSummary = createAsyncThunk(
       if (serviceType && serviceType !== 'all') params.append('serviceType', serviceType);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/spending/summary?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/spending/summary?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` }}
       );
       return response.data.data;
@@ -36,7 +36,7 @@ export const fetchSpendingTrend = createAsyncThunk(
       params.append('period', period);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/spending/trend?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/spending/trend?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` }}
       );
       return response.data.data;
@@ -56,7 +56,7 @@ export const fetchServiceRequests = createAsyncThunk(
       if (endDate) params.append('endDate', endDate);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/spending/service-requests?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/spending/service-requests?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` }}
       );
       return response.data.data;
@@ -76,7 +76,7 @@ export const fetchServicePopularity = createAsyncThunk(
       if (endDate) params.append('endDate', endDate);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/spending/service-popularity?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/spending/service-popularity?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` }}
       );
       return response.data.data;
@@ -96,7 +96,7 @@ export const fetchComprehensivePerformance = createAsyncThunk(
       if (endDate) params.append('endDate', endDate);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/spending/comprehensive?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/spending/comprehensive?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` }}
       );
       return response.data.data;

@@ -24,7 +24,7 @@ export const fetchOperationalSummary = createAsyncThunk(
       if (serviceType && serviceType !== 'all') params.append('serviceType', serviceType);
 
       const response = await axios.get(
-        `${API_BASE_URL}/hotel/analytics/operational/summary?${params.toString()}`,
+        `${API_BASE_URL}/api/hotel/analytics/operational/summary?${params.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -51,7 +51,7 @@ export const fetchCompletionByService = createAsyncThunk(
       if (serviceType && serviceType !== 'all') params.append('serviceType', serviceType);
 
       const response = await axios.get(
-        `${API_BASE_URL}/hotel/analytics/operational/completion-by-service?${params.toString()}`,
+        `${API_BASE_URL}/api/hotel/analytics/operational/completion-by-service?${params.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -78,7 +78,7 @@ export const fetchSLAByService = createAsyncThunk(
       if (serviceType && serviceType !== 'all') params.append('serviceType', serviceType);
 
       const response = await axios.get(
-        `${API_BASE_URL}/hotel/analytics/operational/sla-by-service?${params.toString()}`,
+        `${API_BASE_URL}/api/hotel/analytics/operational/sla-by-service?${params.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -105,7 +105,7 @@ export const fetchSLADistribution = createAsyncThunk(
       if (serviceType && serviceType !== 'all') params.append('serviceType', serviceType);
 
       const response = await axios.get(
-        `${API_BASE_URL}/hotel/analytics/operational/sla-distribution?${params.toString()}`,
+        `${API_BASE_URL}/api/hotel/analytics/operational/sla-distribution?${params.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -132,7 +132,7 @@ export const fetchServiceDetails = createAsyncThunk(
       if (serviceType && serviceType !== 'all') params.append('serviceType', serviceType);
 
       const response = await axios.get(
-        `${API_BASE_URL}/hotel/analytics/operational/service-details?${params.toString()}`,
+        `${API_BASE_URL}/api/hotel/analytics/operational/service-details?${params.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`

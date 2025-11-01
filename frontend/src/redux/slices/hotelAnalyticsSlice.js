@@ -68,7 +68,7 @@ export const fetchRatingSummary = createAsyncThunk(
       if (serviceType && serviceType !== 'all') params.append('serviceType', serviceType);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/ratings/summary?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/ratings/summary?${params.toString()}`,
         getAuthHeaders()
       );
 
@@ -94,7 +94,7 @@ export const fetchRatingsBreakdown = createAsyncThunk(
       if (serviceType && serviceType !== 'all') params.append('serviceType', serviceType);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/ratings/breakdown?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/ratings/breakdown?${params.toString()}`,
         getAuthHeaders()
       );
 
@@ -120,7 +120,7 @@ export const fetchRatingsByType = createAsyncThunk(
       if (serviceType && serviceType !== 'all') params.append('serviceType', serviceType);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/ratings/by-type?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/ratings/by-type?${params.toString()}`,
         getAuthHeaders()
       );
 
@@ -147,7 +147,7 @@ export const fetchRatingsTrend = createAsyncThunk(
       if (serviceType && serviceType !== 'all') params.append('serviceType', serviceType);
 
       const response = await axios.get(
-        `${API_URL}/hotel/analytics/ratings/trend?${params.toString()}`,
+        `${API_URL}/api/hotel/analytics/ratings/trend?${params.toString()}`,
         getAuthHeaders()
       );
 

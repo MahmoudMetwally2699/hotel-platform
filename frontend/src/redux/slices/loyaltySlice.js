@@ -26,7 +26,7 @@ export const fetchMyMembership = createAsyncThunk(
   async (hotelId, { getState, rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `${API_URL}/loyalty/my-membership?hotelId=${hotelId}`,
+        `${API_URL}/api/loyalty/my-membership?hotelId=${hotelId}`,
         getAuthHeaders(getState)
       );
       return response.data.data;
@@ -44,7 +44,7 @@ export const fetchAvailableRewards = createAsyncThunk(
   async (hotelId, { getState, rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `${API_URL}/loyalty/available-rewards?hotelId=${hotelId}`,
+        `${API_URL}/api/loyalty/available-rewards?hotelId=${hotelId}`,
         getAuthHeaders(getState)
       );
       return response.data.data;
@@ -62,7 +62,7 @@ export const redeemReward = createAsyncThunk(
   async ({ rewardId, hotelId }, { getState, rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${API_URL}/loyalty/redeem/${rewardId}`,
+        `${API_URL}/api/loyalty/redeem/${rewardId}`,
         { hotelId },
         getAuthHeaders(getState)
       );
@@ -85,7 +85,7 @@ export const fetchPointsHistory = createAsyncThunk(
       if (limit) params.append('limit', limit);
 
       const response = await axios.get(
-        `${API_URL}/loyalty/my-history?${params.toString()}`,
+        `${API_URL}/api/loyalty/my-history?${params.toString()}`,
         getAuthHeaders(getState)
       );
       return response.data.data;
@@ -102,7 +102,7 @@ export const fetchProgramDetails = createAsyncThunk(
   'loyalty/fetchProgramDetails',
   async (hotelId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/loyalty/program-details/${hotelId}`);
+      const response = await axios.get(`${API_URL}/api/loyalty/program-details/${hotelId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch program details');
@@ -122,7 +122,7 @@ export const createOrUpdateProgram = createAsyncThunk(
   async (programData, { getState, rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${API_URL}/loyalty/hotel/program`,
+        `${API_URL}/api/loyalty/hotel/program`,
         programData,
         getAuthHeaders(getState)
       );
@@ -141,7 +141,7 @@ export const fetchLoyaltyProgram = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `${API_URL}/loyalty/hotel/program`,
+        `${API_URL}/api/loyalty/hotel/program`,
         getAuthHeaders(getState)
       );
       return response.data.data;
@@ -160,7 +160,7 @@ export const fetchMembers = createAsyncThunk(
     try {
       const params = new URLSearchParams(filters || {});
       const response = await axios.get(
-        `${API_URL}/loyalty/hotel/members?${params.toString()}`,
+        `${API_URL}/api/loyalty/hotel/members?${params.toString()}`,
         getAuthHeaders(getState)
       );
       return response.data;
@@ -178,7 +178,7 @@ export const fetchMemberDetails = createAsyncThunk(
   async (memberId, { getState, rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `${API_URL}/loyalty/hotel/members/${memberId}`,
+        `${API_URL}/api/loyalty/hotel/members/${memberId}`,
         getAuthHeaders(getState)
       );
       return response.data.data;
@@ -196,7 +196,7 @@ export const adjustMemberPoints = createAsyncThunk(
   async ({ memberId, points, reason, adminNote }, { getState, rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${API_URL}/loyalty/hotel/members/${memberId}/adjust-points`,
+        `${API_URL}/api/loyalty/hotel/members/${memberId}/adjust-points`,
         { points, reason, adminNote },
         getAuthHeaders(getState)
       );
@@ -215,7 +215,7 @@ export const changeMemberTier = createAsyncThunk(
   async ({ memberId, tier, reason }, { getState, rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${API_URL}/loyalty/hotel/members/${memberId}/change-tier`,
+        `${API_URL}/api/loyalty/hotel/members/${memberId}/change-tier`,
         { tier, reason },
         getAuthHeaders(getState)
       );
@@ -234,7 +234,7 @@ export const fetchLoyaltyAnalytics = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `${API_URL}/loyalty/hotel/analytics`,
+        `${API_URL}/api/loyalty/hotel/analytics`,
         getAuthHeaders(getState)
       );
       return response.data.data;
@@ -252,7 +252,7 @@ export const createReward = createAsyncThunk(
   async (rewardData, { getState, rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${API_URL}/loyalty/hotel/rewards`,
+        `${API_URL}/api/loyalty/hotel/rewards`,
         rewardData,
         getAuthHeaders(getState)
       );
@@ -272,7 +272,7 @@ export const fetchRewards = createAsyncThunk(
     try {
       const params = new URLSearchParams(filters || {});
       const response = await axios.get(
-        `${API_URL}/loyalty/hotel/rewards?${params.toString()}`,
+        `${API_URL}/api/loyalty/hotel/rewards?${params.toString()}`,
         getAuthHeaders(getState)
       );
       return response.data.data;
@@ -290,7 +290,7 @@ export const updateReward = createAsyncThunk(
   async ({ rewardId, rewardData }, { getState, rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `${API_URL}/loyalty/hotel/rewards/${rewardId}`,
+        `${API_URL}/api/loyalty/hotel/rewards/${rewardId}`,
         rewardData,
         getAuthHeaders(getState)
       );
@@ -309,7 +309,7 @@ export const deleteReward = createAsyncThunk(
   async (rewardId, { getState, rejectWithValue }) => {
     try {
       const response = await axios.delete(
-        `${API_URL}/loyalty/hotel/rewards/${rewardId}`,
+        `${API_URL}/api/loyalty/hotel/rewards/${rewardId}`,
         getAuthHeaders(getState)
       );
       return { rewardId, message: response.data.message };
@@ -327,7 +327,7 @@ export const exportMemberReport = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `${API_URL}/loyalty/hotel/reports`,
+        `${API_URL}/api/loyalty/hotel/reports`,
         getAuthHeaders(getState)
       );
       return response.data.data;
