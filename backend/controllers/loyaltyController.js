@@ -351,8 +351,18 @@ exports.getAllMembers = async (req, res) => {
       .skip(skip)
       .limit(Number(limit));
 
+    // Get loyalty program for tier validation
+    const programs = await LoyaltyProgram.find({ hotel: hotelId });
+    const channelPrograms = programs.filter(p =>
+      p.channel && ['Travel Agency', 'Corporate', 'Direct'].includes(p.channel)
+    );
+    const defaultProgram = channelPrograms.length > 0 ? channelPrograms[0] : programs[0];
+
+    const { determineTier } = require('../utils/loyaltyHelper');
+
     // Calculate nights stayed from check-in and check-out dates + stay history
-    members = members.map(member => {
+    // Also check and correct tier if needed
+    members = await Promise.all(members.map(async (member) => {
       const memberObj = member.toObject();
 
       let totalNights = memberObj.totalNightsStayed || 0;
@@ -376,8 +386,20 @@ exports.getAllMembers = async (req, res) => {
 
       memberObj.totalNightsStayed = totalNights;
 
+      // Check if tier needs correction
+      if (defaultProgram && defaultProgram.tierConfiguration) {
+        console.log(`🔍 Checking tier in list for member ${member._id} (${memberObj.guest?.email}): tierPoints=${member.tierPoints}, currentTier=${member.currentTier}`);
+        const correctTier = determineTier(member.tierPoints, defaultProgram.tierConfiguration);
+        if (correctTier && correctTier.name !== member.currentTier) {
+          console.log(`🔄 Correcting tier for member ${member._id}: ${member.currentTier} → ${correctTier.name} (${member.tierPoints} points)`);
+          member.updateTier(correctTier.name, 'Tier corrected during members list view');
+          await member.save();
+          memberObj.currentTier = correctTier.name;
+        }
+      }
+
       return memberObj;
-    });
+    }));
 
     // Apply channel filter if provided (filter on populated guest data)
     if (channel) {
@@ -441,8 +463,17 @@ exports.getMemberDetails = async (req, res) => {
     // Get loyalty program for tier details
     const program = await LoyaltyProgram.findOne({ hotel: hotelId });
 
-    // Calculate tier progress
     if (program) {
+      // Check if tier needs to be updated based on current points
+      const { determineTier } = require('../utils/loyaltyHelper');
+      const correctTier = determineTier(member.tierPoints, program.tierConfiguration);
+
+      if (correctTier && correctTier.name !== member.currentTier) {
+        console.log(`🔄 Correcting tier for member ${member._id}: ${member.currentTier} → ${correctTier.name} (${member.tierPoints} points)`);
+        member.updateTier(correctTier.name, 'Tier corrected based on current points');
+      }
+
+      // Calculate tier progress
       member.calculateTierProgress(program.tierConfiguration);
       await member.save();
     }
@@ -1327,6 +1358,17 @@ exports.getMyMembership = async (req, res) => {
     // Check and expire old points
     const expiredPoints = member.expireOldPoints();
     if (expiredPoints > 0) {
+      await member.save();
+    }
+
+    // Check if tier needs to be updated based on current points
+    const { determineTier } = require('../utils/loyaltyHelper');
+    console.log(`🔍 Checking tier for member ${member._id} (${member.guest?.email}): tierPoints=${member.tierPoints}, currentTier=${member.currentTier}`);
+    const correctTier = determineTier(member.tierPoints, program.tierConfiguration);
+
+    if (correctTier && correctTier.name !== member.currentTier) {
+      console.log(`🔄 Correcting tier for member ${member._id}: ${member.currentTier} → ${correctTier.name} (${member.tierPoints} points)`);
+      member.updateTier(correctTier.name, 'Tier corrected based on current points');
       await member.save();
     }
 

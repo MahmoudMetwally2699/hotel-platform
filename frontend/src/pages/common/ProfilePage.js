@@ -233,7 +233,7 @@ const ProfilePage = () => {
           <div className="mt-6 bg-white shadow-lg rounded-2xl p-8">
             <div className="flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-              <span className="ml-3 text-gray-600">Loading loyalty information...</span>
+              <span className="ml-3 text-gray-600">{t('profile.loadingLoyaltyInfo')}</span>
             </div>
           </div>
         )}
@@ -242,11 +242,11 @@ const ProfilePage = () => {
         {userRole === 'guest' && !loyaltyLoading && !currentMembership && currentUser?.selectedHotelId && (
           <div className="mt-6 bg-blue-50 border border-blue-200 rounded-2xl p-6">
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">Join Our Loyalty Program</h3>
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">{t('profile.joinLoyaltyProgram')}</h3>
               <p className="text-blue-700 text-sm">
                 {loyaltyError
-                  ? "You're not enrolled in a loyalty program yet. Complete your first booking to join automatically!"
-                  : "Start earning points and enjoy exclusive benefits with every booking."}
+                  ? t('profile.notEnrolledYet')
+                  : t('profile.startEarningPoints')}
               </p>
             </div>
           </div>

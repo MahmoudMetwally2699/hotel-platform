@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TrendingUp, TrendingDown, Users, DollarSign, Package, Repeat } from 'lucide-react';
 
 const ComprehensivePerformanceTable = ({ data, loading, error }) => {
+  const { t, i18n } = useTranslation();
   const [sortBy, setSortBy] = useState('totalRequests');
   const [sortOrder, setSortOrder] = useState('desc');
 
@@ -21,9 +23,9 @@ const ComprehensivePerformanceTable = ({ data, loading, error }) => {
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Comprehensive Service Performance</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.spending.comprehensive.title')}</h3>
         <div className="bg-red-50 border border-red-200 rounded p-4">
-          <p className="text-red-600">Error loading data: {error}</p>
+          <p className="text-red-600">{t('performanceAnalyticsPage.spending.errors.loadError', 'Error loading data')}: {error}</p>
         </div>
       </div>
     );
@@ -32,16 +34,16 @@ const ComprehensivePerformanceTable = ({ data, loading, error }) => {
   if (!data || !data.services || data.services.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Comprehensive Service Performance</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.spending.comprehensive.title')}</h3>
         <div className="bg-gray-50 rounded p-8 text-center">
-          <p className="text-gray-500">No performance data available</p>
+          <p className="text-gray-500">{t('performanceAnalyticsPage.spending.comprehensive.noData')}</p>
         </div>
       </div>
     );
   }
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(i18n.language || 'en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
@@ -49,18 +51,7 @@ const ComprehensivePerformanceTable = ({ data, loading, error }) => {
     }).format(value || 0);
   };
 
-  const formatServiceName = (service) => {
-    const names = {
-      housekeeping: 'Housekeeping',
-      laundry: 'Laundry',
-      restaurant: 'Restaurant',
-      transportation: 'Transportation',
-      maintenance: 'Maintenance',
-      cleaning: 'Cleaning',
-      amenities: 'Amenities'
-    };
-    return names[service] || service;
-  };
+  const formatServiceName = (service) => t(`performanceAnalyticsPage.serviceTypes.${service}`, { defaultValue: service });
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -80,7 +71,7 @@ const ComprehensivePerformanceTable = ({ data, loading, error }) => {
 
   const GrowthIndicator = ({ value }) => {
     if (value === 0) {
-      return <span className="text-gray-500 text-sm">—</span>;
+      return <span className="text-gray-500 text-sm">{t('common.na', 'N/A')}</span>;
     }
     return (
       <div className={`flex items-center gap-1 ${value > 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -92,21 +83,21 @@ const ComprehensivePerformanceTable = ({ data, loading, error }) => {
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-2">Comprehensive Service Performance</h3>
-      <p className="text-sm text-gray-600 mb-6">Detailed breakdown of service popularity, spending, and growth trends</p>
+  <h3 className="text-lg font-semibold mb-2">{t('performanceAnalyticsPage.spending.comprehensive.title')}</h3>
+  <p className="text-sm text-gray-600 mb-6">{t('performanceAnalyticsPage.spending.comprehensive.subtitle')}</p>
 
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b-2 border-gray-200">
-              <th className="text-left py-3 px-4 font-semibold text-gray-700">Service</th>
+              <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('performanceAnalyticsPage.spending.comprehensive.columns.service')}</th>
               <th
                 className="text-right py-3 px-4 font-semibold text-gray-700 cursor-pointer hover:text-blue-600"
                 onClick={() => handleSort('totalRequests')}
               >
                 <div className="flex items-center justify-end gap-1">
                   <Package className="w-4 h-4" />
-                  Requests {sortBy === 'totalRequests' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  {t('performanceAnalyticsPage.spending.comprehensive.columns.requests')} {sortBy === 'totalRequests' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </div>
               </th>
               <th
@@ -115,11 +106,11 @@ const ComprehensivePerformanceTable = ({ data, loading, error }) => {
               >
                 <div className="flex items-center justify-end gap-1">
                   <DollarSign className="w-4 h-4" />
-                  Revenue {sortBy === 'totalRevenue' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  {t('performanceAnalyticsPage.spending.comprehensive.columns.revenue')} {sortBy === 'totalRevenue' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </div>
               </th>
               <th className="text-right py-3 px-4 font-semibold text-gray-700">
-                Avg Spending
+                {t('performanceAnalyticsPage.spending.comprehensive.columns.avgSpending')}
               </th>
               <th
                 className="text-right py-3 px-4 font-semibold text-gray-700 cursor-pointer hover:text-blue-600"
@@ -127,19 +118,19 @@ const ComprehensivePerformanceTable = ({ data, loading, error }) => {
               >
                 <div className="flex items-center justify-end gap-1">
                   <Users className="w-4 h-4" />
-                  Customers {sortBy === 'uniqueCustomers' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  {t('performanceAnalyticsPage.spending.comprehensive.columns.customers')} {sortBy === 'uniqueCustomers' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </div>
               </th>
               <th className="text-center py-3 px-4 font-semibold text-gray-700">
-                Request Growth
+                {t('performanceAnalyticsPage.spending.comprehensive.columns.requestGrowth')}
               </th>
               <th className="text-center py-3 px-4 font-semibold text-gray-700">
-                Revenue Growth
+                {t('performanceAnalyticsPage.spending.comprehensive.columns.revenueGrowth')}
               </th>
               <th className="text-right py-3 px-4 font-semibold text-gray-700">
                 <div className="flex items-center justify-end gap-1">
                   <Repeat className="w-4 h-4" />
-                  Repeat Rate
+                  {t('performanceAnalyticsPage.spending.comprehensive.columns.repeatRate')}
                 </div>
               </th>
             </tr>
@@ -191,25 +182,25 @@ const ComprehensivePerformanceTable = ({ data, loading, error }) => {
       {/* Summary Stats */}
       <div className="mt-6 grid grid-cols-4 gap-4 pt-4 border-t">
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-1">Total Requests</p>
+          <p className="text-sm text-gray-600 mb-1">{t('performanceAnalyticsPage.spending.comprehensive.totals.totalRequests')}</p>
           <p className="text-xl font-bold text-gray-900">
             {sortedServices.reduce((sum, s) => sum + s.totalRequests, 0)}
           </p>
         </div>
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
+          <p className="text-sm text-gray-600 mb-1">{t('performanceAnalyticsPage.spending.comprehensive.totals.totalRevenue')}</p>
           <p className="text-xl font-bold text-gray-900">
             {formatCurrency(sortedServices.reduce((sum, s) => sum + s.totalRevenue, 0))}
           </p>
         </div>
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-1">Unique Customers</p>
+          <p className="text-sm text-gray-600 mb-1">{t('performanceAnalyticsPage.spending.comprehensive.totals.uniqueCustomers')}</p>
           <p className="text-xl font-bold text-gray-900">
             {sortedServices.reduce((sum, s) => sum + s.uniqueCustomers, 0)}
           </p>
         </div>
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-1">Avg Repeat Rate</p>
+          <p className="text-sm text-gray-600 mb-1">{t('performanceAnalyticsPage.spending.comprehensive.totals.avgRepeatRate')}</p>
           <p className="text-xl font-bold text-gray-900">
             {(sortedServices.reduce((sum, s) => sum + s.repeatCustomerRate, 0) / sortedServices.length).toFixed(2)}x
           </p>

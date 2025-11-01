@@ -1288,7 +1288,21 @@ router.put('/service-providers/:id/markup', catchAsync(async (req, res, next) =>
     reason: 'External provider markup configured by hotel admin'
   };
 
-  await serviceProvider.save();
+  try {
+    await serviceProvider.save();
+  } catch (saveError) {
+    // Check if it's a validation error related to license expiry
+    if (saveError.name === 'ValidationError' && saveError.errors?.['businessLicense.expiryDate']) {
+      logger.error('License validation failed during markup update', {
+        hotelId,
+        serviceProviderId: serviceProvider._id,
+        error: saveError.message
+      });
+      return next(new AppError('Cannot set markup: Business license has expired. Please update the license expiry date first.', 400));
+    }
+    // For other errors, rethrow to be handled by catchAsync
+    throw saveError;
+  }
 
   logger.info(`Service provider markup updated: ${serviceProvider.businessName}`, {
     hotelId,
@@ -1303,6 +1317,66 @@ router.put('/service-providers/:id/markup', catchAsync(async (req, res, next) =>
       serviceProvider,
       markup: serviceProvider.markup
     }
+  });
+}));
+
+/**
+ * @route   PUT /api/hotel/service-providers/:id/license
+ * @desc    Update business license info (expiry date, etc.) for a service provider
+ * @access  Private/HotelAdmin
+ */
+router.put('/service-providers/:id/license', restrictProviderToHotelAdmin, catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const providerId = req.params.id;
+  const { expiryDate, number, issuedBy, issuedDate } = req.body || {};
+
+  // Find service provider and make sure it belongs to this hotel
+  const serviceProvider = await ServiceProvider.findOne({ _id: providerId, hotelId });
+  if (!serviceProvider) {
+    return next(new AppError('No service provider found with that ID in your hotel', 404));
+  }
+
+  // Build update object for nested businessLicense
+  const update = {};
+  if (expiryDate) {
+    const newExpiry = new Date(expiryDate);
+    if (isNaN(newExpiry.getTime())) {
+      return next(new AppError('Invalid expiry date format', 400));
+    }
+    if (newExpiry <= new Date()) {
+      return next(new AppError('Business license expiry date must be in the future', 400));
+    }
+    update['businessLicense.expiryDate'] = newExpiry;
+  }
+  if (number !== undefined) update['businessLicense.number'] = number;
+  if (issuedBy !== undefined) update['businessLicense.issuedBy'] = issuedBy;
+  if (issuedDate !== undefined) {
+    const issued = new Date(issuedDate);
+    if (isNaN(issued.getTime())) {
+      return next(new AppError('Invalid issued date format', 400));
+    }
+    update['businessLicense.issuedDate'] = issued;
+  }
+
+  if (Object.keys(update).length === 0) {
+    return next(new AppError('No valid fields provided to update', 400));
+  }
+
+  const updated = await ServiceProvider.findOneAndUpdate(
+    { _id: providerId, hotelId },
+    { $set: update },
+    { new: true, runValidators: true }
+  );
+
+  logger.info('Service provider business license updated', {
+    hotelId,
+    serviceProviderId: providerId,
+    fields: Object.keys(update)
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: { serviceProvider: updated }
   });
 }));
 

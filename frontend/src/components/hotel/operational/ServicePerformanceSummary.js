@@ -6,8 +6,10 @@
 
 import React from 'react';
 import { FiTrendingUp, FiTrendingDown, FiMinus } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 const ServicePerformanceSummary = ({ completionData, slaData, loading }) => {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -25,10 +27,10 @@ const ServicePerformanceSummary = ({ completionData, slaData, loading }) => {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-6">
-          Service Performance Summary
+          {t('performanceAnalyticsPage.operational.servicePerformanceSummary.title')}
         </h3>
         <div className="text-center text-gray-500 py-8">
-          No performance data available
+          {t('performanceAnalyticsPage.operational.servicePerformanceSummary.noData', 'No performance data available')}
         </div>
       </div>
     );
@@ -71,11 +73,11 @@ const ServicePerformanceSummary = ({ completionData, slaData, loading }) => {
 
   const getPerformanceIndicator = (onTimePercentage) => {
     if (onTimePercentage >= 90) {
-      return { icon: FiTrendingUp, color: 'text-green-600', label: 'Excellent' };
+      return { icon: FiTrendingUp, color: 'text-green-600', label: t('performanceAnalyticsPage.operational.servicePerformanceSummary.performanceLabels.excellent') };
     } else if (onTimePercentage >= 70) {
-      return { icon: FiMinus, color: 'text-yellow-600', label: 'Good' };
+      return { icon: FiMinus, color: 'text-yellow-600', label: t('performanceAnalyticsPage.operational.servicePerformanceSummary.performanceLabels.good') };
     } else {
-      return { icon: FiTrendingDown, color: 'text-red-600', label: 'Needs Improvement' };
+      return { icon: FiTrendingDown, color: 'text-red-600', label: t('performanceAnalyticsPage.operational.servicePerformanceSummary.performanceLabels.needsImprovement') };
     }
   };
 
@@ -83,10 +85,10 @@ const ServicePerformanceSummary = ({ completionData, slaData, loading }) => {
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800">
-          Service Performance Summary
+          {t('performanceAnalyticsPage.operational.servicePerformanceSummary.title')}
         </h3>
         <p className="text-sm text-gray-600 mt-1">
-          Comprehensive efficiency metrics across all services
+          {t('performanceAnalyticsPage.operational.servicePerformanceSummary.subtitle')}
         </p>
       </div>
 
@@ -95,28 +97,28 @@ const ServicePerformanceSummary = ({ completionData, slaData, loading }) => {
           <thead className="bg-gray-50">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Service Type
+                {t('performanceAnalyticsPage.operational.servicePerformanceSummary.columns.serviceType')}
               </th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Requests
+                {t('performanceAnalyticsPage.operational.servicePerformanceSummary.columns.totalRequests')}
               </th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Avg Time<br/><span className="text-xs normal-case">(min)</span>
+                {t('performanceAnalyticsPage.operational.servicePerformanceSummary.columns.avgTime')}<br/><span className="text-xs normal-case">({t('performanceAnalyticsPage.operational.completionTime.minutesShort')})</span>
               </th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Min/Max<br/><span className="text-xs normal-case">(min)</span>
+                {t('performanceAnalyticsPage.operational.servicePerformanceSummary.columns.minMax')}<br/><span className="text-xs normal-case">({t('performanceAnalyticsPage.operational.completionTime.minutesShort')})</span>
               </th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                On-Time Rate
+                {t('performanceAnalyticsPage.operational.servicePerformanceSummary.columns.onTimeRate')}
               </th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Delayed
+                {t('performanceAnalyticsPage.operational.servicePerformanceSummary.columns.delayed')}
               </th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Avg Delay<br/><span className="text-xs normal-case">(min)</span>
+                {t('performanceAnalyticsPage.operational.servicePerformanceSummary.columns.avgDelay')}<br/><span className="text-xs normal-case">({t('performanceAnalyticsPage.operational.completionTime.minutesShort')})</span>
               </th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Performance
+                {t('performanceAnalyticsPage.operational.servicePerformanceSummary.columns.performance')}
               </th>
             </tr>
           </thead>
@@ -129,7 +131,7 @@ const ServicePerformanceSummary = ({ completionData, slaData, loading }) => {
                 <tr key={index} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900 capitalize">
-                      {service.serviceType}
+                      {t(`performanceAnalyticsPage.serviceTypes.${service.serviceType}`, service.serviceType)}
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
@@ -191,19 +193,19 @@ const ServicePerformanceSummary = ({ completionData, slaData, loading }) => {
             <div className="text-2xl font-bold text-blue-700">
               {summaryData.reduce((sum, s) => sum + s.totalBookings, 0)}
             </div>
-            <div className="text-sm text-gray-600 mt-1">Total Requests</div>
+            <div className="text-sm text-gray-600 mt-1">{t('performanceAnalyticsPage.operational.servicePerformanceSummary.totals.totalRequests')}</div>
           </div>
           <div className="bg-green-50 rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-green-700">
               {summaryData.reduce((sum, s) => sum + s.onTimeBookings, 0)}
             </div>
-            <div className="text-sm text-gray-600 mt-1">On Time</div>
+            <div className="text-sm text-gray-600 mt-1">{t('performanceAnalyticsPage.operational.servicePerformanceSummary.totals.onTime')}</div>
           </div>
           <div className="bg-red-50 rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-red-700">
               {summaryData.reduce((sum, s) => sum + s.delayedBookings, 0)}
             </div>
-            <div className="text-sm text-gray-600 mt-1">Delayed</div>
+            <div className="text-sm text-gray-600 mt-1">{t('performanceAnalyticsPage.operational.servicePerformanceSummary.totals.delayed')}</div>
           </div>
           <div className="bg-purple-50 rounded-lg p-4 text-center">
             <div className="text-2xl font-bold text-purple-700">
@@ -213,7 +215,7 @@ const ServicePerformanceSummary = ({ completionData, slaData, loading }) => {
                 return total > 0 ? ((onTime / total) * 100).toFixed(1) : 0;
               })()}%
             </div>
-            <div className="text-sm text-gray-600 mt-1">Overall Rate</div>
+            <div className="text-sm text-gray-600 mt-1">{t('performanceAnalyticsPage.operational.servicePerformanceSummary.totals.overallRate')}</div>
           </div>
         </div>
       </div>

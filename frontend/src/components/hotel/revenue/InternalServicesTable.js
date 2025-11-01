@@ -1,7 +1,9 @@
 import React from 'react';
 import { Home, Package } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const InternalServicesTable = ({ data, loading, error }) => {
+  const { t, i18n } = useTranslation();
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -18,9 +20,9 @@ const InternalServicesTable = ({ data, loading, error }) => {
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Internal Services Performance</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.revenue.internal.title')}</h3>
         <div className="bg-red-50 border border-red-200 rounded p-4">
-          <p className="text-red-600">Error loading data: {error}</p>
+          <p className="text-red-600">{t('performanceAnalyticsPage.revenue.errors.loadError', 'Error loading data')}: {error}</p>
         </div>
       </div>
     );
@@ -29,17 +31,17 @@ const InternalServicesTable = ({ data, loading, error }) => {
   if (!data || !data.services || data.services.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Internal Services Performance</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.revenue.internal.title')}</h3>
         <div className="bg-gray-50 rounded p-8 text-center">
           <Home className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-500">No internal services data available</p>
+          <p className="text-gray-500">{t('performanceAnalyticsPage.revenue.internal.noData')}</p>
         </div>
       </div>
     );
   }
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(i18n.language || 'en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
@@ -47,14 +49,7 @@ const InternalServicesTable = ({ data, loading, error }) => {
     }).format(value || 0);
   };
 
-  const formatServiceName = (type) => {
-    const names = {
-      housekeeping: 'Housekeeping',
-      roomService: 'Room Service',
-      maintenance: 'Maintenance'
-    };
-    return names[type] || type;
-  };
+  const formatServiceName = (type) => t(`performanceAnalyticsPage.serviceTypes.${type}`, { defaultValue: type });
 
   const getServiceIcon = (type) => {
     const icons = {
@@ -68,16 +63,16 @@ const InternalServicesTable = ({ data, loading, error }) => {
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold">Internal Services Performance</h3>
+        <h3 className="text-lg font-semibold">{t('performanceAnalyticsPage.revenue.internal.title')}</h3>
         <div className="flex items-center gap-2 text-sm">
           <Home className="w-4 h-4 text-green-600" />
-          <span className="text-gray-600">Hotel-Operated Services</span>
+          <span className="text-gray-600">{t('performanceAnalyticsPage.revenue.internal.subtitle')}</span>
         </div>
       </div>
 
       {/* Total Revenue Card */}
       <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 mb-6 text-white">
-        <p className="text-sm opacity-90">Total Internal Revenue</p>
+        <p className="text-sm opacity-90">{t('performanceAnalyticsPage.revenue.internal.totalInternalRevenue')}</p>
         <p className="text-3xl font-bold">{formatCurrency(data.totalInternalRevenue)}</p>
       </div>
 
@@ -86,12 +81,12 @@ const InternalServicesTable = ({ data, loading, error }) => {
         <table className="w-full">
           <thead>
             <tr className="border-b-2 border-gray-200">
-              <th className="text-left py-3 px-4 font-semibold text-gray-700">Service</th>
-              <th className="text-right py-3 px-4 font-semibold text-gray-700">Revenue</th>
-              <th className="text-center py-3 px-4 font-semibold text-gray-700">Bookings</th>
-              <th className="text-right py-3 px-4 font-semibold text-gray-700">Avg/Booking</th>
-              <th className="text-right py-3 px-4 font-semibold text-gray-700">Min - Max</th>
-              <th className="text-right py-3 px-4 font-semibold text-gray-700">Share</th>
+              <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('performanceAnalyticsPage.revenue.internal.columns.service')}</th>
+              <th className="text-right py-3 px-4 font-semibold text-gray-700">{t('performanceAnalyticsPage.revenue.internal.columns.revenue')}</th>
+              <th className="text-center py-3 px-4 font-semibold text-gray-700">{t('performanceAnalyticsPage.revenue.internal.columns.bookings')}</th>
+              <th className="text-right py-3 px-4 font-semibold text-gray-700">{t('performanceAnalyticsPage.revenue.internal.columns.avgPerBooking')}</th>
+              <th className="text-right py-3 px-4 font-semibold text-gray-700">{t('performanceAnalyticsPage.revenue.internal.columns.minMax')}</th>
+              <th className="text-right py-3 px-4 font-semibold text-gray-700">{t('performanceAnalyticsPage.revenue.internal.columns.share')}</th>
             </tr>
           </thead>
           <tbody>
@@ -147,17 +142,17 @@ const InternalServicesTable = ({ data, loading, error }) => {
       {/* Summary Stats */}
       <div className="mt-6 grid grid-cols-3 gap-4 pt-4 border-t">
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-1">Total Services</p>
+          <p className="text-sm text-gray-600 mb-1">{t('performanceAnalyticsPage.revenue.internal.totals.totalServices')}</p>
           <p className="text-xl font-bold text-gray-900">{data.services.length}</p>
         </div>
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-1">Total Bookings</p>
+          <p className="text-sm text-gray-600 mb-1">{t('performanceAnalyticsPage.revenue.internal.totals.totalBookings')}</p>
           <p className="text-xl font-bold text-gray-900">
             {data.services.reduce((sum, s) => sum + s.bookingCount, 0)}
           </p>
         </div>
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-1">Avg Revenue/Booking</p>
+          <p className="text-sm text-gray-600 mb-1">{t('performanceAnalyticsPage.revenue.internal.totals.avgRevenuePerBooking')}</p>
           <p className="text-xl font-bold text-gray-900">
             {formatCurrency(
               data.totalInternalRevenue /

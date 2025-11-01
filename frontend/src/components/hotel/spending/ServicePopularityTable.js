@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Package } from 'lucide-react';
 
 const ServicePopularityTable = ({ data, loading, error }) => {
+  const { t, i18n } = useTranslation();
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -19,9 +21,9 @@ const ServicePopularityTable = ({ data, loading, error }) => {
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Service Popularity & Revenue Analysis</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.spending.popularity.title')}</h3>
         <div className="bg-red-50 border border-red-200 rounded p-4">
-          <p className="text-red-600">Error loading data: {error}</p>
+          <p className="text-red-600">{t('performanceAnalyticsPage.spending.errors.loadError', 'Error loading data')}: {error}</p>
         </div>
       </div>
     );
@@ -30,16 +32,16 @@ const ServicePopularityTable = ({ data, loading, error }) => {
   if (!data || !data.services || data.services.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Service Popularity & Revenue Analysis</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.spending.popularity.title')}</h3>
         <div className="bg-gray-50 rounded p-8 text-center">
-          <p className="text-gray-500">No service data available</p>
+          <p className="text-gray-500">{t('performanceAnalyticsPage.spending.popularity.noData')}</p>
         </div>
       </div>
     );
   }
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(i18n.language || 'en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
@@ -47,18 +49,7 @@ const ServicePopularityTable = ({ data, loading, error }) => {
     }).format(value || 0);
   };
 
-  const formatServiceName = (service) => {
-    const names = {
-      housekeeping: 'Housekeeping',
-      laundry: 'Laundry',
-      restaurant: 'Restaurant',
-      transportation: 'Transportation',
-      maintenance: 'Maintenance',
-      cleaning: 'Cleaning',
-      amenities: 'Amenities'
-    };
-    return names[service] || service;
-  };
+  const formatServiceName = (service) => t(`performanceAnalyticsPage.serviceTypes.${service}`, { defaultValue: service });
 
   const pieData = data.services.map(service => ({
     name: formatServiceName(service.serviceType),
@@ -69,21 +60,43 @@ const ServicePopularityTable = ({ data, loading, error }) => {
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-2">Service Popularity & Revenue Analysis</h3>
-      <p className="text-sm text-gray-600 mb-6">Most active and in-demand services with spending metrics</p>
+  <h3 className="text-lg font-semibold mb-2">{t('performanceAnalyticsPage.spending.popularity.title')}</h3>
+  <p className="text-sm text-gray-600 mb-6">{t('performanceAnalyticsPage.spending.popularity.subtitle')}</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pie Chart */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-4">Request Distribution</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-4">{t('performanceAnalyticsPage.spending.popularity.requestDistribution')}</h4>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                label={(entry) => `${entry.name}: ${entry.value}`}
+                labelLine={true}
+                label={({ cx, cy, midAngle, outerRadius, name, value }) => {
+                  const RAD = Math.PI / 180;
+                  const radius = outerRadius + 16;
+                  const x = cx + radius * Math.cos(-midAngle * RAD);
+                  const y = cy + radius * Math.sin(-midAngle * RAD);
+                  const dir = i18n.dir();
+                  const anchorLTR = x > cx ? 'start' : 'end';
+                  const anchorRTL = x > cx ? 'end' : 'start';
+                  const textAnchor = dir === 'rtl' ? anchorRTL : anchorLTR;
+                  const text = `${name}: ${new Intl.NumberFormat(i18n.language || 'en-US').format(value || 0)}`;
+                  return (
+                    <text
+                      x={x}
+                      y={y}
+                      fill="#4b5563"
+                      textAnchor={textAnchor}
+                      dominantBaseline="central"
+                      style={{ direction: dir, unicodeBidi: 'plaintext', fontSize: 12 }}
+                    >
+                      {text}
+                    </text>
+                  );
+                }}
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
@@ -99,7 +112,7 @@ const ServicePopularityTable = ({ data, loading, error }) => {
 
         {/* Services Table */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-4">Detailed Metrics</h4>
+          <h4 className="text-sm font-medium text-gray-700 mb-4">{t('performanceAnalyticsPage.spending.popularity.detailedMetrics')}</h4>
           <div className="space-y-3 max-h-80 overflow-y-auto">
             {data.services.map((service, index) => (
               <div
@@ -116,26 +129,26 @@ const ServicePopularityTable = ({ data, loading, error }) => {
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-gray-600">Requests</p>
+                    <p className="text-gray-600">{t('performanceAnalyticsPage.spending.popularity.labels.requests')}</p>
                     <p className="font-semibold text-gray-900 flex items-center gap-1">
                       <Package className="w-4 h-4" />
                       {service.totalRequests}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Revenue</p>
+                    <p className="text-gray-600">{t('performanceAnalyticsPage.spending.popularity.labels.revenue')}</p>
                     <p className="font-semibold text-gray-900">
                       {formatCurrency(service.totalRevenue)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Avg Spending</p>
+                    <p className="text-gray-600">{t('performanceAnalyticsPage.spending.popularity.labels.avgSpending')}</p>
                     <p className="font-semibold text-gray-900">
                       {formatCurrency(service.avgSpending)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-600">Customers</p>
+                    <p className="text-gray-600">{t('performanceAnalyticsPage.spending.popularity.labels.customers')}</p>
                     <p className="font-semibold text-gray-900">
                       {service.uniqueCustomers}
                     </p>

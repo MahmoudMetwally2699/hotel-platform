@@ -37,19 +37,36 @@ const calculatePointsEarned = (bookingAmount, serviceType, loyaltyProgram) => {
 const determineTier = (totalPoints, tierConfiguration) => {
   try {
     if (!tierConfiguration || tierConfiguration.length === 0) {
+      console.log('❌ No tier configuration provided');
       return null;
     }
+
+    console.log(`🔍 Determining tier for ${totalPoints} points`);
+    console.log(`📊 Available tiers:`, tierConfiguration.map(t => ({
+      name: t.name,
+      minPoints: t.minPoints,
+      maxPoints: t.maxPoints
+    })));
 
     // Sort tiers by minPoints descending to check from highest to lowest
     const sortedTiers = [...tierConfiguration].sort((a, b) => b.minPoints - a.minPoints);
 
+    // Find the highest tier where user meets the minimum points requirement
     for (const tier of sortedTiers) {
-      if (totalPoints >= tier.minPoints && totalPoints <= tier.maxPoints) {
+      // Check if points meet minimum AND are within max (if max is defined and valid)
+      const meetsMin = totalPoints >= tier.minPoints;
+      const meetsMax = !tier.maxPoints || tier.maxPoints === Infinity || tier.maxPoints >= 999999 || totalPoints <= tier.maxPoints;
+
+      console.log(`  Checking ${tier.name}: minPoints=${tier.minPoints}, maxPoints=${tier.maxPoints}, meetsMin=${meetsMin}, meetsMax=${meetsMax}`);
+
+      if (meetsMin && meetsMax) {
+        console.log(`✅ Selected tier: ${tier.name}`);
         return tier;
       }
     }
 
     // Default to first tier (Bronze)
+    console.log(`⚠️ No tier matched, defaulting to: ${tierConfiguration[0]?.name}`);
     return tierConfiguration[0];
   } catch (error) {
     console.error('Error determining tier:', error);

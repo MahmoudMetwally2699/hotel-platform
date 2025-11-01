@@ -95,8 +95,8 @@ const awardPointsForBooking = async (bookingId, bookingType = 'regular') => {
       multiplier = multipliers.laundry;
     } else if (serviceCategory === 'transportation' && multipliers.transportation) {
       multiplier = multipliers.transportation;
-    } else if (['tours', 'travel'].includes(serviceCategory)) {
-      multiplier = multipliers.travel || multipliers.tourism || 1;
+    } else if (serviceCategory === 'dining' && multipliers.dining) {
+      multiplier = multipliers.dining;
     } else if (serviceCategory === 'housekeeping' && multipliers.housekeeping) {
       multiplier = multipliers.housekeeping;
     }

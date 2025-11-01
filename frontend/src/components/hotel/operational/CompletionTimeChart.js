@@ -5,9 +5,12 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 
 const CompletionTimeChart = ({ data, loading }) => {
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.dir() === 'rtl';
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -21,10 +24,10 @@ const CompletionTimeChart = ({ data, loading }) => {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-6">
-          Average Completion Time by Service (minutes)
+          {t('performanceAnalyticsPage.operational.completionTime.title')}
         </h3>
         <div className="h-80 flex items-center justify-center text-gray-500">
-          No completion data available
+          {t('performanceAnalyticsPage.operational.completionTime.noData')}
         </div>
       </div>
     );
@@ -45,7 +48,10 @@ const CompletionTimeChart = ({ data, loading }) => {
 
   // Format data for chart
   const chartData = data.completionByService.map(item => ({
-    name: item.serviceType.charAt(0).toUpperCase() + item.serviceType.slice(1),
+    key: item.serviceType,
+    name: t(`performanceAnalyticsPage.serviceTypes.${item.serviceType}`, {
+      defaultValue: item.serviceType.charAt(0).toUpperCase() + item.serviceType.slice(1)
+    }),
     'Avg Time': item.avgCompletionTime,
     'Min Time': item.minCompletionTime,
     'Max Time': item.maxCompletionTime,
@@ -60,16 +66,16 @@ const CompletionTimeChart = ({ data, loading }) => {
         <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
           <p className="font-semibold text-gray-800 mb-2">{data.name}</p>
           <p className="text-sm text-gray-600">
-            <span className="font-medium">Average:</span> {data['Avg Time']} min
+            <span className="font-medium">{t('performanceAnalyticsPage.operational.completionTime.tooltip.average')}:</span> {data['Avg Time']} {t('performanceAnalyticsPage.operational.completionTime.minutesShort')}
           </p>
           <p className="text-sm text-gray-600">
-            <span className="font-medium">Min:</span> {data['Min Time']} min
+            <span className="font-medium">{t('performanceAnalyticsPage.operational.completionTime.tooltip.min')}:</span> {data['Min Time']} {t('performanceAnalyticsPage.operational.completionTime.minutesShort')}
           </p>
           <p className="text-sm text-gray-600">
-            <span className="font-medium">Max:</span> {data['Max Time']} min
+            <span className="font-medium">{t('performanceAnalyticsPage.operational.completionTime.tooltip.max')}:</span> {data['Max Time']} {t('performanceAnalyticsPage.operational.completionTime.minutesShort')}
           </p>
           <p className="text-sm text-gray-600 mt-2">
-            <span className="font-medium">Bookings:</span> {data.count}
+            <span className="font-medium">{t('performanceAnalyticsPage.operational.completionTime.tooltip.bookings')}:</span> {data.count}
           </p>
         </div>
       );
@@ -77,39 +83,61 @@ const CompletionTimeChart = ({ data, loading }) => {
     return null;
   };
 
+  // RTL-aware custom X-axis tick to prevent clipping/overlap
+  const CustomXAxisTick = (props) => {
+    const { x, y, payload } = props;
+    const angle = isRTL ? 45 : -45;
+    const anchor = isRTL ? 'start' : 'end';
+    const dx = isRTL ? 6 : -6;
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          dx={dx}
+          dy={10}
+          textAnchor={anchor}
+          transform={`rotate(${angle})`}
+          fill="#6B7280"
+          fontSize={12}
+        >
+          {payload.value}
+        </text>
+      </g>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800">
-          Average Completion Time by Service (minutes)
+          {t('performanceAnalyticsPage.operational.completionTime.title')}
         </h3>
         <p className="text-sm text-gray-600 mt-1">
-          Time taken to complete each service after request
+          {t('performanceAnalyticsPage.operational.completionTime.subtitle')}
         </p>
       </div>
 
-      <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+      <ResponsiveContainer width="100%" height={380}>
+        <BarChart
+          data={chartData}
+          margin={{ top: 20, right: isRTL ? 20 : 30, left: isRTL ? 30 : 20, bottom: 50 }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
           <XAxis
             dataKey="name"
-            angle={-45}
-            textAnchor="end"
-            height={100}
-            tick={{ fill: '#6B7280', fontSize: 12 }}
+            height={80}
+            interval={0}
+            tickMargin={12}
+            tick={<CustomXAxisTick />}
           />
           <YAxis
-            label={{ value: 'Minutes', angle: -90, position: 'insideLeft', style: { fill: '#6B7280' } }}
+            label={{ value: t('performanceAnalyticsPage.operational.completionTime.minutes'), angle: -90, position: 'insideLeft', style: { fill: '#6B7280' } }}
             tick={{ fill: '#6B7280' }}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend
-            wrapperStyle={{ paddingTop: '20px' }}
-            iconType="circle"
-          />
+          <Legend verticalAlign="bottom" height={24} wrapperStyle={{ paddingTop: 6 }} iconType="circle" />
           <Bar
             dataKey="Avg Time"
-            name="Average Time"
+            name={t('performanceAnalyticsPage.operational.completionTime.legend.averageTime')}
             radius={[8, 8, 0, 0]}
           >
             {chartData.map((entry, index) => (

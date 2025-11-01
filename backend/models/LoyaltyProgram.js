@@ -75,12 +75,7 @@ const loyaltyProgramSchema = new mongoose.Schema({
         default: 1,
         min: 0
       },
-      tourism: {
-        type: Number,
-        default: 1.5,
-        min: 0
-      },
-      travel: {
+      dining: {
         type: Number,
         default: 1.5,
         min: 0
@@ -223,8 +218,7 @@ loyaltyProgramSchema.statics.getDefaultChannelSettings = function(channel) {
       serviceMultipliers: {
         laundry: 1.2,
         transportation: 1.5,
-        tourism: 2.0,
-        travel: 2.0,
+        dining: 2.0,
         housekeeping: 1.0
       },
       pointsToMoneyRatio: 100,
@@ -237,8 +231,7 @@ loyaltyProgramSchema.statics.getDefaultChannelSettings = function(channel) {
       serviceMultipliers: {
         laundry: 1.5,
         transportation: 2.0,
-        tourism: 1.2,
-        travel: 1.2,
+        dining: 1.2,
         housekeeping: 1.3
       },
       pointsToMoneyRatio: 100,
@@ -251,8 +244,7 @@ loyaltyProgramSchema.statics.getDefaultChannelSettings = function(channel) {
       serviceMultipliers: {
         laundry: 1.5,
         transportation: 1.5,
-        tourism: 1.5,
-        travel: 1.5,
+        dining: 1.5,
         housekeeping: 1.5
       },
       pointsToMoneyRatio: 100,

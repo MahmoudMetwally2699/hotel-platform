@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   AreaChart,
   Area,
@@ -11,6 +12,7 @@ import {
 } from 'recharts';
 
 const RevenueComparisonChart = ({ data, loading, error }) => {
+  const { t, i18n } = useTranslation();
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -23,9 +25,9 @@ const RevenueComparisonChart = ({ data, loading, error }) => {
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Revenue Comparison</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.revenue.comparison.title')}</h3>
         <div className="bg-red-50 border border-red-200 rounded p-4">
-          <p className="text-red-600">Error loading chart: {error}</p>
+          <p className="text-red-600">{t('performanceAnalyticsPage.revenue.comparison.error')}: {error}</p>
         </div>
       </div>
     );
@@ -34,16 +36,16 @@ const RevenueComparisonChart = ({ data, loading, error }) => {
   if (!data || !data.comparisonData || data.comparisonData.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Revenue Comparison: Internal vs External Services</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.revenue.comparison.title')}</h3>
         <div className="h-80 flex items-center justify-center bg-gray-50 rounded">
-          <p className="text-gray-500">No comparison data available for the selected period</p>
+          <p className="text-gray-500">{t('performanceAnalyticsPage.revenue.comparison.noData')}</p>
         </div>
       </div>
     );
   }
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(i18n.language || 'en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
@@ -53,7 +55,7 @@ const RevenueComparisonChart = ({ data, loading, error }) => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString(i18n.language || 'en-US', { month: 'short', day: 'numeric' });
   };
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -67,7 +69,7 @@ const RevenueComparisonChart = ({ data, loading, error }) => {
             </p>
           ))}
           <p className="text-sm font-semibold mt-2 pt-2 border-t">
-            Total: {formatCurrency(payload.reduce((sum, p) => sum + p.value, 0))}
+            {t('performanceAnalyticsPage.revenue.comparison.total')}: {formatCurrency(payload.reduce((sum, p) => sum + p.value, 0))}
           </p>
         </div>
       );
@@ -77,7 +79,7 @@ const RevenueComparisonChart = ({ data, loading, error }) => {
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">Revenue Comparison: Internal vs External Services</h3>
+      <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.revenue.comparison.title')}</h3>
       <ResponsiveContainer width="100%" height={350}>
         <AreaChart data={data.comparisonData}>
           <defs>
@@ -114,7 +116,7 @@ const RevenueComparisonChart = ({ data, loading, error }) => {
             strokeWidth={2}
             fillOpacity={1}
             fill="url(#colorInternal)"
-            name="Internal Services"
+            name={t('performanceAnalyticsPage.revenue.comparison.internal')}
           />
           <Area
             type="monotone"
@@ -123,7 +125,7 @@ const RevenueComparisonChart = ({ data, loading, error }) => {
             strokeWidth={2}
             fillOpacity={1}
             fill="url(#colorExternal)"
-            name="External Services"
+            name={t('performanceAnalyticsPage.revenue.comparison.external')}
           />
         </AreaChart>
       </ResponsiveContainer>

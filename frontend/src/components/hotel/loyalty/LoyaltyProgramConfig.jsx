@@ -5,10 +5,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { X, Save, AlertCircle, Users, Building2, UserCheck } from 'lucide-react';
 import { fetchLoyaltyProgram } from '../../../redux/slices/loyaltySlice';
 
 const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
+  const { t } = useTranslation();
   const { loading, loyaltyProgram } = useSelector((state) => state.loyalty);
   const dispatch = useDispatch();
 
@@ -24,6 +26,17 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
       case 'Direct': return <UserCheck className="w-4 h-4" />;
       default: return <Users className="w-4 h-4" />;
     }
+  };
+
+  // Helper to translate tier names
+  const getTierName = (tierName) => {
+    const tierKey = tierName?.toUpperCase();
+    return t(`loyaltyProgramPage.tierNames.${tierKey}`, { defaultValue: tierName });
+  };
+
+  // Helper to translate channel names
+  const getChannelName = (channel) => {
+    return t(`loyaltyProgramConfig.channels.${channel}`, { defaultValue: channel });
   };
 
   // Helper to get default tier configuration
@@ -63,9 +76,9 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
   // Helper to get default channel settings
   const getDefaultChannelSettings = (channel) => {
     const defaults = {
-      'Travel Agency': { pointsPerDollar: 1, pointsPerNight: 50, serviceMultipliers: { laundry: 1.2, transportation: 1.5, tourism: 2.0, housekeeping: 1.0 }, pointsToMoneyRatio: 100, minimumRedemption: 500 },
-      'Corporate': { pointsPerDollar: 1.5, pointsPerNight: 75, serviceMultipliers: { laundry: 1.5, transportation: 2.0, tourism: 1.2, housekeeping: 1.3 }, pointsToMoneyRatio: 100, minimumRedemption: 1000 },
-      'Direct': { pointsPerDollar: 2, pointsPerNight: 100, serviceMultipliers: { laundry: 1.5, transportation: 1.5, tourism: 1.5, housekeeping: 1.5 }, pointsToMoneyRatio: 100, minimumRedemption: 500 }
+      'Travel Agency': { pointsPerDollar: 1, pointsPerNight: 50, serviceMultipliers: { laundry: 1.2, transportation: 1.5, dining: 2.0, housekeeping: 1.0 }, pointsToMoneyRatio: 100, minimumRedemption: 500 },
+      'Corporate': { pointsPerDollar: 1.5, pointsPerNight: 75, serviceMultipliers: { laundry: 1.5, transportation: 2.0, dining: 1.2, housekeeping: 1.3 }, pointsToMoneyRatio: 100, minimumRedemption: 1000 },
+      'Direct': { pointsPerDollar: 2, pointsPerNight: 100, serviceMultipliers: { laundry: 1.5, transportation: 1.5, dining: 1.5, housekeeping: 1.5 }, pointsToMoneyRatio: 100, minimumRedemption: 500 }
     };
     return defaults[channel];
   };
@@ -241,15 +254,15 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
     const currentChannelSettings = channelPointsSettings[activeChannel];
 
     if (formData.expirationMonths < 1 || formData.expirationMonths > 36) {
-      newErrors.expirationMonths = 'Expiration must be between 1 and 36 months';
+      newErrors.expirationMonths = t('loyaltyProgramConfig.validation.expirationRange');
     }
 
     if (currentChannelSettings.pointsPerDollar < 1) {
-      newErrors.pointsPerDollar = 'Points per dollar must be at least 1';
+      newErrors.pointsPerDollar = t('loyaltyProgramConfig.validation.pointsPerDollarMin');
     }
 
     if (currentChannelSettings.minimumRedemption < 1) {
-      newErrors.minimumRedemption = 'Minimum redemption must be at least 1';
+      newErrors.minimumRedemption = t('loyaltyProgramConfig.validation.minimumRedemptionMin');
     }
 
     // Validate tier progression
@@ -258,7 +271,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
       const nextTier = formData.tierConfiguration[i + 1];
 
       if (currentTier.maxPoints >= nextTier.minPoints) {
-        newErrors.tiers = 'Tier point ranges must not overlap';
+        newErrors.tiers = t('loyaltyProgramConfig.validation.tierOverlap');
         break;
       }
     }
@@ -326,12 +339,12 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
       await dispatch(fetchLoyaltyProgram()).unwrap();
       console.log('Loyalty program data refreshed');
 
-      alert('Loyalty program configured successfully for all channels!');
+      alert(t('loyaltyProgramConfig.messages.successAll'));
 
       onClose();
     } catch (error) {
       console.error('Error saving loyalty program:', error);
-      alert(`Failed to save loyalty program: ${error.message}`);
+      alert(t('loyaltyProgramConfig.messages.error', { message: error.message }));
     }
   };
 
@@ -344,10 +357,10 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">
-              {existingProgram ? 'Update' : 'Configure'} Loyalty Program
+              {existingProgram ? t('loyaltyProgramConfig.titleUpdate') : t('loyaltyProgramConfig.titleConfigure')} {t('loyaltyProgramConfig.title')}
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              Set up tiers, points rules, and redemption policies
+              {t('loyaltyProgramConfig.subtitle')}
             </p>
           </div>
           <button
@@ -362,7 +375,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
           {/* General Settings */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              General Settings
+              {t('loyaltyProgramConfig.generalSettings.title')}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -375,17 +388,17 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                     className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                   />
                   <span className="text-sm font-medium text-gray-700">
-                    Program Active
+                    {t('loyaltyProgramConfig.generalSettings.programActive')}
                   </span>
                 </label>
                 <p className="text-xs text-gray-500 mt-1 ml-6">
-                  Enable the loyalty program for guest enrollment
+                  {t('loyaltyProgramConfig.generalSettings.programActiveDesc')}
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Points Expiration (months)
+                  {t('loyaltyProgramConfig.generalSettings.pointsExpiration')}
                 </label>
                 <input
                   type="number"
@@ -404,7 +417,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
 
           {/* Tier Configuration */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Membership Tiers</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('loyaltyProgramConfig.tiers.title')}</h3>
             {errors.tiers && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
                 <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -416,13 +429,13 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
               {(formData.tierConfiguration || []).map((tier, index) => (
                 <div key={tier.name} className="border rounded-lg p-4 bg-gray-50">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-gray-900">{tier.name} Tier</h4>
+                    <h4 className="font-semibold text-gray-900">{getTierName(tier.name)} {t('loyaltyProgramConfig.tiers.tierLabel')}</h4>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Min Points
+                        {t('loyaltyProgramConfig.tiers.minPoints')}
                       </label>
                       <input
                         type="number"
@@ -435,7 +448,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
 
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Max Points
+                        {t('loyaltyProgramConfig.tiers.maxPoints')}
                       </label>
                       <input
                         type="number"
@@ -449,7 +462,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
 
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Benefits (comma-separated)
+                      {t('loyaltyProgramConfig.tiers.benefits')}
                     </label>
                     <input
                       type="text"
@@ -461,7 +474,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                           .filter(b => b.length > 0);
                         handleTierChange(index, 'benefits', benefitsArray);
                       }}
-                      placeholder="e.g., Priority support, Free upgrades, Complimentary breakfast"
+                      placeholder={t('loyaltyProgramConfig.tiers.benefitsPlaceholder')}
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -473,7 +486,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
           {/* Channel Tabs - Before Points Rules */}
           <div className="border-b border-gray-200 bg-gray-50 rounded-lg">
             <div className="px-4 py-2">
-              <p className="text-sm font-medium text-gray-700 mb-2">Select Channel to Configure Points Rules:</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">{t('loyaltyProgramConfig.channels.title')}</p>
             </div>
             <nav className="flex px-4 pb-0">
               {channels.map((channel) => (
@@ -488,7 +501,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                   }`}
                 >
                   {getChannelIcon(channel)}
-                  {channel}
+                  {getChannelName(channel)}
                 </button>
               ))}
             </nav>
@@ -497,7 +510,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
           {/* Points Rules */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              Points Earning Rules
+              {t('loyaltyProgramConfig.pointsRules.title')}
               <span className="text-sm font-normal text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
                 {activeChannel}
               </span>
@@ -506,7 +519,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Points per Dollar Spent
+                  {t('loyaltyProgramConfig.pointsRules.pointsPerDollar')}
                 </label>
                 <input
                   type="number"
@@ -523,7 +536,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Points per Night Stayed
+                  {t('loyaltyProgramConfig.pointsRules.pointsPerNight')}
                 </label>
                 <input
                   type="number"
@@ -532,16 +545,16 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                   onChange={(e) => handleChannelPointsChange('pointsPerNight', parseInt(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
-                <p className="text-xs text-gray-500 mt-1">Award bonus points for each night guests stay at your hotel</p>
+                <p className="text-xs text-gray-500 mt-1">{t('loyaltyProgramConfig.pointsRules.pointsPerNightDesc')}</p>
               </div>
             </div>
 
             <div className="border rounded-lg p-4 bg-gray-50">
-              <h4 className="font-medium text-gray-900 mb-3">Service Category Multipliers</h4>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <h4 className="font-medium text-gray-900 mb-3">{t('loyaltyProgramConfig.pointsRules.serviceMultipliers')}</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Laundry (x)
+                    {t('loyaltyProgramConfig.pointsRules.laundry')} (x)
                   </label>
                   <input
                     type="number"
@@ -555,7 +568,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
 
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Transportation (x)
+                    {t('loyaltyProgramConfig.pointsRules.transportation')} (x)
                   </label>
                   <input
                     type="number"
@@ -569,21 +582,21 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
 
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Tourism (x)
+                    {t('loyaltyProgramConfig.pointsRules.dining')} (x)
                   </label>
                   <input
                     type="number"
                     step="0.1"
                     min="0"
-                    value={channelPointsSettings[activeChannel].serviceMultipliers.tourism}
-                    onChange={(e) => handleServiceMultiplierChange('tourism', e.target.value)}
+                    value={channelPointsSettings[activeChannel].serviceMultipliers.dining}
+                    onChange={(e) => handleServiceMultiplierChange('dining', e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Housekeeping (x)
+                    {t('loyaltyProgramConfig.pointsRules.housekeeping')} (x)
                   </label>
                   <input
                     type="number"
@@ -601,7 +614,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
           {/* Redemption Rules */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              Points Redemption Rules
+              {t('loyaltyProgramConfig.redemptionRules.title')}
               <span className="text-sm font-normal text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
                 {activeChannel}
               </span>
@@ -610,7 +623,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Points to Money Ratio
+                  {t('loyaltyProgramConfig.redemptionRules.pointsToMoneyRatio')}
                 </label>
                 <input
                   type="number"
@@ -620,13 +633,13 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {channelPointsSettings[activeChannel].pointsToMoneyRatio} points = $1
+                  {channelPointsSettings[activeChannel].pointsToMoneyRatio} {t('loyaltyProgramConfig.redemptionRules.pointsToMoneyRatioDesc')}
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Minimum Redemption Points
+                  {t('loyaltyProgramConfig.redemptionRules.minimumRedemption')}
                 </label>
                 <input
                   type="number"
@@ -636,40 +649,35 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Minimum {channelPointsSettings[activeChannel].minimumRedemption} points = $
-                  {(channelPointsSettings[activeChannel].minimumRedemption / channelPointsSettings[activeChannel].pointsToMoneyRatio).toFixed(2)}
+                  {t('loyaltyProgramConfig.redemptionRules.minimumRedemptionDesc')}
                 </p>
-                {errors.minimumRedemption && (
-                  <p className="text-xs text-red-600 mt-1">{errors.minimumRedemption}</p>
-                )}
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-              disabled={loading}
+              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
             >
-              Cancel
+              {t('loyaltyProgramConfig.actions.cancel')}
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Saving...
+                  {t('loyaltyProgramConfig.actions.saving')}
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  {existingProgram ? 'Update' : 'Create'} Program
+                  {t('loyaltyProgramConfig.actions.saveProgram')}
                 </>
               )}
             </button>

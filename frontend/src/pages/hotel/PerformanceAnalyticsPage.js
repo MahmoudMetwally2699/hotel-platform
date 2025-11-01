@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { FiCalendar, FiDownload, FiRefreshCw } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import RatingSummaryCards from '../../components/hotel/analytics/RatingSummaryCards';
@@ -64,6 +65,7 @@ import {
 
 const PerformanceAnalyticsPage = () => {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
 
   // Redux state - Ratings
   const summaryState = useSelector(selectRatingSummary);
@@ -110,20 +112,20 @@ const PerformanceAnalyticsPage = () => {
 
   // Service type options
   const serviceTypes = [
-    { value: 'all', label: 'All Services' },
-    { value: 'laundry', label: 'Laundry' },
-    { value: 'housekeeping', label: 'Housekeeping (All)' },
-    { value: 'maintenance', label: 'Maintenance' },
-    { value: 'cleaning', label: 'Cleaning' },
-    { value: 'amenities', label: 'Amenities' },
-    { value: 'transportation', label: 'Transportation' },
-    { value: 'dining', label: 'Dining' }
+    { value: 'all', label: t('performanceAnalyticsPage.serviceTypes.all') },
+    { value: 'laundry', label: t('performanceAnalyticsPage.serviceTypes.laundry') },
+    { value: 'housekeeping', label: t('performanceAnalyticsPage.serviceTypes.housekeeping') },
+    { value: 'maintenance', label: t('performanceAnalyticsPage.serviceTypes.maintenance') },
+    { value: 'cleaning', label: t('performanceAnalyticsPage.serviceTypes.cleaning') },
+    { value: 'amenities', label: t('performanceAnalyticsPage.serviceTypes.amenities') },
+    { value: 'transportation', label: t('performanceAnalyticsPage.serviceTypes.transportation') },
+    { value: 'dining', label: t('performanceAnalyticsPage.serviceTypes.dining') }
   ];
 
   // Date range presets
   const dateRangePresets = {
     allTime: {
-      label: 'All Time',
+      label: t('performanceAnalyticsPage.dateRanges.allTime'),
       getRange: () => {
         const now = new Date();
         const start = new Date(now);
@@ -132,7 +134,7 @@ const PerformanceAnalyticsPage = () => {
       }
     },
     thisWeek: {
-      label: 'This Week',
+      label: t('performanceAnalyticsPage.dateRanges.thisWeek'),
       getRange: () => {
         const now = new Date();
         const start = new Date(now);
@@ -142,7 +144,7 @@ const PerformanceAnalyticsPage = () => {
       }
     },
     thisMonth: {
-      label: 'This Month',
+      label: t('performanceAnalyticsPage.dateRanges.thisMonth'),
       getRange: () => {
         const now = new Date();
         const start = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -150,7 +152,7 @@ const PerformanceAnalyticsPage = () => {
       }
     },
     lastQuarter: {
-      label: 'Last Quarter',
+      label: t('performanceAnalyticsPage.dateRanges.lastQuarter'),
       getRange: () => {
         const now = new Date();
         const start = new Date(now);
@@ -159,7 +161,7 @@ const PerformanceAnalyticsPage = () => {
       }
     },
     custom: {
-      label: 'Custom Range',
+      label: t('performanceAnalyticsPage.dateRanges.custom'),
       getRange: () => ({
         startDate: customStartDate,
         endDate: customEndDate
@@ -215,7 +217,7 @@ const PerformanceAnalyticsPage = () => {
 
       dispatch(setDateRange({ startDate, endDate }));
     } catch (error) {
-      toast.error(error || 'Failed to fetch analytics data');
+      toast.error(error || t('performanceAnalyticsPage.messages.fetchError'));
     }
   };
 
@@ -256,12 +258,12 @@ const PerformanceAnalyticsPage = () => {
   // Handle custom date range apply
   const handleCustomRangeApply = async () => {
     if (!customStartDate || !customEndDate) {
-      toast.error('Please select both start and end dates');
+      toast.error(t('performanceAnalyticsPage.messages.selectBothDates'));
       return;
     }
 
     if (new Date(customStartDate) > new Date(customEndDate)) {
-      toast.error('Start date must be before end date');
+      toast.error(t('performanceAnalyticsPage.messages.startBeforeEnd'));
       return;
     }
 
@@ -282,12 +284,12 @@ const PerformanceAnalyticsPage = () => {
 
     await fetchAllData(range, selectedService);
     setRefreshing(false);
-    toast.success('Analytics data refreshed');
+    toast.success(t('performanceAnalyticsPage.messages.refreshSuccess'));
   };
 
   // Handle export (placeholder for future PDF generation)
   const handleExport = () => {
-    toast.info('Export functionality coming soon');
+    toast.info(t('performanceAnalyticsPage.messages.exportSoon'));
   };
 
   // Handle spending period change
@@ -306,16 +308,16 @@ const PerformanceAnalyticsPage = () => {
         dispatch(fetchServiceRequests({ ...params, period })).unwrap()
       ]);
     } catch (error) {
-      toast.error(error || 'Failed to update spending analytics');
+      toast.error(error || t('performanceAnalyticsPage.messages.updateError'));
     }
   };
 
   // Tab content
   const tabs = [
-    { id: 'ratings', label: 'Customer Ratings', active: true },
-    { id: 'operational', label: 'Operational Efficiency', active: true },
-    { id: 'revenue', label: 'Revenue Analysis', active: true },
-    { id: 'spending', label: 'Customer Spending', active: true }
+    { id: 'ratings', label: t('performanceAnalyticsPage.tabs.ratings'), active: true },
+    { id: 'operational', label: t('performanceAnalyticsPage.tabs.operational'), active: true },
+    { id: 'revenue', label: t('performanceAnalyticsPage.tabs.revenue'), active: true },
+    { id: 'spending', label: t('performanceAnalyticsPage.tabs.spending'), active: true }
   ];
 
   return (
@@ -323,9 +325,9 @@ const PerformanceAnalyticsPage = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Performance Analytics</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('performanceAnalyticsPage.title')}</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Comprehensive insights into customer feedback and service quality
+            {t('performanceAnalyticsPage.subtitle')}
           </p>
         </div>
 
@@ -336,7 +338,7 @@ const PerformanceAnalyticsPage = () => {
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
               {/* Service Filter */}
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Service:</span>
+                <span className="text-sm font-medium text-gray-700">{t('performanceAnalyticsPage.controls.service')}</span>
                 <select
                   value={selectedService}
                   onChange={(e) => handleServiceFilterChange(e.target.value)}
@@ -353,7 +355,7 @@ const PerformanceAnalyticsPage = () => {
               {/* Date Range Selector */}
               <div className="flex items-center gap-2">
                 <FiCalendar className="w-5 h-5 text-gray-400" />
-                <span className="text-sm font-medium text-gray-700">Date Range:</span>
+                <span className="text-sm font-medium text-gray-700">{t('performanceAnalyticsPage.controls.dateRange')}</span>
                 <select
                   value={selectedRange}
                   onChange={(e) => handleDateRangeChange(e.target.value)}
@@ -376,7 +378,7 @@ const PerformanceAnalyticsPage = () => {
                     onChange={(e) => setCustomStartDate(e.target.value)}
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  <span className="text-gray-500">to</span>
+                  <span className="text-gray-500">{t('performanceAnalyticsPage.controls.to')}</span>
                   <input
                     type="date"
                     value={customEndDate}
@@ -387,7 +389,7 @@ const PerformanceAnalyticsPage = () => {
                     onClick={handleCustomRangeApply}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Apply
+                    {t('performanceAnalyticsPage.controls.apply')}
                   </button>
                 </div>
               )}
@@ -401,7 +403,7 @@ const PerformanceAnalyticsPage = () => {
                 className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
                 <FiRefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
+                {t('performanceAnalyticsPage.controls.refresh')}
               </button>
 
               <button
@@ -409,7 +411,7 @@ const PerformanceAnalyticsPage = () => {
                 className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 <FiDownload className="w-4 h-4 mr-2" />
-                Export Report
+                {t('performanceAnalyticsPage.controls.exportReport')}
               </button>
             </div>
           </div>
@@ -437,7 +439,7 @@ const PerformanceAnalyticsPage = () => {
                   {tab.label}
                   {!tab.active && (
                     <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">
-                      Soon
+                      {t('performanceAnalyticsPage.tabs.soon')}
                     </span>
                   )}
                 </button>
@@ -568,7 +570,7 @@ const PerformanceAnalyticsPage = () => {
             {/* Period Selector for Spending Tab */}
             <div className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-700">View Period:</span>
+                <span className="text-sm font-medium text-gray-700">{t('performanceAnalyticsPage.spending.viewPeriod')}</span>
                 <div className="flex gap-2">
                   {['weekly', 'monthly', 'annual'].map((period) => (
                     <button
@@ -582,7 +584,7 @@ const PerformanceAnalyticsPage = () => {
                         }
                       `}
                     >
-                      {period.charAt(0).toUpperCase() + period.slice(1)}
+                      {t(`performanceAnalyticsPage.spending.${period}`)}
                     </button>
                   ))}
                 </div>

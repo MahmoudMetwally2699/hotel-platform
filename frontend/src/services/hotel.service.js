@@ -171,6 +171,21 @@ class HotelService {
   }
 
   /**
+   * Update service provider business license (for hotel admin)
+   * @param {string} id - Service provider ID
+   * @param {Object} payload - Fields to update (e.g., { expiryDate, number, issuedBy, issuedDate })
+   * @returns {Promise} - Response from API
+   */
+  async updateServiceProviderLicense(id, payload) {
+    try {
+      const response = await apiClient.put(`${HOTEL_ADMIN_API.SERVICE_PROVIDERS}/${id}/license`, payload);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Reset service provider password (for hotel admin)
    * @param {string} id - Service provider ID
    * @param {string} newPassword - New password to set
@@ -392,6 +407,7 @@ class HotelService {
 
     if (token) {
       try {
+        // eslint-disable-next-line no-unused-vars
         const decoded = jwt_decode(token);
         // ...existing code...
       } catch (error) {

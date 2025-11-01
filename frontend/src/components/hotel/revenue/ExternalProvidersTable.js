@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Users, TrendingUp, DollarSign, Percent } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const ExternalProvidersTable = ({ data, loading, error }) => {
+  const { t, i18n } = useTranslation();
   const [sortBy, setSortBy] = useState('totalRevenue');
   const [sortOrder, setSortOrder] = useState('desc');
 
@@ -21,9 +23,9 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">External Service Provider Performance</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.revenue.external.title')}</h3>
         <div className="bg-red-50 border border-red-200 rounded p-4">
-          <p className="text-red-600">Error loading data: {error}</p>
+          <p className="text-red-600">{t('performanceAnalyticsPage.revenue.errors.loadError', 'Error loading data')}: {error}</p>
         </div>
       </div>
     );
@@ -32,17 +34,17 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
   if (!data || !data.providers || data.providers.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">External Service Provider Performance</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.revenue.external.title')}</h3>
         <div className="bg-gray-50 rounded p-8 text-center">
           <Users className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-500">No external provider data available</p>
+          <p className="text-gray-500">{t('performanceAnalyticsPage.revenue.external.noData')}</p>
         </div>
       </div>
     );
   }
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(i18n.language || 'en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
@@ -50,14 +52,7 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
     }).format(value || 0);
   };
 
-  const formatServiceName = (type) => {
-    const names = {
-      laundry: 'Laundry',
-      restaurant: 'Restaurant',
-      transportation: 'Transportation'
-    };
-    return names[type] || type;
-  };
+  const formatServiceName = (type) => t(`performanceAnalyticsPage.serviceTypes.${type}`, { defaultValue: type });
 
   const getServiceColor = (type) => {
     const colors = {
@@ -87,10 +82,10 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold">External Service Provider Performance</h3>
+        <h3 className="text-lg font-semibold">{t('performanceAnalyticsPage.revenue.external.title')}</h3>
         <div className="flex items-center gap-2 text-sm">
           <Users className="w-4 h-4 text-purple-600" />
-          <span className="text-gray-600">Third-Party Services</span>
+          <span className="text-gray-600">{t('performanceAnalyticsPage.revenue.external.subtitle')}</span>
         </div>
       </div>
 
@@ -99,7 +94,7 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
           <div className="flex items-center gap-2 mb-1">
             <DollarSign className="w-5 h-5" />
-            <p className="text-sm opacity-90">Total Revenue</p>
+            <p className="text-sm opacity-90">{t('performanceAnalyticsPage.revenue.external.cards.totalRevenue')}</p>
           </div>
           <p className="text-2xl font-bold">{formatCurrency(data.totals.totalRevenue)}</p>
         </div>
@@ -107,7 +102,7 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
           <div className="flex items-center gap-2 mb-1">
             <Users className="w-5 h-5" />
-            <p className="text-sm opacity-90">Provider Earnings</p>
+            <p className="text-sm opacity-90">{t('performanceAnalyticsPage.revenue.external.cards.providerEarnings')}</p>
           </div>
           <p className="text-2xl font-bold">{formatCurrency(data.totals.totalProviderEarnings)}</p>
         </div>
@@ -115,7 +110,7 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
         <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-5 h-5" />
-            <p className="text-sm opacity-90">Hotel Commission</p>
+            <p className="text-sm opacity-90">{t('performanceAnalyticsPage.revenue.external.cards.hotelCommission')}</p>
           </div>
           <p className="text-2xl font-bold">{formatCurrency(data.totals.totalHotelCommission)}</p>
         </div>
@@ -123,7 +118,7 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-4 text-white">
           <div className="flex items-center gap-2 mb-1">
             <Percent className="w-5 h-5" />
-            <p className="text-sm opacity-90">Avg Profit Margin</p>
+            <p className="text-sm opacity-90">{t('performanceAnalyticsPage.revenue.external.cards.avgProfitMargin')}</p>
           </div>
           <p className="text-2xl font-bold">{data.totals.avgProfitMargin}%</p>
         </div>
@@ -134,28 +129,28 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
         <table className="w-full">
           <thead>
             <tr className="border-b-2 border-gray-200">
-              <th className="text-left py-3 px-4 font-semibold text-gray-700">Provider</th>
-              <th className="text-center py-3 px-4 font-semibold text-gray-700">Service</th>
+              <th className="text-left py-3 px-4 font-semibold text-gray-700">{t('performanceAnalyticsPage.revenue.external.columns.provider')}</th>
+              <th className="text-center py-3 px-4 font-semibold text-gray-700">{t('performanceAnalyticsPage.revenue.external.columns.service')}</th>
               <th
                 className="text-right py-3 px-4 font-semibold text-gray-700 cursor-pointer hover:text-blue-600"
                 onClick={() => handleSort('totalRevenue')}
               >
-                Total Revenue {sortBy === 'totalRevenue' && (sortOrder === 'asc' ? '↑' : '↓')}
+                {t('performanceAnalyticsPage.revenue.external.columns.totalRevenue')} {sortBy === 'totalRevenue' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
-              <th className="text-right py-3 px-4 font-semibold text-gray-700">Provider Earns</th>
+              <th className="text-right py-3 px-4 font-semibold text-gray-700">{t('performanceAnalyticsPage.revenue.external.columns.providerEarns')}</th>
               <th
                 className="text-right py-3 px-4 font-semibold text-gray-700 cursor-pointer hover:text-blue-600"
                 onClick={() => handleSort('hotelCommission')}
               >
-                Hotel Commission {sortBy === 'hotelCommission' && (sortOrder === 'asc' ? '↑' : '↓')}
+                {t('performanceAnalyticsPage.revenue.external.columns.hotelCommission')} {sortBy === 'hotelCommission' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
-              <th className="text-center py-3 px-4 font-semibold text-gray-700">Bookings</th>
-              <th className="text-right py-3 px-4 font-semibold text-gray-700">Markup %</th>
+              <th className="text-center py-3 px-4 font-semibold text-gray-700">{t('performanceAnalyticsPage.revenue.external.columns.bookings')}</th>
+              <th className="text-right py-3 px-4 font-semibold text-gray-700">{t('performanceAnalyticsPage.revenue.external.columns.markupPercent')}</th>
               <th
                 className="text-right py-3 px-4 font-semibold text-gray-700 cursor-pointer hover:text-blue-600"
                 onClick={() => handleSort('profitMargin')}
               >
-                Profit Margin {sortBy === 'profitMargin' && (sortOrder === 'asc' ? '↑' : '↓')}
+                {t('performanceAnalyticsPage.revenue.external.columns.profitMargin')} {sortBy === 'profitMargin' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
             </tr>
           </thead>

@@ -4,9 +4,11 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiStar, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
 const RatingsBreakdownTable = ({ data, loading }) => {
+  const { t } = useTranslation();
   const [expandedRows, setExpandedRows] = useState(new Set());
 
   if (loading) {
@@ -136,8 +138,8 @@ const RatingsBreakdownTable = ({ data, loading }) => {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">Detailed Ratings Breakdown</h3>
-        <p className="text-sm text-gray-600 mt-1">Performance metrics by service category</p>
+        <h3 className="text-lg font-semibold text-gray-900">{t('performanceAnalyticsPage.ratingsBreakdown.title')}</h3>
+        <p className="text-sm text-gray-600 mt-1">{t('performanceAnalyticsPage.ratingsBreakdown.subtitle')}</p>
       </div>
 
       <div className="overflow-x-auto">
@@ -145,25 +147,25 @@ const RatingsBreakdownTable = ({ data, loading }) => {
           <thead className="bg-gray-50">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Service Type
+                {t('performanceAnalyticsPage.ratingsBreakdown.serviceType')}
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Requests
+                {t('performanceAnalyticsPage.ratingsBreakdown.totalRequests')}
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Avg Rating
+                {t('performanceAnalyticsPage.ratingsBreakdown.avgRating')}
               </th>
               <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                5 Stars
+                {t('performanceAnalyticsPage.ratingsBreakdown.stars5')}
               </th>
               <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                4 Stars
+                {t('performanceAnalyticsPage.ratingsBreakdown.stars4')}
               </th>
               <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                3 Stars
+                {t('performanceAnalyticsPage.ratingsBreakdown.stars3')}
               </th>
               <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                1-2 Stars
+                {t('performanceAnalyticsPage.ratingsBreakdown.stars1-2')}
               </th>
             </tr>
           </thead>

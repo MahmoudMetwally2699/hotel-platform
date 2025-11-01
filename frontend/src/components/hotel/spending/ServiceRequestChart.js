@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const ServiceRequestChart = ({ data, loading, error }) => {
+  const { t, i18n } = useTranslation();
   const [selectedServices, setSelectedServices] = useState(['all']);
 
   if (loading) {
@@ -16,9 +18,9 @@ const ServiceRequestChart = ({ data, loading, error }) => {
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Service Request Volume</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.spending.serviceRequestVolume.title')}</h3>
         <div className="bg-red-50 border border-red-200 rounded p-4">
-          <p className="text-red-600">Error loading data: {error}</p>
+          <p className="text-red-600">{t('performanceAnalyticsPage.spending.errors.loadError', 'Error loading data')}: {error}</p>
         </div>
       </div>
     );
@@ -27,9 +29,9 @@ const ServiceRequestChart = ({ data, loading, error }) => {
   if (!data || !data.requestData || data.requestData.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Service Request Volume</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.spending.serviceRequestVolume.title')}</h3>
         <div className="bg-gray-50 rounded p-8 text-center">
-          <p className="text-gray-500">No service request data available</p>
+          <p className="text-gray-500">{t('performanceAnalyticsPage.spending.serviceRequestVolume.noData')}</p>
         </div>
       </div>
     );
@@ -50,7 +52,7 @@ const ServiceRequestChart = ({ data, loading, error }) => {
   });
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return new Date(dateString).toLocaleDateString(i18n.language || 'en-US', { month: 'short', day: 'numeric' });
   };
 
   const serviceColors = {
@@ -79,10 +81,12 @@ const ServiceRequestChart = ({ data, loading, error }) => {
 
   const displayedServices = selectedServices.includes('all') ? serviceTypes : selectedServices;
 
+  const translateService = (key) => t(`performanceAnalyticsPage.serviceTypes.${key}`, { defaultValue: key });
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-2">Service Request Volume</h3>
-      <p className="text-sm text-gray-600 mb-4">Number of requests for each service over time</p>
+      <h3 className="text-lg font-semibold mb-2">{t('performanceAnalyticsPage.spending.serviceRequestVolume.title')}</h3>
+      <p className="text-sm text-gray-600 mb-4">{t('performanceAnalyticsPage.spending.serviceRequestVolume.subtitle')}</p>
 
       {/* Service Filter */}
       <div className="flex flex-wrap gap-2 mb-6">
@@ -94,7 +98,7 @@ const ServiceRequestChart = ({ data, loading, error }) => {
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
-          All Services
+          {t('performanceAnalyticsPage.serviceTypes.all')}
         </button>
         {serviceTypes.map(service => (
           <button
@@ -106,7 +110,7 @@ const ServiceRequestChart = ({ data, loading, error }) => {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            {service}
+            {translateService(service)}
           </button>
         ))}
       </div>
@@ -128,7 +132,7 @@ const ServiceRequestChart = ({ data, loading, error }) => {
               key={service}
               dataKey={service}
               fill={serviceColors[service] || '#6b7280'}
-              name={service}
+              name={translateService(service)}
             />
           ))}
         </BarChart>

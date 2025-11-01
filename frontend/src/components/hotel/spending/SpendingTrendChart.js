@@ -1,7 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const SpendingTrendChart = ({ data, loading, error }) => {
+  const { t, i18n } = useTranslation();
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -14,9 +16,9 @@ const SpendingTrendChart = ({ data, loading, error }) => {
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Average Customer Spending Trend</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.spending.spendingTrend.title')}</h3>
         <div className="bg-red-50 border border-red-200 rounded p-4">
-          <p className="text-red-600">Error loading data: {error}</p>
+          <p className="text-red-600">{t('performanceAnalyticsPage.spending.errors.loadError', 'Error loading data')}: {error}</p>
         </div>
       </div>
     );
@@ -25,16 +27,16 @@ const SpendingTrendChart = ({ data, loading, error }) => {
   if (!data || !data.trendData || data.trendData.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Average Customer Spending Trend</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.spending.spendingTrend.title')}</h3>
         <div className="bg-gray-50 rounded p-8 text-center">
-          <p className="text-gray-500">No trend data available</p>
+          <p className="text-gray-500">{t('performanceAnalyticsPage.spending.spendingTrend.noData')}</p>
         </div>
       </div>
     );
   }
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(i18n.language || 'en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
@@ -52,9 +54,9 @@ const SpendingTrendChart = ({ data, loading, error }) => {
     if (period.length === 7) {
       const [year, month] = period.split('-');
       const date = new Date(parseInt(year), parseInt(month) - 1);
-      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      return date.toLocaleDateString(i18n.language || 'en-US', { month: 'short', year: 'numeric' });
     }
-    return new Date(period).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return new Date(period).toLocaleDateString(i18n.language || 'en-US', { month: 'short', day: 'numeric' });
   };
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -64,7 +66,7 @@ const SpendingTrendChart = ({ data, loading, error }) => {
           <p className="font-semibold mb-2">{formatPeriod(label)}</p>
           {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">
-              {entry.name}: {entry.name.includes('Spending') ? formatCurrency(entry.value) : entry.value}
+              {entry.name}: {entry.dataKey === 'avgSpending' ? formatCurrency(entry.value) : entry.value}
             </p>
           ))}
         </div>
@@ -75,8 +77,8 @@ const SpendingTrendChart = ({ data, loading, error }) => {
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">Average Customer Spending Trend</h3>
-      <p className="text-sm text-gray-600 mb-6">Spending patterns and customer count over time</p>
+  <h3 className="text-lg font-semibold mb-4">{t('performanceAnalyticsPage.spending.spendingTrend.title')}</h3>
+  <p className="text-sm text-gray-600 mb-6">{t('performanceAnalyticsPage.spending.spendingTrend.subtitle')}</p>
 
       <ResponsiveContainer width="100%" height={350}>
         <AreaChart data={data.trendData}>
@@ -118,7 +120,7 @@ const SpendingTrendChart = ({ data, loading, error }) => {
             stroke="#3b82f6"
             fillOpacity={1}
             fill="url(#colorSpending)"
-            name="Avg Spending"
+            name={t('performanceAnalyticsPage.spending.spendingTrend.legend.avgSpending')}
             strokeWidth={2}
           />
           <Line
@@ -126,7 +128,7 @@ const SpendingTrendChart = ({ data, loading, error }) => {
             type="monotone"
             dataKey="customerCount"
             stroke="#10b981"
-            name="Customers"
+            name={t('performanceAnalyticsPage.spending.spendingTrend.legend.customers')}
             strokeWidth={2}
             dot={{ fill: '#10b981', r: 4 }}
           />

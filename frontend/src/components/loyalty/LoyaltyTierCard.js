@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FaTrophy, FaStar, FaGift, FaChevronRight } from 'react-icons/fa';
 
 // Tier color configurations
@@ -43,6 +44,8 @@ const TIER_ICONS = {
 };
 
 const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
+  const { t } = useTranslation();
+
   if (!membership || !tierDetails) {
     return null;
   }
@@ -76,14 +79,14 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
                 <TierIcon className="text-3xl" />
               </div>
               <div>
-                <p className="text-sm font-medium opacity-90">Loyalty Tier</p>
+                <p className="text-sm font-medium opacity-90">{t('loyaltyCard.loyaltyTier')}</p>
                 <h2 className="text-3xl font-bold tracking-wide">{membership.currentTier}</h2>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-xs font-medium opacity-90">Tier Points</p>
+              <p className="text-xs font-medium opacity-90">{t('loyaltyCard.tierPoints')}</p>
               <p className="text-2xl font-bold">{(membership.tierPoints || membership.totalPoints).toLocaleString()}</p>
-              <p className="text-xs font-medium opacity-90 mt-2">Redeemable Points</p>
+              <p className="text-xs font-medium opacity-90 mt-2">{t('loyaltyCard.redeemablePoints')}</p>
               <p className="text-3xl font-bold">{membership.availablePoints.toLocaleString()}</p>
             </div>
           </div>
@@ -94,18 +97,18 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
       <div className="grid grid-cols-3 divide-x divide-gray-200 bg-gray-50 border-b border-gray-200">
         <div className="p-4 text-center">
           <p className="text-2xl font-bold text-gray-800">{(membership.tierPoints || membership.totalPoints).toLocaleString()}</p>
-          <p className="text-xs text-gray-600 mt-1">Tier Points</p>
-          <p className="text-xs text-gray-500 mt-1">🔒 Never decrease</p>
+          <p className="text-xs text-gray-600 mt-1">{t('loyaltyCard.tierPoints')}</p>
+          <p className="text-xs text-gray-500 mt-1">{t('loyaltyCard.neverDecrease')}</p>
         </div>
         <div className="p-4 text-center">
           <p className="text-2xl font-bold text-blue-600">{membership.availablePoints.toLocaleString()}</p>
-          <p className="text-xs text-gray-600 mt-1">Redeemable Points</p>
-          <p className="text-xs text-gray-500 mt-1">Use for rewards</p>
+          <p className="text-xs text-gray-600 mt-1">{t('loyaltyCard.redeemablePoints')}</p>
+          <p className="text-xs text-gray-500 mt-1">{t('loyaltyCard.useForRewards')}</p>
         </div>
         <div className="p-4 text-center">
           <p className="text-2xl font-bold text-green-600">${redeemableValue.toFixed(2)}</p>
-          <p className="text-xs text-gray-600 mt-1">Cash Value</p>
-          <p className="text-xs text-gray-500 mt-1">Current balance</p>
+          <p className="text-xs text-gray-600 mt-1">{t('loyaltyCard.cashValue')}</p>
+          <p className="text-xs text-gray-500 mt-1">{t('loyaltyCard.currentBalance')}</p>
         </div>
       </div>
 
@@ -113,9 +116,9 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
       {nextTier && pointsToNextTier > 0 && (
         <div className="p-6 bg-white border-b border-gray-200">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="text-sm font-semibold text-gray-700">Progress to {nextTier}</h3>
+            <h3 className="text-sm font-semibold text-gray-700">{t('loyaltyCard.progressTo', { tier: nextTier })}</h3>
             <span className="text-sm font-medium" style={{ color: tierColor.primary }}>
-              {pointsToNextTier.toLocaleString()} points needed
+              {t('loyaltyCard.pointsNeeded', { points: pointsToNextTier.toLocaleString() })}
             </span>
           </div>
 
@@ -131,7 +134,7 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
               ></div>
             </div>
             <div className="flex justify-between items-center mt-2">
-              <span className="text-xs text-gray-600">{progressPercentage.toFixed(1)}% Complete</span>
+              <span className="text-xs text-gray-600">{t('loyaltyCard.complete', { percentage: progressPercentage.toFixed(1) })}</span>
               <span className="text-xs font-medium text-gray-700">
                 {membership.totalPoints.toLocaleString()} / {(membership.totalPoints + pointsToNextTier).toLocaleString()}
               </span>
@@ -145,7 +148,7 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
         <div className="p-6 bg-gradient-to-r from-amber-50 to-yellow-50 border-b border-yellow-200">
           <div className="flex items-center justify-center space-x-2 text-yellow-800">
             <FaTrophy className="text-xl" />
-            <p className="font-semibold">You've reached the highest tier! 🎉</p>
+            <p className="font-semibold">{t('loyaltyCard.highestTier')}</p>
           </div>
         </div>
       )}
@@ -154,7 +157,7 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
       <div className="p-6">
         <div className="flex items-center space-x-2 mb-4">
           <FaGift className="text-xl" style={{ color: tierColor.primary }} />
-          <h3 className="text-lg font-semibold text-gray-800">Your {membership.currentTier} Benefits</h3>
+          <h3 className="text-lg font-semibold text-gray-800">{t('loyaltyCard.yourBenefits', { tier: membership.currentTier })}</h3>
         </div>
 
         <div className="space-y-3">
@@ -171,7 +174,7 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
               </div>
             ))
           ) : (
-            <p className="text-gray-500 text-sm">No benefits listed</p>
+            <p className="text-gray-500 text-sm">{t('loyaltyCard.noBenefits')}</p>
           )}
         </div>
 
@@ -182,11 +185,11 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
         <div className="flex justify-between items-center text-xs text-gray-600">
           <div>
-            <p>Member since: {new Date(membership.joinDate).toLocaleDateString()}</p>
+            <p>{t('loyaltyCard.memberSince', { date: new Date(membership.joinDate).toLocaleDateString() })}</p>
           </div>
           {program?.expirationMonths && (
             <div className="text-right">
-              <p>Points expire after {program.expirationMonths} months</p>
+              <p>{t('loyaltyCard.pointsExpire', { months: program.expirationMonths })}</p>
             </div>
           )}
         </div>

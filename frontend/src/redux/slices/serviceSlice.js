@@ -117,7 +117,8 @@ export const setServiceProviderMarkup = createAsyncThunk(
       const response = await hotelService.setServiceProviderMarkup(providerId, percentage, notes);
       return { providerId, ...response };
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to set service provider markup');
+      const msg = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to set service provider markup';
+      return rejectWithValue(msg);
     }
   }
 );
@@ -438,6 +439,7 @@ export const deleteServiceProvider = createAsyncThunk(
 );
 
 // Create the service slice
+/* eslint-disable no-whitespace-before-property */
 const serviceSlice = createSlice({
   name: 'service',
   initialState,
@@ -797,6 +799,7 @@ const serviceSlice = createSlice({
       });
   },
 });
+/* eslint-enable no-whitespace-before-property */
 
 // Export actions and reducer
 export const { setCurrentService, setCurrentServiceProvider, clearServiceState } = serviceSlice.actions;

@@ -5,9 +5,11 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiCheckCircle, FiXCircle, FiClock, FiAlertCircle } from 'react-icons/fi';
 
 const ServiceDetailsTable = ({ data, loading }) => {
+  const { t, i18n } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -28,10 +30,10 @@ const ServiceDetailsTable = ({ data, loading }) => {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-6">
-          Service Performance Details
+          {t('performanceAnalyticsPage.operational.serviceDetails.title')}
         </h3>
         <div className="text-center text-gray-500 py-8">
-          No service details available
+          {t('performanceAnalyticsPage.operational.serviceDetails.noData', 'No service details available')}
         </div>
       </div>
     );
@@ -45,10 +47,10 @@ const ServiceDetailsTable = ({ data, loading }) => {
 
   const getSLAStatusBadge = (status) => {
     const config = {
-      met: { bg: 'bg-green-100', text: 'text-green-800', label: 'Met', icon: FiCheckCircle },
-      missed: { bg: 'bg-red-100', text: 'text-red-800', label: 'Missed', icon: FiXCircle },
-      'at-risk': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'At Risk', icon: FiAlertCircle },
-      pending: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Pending', icon: FiClock }
+      met: { bg: 'bg-green-100', text: 'text-green-800', label: t('performanceAnalyticsPage.operational.serviceDetails.slaStatus.met'), icon: FiCheckCircle },
+      missed: { bg: 'bg-red-100', text: 'text-red-800', label: t('performanceAnalyticsPage.operational.serviceDetails.slaStatus.missed'), icon: FiXCircle },
+      'at-risk': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: t('performanceAnalyticsPage.operational.serviceDetails.slaStatus.atRisk'), icon: FiAlertCircle },
+      pending: { bg: 'bg-gray-100', text: 'text-gray-800', label: t('performanceAnalyticsPage.operational.serviceDetails.slaStatus.pending'), icon: FiClock }
     };
 
     const { bg, text, label, icon: Icon } = config[status] || config.pending;
@@ -63,7 +65,7 @@ const ServiceDetailsTable = ({ data, loading }) => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(i18n.language || 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -76,10 +78,10 @@ const ServiceDetailsTable = ({ data, loading }) => {
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800">
-          Service Performance Details
+          {t('performanceAnalyticsPage.operational.serviceDetails.title')}
         </h3>
         <p className="text-sm text-gray-600 mt-1">
-          Detailed timing analysis for service requests (minutes)
+          {t('performanceAnalyticsPage.operational.serviceDetails.subtitle')}
         </p>
       </div>
 
@@ -88,28 +90,28 @@ const ServiceDetailsTable = ({ data, loading }) => {
           <thead className="bg-gray-50">
             <tr>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Booking #
+                {t('performanceAnalyticsPage.operational.serviceDetails.columns.booking')}
               </th>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Service
+                {t('performanceAnalyticsPage.operational.serviceDetails.columns.service')}
               </th>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Guest
+                {t('performanceAnalyticsPage.operational.serviceDetails.columns.guest')}
               </th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Response Time
+                {t('performanceAnalyticsPage.operational.serviceDetails.columns.responseTime')}
               </th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Completion Time
+                {t('performanceAnalyticsPage.operational.serviceDetails.columns.completionTime')}
               </th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Service Time
+                {t('performanceAnalyticsPage.operational.serviceDetails.columns.serviceTime')}
               </th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                SLA Status
+                {t('performanceAnalyticsPage.operational.serviceDetails.columns.slaStatus')}
               </th>
               <th scope="col" className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date
+                {t('performanceAnalyticsPage.operational.serviceDetails.columns.date')}
               </th>
             </tr>
           </thead>
@@ -118,20 +120,20 @@ const ServiceDetailsTable = ({ data, loading }) => {
               <tr key={index} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
-                    {service.bookingNumber || 'N/A'}
+                    {service.bookingNumber || t('common.notAvailable', 'N/A')}
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 capitalize">
-                    {service.serviceType}
+                    {t(`performanceAnalyticsPage.serviceTypes.${service.serviceType}`, service.serviceType)}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {service.serviceName || 'N/A'}
+                    {service.serviceName || t('common.notAvailable', 'N/A')}
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {service.guestName || 'N/A'}
+                    {service.guestName || t('common.notAvailable', 'N/A')}
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-center">
@@ -142,16 +144,16 @@ const ServiceDetailsTable = ({ data, loading }) => {
                         service.isResponseOnTime === false ? 'text-red-600' :
                         'text-gray-600'
                       }`}>
-                        {service.actualResponseTime} min
+                        {service.actualResponseTime} {t('performanceAnalyticsPage.operational.completionTime.minutesShort')}
                       </span>
                       {service.responseDelay > 0 && (
                         <span className="text-xs text-red-500">
-                          +{service.responseDelay} min
+                          +{service.responseDelay} {t('performanceAnalyticsPage.operational.completionTime.minutesShort')}
                         </span>
                       )}
                     </div>
                   ) : (
-                    <span className="text-sm text-gray-400">N/A</span>
+                    <span className="text-sm text-gray-400">{t('common.notAvailable', 'N/A')}</span>
                   )}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-center">
@@ -162,25 +164,25 @@ const ServiceDetailsTable = ({ data, loading }) => {
                         service.isCompletionOnTime === false ? 'text-red-600' :
                         'text-gray-600'
                       }`}>
-                        {service.actualCompletionTime} min
+                        {service.actualCompletionTime} {t('performanceAnalyticsPage.operational.completionTime.minutesShort')}
                       </span>
                       {service.completionDelay > 0 && (
                         <span className="text-xs text-red-500">
-                          +{service.completionDelay} min
+                          +{service.completionDelay} {t('performanceAnalyticsPage.operational.completionTime.minutesShort')}
                         </span>
                       )}
                     </div>
                   ) : (
-                    <span className="text-sm text-gray-400">N/A</span>
+                    <span className="text-sm text-gray-400">{t('common.notAvailable', 'N/A')}</span>
                   )}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-center">
                   {service.actualServiceTime != null ? (
                     <span className="text-sm text-gray-900">
-                      {service.actualServiceTime} min
+                      {service.actualServiceTime} {t('performanceAnalyticsPage.operational.completionTime.minutesShort')}
                     </span>
                   ) : (
-                    <span className="text-sm text-gray-400">N/A</span>
+                    <span className="text-sm text-gray-400">{t('common.notAvailable', 'N/A')}</span>
                   )}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-center">
@@ -201,9 +203,11 @@ const ServiceDetailsTable = ({ data, loading }) => {
       {totalPages > 1 && (
         <div className="mt-6 flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
-            <span className="font-medium">{Math.min(endIndex, serviceDetails.length)}</span> of{' '}
-            <span className="font-medium">{serviceDetails.length}</span> results
+            {t('performanceAnalyticsPage.operational.serviceDetails.pagination.showRange', {
+              from: startIndex + 1,
+              to: Math.min(endIndex, serviceDetails.length),
+              total: serviceDetails.length
+            })}
           </div>
           <div className="flex gap-2">
             <button
@@ -215,7 +219,7 @@ const ServiceDetailsTable = ({ data, loading }) => {
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
               }`}
             >
-              Previous
+              {t('common.previous', 'Previous')}
             </button>
             <div className="flex items-center gap-1">
               {[...Array(totalPages)].map((_, i) => {
@@ -254,7 +258,7 @@ const ServiceDetailsTable = ({ data, loading }) => {
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
               }`}
             >
-              Next
+              {t('common.next', 'Next')}
             </button>
           </div>
         </div>

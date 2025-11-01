@@ -6,9 +6,11 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiCheckCircle, FiXCircle, FiClock } from 'react-icons/fi';
 
 const SLAByServiceTable = ({ data, loading }) => {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -26,10 +28,10 @@ const SLAByServiceTable = ({ data, loading }) => {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-6">
-          SLA Performance by Service
+          {t('performanceAnalyticsPage.operational.slaByService.title')}
         </h3>
         <div className="text-center text-gray-500 py-8">
-          No SLA data available
+          {t('performanceAnalyticsPage.operational.slaByService.noData', 'No SLA data available')}
         </div>
       </div>
     );
@@ -39,10 +41,10 @@ const SLAByServiceTable = ({ data, loading }) => {
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800">
-          SLA Performance by Service
+          {t('performanceAnalyticsPage.operational.slaByService.title')}
         </h3>
         <p className="text-sm text-gray-600 mt-1">
-          On-time vs. delayed service completions
+          {t('performanceAnalyticsPage.operational.slaByService.subtitle')}
         </p>
       </div>
 
@@ -51,22 +53,22 @@ const SLAByServiceTable = ({ data, loading }) => {
           <thead className="bg-gray-50">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Service Type
+                {t('performanceAnalyticsPage.operational.slaByService.columns.serviceType')}
               </th>
               <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Bookings
+                {t('performanceAnalyticsPage.operational.slaByService.columns.totalBookings')}
               </th>
               <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                On Time
+                {t('performanceAnalyticsPage.operational.slaByService.columns.onTime')}
               </th>
               <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Delayed
+                {t('performanceAnalyticsPage.operational.slaByService.columns.delayed')}
               </th>
               <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                On-Time %
+                {t('performanceAnalyticsPage.operational.slaByService.columns.onTimePercent')}
               </th>
               <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Avg Delay
+                {t('performanceAnalyticsPage.operational.slaByService.columns.avgDelay')}
               </th>
             </tr>
           </thead>
@@ -81,7 +83,7 @@ const SLAByServiceTable = ({ data, loading }) => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="text-sm font-medium text-gray-900 capitalize">
-                        {service.serviceType}
+                        {t(`performanceAnalyticsPage.serviceTypes.${service.serviceType}`, service.serviceType)}
                       </div>
                     </div>
                   </td>
@@ -118,11 +120,11 @@ const SLAByServiceTable = ({ data, loading }) => {
                       {service.avgDelay > 0 && (
                         <>
                           <FiClock className="w-4 h-4 text-orange-500 mr-1" />
-                          <span>{service.avgDelay} min</span>
+                          <span>{service.avgDelay} {t('performanceAnalyticsPage.operational.completionTime.minutesShort')}</span>
                         </>
                       )}
                       {service.avgDelay === 0 && (
-                        <span className="text-gray-400">N/A</span>
+                        <span className="text-gray-400">{t('common.notAvailable', 'N/A')}</span>
                       )}
                     </div>
                   </td>
@@ -140,19 +142,19 @@ const SLAByServiceTable = ({ data, loading }) => {
             <div className="text-2xl font-bold text-gray-900">
               {data.slaByService.reduce((sum, s) => sum + s.totalBookings, 0)}
             </div>
-            <div className="text-sm text-gray-600">Total Bookings</div>
+            <div className="text-sm text-gray-600">{t('performanceAnalyticsPage.operational.slaByService.totals.totalBookings')}</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-green-600">
               {data.slaByService.reduce((sum, s) => sum + s.onTimeBookings, 0)}
             </div>
-            <div className="text-sm text-gray-600">On Time</div>
+            <div className="text-sm text-gray-600">{t('performanceAnalyticsPage.operational.slaByService.totals.onTime')}</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-red-600">
               {data.slaByService.reduce((sum, s) => sum + s.delayedBookings, 0)}
             </div>
-            <div className="text-sm text-gray-600">Delayed</div>
+            <div className="text-sm text-gray-600">{t('performanceAnalyticsPage.operational.slaByService.totals.delayed')}</div>
           </div>
         </div>
       </div>

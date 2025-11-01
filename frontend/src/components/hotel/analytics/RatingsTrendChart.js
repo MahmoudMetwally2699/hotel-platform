@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   LineChart,
   Line,
@@ -16,6 +17,8 @@ import {
 } from 'recharts';
 
 const RatingsTrendChart = ({ data, loading }) => {
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.dir() === 'rtl';
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6 mb-8">
@@ -28,9 +31,9 @@ const RatingsTrendChart = ({ data, loading }) => {
   if (!data || !data.trendData || data.trendData.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6 mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Service Ratings Trend</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('performanceAnalyticsPage.ratingsTrend.title')}</h3>
         <div className="h-96 flex items-center justify-center">
-          <p className="text-gray-500">No trend data available</p>
+          <p className="text-gray-500">{t('performanceAnalyticsPage.ratingsTrend.noData', 'No trend data available')}</p>
         </div>
       </div>
     );
@@ -67,8 +70,11 @@ const RatingsTrendChart = ({ data, loading }) => {
   };
 
   const formatServiceName = (name) => {
-    if (!name) return 'Unknown';
-    return name.charAt(0).toUpperCase() + name.slice(1);
+    if (!name) return t('services.service', { defaultValue: 'Service' });
+    const key = name.toString();
+    return t(`performanceAnalyticsPage.serviceTypes.${key}`, {
+      defaultValue: key.charAt(0).toUpperCase() + key.slice(1)
+    });
   };
 
   // Custom tooltip
@@ -80,7 +86,7 @@ const RatingsTrendChart = ({ data, loading }) => {
           <div className="space-y-1">
             {payload.map((entry, index) => (
               <p key={index} className="text-sm" style={{ color: entry.color }}>
-                {formatServiceName(entry.name)}: <span className="font-medium">{entry.value?.toFixed(1)}/5.0</span>
+                {entry.name}: <span className="font-medium">{entry.value?.toFixed(1)}/5.0</span>
               </p>
             ))}
           </div>
@@ -90,31 +96,50 @@ const RatingsTrendChart = ({ data, loading }) => {
     return null;
   };
 
+  // Localize X-axis period labels such as "Week 41, 2025"
+  const formatPeriod = (value) => {
+    if (!value) return '';
+    const str = String(value);
+    const match = str.match(/Week\s*(\d+)[,\s]+(\d{4})/i);
+    if (match) {
+      const week = match[1];
+      const year = match[2];
+      return t('performanceAnalyticsPage.ratingsTrend.weekLabel', {
+        week,
+        year,
+        defaultValue: `Week ${week}, ${year}`
+      });
+    }
+    return str;
+  };
+
   return (
     <div className="bg-white rounded-lg shadow p-6 mb-8">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Service Ratings Trend</h3>
-        <p className="text-sm text-gray-600 mt-1">Rating performance over time by service category</p>
+        <h3 className="text-lg font-semibold text-gray-900">{t('performanceAnalyticsPage.ratingsTrend.title')}</h3>
+        <p className="text-sm text-gray-600 mt-1">{t('performanceAnalyticsPage.ratingsTrend.subtitle')}</p>
       </div>
 
-      <ResponsiveContainer width="100%" height={450}>
+      <ResponsiveContainer width="100%" height={isRTL ? 520 : 450}>
         <LineChart
           data={data.trendData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+          margin={{ top: 20, right: isRTL ? 40 : 30, left: isRTL ? 30 : 20, bottom: isRTL ? 50 : 45 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
           <XAxis
             dataKey="period"
-            tick={{ fill: '#6B7280', fontSize: 12 }}
-            angle={-45}
-            textAnchor="end"
-            height={80}
+            tick={{ fill: '#6B7280', fontSize: 12, dy: 10 }}
+            angle={isRTL ? 45 : -45}
+            textAnchor={isRTL ? 'start' : 'end'}
+            tickMargin={16}
+            height={isRTL ? 100 : 90}
+            tickFormatter={formatPeriod}
           />
           <YAxis
             domain={[0, 5]}
             ticks={[0, 1, 2, 3, 4, 5]}
             tick={{ fill: '#6B7280', fontSize: 12 }}
-            label={{ value: 'Rating (0-5)', angle: -90, position: 'insideLeft' }}
+            label={{ value: t('performanceAnalyticsPage.ratingsTrend.yAxisLabel'), angle: -90, position: 'insideLeft' }}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend
@@ -130,7 +155,7 @@ const RatingsTrendChart = ({ data, loading }) => {
               key={serviceType}
               type="monotone"
               dataKey={serviceType}
-              name={serviceType}
+              name={formatServiceName(serviceType)}
               stroke={getServiceColor(serviceType)}
               strokeWidth={2}
               dot={{ r: 4, fill: getServiceColor(serviceType) }}

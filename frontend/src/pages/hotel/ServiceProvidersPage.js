@@ -22,6 +22,7 @@ const ServiceProvidersPage = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
+  const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [markupValue, setMarkupValue] = useState('');
   const [markupNotes, setMarkupNotes] = useState('');
@@ -30,6 +31,8 @@ const ServiceProvidersPage = () => {
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [licenseExpiry, setLicenseExpiry] = useState('');
+  const [isSavingLicense, setIsSavingLicense] = useState(false);
 
   // Available service categories (only the specified ones)
   const serviceCategories = [
@@ -68,6 +71,15 @@ const ServiceProvidersPage = () => {
     setSelectedProvider(provider);
     setSelectedCategories(provider.categories || []);
     setIsCategoriesModalOpen(true);
+  };
+
+  // Handle opening update license modal
+  const handleUpdateLicense = (provider) => {
+    setSelectedProvider(provider);
+    const d = provider?.businessLicense?.expiryDate ? new Date(provider.businessLicense.expiryDate) : null;
+    const yyyyMmDd = d ? new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10) : '';
+    setLicenseExpiry(yyyyMmDd);
+    setIsLicenseModalOpen(true);
   };
 
   // Handle opening reset password modal
@@ -158,7 +170,22 @@ const ServiceProvidersPage = () => {
       setMarkupValue('');
       setMarkupNotes('');
     } catch (error) {
-      alert(t('hotelAdmin.serviceProviders.errors.markupSetFailed'));
+      const backendMsg = error?.response?.data?.message
+        || error?.response?.data?.error
+        || error?.message
+        || (typeof error === 'string' ? error : '');
+      const licenseRelated = /license|licen[cs]e|expiry|expiration|expired/i.test(backendMsg || '');
+      // Optional: log for debugging in dev
+      // eslint-disable-next-line no-console
+      console.error('Set markup failed:', backendMsg, error);
+      if (licenseRelated) {
+        // Close markup modal and open the license update flow
+        setIsModalOpen(false);
+        alert(t('hotelAdmin.serviceProviders.errors.updateLicenseFirst'));
+        handleUpdateLicense(selectedProvider);
+      } else {
+        alert(t('hotelAdmin.serviceProviders.errors.markupSetFailed'));
+      }
     } finally {
       setIsSavingMarkup(false);
     }
@@ -181,6 +208,36 @@ const ServiceProvidersPage = () => {
       alert(t('hotelAdmin.serviceProviders.errors.categoriesUpdateFailed'));
     } finally {
       setIsSavingCategories(false);
+    }
+  };
+
+  // Handle saving license expiry
+  const handleSaveLicense = async () => {
+    if (!selectedProvider) return;
+    if (!licenseExpiry) {
+      toast.error(t('hotelAdmin.serviceProviders.licenseModal.errors.dateRequired'));
+      return;
+    }
+    const chosen = new Date(licenseExpiry);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    if (chosen <= today) {
+      toast.error(t('hotelAdmin.serviceProviders.licenseModal.errors.futureDate'));
+      return;
+    }
+    setIsSavingLicense(true);
+    try {
+      await hotelService.updateServiceProviderLicense(selectedProvider._id, { expiryDate: licenseExpiry });
+      setIsLicenseModalOpen(false);
+      setSelectedProvider(null);
+      setLicenseExpiry('');
+      dispatch(fetchServiceProviders({}));
+      toast.success(t('hotelAdmin.serviceProviders.licenseModal.success'));
+    } catch (error) {
+      const msg = error.response?.data?.message || t('hotelAdmin.serviceProviders.licenseModal.error');
+      toast.error(msg);
+    } finally {
+      setIsSavingLicense(false);
     }
   };
 
@@ -385,6 +442,12 @@ const ServiceProvidersPage = () => {
                               >
                                 {t('hotelAdmin.serviceProviders.actions.resetPassword')}
                               </button>
+                              <button
+                                onClick={() => handleUpdateLicense(provider)}
+                                className="text-emerald-700 hover:text-emerald-900 font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-emerald-50 text-sm"
+                              >
+                                {t('hotelAdmin.serviceProviders.actions.updateLicense')}
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -477,6 +540,12 @@ const ServiceProvidersPage = () => {
                           title={t('hotelAdmin.serviceProviders.actions.resetPassword')}
                         >
                           {t('hotelAdmin.serviceProviders.actions.resetPassword')}
+                        </button>
+                        <button
+                          onClick={() => handleUpdateLicense(provider)}
+                          className="flex-1 text-emerald-700 hover:text-emerald-900 font-medium transition-colors duration-200 py-2 rounded hover:bg-emerald-50 text-sm text-center border border-emerald-700"
+                        >
+                          {t('hotelAdmin.serviceProviders.actions.updateLicense')}
                         </button>
                       </div>
                     </div>
@@ -576,6 +645,63 @@ const ServiceProvidersPage = () => {
                     disabled={isSavingMarkup}
                   >
                     {isSavingMarkup ? t('hotelAdmin.serviceProviders.markupModal.saving') : t('hotelAdmin.serviceProviders.markupModal.saveMarkup')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Update License Modal */}
+        {isLicenseModalOpen && selectedProvider && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+              <div className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white">{t('hotelAdmin.serviceProviders.licenseModal.title')}</h3>
+                  <button
+                    onClick={() => { setIsLicenseModalOpen(false); setSelectedProvider(null); }}
+                    className="text-white hover:text-gray-200"
+                    disabled={isSavingLicense}
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-1">{selectedProvider.businessName}</h4>
+                  <p className="text-sm text-gray-600">
+                    {t('hotelAdmin.serviceProviders.licenseModal.currentExpiry')}: {selectedProvider?.businessLicense?.expiryDate ? new Date(selectedProvider.businessLicense.expiryDate).toLocaleDateString() : t('hotelAdmin.serviceProviders.notAvailable')}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('hotelAdmin.serviceProviders.licenseModal.expiryDateLabel')}</label>
+                  <input
+                    type="date"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600 focus:ring-opacity-20 transition-all duration-300"
+                    value={licenseExpiry}
+                    onChange={(e) => setLicenseExpiry(e.target.value)}
+                    disabled={isSavingLicense}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">{t('hotelAdmin.serviceProviders.licenseModal.hint')}</p>
+                </div>
+              </div>
+              <div className="px-6 py-4 bg-gray-50 rounded-b-2xl">
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => { setIsLicenseModalOpen(false); setSelectedProvider(null); }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    disabled={isSavingLicense}
+                  >
+                    {t('hotelAdmin.serviceProviders.licenseModal.cancel')}
+                  </button>
+                  <button
+                    onClick={handleSaveLicense}
+                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-emerald-600 to-emerald-500 border border-transparent rounded-md hover:shadow-lg disabled:opacity-50"
+                    disabled={isSavingLicense}
+                  >
+                    {isSavingLicense ? t('hotelAdmin.serviceProviders.licenseModal.saving') : t('hotelAdmin.serviceProviders.licenseModal.save')}
                   </button>
                 </div>
               </div>

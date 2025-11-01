@@ -120,6 +120,7 @@
     "loyaltyProgram": "Loyalty Program",
     "performanceAnalytics": "Performance Analytics"
   },
+
   "loyaltyProgram": {
     "subtitle": "Guest rewards and loyalty management system",
     "description": "We're working on an exciting loyalty program feature that will help you reward your most valued guests and build long-lasting relationships.",
@@ -141,6 +142,208 @@
     },
     "stayTuned": "Stay tuned for updates! This feature will be available soon.",
     "underDevelopment": "Feature Under Development"
+  },
+  "loyaltyProgramPage": {
+    "title": "Loyalty Program Dashboard",
+    "subtitle": "Manage your hotel's loyalty program and rewards",
+    "configureProgram": "Configure Program",
+    "loading": "Loading...",
+    "tierNames": {
+      "BRONZE": "Bronze",
+      "SILVER": "Silver",
+      "GOLD": "Gold",
+      "PLATINUM": "Platinum"
+    },
+    "programStatus": {
+      "inactiveTitle": "Program Inactive",
+      "inactiveMessage": "Your loyalty program is currently inactive. Activate it to start enrolling guests.",
+      "notConfiguredTitle": "No Program Configured",
+      "notConfiguredMessage": "No loyalty program configured yet. Click \"Configure Program\" to get started!"
+    },
+    "tierBenefits": {
+      "title": "Tier Benefits Overview",
+      "noBenefits": "No benefits configured",
+      "points": "points"
+    },
+    "overviewCards": {
+      "totalMembers": "Total Members",
+      "pointsIssued": "Points Issued",
+      "loyaltyRevenue": "Loyalty Revenue",
+      "programROI": "Program ROI"
+    },
+    "membersByTier": {
+      "title": "Members by Tier"
+    },
+    "recentMembers": {
+      "title": "Recent Members",
+      "noMembers": "No members yet",
+      "pts": "pts"
+    },
+    "topMembers": {
+      "title": "Top Members by Spending",
+      "rank": "Rank",
+      "member": "Member",
+      "tier": "Tier",
+      "totalSpending": "Total Spending",
+      "points": "Points",
+      "noMembers": "No members yet"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "viewMembers": "View Members",
+      "viewMembersDesc": "Manage all members",
+      "manageRewards": "Manage Rewards",
+      "manageRewardsDesc": "Create and edit rewards",
+      "refreshAnalytics": "Refresh Analytics",
+      "refreshAnalyticsDesc": "Update program insights"
+    },
+    "membersModal": {
+      "title": "Loyalty Members",
+      "searchPlaceholder": "Search by email or phone...",
+      "filterAllTiers": "All Tiers",
+      "filterBronze": "Bronze",
+      "filterSilver": "Silver",
+      "filterGold": "Gold",
+      "filterPlatinum": "Platinum",
+      "totalMembers": "Total Members:",
+      "filtered": "filtered from {{total}} total",
+      "joined": "Joined:",
+      "nightsStayed": "Nights stayed:",
+      "tierPts": "tier pts",
+      "managePoints": "Manage Points",
+      "noMembers": "No members match your filters",
+      "noMembersHint": "Try adjusting your search or filter criteria",
+      "noMembersYet": "Members will appear here when guests are enrolled in the loyalty program",
+      "noEmail": "No email",
+      "close": "Close"
+    },
+    "rewardsModal": {
+      "title": "Manage Rewards",
+      "comingSoon": "Rewards feature coming soon",
+      "description": "Create redeemable rewards for your loyalty members",
+      "close": "Close"
+    },
+    "adjustPointsModal": {
+      "title": "Adjust Points",
+      "memberInfo": "Member Info",
+      "tierPoints": "Tier Points",
+      "cashValue": "Cash Value",
+      "infoNote": "💡 Tier points never decrease - they determine membership level. Cash value can be used for rewards.",
+      "whatToAdjust": "What to Adjust",
+      "allPoints": "All Points",
+      "allPointsDesc": "Affects tier & redeemable",
+      "redeemableOnly": "Redeemable Only",
+      "redeemableOnlyDesc": "🔒 Tier status protected",
+      "redeemableNote": "💡 This will only adjust redeemable points. Tier points and tier status will remain unchanged.",
+      "adjustmentType": "Adjustment Type",
+      "addPoints": "Add Points",
+      "deductPoints": "Deduct Points",
+      "pointsAmount": "Points Amount",
+      "pointsPlaceholder": "Enter points amount",
+      "equivalentCash": "Equivalent to ${{amount}} cash value",
+      "cashValueAmount": "Cash Value Amount",
+      "equivalentPoints": "Equivalent to {{points}} points",
+      "reason": "Reason for Adjustment",
+      "reasonPlaceholder": "Enter reason (required)",
+      "preview": "Preview",
+      "tierPointsPreview": "Tier Points:",
+      "redeemablePointsPreview": "Redeemable Points:",
+      "cashValuePreview": "Cash value:",
+      "unchanged": "unchanged 🔒",
+      "tierStatusRemain": "✓ Tier status will remain: {{tier}}",
+      "pointsAdjustment": "Points adjustment:",
+      "cancel": "Cancel",
+      "add": "Add",
+      "deduct": "Deduct",
+      "adjustPoints": "Points",
+      "validAmountRequired": "Please enter a valid points amount",
+      "reasonRequired": "Please provide a reason for the adjustment",
+      "adjustmentSuccess": "{{type}} {{mode}} successfully!{{note}}",
+      "adjustmentSuccessWithPDF": "Points {{type}} successfully! PDF report downloaded.",
+      "adjustmentFailed": "Failed to adjust points. Please try again.",
+      "modeAll": "all points (tier + redeemable)",
+      "modeRedeemable": "redeemable points",
+      "typeAdded": "added",
+      "typeDeducted": "deducted",
+      "tierStatusUnchanged": " Tier status unchanged."
+    },
+    "guestDisplay": {
+      "unknownGuest": "Guest",
+      "noEmail": "No email"
+    },
+    "tiers": {
+      "bronze": "BRONZE",
+      "silver": "SILVER",
+      "gold": "GOLD",
+      "platinum": "PLATINUM"
+    }
+  },
+  "loyaltyProgramConfig": {
+    "title": "Loyalty Program",
+    "titleUpdate": "Update",
+    "titleConfigure": "Configure",
+    "subtitle": "Set up tiers, points rules, and redemption policies",
+    "generalSettings": {
+      "title": "General Settings",
+      "programActive": "Program Active",
+      "programActiveDesc": "Enable the loyalty program for guest enrollment",
+      "pointsExpiration": "Points Expiration (months)",
+      "expirationError": "Expiration must be between 1 and 36 months"
+    },
+    "tiers": {
+      "title": "Membership Tiers",
+      "tierLabel": "Tier",
+      "minPoints": "Min Points",
+      "maxPoints": "Max Points",
+      "benefits": "Benefits (comma-separated)",
+      "benefitsPlaceholder": "e.g., Priority support, Free upgrades, Complimentary breakfast"
+    },
+    "channels": {
+      "title": "Select Channel to Configure Points Rules:",
+      "travelAgency": "Travel Agency",
+      "corporate": "Corporate",
+      "direct": "Direct",
+      "Travel Agency": "Travel Agency",
+      "Corporate": "Corporate",
+      "Direct": "Direct"
+    },
+    "pointsRules": {
+      "title": "Points Earning Rules",
+      "pointsPerDollar": "Points per Dollar Spent",
+      "pointsPerNight": "Points per Night Stayed",
+      "pointsPerNightDesc": "Award bonus points for each night guests stay at your hotel",
+      "serviceMultipliers": "Service Category Multipliers",
+      "serviceMultipliersDesc": "Multiply points earned for specific service categories",
+      "laundry": "Laundry",
+      "transportation": "Transportation",
+      "dining": "Dining",
+      "housekeeping": "Housekeeping",
+      "multiplierSuffix": "x multiplier"
+    },
+    "redemptionRules": {
+      "title": "Redemption Rules",
+      "pointsToMoneyRatio": "Points to Money Ratio",
+      "pointsToMoneyRatioDesc": "points = $1",
+      "minimumRedemption": "Minimum Redemption Points",
+      "minimumRedemptionDesc": "Minimum points required to redeem rewards"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "saveProgram": "Save Program",
+      "saving": "Saving...",
+      "close": "Close"
+    },
+    "messages": {
+      "successAll": "Loyalty program configured successfully for all channels!",
+      "error": "Failed to save loyalty program: {{message}}",
+      "tierError": "Please configure all tiers correctly"
+    },
+    "validation": {
+      "expirationRange": "Expiration must be between 1 and 36 months",
+      "pointsPerDollarMin": "Points per dollar must be at least 1",
+      "minimumRedemptionMin": "Minimum redemption must be at least 1",
+      "tierOverlap": "Tier point ranges must not overlap"
+    }
   },
   "performanceAnalytics": {
     "subtitle": "Advanced analytics and performance insights for your hotel",
@@ -171,6 +374,364 @@
     },
     "stayTuned": "Stay tuned for updates! This feature will be available soon.",
     "underDevelopment": "Feature Under Development"
+  },
+  "performanceAnalyticsPage": {
+    "title": "Performance Analytics",
+    "subtitle": "Comprehensive insights into customer feedback and service quality",
+    "controls": {
+      "service": "Service:",
+      "dateRange": "Date Range:",
+      "to": "to",
+      "apply": "Apply",
+      "refresh": "Refresh",
+      "exportReport": "Export Report"
+    },
+    "serviceTypes": {
+      "all": "All Services",
+      "laundry": "Laundry",
+      "housekeeping": "Housekeeping (All)",
+      "maintenance": "Maintenance",
+      "cleaning": "Cleaning",
+      "amenities": "Amenities",
+      "transportation": "Transportation",
+      "dining": "Dining",
+      "restaurant": "Restaurant",
+      "roomService": "Room Service"
+    },
+    "dateRanges": {
+      "allTime": "All Time",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "lastQuarter": "Last Quarter",
+      "custom": "Custom Range"
+    },
+    "tabs": {
+      "ratings": "Customer Ratings",
+      "operational": "Operational Efficiency",
+      "revenue": "Revenue Analysis",
+      "spending": "Customer Spending",
+      "soon": "Soon"
+    },
+    "spending": {
+      "viewPeriod": "View Period:",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "annual": "Annual",
+      "spendingTrend": {
+        "title": "Average Customer Spending Trend",
+        "subtitle": "Spending patterns and customer count over time",
+        "noData": "No trend data available",
+        "legend": { "avgSpending": "Avg Spending", "customers": "Customers" }
+      },
+      "serviceRequestVolume": {
+        "title": "Service Request Volume",
+        "subtitle": "Number of requests for each service over time",
+        "noData": "No service request data available"
+      },
+      "errors": {
+        "loadError": "Error loading data",
+        "summaryError": "Error loading spending summary"
+      },
+      "noData": "No spending data available",
+      "summary": {
+        "avgCustomerSpending": "Average Customer Spending",
+        "totalCustomersServed": "Total Customers Served",
+        "totalServiceRequests": "Total Service Requests",
+        "mostPopularService": "Most Popular Service",
+        "requestsSuffix": "{{count}} requests"
+      },
+      "popularity": {
+        "title": "Service Popularity & Revenue Analysis",
+        "subtitle": "Most active and in-demand services with spending metrics",
+        "noData": "No service data available",
+        "requestDistribution": "Request Distribution",
+        "detailedMetrics": "Detailed Metrics",
+        "labels": {
+          "requests": "Requests",
+          "revenue": "Revenue",
+          "avgSpending": "Avg Spending",
+          "customers": "Customers"
+        }
+      },
+      "comprehensive": {
+        "title": "Comprehensive Service Performance",
+        "subtitle": "Detailed breakdown of service popularity, spending, and growth trends",
+        "noData": "No performance data available",
+        "columns": {
+          "service": "Service",
+          "requests": "Requests",
+          "revenue": "Revenue",
+          "avgSpending": "Avg Spending",
+          "customers": "Customers",
+          "requestGrowth": "Request Growth",
+          "revenueGrowth": "Revenue Growth",
+          "repeatRate": "Repeat Rate"
+        },
+        "totals": {
+          "totalRequests": "Total Requests",
+          "totalRevenue": "Total Revenue",
+          "uniqueCustomers": "Unique Customers",
+          "avgRepeatRate": "Avg Repeat Rate"
+        }
+      }
+    },
+    "messages": {
+      "refreshSuccess": "Analytics data refreshed",
+      "exportSoon": "Export functionality coming soon",
+      "selectBothDates": "Please select both start and end dates",
+      "startBeforeEnd": "Start date must be before end date",
+      "fetchError": "Failed to fetch analytics data",
+      "updateError": "Failed to update spending analytics"
+    },
+    "ratingSummaryCards": {
+      "averageRating": "Average Rating",
+      "totalReviews": "Total Reviews",
+      "topService": "Top Service",
+      "thisPeriod": "This period",
+      "vsPrevious": "vs previous period",
+      "noChange": "No change",
+      "reviews": "reviews",
+      "basedOn": "Based on {{count}} reviews"
+    },
+    "ratingsBreakdown": {
+      "title": "Detailed Ratings Breakdown",
+      "subtitle": "Performance metrics by service category",
+      "stars1-2": "STARS 1-2",
+      "stars3": "STARS 3",
+      "stars4": "STARS 4",
+      "stars5": "STARS 5",
+      "avgRating": "AVG RATING",
+      "totalRequests": "TOTAL REQUESTS",
+      "serviceType": "SERVICE TYPE"
+    },
+    "ratingsTrend": {
+      "title": "Service Ratings Trend",
+      "subtitle": "Rating performance over time by service category",
+      "yAxisLabel": "Rating (0-5)",
+      "noData": "No trend data available",
+      "weekLabel": "Week {{week}}, {{year}}"
+    },
+    "ratingsByType": {
+      "title": "Ratings by Service Type",
+      "subtitle": "Average rating and request volume comparison",
+      "requestCount": "Request Count",
+      "averageRating": "Average Rating",
+      "serviceTypeColors": "Service Type Colors:"
+    },
+    "operational": {
+      "slaDistribution": {
+        "title": "Overall SLA Distribution",
+        "subtitle": "Total service completion status",
+        "noData": "No SLA distribution data available",
+        "count": "Count",
+        "percentage": "Percentage",
+        "status": {
+          "onTime": "On Time",
+          "delayed": "Delayed",
+          "atRisk": "At Risk",
+          "pending": "Pending"
+        }
+      },
+      "completionTime": {
+        "title": "Average Completion Time by Service (minutes)",
+        "subtitle": "Time taken to complete each service after request",
+        "noData": "No completion data available",
+        "minutes": "Minutes",
+        "minutesShort": "min",
+        "legend": { "averageTime": "Average Time" },
+        "tooltip": { "average": "Average", "min": "Min", "max": "Max", "bookings": "Bookings" }
+      },
+      "summary": {
+        "avgResponseTime": "Average Response Time",
+        "avgCompletionTime": "Average Completion Time",
+        "slaComplianceRate": "SLA Compliance Rate",
+        "delayedRequests": "Delayed Requests",
+        "faster": "faster than last period",
+        "slower": "slower than last period",
+        "fromTarget": "{{value}}% from target",
+        "ofTotalRequests": "{{percent}}% of total requests",
+        "noData": "No data available"
+      },
+      "slaByService": {
+        "title": "SLA Performance by Service",
+        "subtitle": "On-time vs. delayed service completions",
+        "noData": "No SLA data available",
+        "columns": {
+          "serviceType": "Service Type",
+          "totalBookings": "Total Bookings",
+          "onTime": "On Time",
+          "delayed": "Delayed",
+          "onTimePercent": "On-Time %",
+          "avgDelay": "Avg Delay"
+        },
+        "totals": {
+          "totalBookings": "Total Bookings",
+          "onTime": "On Time",
+          "delayed": "Delayed"
+        }
+      },
+      "servicePerformanceSummary": {
+        "title": "Service Performance Summary",
+        "subtitle": "Comprehensive efficiency metrics across all services",
+        "noData": "No performance data available",
+        "columns": {
+          "serviceType": "Service Type",
+          "totalRequests": "Total Requests",
+          "avgTime": "Avg Time",
+          "minMax": "Min/Max",
+          "onTimeRate": "On-Time Rate",
+          "delayed": "Delayed",
+          "avgDelay": "Avg Delay",
+          "performance": "Performance"
+        },
+        "performanceLabels": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "needsImprovement": "Needs Improvement"
+        },
+        "totals": {
+          "totalRequests": "Total Requests",
+          "onTime": "On Time",
+          "delayed": "Delayed",
+          "overallRate": "Overall Rate"
+        }
+      },
+      "serviceDetails": {
+        "title": "Service Performance Details",
+        "subtitle": "Detailed timing analysis for service requests (minutes)",
+        "noData": "No service details available",
+        "columns": {
+          "booking": "Booking #",
+          "service": "Service",
+          "guest": "Guest",
+          "responseTime": "Response Time",
+          "completionTime": "Completion Time",
+          "serviceTime": "Service Time",
+          "slaStatus": "SLA Status",
+          "date": "Date"
+        },
+        "slaStatus": {
+          "met": "Met",
+          "missed": "Missed",
+          "atRisk": "At Risk",
+          "pending": "Pending"
+        },
+        "pagination": {
+          "showRange": "Showing {{from}} to {{to}} of {{total}} results"
+        }
+      }
+    },
+    "revenue": {
+      "comparison": {
+        "title": "Revenue Comparison: Internal vs External Services",
+        "noData": "No comparison data available for the selected period",
+        "error": "Error loading chart",
+        "internal": "Internal Services",
+        "external": "External Services",
+        "total": "Total"
+      },
+      "byCategory": {
+        "title": "Revenue by Service Category",
+        "noData": "No category data available",
+        "error": "Error loading chart",
+        "tooltip": {
+          "revenue": "Revenue",
+          "share": "Share",
+          "bookings": "Bookings"
+        },
+        "totalServices": "Total Services",
+        "totalBookings": "Total Bookings"
+      },
+      "errors": {
+        "loadError": "Error loading data",
+        "summaryError": "Error loading revenue summary"
+      },
+      "noData": "No revenue data available",
+      "summary": {
+        "totalRevenue": "Total Revenue",
+        "internalRevenue": "Internal Revenue",
+        "externalRevenue": "External Revenue",
+        "commissionEarned": "Commission Earned"
+      },
+      "internal": {
+        "title": "Internal Services Revenue",
+        "subtitle": "Hotel-managed services",
+        "noData": "No internal service data available",
+        "totalInternalRevenue": "Total Internal Revenue",
+        "columns": {
+          "service": "Service",
+          "revenue": "Revenue",
+          "bookings": "Bookings",
+          "avgPerBooking": "Avg/Booking",
+          "minMax": "Min/Max",
+          "share": "Share"
+        },
+        "totals": {
+          "totalServices": "Total Services",
+          "totalBookings": "Total Bookings",
+          "avgRevenuePerBooking": "Avg Revenue per Booking"
+        }
+      },
+  "external": {
+        "title": "External Service Provider Performance",
+        "subtitle": "Third-Party Services",
+        "noData": "No external provider data available",
+        "cards": {
+          "totalRevenue": "Total Revenue",
+          "providerEarnings": "Provider Earnings",
+          "hotelCommission": "Hotel Commission",
+          "avgProfitMargin": "Avg Profit Margin"
+        },
+        "columns": {
+          "provider": "Provider",
+          "service": "Service",
+          "totalRevenue": "Total Revenue",
+          "providerEarns": "Provider Earns",
+          "hotelCommission": "Hotel Commission",
+          "bookings": "Bookings",
+          "markupPercent": "Markup %",
+          "profitMargin": "Profit Margin"
+        }
+      },
+      "complete": {
+        "title": "Complete Revenue Summary",
+        "noData": "No revenue data available",
+        "badges": {
+          "internal": "Internal",
+          "external": "External"
+        },
+        "performance": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "fair": "Fair"
+        },
+        "filters": {
+          "all": "All Services",
+          "internal": "Internal",
+          "external": "External"
+        },
+        "banner": {
+          "grandTotalRevenue": "Grand Total Revenue",
+          "basePrice": "Base Price (Provider)",
+          "hotelProfit": "Hotel Profit (Markup)",
+          "overallProfitMargin": "Overall Profit Margin"
+        },
+        "columns": {
+          "service": "Service",
+          "category": "Category",
+          "totalRevenue": "Total Revenue",
+          "basePrice": "Base Price",
+          "hotelProfit": "Hotel Profit",
+          "bookings": "Bookings",
+          "avgPerBooking": "Avg/Booking",
+          "revenueShare": "Revenue Share",
+          "markupPercent": "Markup %",
+          "performance": "Performance"
+        },
+        "totalLabel": "TOTAL ({{count}} services)"
+      }
+    }
+
   },
   "auth": {
     "signIn": "Sign In",
@@ -520,7 +1081,8 @@
         "delete": "Delete",
         "setMarkup": "Set Markup",
         "manageServices": "Manage Services",
-        "resetPassword": "Reset Password"
+        "resetPassword": "Reset Password",
+        "updateLicense": "Update License"
       },
       "noProviders": "No providers found",
       "noProvidersSearch": "No providers match your search criteria.",
@@ -575,8 +1137,24 @@
           "passwordMismatch": "Passwords do not match"
         }
       },
+      "licenseModal": {
+        "title": "Update Business License",
+        "currentExpiry": "Current expiry",
+        "expiryDateLabel": "New expiry date",
+        "hint": "Must be a future date.",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving...",
+        "success": "License updated successfully.",
+        "error": "Failed to update license.",
+        "errors": {
+          "dateRequired": "Please select an expiry date",
+          "futureDate": "Expiry date must be in the future"
+        }
+      },
       "errors": {
         "markupSetFailed": "Failed to set markup. Please try again.",
+        "updateLicenseFirst": "Cannot set markup: Business license has expired. Please update the license expiry date first.",
         "categoriesUpdateFailed": "Failed to update service categories. Please try again."
       }
     },
@@ -864,6 +1442,10 @@
     "updateFailed": "Failed to update profile",
     "notProvided": "Not provided",
     "notSet": "Not set",
+    "loadingLoyaltyInfo": "Loading loyalty information...",
+    "joinLoyaltyProgram": "Join Our Loyalty Program",
+    "notEnrolledYet": "You're not enrolled in a loyalty program yet. Complete your first booking to join automatically!",
+    "startEarningPoints": "Start earning points and enjoy exclusive benefits with every booking.",
     "roles": {
       "guest": "Guest",
       "hotelAdmin": "Hotel Administrator",
@@ -893,6 +1475,23 @@
       "invalidEmail": "Invalid email address",
       "invalidPhone": "Invalid phone number"
     }
+  },
+  "loyaltyCard": {
+    "loyaltyTier": "Loyalty Tier",
+    "tierPoints": "Tier Points",
+    "redeemablePoints": "Redeemable Points",
+    "neverDecrease": "🔒 Never decrease",
+    "useForRewards": "Use for rewards",
+    "cashValue": "Cash Value",
+    "currentBalance": "Current balance",
+    "progressTo": "Progress to {{tier}}",
+    "pointsNeeded": "{{points}} points needed",
+    "complete": "{{percentage}}% Complete",
+    "highestTier": "You've reached the highest tier! 🎉",
+    "yourBenefits": "Your {{tier}} Benefits",
+    "noBenefits": "No benefits listed",
+    "memberSince": "Member since: {{date}}",
+    "pointsExpire": "Points expire after {{months}} months"
   },
   "services": {
     "serviceManagement": "Service Management",

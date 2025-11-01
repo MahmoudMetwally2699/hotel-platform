@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   TrendingUp,
   TrendingDown,
@@ -9,6 +10,7 @@ import {
 } from 'lucide-react';
 
 const RevenueSummaryCards = ({ data, loading, error }) => {
+  const { t, i18n } = useTranslation();
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -25,7 +27,7 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-600">Error loading revenue summary: {error}</p>
+        <p className="text-red-600">{t('performanceAnalyticsPage.revenue.errors.summaryError', 'Error loading revenue summary')}: {error}</p>
       </div>
     );
   }
@@ -33,14 +35,14 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
   if (!data) {
     return (
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-        <p className="text-gray-500">No revenue data available</p>
+        <p className="text-gray-500">{t('performanceAnalyticsPage.revenue.noData', 'No revenue data available')}</p>
       </div>
     );
   }
 
   const cards = [
     {
-      title: 'Total Revenue',
+      title: t('performanceAnalyticsPage.revenue.summary.totalRevenue'),
       value: data.totalRevenue,
       trend: data.trend,
       icon: DollarSign,
@@ -49,7 +51,7 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
       iconColor: 'text-blue-600'
     },
     {
-      title: 'Internal Services Revenue',
+      title: t('performanceAnalyticsPage.revenue.summary.internalRevenue'),
       value: data.internalRevenue,
       icon: Home,
       gradient: 'from-green-500 to-green-600',
@@ -57,7 +59,7 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
       iconColor: 'text-green-600'
     },
     {
-      title: 'External Services Revenue',
+      title: t('performanceAnalyticsPage.revenue.summary.externalRevenue'),
       value: data.externalRevenue,
       icon: Users,
       gradient: 'from-purple-500 to-purple-600',
@@ -65,7 +67,7 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
       iconColor: 'text-purple-600'
     },
     {
-      title: 'Commission Earned',
+      title: t('performanceAnalyticsPage.revenue.summary.commissionEarned'),
       value: data.externalCommission,
       icon: Percent,
       gradient: 'from-orange-500 to-orange-600',
@@ -75,7 +77,7 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
   ];
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(i18n.language || 'en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,

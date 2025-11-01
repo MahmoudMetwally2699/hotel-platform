@@ -4,9 +4,11 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiStar, FiTrendingUp, FiTrendingDown, FiMessageSquare } from 'react-icons/fi';
 
 const RatingSummaryCards = ({ data, loading }) => {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -50,7 +52,7 @@ const RatingSummaryCards = ({ data, loading }) => {
   // Render trend indicator
   const renderTrend = (trend) => {
     if (!trend || trend === 0) {
-      return <span className="text-gray-500 text-sm">No change</span>;
+      return <span className="text-gray-500 text-sm">{t('performanceAnalyticsPage.ratingSummaryCards.noChange')}</span>;
     }
 
     const isPositive = trend > 0;
@@ -70,7 +72,7 @@ const RatingSummaryCards = ({ data, loading }) => {
       {/* Average Rating Card */}
       <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold opacity-90">Average Rating</h3>
+          <h3 className="text-lg font-semibold opacity-90">{t('performanceAnalyticsPage.ratingSummaryCards.averageRating')}</h3>
           <div className="bg-white bg-opacity-20 rounded-full p-2">
             <FiStar className="w-6 h-6" />
           </div>
@@ -83,7 +85,7 @@ const RatingSummaryCards = ({ data, loading }) => {
           {renderStars(avgRating)}
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm opacity-75">This period</span>
+          <span className="text-sm opacity-75">{t('performanceAnalyticsPage.ratingSummaryCards.thisPeriod')}</span>
           {renderTrend(ratingTrend)}
         </div>
       </div>
@@ -91,18 +93,18 @@ const RatingSummaryCards = ({ data, loading }) => {
       {/* Total Reviews Card */}
       <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold opacity-90">Total Reviews</h3>
+          <h3 className="text-lg font-semibold opacity-90">{t('performanceAnalyticsPage.ratingSummaryCards.totalReviews')}</h3>
           <div className="bg-white bg-opacity-20 rounded-full p-2">
             <FiMessageSquare className="w-6 h-6" />
           </div>
         </div>
         <div className="flex items-baseline mb-2">
           <span className="text-4xl font-bold">{totalReviews}</span>
-          <span className="text-xl ml-2 opacity-75">reviews</span>
+          <span className="text-xl ml-2 opacity-75">{t('performanceAnalyticsPage.ratingSummaryCards.reviews')}</span>
         </div>
         <div className="mb-3 h-5"></div>
         <div className="flex items-center justify-between">
-          <span className="text-sm opacity-75">vs previous period</span>
+          <span className="text-sm opacity-75">{t('performanceAnalyticsPage.ratingSummaryCards.vsPrevious')}</span>
           {renderTrend(reviewsTrend)}
         </div>
       </div>
@@ -110,7 +112,7 @@ const RatingSummaryCards = ({ data, loading }) => {
       {/* Highest Rated Service Card */}
       <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold opacity-90">Top Service</h3>
+          <h3 className="text-lg font-semibold opacity-90">{t('performanceAnalyticsPage.ratingSummaryCards.topService')}</h3>
           <div className="bg-white bg-opacity-20 rounded-full p-2">
             <FiTrendingUp className="w-6 h-6" />
           </div>
@@ -123,7 +125,7 @@ const RatingSummaryCards = ({ data, loading }) => {
           <span className="text-xl font-semibold">{highestRatedService.rating.toFixed(1)}</span>
         </div>
         <div className="text-sm opacity-75">
-          Based on {highestRatedService.totalReviews} reviews
+          {t('performanceAnalyticsPage.ratingSummaryCards.basedOn', { count: highestRatedService.totalReviews })}
         </div>
       </div>
     </div>

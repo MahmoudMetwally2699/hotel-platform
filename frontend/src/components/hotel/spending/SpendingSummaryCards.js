@@ -1,7 +1,9 @@
 import React from 'react';
 import { DollarSign, Users, FileText, Star } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const SpendingSummaryCards = ({ data, loading, error }) => {
+  const { t, i18n } = useTranslation();
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -18,7 +20,7 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-600">Error loading spending summary: {error}</p>
+        <p className="text-red-600">{t('performanceAnalyticsPage.spending.errors.summaryError', 'Error loading spending summary')}: {error}</p>
       </div>
     );
   }
@@ -26,13 +28,13 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
   if (!data) {
     return (
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-        <p className="text-gray-500">No spending data available</p>
+        <p className="text-gray-500">{t('performanceAnalyticsPage.spending.noData', 'No spending data available')}</p>
       </div>
     );
   }
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(i18n.language || 'en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
@@ -40,22 +42,11 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
     }).format(value || 0);
   };
 
-  const formatServiceName = (service) => {
-    const names = {
-      housekeeping: 'Housekeeping',
-      laundry: 'Laundry',
-      restaurant: 'Restaurant',
-      transportation: 'Transportation',
-      maintenance: 'Maintenance',
-      cleaning: 'Cleaning',
-      amenities: 'Amenities'
-    };
-    return names[service] || service;
-  };
+  const formatServiceName = (service) => t(`performanceAnalyticsPage.serviceTypes.${service}`, { defaultValue: service });
 
   const cards = [
     {
-      title: 'Average Customer Spending',
+      title: t('performanceAnalyticsPage.spending.summary.avgCustomerSpending'),
       value: formatCurrency(data.avgCustomerSpending),
       icon: DollarSign,
       gradient: 'from-blue-500 to-blue-600',
@@ -63,7 +54,7 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
       iconColor: 'text-blue-600'
     },
     {
-      title: 'Total Customers Served',
+      title: t('performanceAnalyticsPage.spending.summary.totalCustomersServed'),
       value: data.totalCustomers,
       icon: Users,
       gradient: 'from-green-500 to-green-600',
@@ -71,7 +62,7 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
       iconColor: 'text-green-600'
     },
     {
-      title: 'Total Service Requests',
+      title: t('performanceAnalyticsPage.spending.summary.totalServiceRequests'),
       value: data.totalServiceRequests,
       icon: FileText,
       gradient: 'from-purple-500 to-purple-600',
@@ -79,9 +70,9 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
       iconColor: 'text-purple-600'
     },
     {
-      title: 'Most Popular Service',
+      title: t('performanceAnalyticsPage.spending.summary.mostPopularService'),
       value: formatServiceName(data.mostPopularService),
-      subValue: `${data.mostPopularServiceCount} requests`,
+      subValue: t('performanceAnalyticsPage.spending.summary.requestsSuffix', { count: data.mostPopularServiceCount }),
       icon: Star,
       gradient: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-50',

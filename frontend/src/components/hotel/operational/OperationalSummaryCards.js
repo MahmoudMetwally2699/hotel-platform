@@ -9,9 +9,11 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { FiClock, FiCheckCircle, FiAlertTriangle, FiTrendingDown, FiTrendingUp } from 'react-icons/fi';
 
 const OperationalSummaryCards = ({ data, loading }) => {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -30,7 +32,7 @@ const OperationalSummaryCards = ({ data, loading }) => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-          No data available
+          {t('performanceAnalyticsPage.operational.summary.noData', 'No data available')}
         </div>
       </div>
     );
@@ -38,38 +40,42 @@ const OperationalSummaryCards = ({ data, loading }) => {
 
   const cards = [
     {
-      title: 'Average Response Time',
-      value: `${data.avgResponseTime} min`,
+      title: t('performanceAnalyticsPage.operational.summary.avgResponseTime'),
+      value: `${data.avgResponseTime} ${t('performanceAnalyticsPage.operational.completionTime.minutesShort')}`,
       trend: data.responseTrend,
       icon: FiClock,
       gradient: 'from-blue-500 to-blue-600',
-      trendText: data.responseTrend > 0 ? 'faster than last period' : 'slower than last period',
+      trendText: data.responseTrend > 0
+        ? t('performanceAnalyticsPage.operational.summary.faster')
+        : t('performanceAnalyticsPage.operational.summary.slower'),
       isPositive: data.responseTrend > 0 // Positive = faster (lower time)
     },
     {
-      title: 'Average Completion Time',
-      value: `${data.avgCompletionTime} min`,
+      title: t('performanceAnalyticsPage.operational.summary.avgCompletionTime'),
+      value: `${data.avgCompletionTime} ${t('performanceAnalyticsPage.operational.completionTime.minutesShort')}`,
       trend: data.completionTrend,
       icon: FiCheckCircle,
       gradient: 'from-purple-500 to-purple-600',
-      trendText: data.completionTrend > 0 ? 'faster than last period' : 'slower than last period',
+      trendText: data.completionTrend > 0
+        ? t('performanceAnalyticsPage.operational.summary.faster')
+        : t('performanceAnalyticsPage.operational.summary.slower'),
       isPositive: data.completionTrend > 0
     },
     {
-      title: 'SLA Compliance Rate',
+      title: t('performanceAnalyticsPage.operational.summary.slaComplianceRate'),
       value: `${data.slaComplianceRate}%`,
       trend: data.slaTrend,
       icon: FiCheckCircle,
       gradient: 'from-green-500 to-green-600',
-      trendText: `${Math.abs(data.slaTrend).toFixed(1)}% from target`,
+      trendText: t('performanceAnalyticsPage.operational.summary.fromTarget', { value: Math.abs(data.slaTrend).toFixed(1) }),
       isPositive: data.slaTrend > 0
     },
     {
-      title: 'Delayed Requests',
+      title: t('performanceAnalyticsPage.operational.summary.delayedRequests'),
       value: data.delayedRequests,
       subValue: data.totalRequests > 0
-        ? `${((data.delayedRequests / data.totalRequests) * 100).toFixed(1)}% of total requests`
-        : '0% of total requests',
+        ? t('performanceAnalyticsPage.operational.summary.ofTotalRequests', { percent: ((data.delayedRequests / data.totalRequests) * 100).toFixed(1) })
+        : t('performanceAnalyticsPage.operational.summary.ofTotalRequests', { percent: '0' }),
       icon: FiAlertTriangle,
       gradient: 'from-red-500 to-red-600',
       isNegative: true

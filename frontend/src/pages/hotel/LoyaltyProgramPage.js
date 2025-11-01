@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { fetchLoyaltyAnalytics, fetchLoyaltyProgram, fetchMembers } from '../../redux/slices/loyaltySlice';
 import LoyaltyProgramConfig from '../../components/hotel/loyalty/LoyaltyProgramConfig';
 import {
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 
 const LoyaltyProgramPage = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { analytics, loyaltyProgram, loading, members } = useSelector((state) => state.loyalty);
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -43,13 +45,19 @@ const LoyaltyProgramPage = () => {
 
   // Helper function to get guest display name
   const getGuestDisplayName = (guest) => {
-    if (!guest) return 'Guest';
+    if (!guest) return t('loyaltyProgramPage.guestDisplay.unknownGuest');
     if (guest.name) return guest.name;
     if (guest.firstName || guest.lastName) {
       return `${guest.firstName || ''} ${guest.lastName || ''}`.trim();
     }
     if (guest.email) return guest.email.split('@')[0];
-    return 'Guest';
+    return t('loyaltyProgramPage.guestDisplay.unknownGuest');
+  };
+
+  // Helper function to translate tier names
+  const getTierName = (tierName) => {
+    const tierKey = tierName?.toUpperCase();
+    return t(`loyaltyProgramPage.tierNames.${tierKey}`, { defaultValue: tierName });
   };
 
   useEffect(() => {
@@ -60,12 +68,12 @@ const LoyaltyProgramPage = () => {
   // Handle points adjustment
   const handleAdjustPoints = async () => {
     if (!selectedMember || !pointsAdjustment || pointsAdjustment <= 0) {
-      alert('Please enter a valid points amount');
+      alert(t('loyaltyProgramPage.adjustPointsModal.validAmountRequired'));
       return;
     }
 
     if (!adjustmentReason.trim()) {
-      alert('Please provide a reason for the adjustment');
+      alert(t('loyaltyProgramPage.adjustPointsModal.reasonRequired'));
       return;
     }
 
@@ -115,7 +123,9 @@ const LoyaltyProgramPage = () => {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
 
-        alert(`Points ${adjustmentType === 'add' ? 'added' : 'deducted'} successfully! PDF report downloaded.`);
+        alert(t('loyaltyProgramPage.adjustPointsModal.adjustmentSuccessWithPDF', {
+          type: adjustmentType === 'add' ? t('loyaltyProgramPage.adjustPointsModal.typeAdded') : t('loyaltyProgramPage.adjustPointsModal.typeDeducted')
+        }));
         setSelectedMember(null);
         setPointsAdjustment(0);
         setCashAdjustment(0);
@@ -129,8 +139,15 @@ const LoyaltyProgramPage = () => {
         const data = await response.json();
 
         if (data.success) {
-          const modeText = adjustmentMode === 'redeemable' ? 'redeemable points' : 'all points (tier + redeemable)';
-          alert(`${modeText} ${adjustmentType === 'add' ? 'added' : 'deducted'} successfully!${adjustmentMode === 'redeemable' ? ' Tier status unchanged.' : ''}`);
+          const modeText = adjustmentMode === 'redeemable' ? t('loyaltyProgramPage.adjustPointsModal.modeRedeemable') : t('loyaltyProgramPage.adjustPointsModal.modeAll');
+          const typeText = adjustmentType === 'add' ? t('loyaltyProgramPage.adjustPointsModal.typeAdded') : t('loyaltyProgramPage.adjustPointsModal.typeDeducted');
+          const noteText = adjustmentMode === 'redeemable' ? t('loyaltyProgramPage.adjustPointsModal.tierStatusUnchanged') : '';
+
+          alert(t('loyaltyProgramPage.adjustPointsModal.adjustmentSuccess', {
+            type: typeText,
+            mode: modeText,
+            note: noteText
+          }));
           setSelectedMember(null);
           setPointsAdjustment(0);
           setCashAdjustment(0);
@@ -140,12 +157,12 @@ const LoyaltyProgramPage = () => {
           // Refresh analytics
           dispatch(fetchLoyaltyAnalytics());
         } else {
-          alert(data.message || 'Failed to adjust points');
+          alert(data.message || t('loyaltyProgramPage.adjustPointsModal.adjustmentFailed'));
         }
       }
     } catch (error) {
       console.error('Error adjusting points:', error);
-      alert('Failed to adjust points. Please try again.');
+      alert(t('loyaltyProgramPage.adjustPointsModal.adjustmentFailed'));
     }
   };
 
@@ -213,8 +230,8 @@ const LoyaltyProgramPage = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Loyalty Program Dashboard</h1>
-          <p className="text-gray-600 mt-1">Manage your hotel's loyalty program and rewards</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('loyaltyProgramPage.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('loyaltyProgramPage.subtitle')}</p>
         </div>
         <div className="flex gap-3">
           <button
@@ -222,7 +239,7 @@ const LoyaltyProgramPage = () => {
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
           >
             <Settings className="h-4 w-4" />
-            Configure Program
+            {t('loyaltyProgramPage.configureProgram')}
           </button>
         </div>
       </div>
@@ -246,7 +263,7 @@ const LoyaltyProgramPage = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-yellow-700">
-                  Your loyalty program is currently inactive. Activate it to start enrolling guests.
+                  {t('loyaltyProgramPage.programStatus.inactiveMessage')}
                 </p>
               </div>
             </div>
@@ -267,7 +284,7 @@ const LoyaltyProgramPage = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-blue-700">
-                  No loyalty program configured yet. Click "Configure Program" to get started!
+                  {t('loyaltyProgramPage.programStatus.notConfiguredMessage')}
                 </p>
               </div>
             </div>
@@ -299,7 +316,7 @@ const LoyaltyProgramPage = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <Award className="h-6 w-6 text-blue-600" />
-              Tier Benefits Overview
+              {t('loyaltyProgramPage.tierBenefits.title')}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...programData.tierConfiguration]
@@ -325,10 +342,10 @@ const LoyaltyProgramPage = () => {
                       className="text-xl font-bold mb-1"
                       style={{ color: getTierColor(tier.name) }}
                     >
-                      {tier.name}
+                      {getTierName(tier.name)}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {tier.minPoints} - {tier.maxPoints === 999999 ? '∞' : tier.maxPoints} points
+                      {tier.minPoints} - {tier.maxPoints === 999999 ? '∞' : tier.maxPoints} {t('loyaltyProgramPage.tierBenefits.points')}
                     </p>
                   </div>
 
@@ -359,7 +376,7 @@ const LoyaltyProgramPage = () => {
                       ))
                     ) : (
                       <p className="text-sm text-gray-500 italic text-center py-2">
-                        No benefits configured
+                        {t('loyaltyProgramPage.tierBenefits.noBenefits')}
                       </p>
                     )}
                   </div>
@@ -376,7 +393,7 @@ const LoyaltyProgramPage = () => {
         <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Members</p>
+              <p className="text-sm font-medium text-gray-600">{t('loyaltyProgramPage.overviewCards.totalMembers')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {analytics?.overview?.totalMembers || 0}
               </p>
@@ -391,7 +408,7 @@ const LoyaltyProgramPage = () => {
         <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Points Issued</p>
+              <p className="text-sm font-medium text-gray-600">{t('loyaltyProgramPage.overviewCards.pointsIssued')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {analytics?.overview?.totalPointsIssued?.toLocaleString() || 0}
               </p>
@@ -406,7 +423,7 @@ const LoyaltyProgramPage = () => {
         <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Loyalty Revenue</p>
+              <p className="text-sm font-medium text-gray-600">{t('loyaltyProgramPage.overviewCards.loyaltyRevenue')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 ${analytics?.overview?.totalLifetimeSpending?.toFixed(2) || '0.00'}
               </p>
@@ -421,7 +438,7 @@ const LoyaltyProgramPage = () => {
         <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Program ROI</p>
+              <p className="text-sm font-medium text-gray-600">{t('loyaltyProgramPage.overviewCards.programROI')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {analytics?.roi?.roiPercentage?.toFixed(1) || 0}%
               </p>
@@ -438,7 +455,7 @@ const LoyaltyProgramPage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Members by Tier
+            {t('loyaltyProgramPage.membersByTier.title')}
           </h2>
           <div className="space-y-4">
             {['BRONZE', 'SILVER', 'GOLD', 'PLATINUM'].map((tier) => {
@@ -451,7 +468,7 @@ const LoyaltyProgramPage = () => {
                 <div key={tier}>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="font-medium" style={{ color: getTierColor(tier) }}>
-                      {tier}
+                      {getTierName(tier)}
                     </span>
                     <span className="text-gray-600">
                       {count} ({percentage}%)
@@ -477,7 +494,7 @@ const LoyaltyProgramPage = () => {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Recent Members
+              {t('loyaltyProgramPage.recentMembers.title')}
             </h2>
           </div>
           <div className="space-y-3">
@@ -498,16 +515,16 @@ const LoyaltyProgramPage = () => {
                       color: getTierColor(member.currentTier)
                     }}
                   >
-                    {member.currentTier}
+                    {getTierName(member.currentTier)}
                   </span>
                   <p className="text-sm text-gray-600 mt-1">
-                    {member.totalPoints} pts
+                    {member.totalPoints} {t('loyaltyProgramPage.recentMembers.pts')}
                   </p>
                 </div>
               </div>
             ))}
             {(!analytics?.recentMembers || analytics.recentMembers.length === 0) && (
-              <p className="text-center text-gray-500 py-4">No members yet</p>
+              <p className="text-center text-gray-500 py-4">{t('loyaltyProgramPage.recentMembers.noMembers')}</p>
             )}
           </div>
         </div>
@@ -518,7 +535,7 @@ const LoyaltyProgramPage = () => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
             <Award className="h-5 w-5" />
-            Top Members by Spending
+            {t('loyaltyProgramPage.topMembers.title')}
           </h2>
         </div>
         <div className="overflow-x-auto">
@@ -526,19 +543,19 @@ const LoyaltyProgramPage = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Rank
+                  {t('loyaltyProgramPage.topMembers.rank')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Member
+                  {t('loyaltyProgramPage.topMembers.member')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tier
+                  {t('loyaltyProgramPage.topMembers.tier')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Spending
+                  {t('loyaltyProgramPage.topMembers.totalSpending')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Points
+                  {t('loyaltyProgramPage.topMembers.points')}
                 </th>
               </tr>
             </thead>
@@ -566,7 +583,7 @@ const LoyaltyProgramPage = () => {
                         color: getTierColor(member.currentTier)
                       }}
                     >
-                      {member.currentTier}
+                      {getTierName(member.currentTier)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -580,7 +597,7 @@ const LoyaltyProgramPage = () => {
               {(!analytics?.topMembers || analytics.topMembers.length === 0) && (
                 <tr>
                   <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                    No members yet
+                    {t('loyaltyProgramPage.topMembers.noMembers')}
                   </td>
                 </tr>
               )}
@@ -591,27 +608,16 @@ const LoyaltyProgramPage = () => {
 
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('loyaltyProgramPage.quickActions.title')}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
             onClick={handleOpenMembersModal}
             className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition"
           >
             <Users className="h-8 w-8 text-blue-600 mr-3" />
             <div className="text-left">
-              <p className="font-semibold text-gray-900">View Members</p>
-              <p className="text-sm text-gray-600">Manage all members</p>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setShowRewardsModal(true)}
-            className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:shadow-md transition"
-          >
-            <Gift className="h-8 w-8 text-green-600 mr-3" />
-            <div className="text-left">
-              <p className="font-semibold text-gray-900">Manage Rewards</p>
-              <p className="text-sm text-gray-600">Create and edit rewards</p>
+              <p className="font-semibold text-gray-900">{t('loyaltyProgramPage.quickActions.viewMembers')}</p>
+              <p className="text-sm text-gray-600">{t('loyaltyProgramPage.quickActions.viewMembersDesc')}</p>
             </div>
           </button>
 
@@ -621,8 +627,8 @@ const LoyaltyProgramPage = () => {
           >
             <TrendingUp className="h-8 w-8 text-purple-600 mr-3" />
             <div className="text-left">
-              <p className="font-semibold text-gray-900">Refresh Analytics</p>
-              <p className="text-sm text-gray-600">Update program insights</p>
+              <p className="font-semibold text-gray-900">{t('loyaltyProgramPage.quickActions.refreshAnalytics')}</p>
+              <p className="text-sm text-gray-600">{t('loyaltyProgramPage.quickActions.refreshAnalyticsDesc')}</p>
             </div>
           </button>
         </div>
@@ -634,7 +640,7 @@ const LoyaltyProgramPage = () => {
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-gray-900">Loyalty Members</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{t('loyaltyProgramPage.membersModal.title')}</h2>
                 <button
                   onClick={() => setShowMembersModal(false)}
                   className="text-gray-400 hover:text-gray-600"
@@ -649,7 +655,7 @@ const LoyaltyProgramPage = () => {
                 <div className="flex-1">
                   <input
                     type="text"
-                    placeholder="Search by email or phone..."
+                    placeholder={t('loyaltyProgramPage.membersModal.searchPlaceholder')}
                     value={memberSearchTerm}
                     onChange={(e) => setMemberSearchTerm(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
@@ -663,11 +669,11 @@ const LoyaltyProgramPage = () => {
                     onChange={(e) => setMemberTierFilter(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   >
-                    <option value="">All Tiers</option>
-                    <option value="BRONZE">Bronze</option>
-                    <option value="SILVER">Silver</option>
-                    <option value="GOLD">Gold</option>
-                    <option value="PLATINUM">Platinum</option>
+                    <option value="">{t('loyaltyProgramPage.membersModal.filterAllTiers')}</option>
+                    <option value="BRONZE">{t('loyaltyProgramPage.membersModal.filterBronze')}</option>
+                    <option value="SILVER">{t('loyaltyProgramPage.membersModal.filterSilver')}</option>
+                    <option value="GOLD">{t('loyaltyProgramPage.membersModal.filterGold')}</option>
+                    <option value="PLATINUM">{t('loyaltyProgramPage.membersModal.filterPlatinum')}</option>
                   </select>
                 </div>
               </div>
@@ -733,7 +739,7 @@ const LoyaltyProgramPage = () => {
                                 color: getTierColor(member.currentTier)
                               }}
                             >
-                              {member.currentTier}
+                              {getTierName(member.currentTier)}
                             </span>
                             <p className="text-sm text-gray-600 mt-1">
                               <span className="font-semibold">{member.tierPoints || member.totalPoints || 0}</span> tier pts
@@ -793,7 +799,7 @@ const LoyaltyProgramPage = () => {
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900">Manage Rewards</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{t('loyaltyProgramPage.rewardsModal.title')}</h2>
                 <button
                   onClick={() => setShowRewardsModal(false)}
                   className="text-gray-400 hover:text-gray-600"
@@ -805,9 +811,9 @@ const LoyaltyProgramPage = () => {
             <div className="p-6">
               <div className="text-center py-12">
                 <Gift className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 mb-2">Rewards feature coming soon</p>
+                <p className="text-gray-500 mb-2">{t('loyaltyProgramPage.rewardsModal.comingSoon')}</p>
                 <p className="text-sm text-gray-400">
-                  Create redeemable rewards for your loyalty members
+                  {t('loyaltyProgramPage.rewardsModal.description')}
                 </p>
               </div>
             </div>
@@ -816,7 +822,7 @@ const LoyaltyProgramPage = () => {
                 onClick={() => setShowRewardsModal(false)}
                 className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
               >
-                Close
+                {t('loyaltyProgramPage.rewardsModal.close')}
               </button>
             </div>
           </div>
@@ -829,7 +835,7 @@ const LoyaltyProgramPage = () => {
           <div className="bg-white rounded-lg max-w-md w-full">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900">Adjust Points</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{t('loyaltyProgramPage.adjustPointsModal.title')}</h2>
                 <button
                   onClick={() => setSelectedMember(null)}
                   className="text-gray-400 hover:text-gray-600"
@@ -851,14 +857,14 @@ const LoyaltyProgramPage = () => {
                       color: getTierColor(selectedMember.currentTier)
                     }}
                   >
-                    {selectedMember.currentTier}
+                    {getTierName(selectedMember.currentTier)}
                   </span>
                   <div className="text-right">
-                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Tier Points</p>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{t('loyaltyProgramPage.adjustPointsModal.tierPoints')}</p>
                     <p className="text-lg font-bold text-gray-900">
                       {selectedMember.tierPoints || selectedMember.totalPoints || 0}
                     </p>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide mt-3 mb-1">Cash Value</p>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide mt-3 mb-1">{t('loyaltyProgramPage.adjustPointsModal.cashValue')}</p>
                     <p className="text-xl font-bold text-green-600">
                       ${calculateRedemptionValue(selectedMember.availablePoints || 0, selectedMember.guest?.channel).toFixed(2)}
                     </p>
@@ -866,7 +872,7 @@ const LoyaltyProgramPage = () => {
                 </div>
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <p className="text-xs text-gray-500">
-                    💡 Tier points never decrease - they determine membership level. Cash value can be used for rewards.
+                    {t('loyaltyProgramPage.adjustPointsModal.infoNote')}
                   </p>
                 </div>
               </div>
@@ -874,7 +880,7 @@ const LoyaltyProgramPage = () => {
               {/* Adjustment Mode Selector - NEW */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  What to Adjust
+                  {t('loyaltyProgramPage.adjustPointsModal.whatToAdjust')}
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -889,8 +895,8 @@ const LoyaltyProgramPage = () => {
                         : 'border-gray-300 text-gray-700 hover:border-blue-300'
                     }`}
                   >
-                    <div className="font-semibold">All Points</div>
-                    <div className="text-xs mt-1">Affects tier & redeemable</div>
+                    <div className="font-semibold">{t('loyaltyProgramPage.adjustPointsModal.allPoints')}</div>
+                    <div className="text-xs mt-1">{t('loyaltyProgramPage.adjustPointsModal.allPointsDesc')}</div>
                   </button>
                   <button
                     onClick={() => {
@@ -904,13 +910,13 @@ const LoyaltyProgramPage = () => {
                         : 'border-gray-300 text-gray-700 hover:border-purple-300'
                     }`}
                   >
-                    <div className="font-semibold">Redeemable Only</div>
-                    <div className="text-xs mt-1">🔒 Tier status protected</div>
+                    <div className="font-semibold">{t('loyaltyProgramPage.adjustPointsModal.redeemableOnly')}</div>
+                    <div className="text-xs mt-1">{t('loyaltyProgramPage.adjustPointsModal.redeemableOnlyDesc')}</div>
                   </button>
                 </div>
                 {adjustmentMode === 'redeemable' && (
                   <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-                    💡 This will only adjust redeemable points. Tier points and tier status will remain unchanged.
+                    {t('loyaltyProgramPage.adjustPointsModal.redeemableNote')}
                   </div>
                 )}
               </div>
@@ -918,7 +924,7 @@ const LoyaltyProgramPage = () => {
               {/* Adjustment Type */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Adjustment Type
+                  {t('loyaltyProgramPage.adjustPointsModal.adjustmentType')}
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -929,7 +935,7 @@ const LoyaltyProgramPage = () => {
                         : 'border-gray-300 text-gray-700 hover:border-green-300'
                     }`}
                   >
-                    Add Points
+                    {t('loyaltyProgramPage.adjustPointsModal.addPoints')}
                   </button>
                   <button
                     onClick={() => setAdjustmentType('deduct')}
@@ -939,7 +945,7 @@ const LoyaltyProgramPage = () => {
                         : 'border-gray-300 text-gray-700 hover:border-red-300'
                     }`}
                   >
-                    Deduct Points
+                    {t('loyaltyProgramPage.adjustPointsModal.deductPoints')}
                   </button>
                 </div>
               </div>
@@ -1085,7 +1091,7 @@ const LoyaltyProgramPage = () => {
                         Points adjustment: {adjustmentType === 'add' ? '+' : '-'}{pointsAdjustment} points
                       </p>
                       <p className="text-xs text-purple-700 mt-1 font-semibold">
-                        ✓ Tier status will remain: {selectedMember.currentTier}
+                        ✓ Tier status will remain: {getTierName(selectedMember.currentTier)}
                       </p>
                     </>
                   )}
