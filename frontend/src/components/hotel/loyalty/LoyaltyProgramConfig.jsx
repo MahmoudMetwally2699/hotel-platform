@@ -101,69 +101,64 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
 
   useEffect(() => {
     if (isOpen) {
+      // Reset errors when modal opens
+      setErrors({});
+
       // Use the freshest data - prioritize Redux state over prop
       const currentProgram = loyaltyProgram || existingProgram;
 
-      if (currentProgram) {
-        console.log('Loading existing program:', currentProgram);
-        // Handle array of programs (channel-based) or single program
-        const programs = Array.isArray(currentProgram) ? currentProgram : [currentProgram];
+      // Handle array of programs (channel-based) or single program
+      const programs = Array.isArray(currentProgram) ? currentProgram : (currentProgram ? [currentProgram] : []);
 
-        if (programs.length > 0) {
-          // IMPORTANT: Filter to only channel-based programs and use the most recently updated one
-          const channelPrograms = programs.filter(p => p.channel && ['Travel Agency', 'Corporate', 'Direct'].includes(p.channel));
+      if (programs.length > 0) {
+        // IMPORTANT: Filter to only channel-based programs and use the most recently updated one
+        const channelPrograms = programs.filter(p => p.channel && ['Travel Agency', 'Corporate', 'Direct'].includes(p.channel));
 
-          // Sort by updatedAt to get the most recent
-          const sortedPrograms = channelPrograms.sort((a, b) =>
-            new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
-          );
+        // Sort by updatedAt to get the most recent
+        const sortedPrograms = channelPrograms.sort((a, b) =>
+          new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
+        );
 
-          console.log('Filtered channel programs:', sortedPrograms);
+        // Use the most recently updated program for shared settings
+        const firstProgram = sortedPrograms[0] || programs[0];
 
-          // Use the most recently updated program for shared settings
-          const firstProgram = sortedPrograms[0] || programs[0];
+        // Deep clone tier configuration to avoid reference issues
+        // Always use default if tierConfiguration is missing or empty
+        const tierConfig = (firstProgram.tierConfiguration && firstProgram.tierConfiguration.length > 0)
+          ? JSON.parse(JSON.stringify(firstProgram.tierConfiguration))
+          : getDefaultTierConfiguration();
 
-          console.log('Using program for tier config:', firstProgram);
+        setFormData({
+          isActive: firstProgram.isActive !== undefined ? firstProgram.isActive : true,
+          expirationMonths: firstProgram.expirationMonths || 12,
+          tierConfiguration: tierConfig
+        });
 
-          // Deep clone tier configuration to avoid reference issues
-          const tierConfig = firstProgram.tierConfiguration
-            ? JSON.parse(JSON.stringify(firstProgram.tierConfiguration))
-            : getDefaultTierConfiguration();
-
-          console.log('Setting tier configuration:', tierConfig);
-
-          setFormData({
-            isActive: firstProgram.isActive !== undefined ? firstProgram.isActive : true,
-            expirationMonths: firstProgram.expirationMonths || 12,
-            tierConfiguration: tierConfig
-          });
-
-          // Load channel-specific settings from all channel programs
-          const newChannelSettings = {};
-          sortedPrograms.forEach(program => {
-            if (program.channel && program.pointsRules && program.redemptionRules) {
-              newChannelSettings[program.channel] = {
-                pointsPerDollar: program.pointsRules.pointsPerDollar,
-                pointsPerNight: program.pointsRules.pointsPerNight,
-                serviceMultipliers: program.pointsRules.serviceMultipliers,
-                pointsToMoneyRatio: program.redemptionRules.pointsToMoneyRatio,
-                minimumRedemption: program.redemptionRules.minimumRedemption
-              };
-            }
-          });
-
-          if (Object.keys(newChannelSettings).length > 0) {
-            console.log('Setting channel settings:', newChannelSettings);
-            setChannelPointsSettings(newChannelSettings);
+        // Load channel-specific settings from all channel programs
+        const newChannelSettings = {};
+        sortedPrograms.forEach(program => {
+          if (program.channel && program.pointsRules && program.redemptionRules) {
+            newChannelSettings[program.channel] = {
+              pointsPerDollar: program.pointsRules.pointsPerDollar,
+              pointsPerNight: program.pointsRules.pointsPerNight,
+              serviceMultipliers: program.pointsRules.serviceMultipliers,
+              pointsToMoneyRatio: program.redemptionRules.pointsToMoneyRatio,
+              minimumRedemption: program.redemptionRules.minimumRedemption
+            };
           }
+        });
+
+        if (Object.keys(newChannelSettings).length > 0) {
+          setChannelPointsSettings(newChannelSettings);
         }
       } else {
-        // No existing program - set defaults for new program
-        console.log('No existing program, setting defaults');
+        // No existing program OR empty array - set defaults for new program
+        const defaultTiers = getDefaultTierConfiguration();
+
         setFormData({
           isActive: true,
           expirationMonths: 12,
-          tierConfiguration: getDefaultTierConfiguration()
+          tierConfiguration: defaultTiers
         });
 
         // Reset channel settings to defaults
@@ -176,7 +171,6 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
     }
   }, [isOpen, loyaltyProgram, existingProgram]);  // Handler for channel-specific points changes
   const handleChannelPointsChange = (field, value) => {
-    console.log(`Updating ${activeChannel} - ${field}:`, value);
     setChannelPointsSettings(prev => ({
       ...prev,
       [activeChannel]: {
@@ -188,7 +182,6 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
 
   // Handler for channel-specific service multipliers
   const handleServiceMultiplierChange = (service, value) => {
-    console.log(`Updating ${activeChannel} service multiplier - ${service}:`, value);
     setChannelPointsSettings(prev => ({
       ...prev,
       [activeChannel]: {
@@ -217,7 +210,6 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
   };
 
   const handleTierChange = (index, field, value) => {
-    console.log(`Updating tier ${index}, field: ${field}, value:`, value);
     const newTiers = [...formData.tierConfiguration];
     if (field.includes('.')) {
       const [parent, child] = field.split('.');
@@ -234,7 +226,6 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
         [field]: value
       };
     }
-    console.log('New tier configuration:', newTiers);
     setFormData(prev => ({
       ...prev,
       tierConfiguration: newTiers
@@ -255,6 +246,11 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
 
     if (formData.expirationMonths < 1 || formData.expirationMonths > 36) {
       newErrors.expirationMonths = t('loyaltyProgramConfig.validation.expirationRange');
+    }
+
+    // Validate tier configuration
+    if (!formData.tierConfiguration || formData.tierConfiguration.length === 0) {
+      newErrors.tiers = 'Tier configuration is required';
     }
 
     if (currentChannelSettings.pointsPerDollar < 1) {
@@ -287,11 +283,14 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
       return;
     }
 
-    console.log('Submitting loyalty program with channel settings:', channelPointsSettings);
-
     try {
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
       const cleanApiUrl = apiUrl.endsWith('/api') ? apiUrl : `${apiUrl}/api`;
+
+      // Ensure we always have tier configuration
+      const tierConfig = (formData.tierConfiguration && formData.tierConfiguration.length > 0)
+        ? formData.tierConfiguration
+        : getDefaultTierConfiguration();
 
       // Save settings for all channels
       const savePromises = channels.map(async (channel) => {
@@ -300,7 +299,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
           channel: channel,
           isActive: formData.isActive,
           expirationMonths: formData.expirationMonths,
-          tierConfiguration: formData.tierConfiguration,
+          tierConfiguration: tierConfig,
           pointsRules: {
             pointsPerDollar: channelData.pointsPerDollar,
             pointsPerNight: channelData.pointsPerNight,
@@ -311,8 +310,6 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
             minimumRedemption: channelData.minimumRedemption
           }
         };
-
-        console.log(`Saving ${channel} program:`, payload);
 
         const response = await fetch(`${cleanApiUrl}/loyalty/hotel/program`, {
           method: 'POST',
@@ -331,13 +328,10 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
         return response.json();
       });
 
-      const results = await Promise.all(savePromises);
-      console.log('All channels saved successfully:', results);
+      await Promise.all(savePromises);
 
       // Refetch the loyalty program data to get the updated values - WAIT for it to complete
-      console.log('Refetching loyalty program data...');
       await dispatch(fetchLoyaltyProgram()).unwrap();
-      console.log('Loyalty program data refreshed');
 
       alert(t('loyaltyProgramConfig.messages.successAll'));
 
@@ -426,6 +420,12 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
             )}
 
             <div className="space-y-4">
+              {(!formData.tierConfiguration || formData.tierConfiguration.length === 0) && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-start gap-2">
+                  <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-yellow-800">No tier configuration found. Please reload the form.</p>
+                </div>
+              )}
               {(formData.tierConfiguration || []).map((tier, index) => (
                 <div key={tier.name} className="border rounded-lg p-4 bg-gray-50">
                   <div className="flex items-center justify-between mb-3">
