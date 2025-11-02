@@ -66,41 +66,41 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
     <div className="bg-white shadow-lg rounded-2xl overflow-hidden border border-gray-100">
       {/* Header Section with Gradient */}
       <div
-        className={`bg-gradient-to-r ${tierColor.gradient} p-6 text-white relative overflow-hidden`}
+        className={`bg-gradient-to-r ${tierColor.gradient} p-4 sm:p-6 text-white relative overflow-hidden`}
       >
         {/* Decorative circles */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
 
         <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-4 sm:space-y-0">
             <div className="flex items-center space-x-3">
-              <div className="bg-white bg-opacity-20 p-3 rounded-full backdrop-blur-sm">
-                <TierIcon className="text-3xl" />
+              <div className="bg-white bg-opacity-20 p-2 sm:p-3 rounded-full backdrop-blur-sm">
+                <TierIcon className="text-2xl sm:text-3xl" />
               </div>
               <div>
                 <p className="text-sm font-medium opacity-90">{t('loyaltyCard.loyaltyTier')}</p>
-                <h2 className="text-3xl font-bold tracking-wide">{membership.currentTier}</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-wide">{membership.currentTier}</h2>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <p className="text-xs font-medium opacity-90">{t('loyaltyCard.tierPoints')}</p>
-              <p className="text-2xl font-bold">{(membership.tierPoints || membership.totalPoints).toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold">{(membership.tierPoints || membership.totalPoints).toLocaleString()}</p>
               <p className="text-xs font-medium opacity-90 mt-2">{t('loyaltyCard.redeemablePoints')}</p>
-              <p className="text-3xl font-bold">{membership.availablePoints.toLocaleString()}</p>
+              <p className="text-2xl sm:text-3xl font-bold">{membership.availablePoints.toLocaleString()}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Points Statistics */}
-      <div className="grid grid-cols-3 divide-x divide-gray-200 bg-gray-50 border-b border-gray-200">
-        <div className="p-4 text-center">
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-x-0 sm:divide-x divide-y sm:divide-y-0 divide-gray-200 bg-gray-50 border-b border-gray-200">
+        <div className="p-4 text-center sm:border-b-0 border-b border-gray-200">
           <p className="text-2xl font-bold text-gray-800">{(membership.tierPoints || membership.totalPoints).toLocaleString()}</p>
           <p className="text-xs text-gray-600 mt-1">{t('loyaltyCard.tierPoints')}</p>
           <p className="text-xs text-gray-500 mt-1">{t('loyaltyCard.neverDecrease')}</p>
         </div>
-        <div className="p-4 text-center">
+        <div className="p-4 text-center sm:border-b-0 border-b border-gray-200">
           <p className="text-2xl font-bold text-blue-600">{membership.availablePoints.toLocaleString()}</p>
           <p className="text-xs text-gray-600 mt-1">{t('loyaltyCard.redeemablePoints')}</p>
           <p className="text-xs text-gray-500 mt-1">{t('loyaltyCard.useForRewards')}</p>
@@ -114,7 +114,7 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
 
       {/* Tier Progress */}
       {nextTier && pointsToNextTier > 0 && (
-        <div className="p-6 bg-white border-b border-gray-200">
+        <div className="p-4 sm:p-6 bg-white border-b border-gray-200">
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-sm font-semibold text-gray-700">{t('loyaltyCard.progressTo', { tier: nextTier })}</h3>
             <span className="text-sm font-medium" style={{ color: tierColor.primary }}>
@@ -145,7 +145,7 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
 
       {/* Already at Highest Tier */}
       {!nextTier && (
-        <div className="p-6 bg-gradient-to-r from-amber-50 to-yellow-50 border-b border-yellow-200">
+        <div className="p-4 sm:p-6 bg-gradient-to-r from-amber-50 to-yellow-50 border-b border-yellow-200">
           <div className="flex items-center justify-center space-x-2 text-yellow-800">
             <FaTrophy className="text-xl" />
             <p className="font-semibold">{t('loyaltyCard.highestTier')}</p>
@@ -154,7 +154,7 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
       )}
 
       {/* Tier Benefits */}
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="flex items-center space-x-2 mb-4">
           <FaGift className="text-xl" style={{ color: tierColor.primary }} />
           <h3 className="text-lg font-semibold text-gray-800">{t('loyaltyCard.yourBenefits', { tier: membership.currentTier })}</h3>
@@ -183,12 +183,12 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
 
       {/* Membership Info Footer */}
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-        <div className="flex justify-between items-center text-xs text-gray-600">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-xs text-gray-600 space-y-2 sm:space-y-0">
           <div>
             <p>{t('loyaltyCard.memberSince', { date: new Date(membership.joinDate).toLocaleDateString() })}</p>
           </div>
           {program?.expirationMonths && (
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <p>{t('loyaltyCard.pointsExpire', { months: program.expirationMonths })}</p>
             </div>
           )}
