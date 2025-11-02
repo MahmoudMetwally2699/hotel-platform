@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import {
   fetchProviderEarnings,
   fetchProviderPayouts,
@@ -12,8 +13,10 @@ import {
   selectProviderEarnings,
   selectCategoryAnalytics,
   selectServiceLoading,
-  selectServiceError
+  selectServiceError,
+  selectProviderCurrency
 } from '../../redux/slices/serviceSlice';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 // Chart.js imports
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement, ArcElement } from 'chart.js';
@@ -39,10 +42,12 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 const EarningsPage = () => {
   const dispatch = useDispatch();
+  const { i18n } = useTranslation();
   const earnings = useSelector(selectProviderEarnings);
   const categoryAnalytics = useSelector(selectCategoryAnalytics);
   const isLoading = useSelector(selectServiceLoading);
   const error = useSelector(selectServiceError);
+  const currency = useSelector(selectProviderCurrency);
 
   const [timeRange, setTimeRange] = useState('month'); // 'week', 'month', 'year'
 
@@ -290,7 +295,7 @@ const EarningsPage = () => {
                       Available Balance
                     </dt>
                     <dd className="text-2xl font-bold text-white">
-                      ${earnings?.data?.availableBalance?.toFixed(2) || '0.00'}
+                      {formatPriceByLanguage(earnings?.data?.availableBalance || 0, i18n.language, currency)}
                     </dd>
                   </dl>
                 </div>
@@ -311,7 +316,7 @@ const EarningsPage = () => {
                       Monthly Earnings
                     </dt>
                     <dd className="text-2xl font-bold text-white">
-                      ${earnings?.data?.monthlyEarnings?.toFixed(2) || '0.00'}
+                      {formatPriceByLanguage(earnings?.data?.monthlyEarnings || 0, i18n.language, currency)}
                     </dd>
                   </dl>
                 </div>
@@ -332,7 +337,7 @@ const EarningsPage = () => {
                       Total Earnings YTD
                     </dt>
                     <dd className="text-2xl font-bold text-white">
-                      ${earnings?.data?.yearlyEarnings?.toFixed(2) || '0.00'}
+                      {formatPriceByLanguage(earnings?.data?.yearlyEarnings || 0, i18n.language, currency)}
                     </dd>
                   </dl>
                 </div>
@@ -374,7 +379,7 @@ const EarningsPage = () => {
                 <div className="ml-4">
                   <div className="text-sm font-medium text-gray-500">Pending Earnings</div>
                   <div className="text-lg font-semibold text-gray-900">
-                    ${earnings?.data?.pending?.pendingEarnings?.toFixed(2) || '0.00'}
+                    {formatPriceByLanguage(earnings?.data?.pending?.pendingEarnings || 0, i18n.language, currency)}
                   </div>
                   <div className="text-xs text-gray-400">
                     {earnings?.data?.pending?.pendingBookings || 0} pending orders
@@ -394,7 +399,7 @@ const EarningsPage = () => {
                 <div className="ml-4">
                   <div className="text-sm font-medium text-gray-500">Avg per Order</div>
                   <div className="text-lg font-semibold text-gray-900">
-                    ${earnings?.data?.currentPeriod?.averagePerBooking?.toFixed(2) || '0.00'}
+                    {formatPriceByLanguage(earnings?.data?.currentPeriod?.averagePerBooking || 0, i18n.language, currency)}
                   </div>
                   <div className="text-xs text-gray-400">Current period</div>
                 </div>
@@ -475,7 +480,7 @@ const EarningsPage = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Total Earnings</span>
                     <span className="font-semibold text-gray-900">
-                      ${getCategoryData('transportation').allTime?.totalEarnings?.toFixed(2) || '0.00'}
+                      {formatPriceByLanguage(getCategoryData('transportation').allTime?.totalEarnings || 0, i18n.language, currency)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -487,13 +492,13 @@ const EarningsPage = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Avg per Order</span>
                     <span className="font-semibold text-gray-900">
-                      ${getCategoryData('transportation').allTime?.averagePerOrder?.toFixed(2) || '0.00'}
+                      {formatPriceByLanguage(getCategoryData('transportation').allTime?.averagePerOrder || 0, i18n.language, currency)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">This Month</span>
                     <span className="font-semibold text-[#3B5787]">
-                      ${getCategoryData('transportation').currentPeriod?.totalEarnings?.toFixed(2) || '0.00'}
+                      {formatPriceByLanguage(getCategoryData('transportation').currentPeriod?.totalEarnings || 0, i18n.language, currency)}
                     </span>
                   </div>
                 </div>
@@ -513,7 +518,7 @@ const EarningsPage = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Total Earnings</span>
                     <span className="font-semibold text-gray-900">
-                      ${getCategoryData('laundry').allTime?.totalEarnings?.toFixed(2) || '0.00'}
+                      {formatPriceByLanguage(getCategoryData('laundry').allTime?.totalEarnings || 0, i18n.language, currency)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -525,13 +530,13 @@ const EarningsPage = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Avg per Order</span>
                     <span className="font-semibold text-gray-900">
-                      ${getCategoryData('laundry').allTime?.averagePerOrder?.toFixed(2) || '0.00'}
+                      {formatPriceByLanguage(getCategoryData('laundry').allTime?.averagePerOrder || 0, i18n.language, currency)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">This Month</span>
                     <span className="font-semibold text-[#67BAE0]">
-                      ${getCategoryData('laundry').currentPeriod?.totalEarnings?.toFixed(2) || '0.00'}
+                      {formatPriceByLanguage(getCategoryData('laundry').currentPeriod?.totalEarnings || 0, i18n.language, currency)}
                     </span>
                   </div>
                 </div>
@@ -571,7 +576,7 @@ const EarningsPage = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Total Earnings</span>
                     <span className="font-semibold text-gray-900">
-                      ${getCategoryData('restaurant').allTime?.totalEarnings?.toFixed(2) || '0.00'}
+                      {formatPriceByLanguage(getCategoryData('restaurant').allTime?.totalEarnings || 0, i18n.language, currency)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -583,13 +588,13 @@ const EarningsPage = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Avg per Order</span>
                     <span className="font-semibold text-gray-900">
-                      ${getCategoryData('restaurant').allTime?.averagePerOrder?.toFixed(2) || '0.00'}
+                      {formatPriceByLanguage(getCategoryData('restaurant').allTime?.averagePerOrder || 0, i18n.language, currency)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">This Month</span>
                     <span className="font-semibold text-[#67BAE0]">
-                      ${getCategoryData('restaurant').currentPeriod?.totalEarnings?.toFixed(2) || '0.00'}
+                      {formatPriceByLanguage(getCategoryData('restaurant').currentPeriod?.totalEarnings || 0, i18n.language, currency)}
                     </span>
                   </div>
                 </div>
@@ -775,7 +780,7 @@ const EarningsPage = () => {
                         tooltip: {
                           callbacks: {
                             label: function(context) {
-                              return `$${context.raw.toFixed(2)}`;
+                              return formatPriceByLanguage(context.raw, i18n.language, currency);
                             }
                           }
                         }
@@ -785,7 +790,7 @@ const EarningsPage = () => {
                           beginAtZero: true,
                           ticks: {
                             callback: function(value) {
-                              return '$' + value;
+                              return formatPriceByLanguage(value, i18n.language, currency);
                             }
                           }
                         }
@@ -818,7 +823,7 @@ const EarningsPage = () => {
                         tooltip: {
                           callbacks: {
                             label: function(context) {
-                              return `$${context.raw.toFixed(2)}`;
+                              return formatPriceByLanguage(context.raw, i18n.language, currency);
                             }
                           }
                         }
@@ -828,7 +833,7 @@ const EarningsPage = () => {
                           beginAtZero: true,
                           ticks: {
                             callback: function(value) {
-                              return '$' + value;
+                              return formatPriceByLanguage(value, i18n.language, currency);
                             }
                           }
                         }

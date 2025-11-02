@@ -274,6 +274,7 @@ export const selectAllHotels = (state) => state.hotel.hotels;
 export const selectCurrentHotel = (state) => state.hotel.currentHotel;
 export const selectHotelLoading = (state) => state.hotel.isLoading;
 export const selectHotelError = (state) => state.hotel.error;
+export const selectHotelCurrency = (state) => state.hotel.currentHotel?.paymentSettings?.currency || state.hotel.dashboardStats?.hotel?.paymentSettings?.currency || 'USD';
 
 // Additional selectors for backward compatibility
 export const selectHotels = (state) => state.hotel.hotels;

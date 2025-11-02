@@ -900,6 +900,8 @@ const SuperAdminHotelsPage = () => {
                         <option value="GBP">GBP - British Pound</option>
                         <option value="CAD">CAD - Canadian Dollar</option>
                         <option value="AUD">AUD - Australian Dollar</option>
+                        <option value="SAR">SAR - Saudi Riyal</option>
+                        <option value="EGP">EGP - Egyptian Pound</option>
                       </select>
                     </div>
                   </div>
@@ -1201,6 +1203,8 @@ const SuperAdminHotelsPage = () => {
                         <option value="GBP">GBP - British Pound</option>
                         <option value="CAD">CAD - Canadian Dollar</option>
                         <option value="AUD">AUD - Australian Dollar</option>
+                        <option value="SAR">SAR - Saudi Riyal</option>
+                        <option value="EGP">EGP - Egyptian Pound</option>
                       </select>
                     </div>
                   </div>

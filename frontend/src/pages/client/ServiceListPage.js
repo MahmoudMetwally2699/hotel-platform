@@ -153,7 +153,7 @@ const ServiceListPage = () => {
                   </div>
                 )}                {/* Price Tag */}
                 <div className="absolute bottom-0 right-0 bg-primary-main text-white px-2 sm:px-3 py-1 rounded-tl-lg font-semibold text-xs sm:text-sm">
-                  {formatPriceByLanguage((service.pricing?.finalPrice || service.pricing?.basePrice || service.basePrice || 0), i18n.language)}
+                  {formatPriceByLanguage((service.pricing?.finalPrice || service.pricing?.basePrice || service.basePrice || 0), i18n.language, service.currency || 'USD')}
                 </div>
               </div>
 

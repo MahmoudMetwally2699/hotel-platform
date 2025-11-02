@@ -99,14 +99,39 @@ const LaundryServiceCreator = () => {
   });
   const [laundryItems, setLaundryItems] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
+  const [currency, setCurrency] = useState('USD'); // Default currency
+  const [currencySymbol, setCurrencySymbol] = useState('$'); // Default symbol
 
   useEffect(() => {
     fetchCategoryTemplate();
+    fetchCurrencyFromServices(); // Detect currency on mount
     if (activeTab === 'manage') fetchExistingServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   // ===== API =====
+  const fetchCurrencyFromServices = async () => {
+    try {
+      const res = await apiClient.get('/service/services?category=laundry');
+      let services = [];
+      if (res.data?.data?.services) services = res.data.data.services;
+      else if (res.data?.services) services = res.data.services;
+      else if (Array.isArray(res.data?.data)) services = res.data.data;
+      else if (Array.isArray(res.data)) services = res.data;
+
+      // Detect currency from first service
+      if (services.length > 0 && services[0].pricing?.currency) {
+        const detectedCurrency = services[0].pricing.currency;
+        setCurrency(detectedCurrency);
+        const symbols = { USD: '$', EUR: '€', GBP: '£', CAD: 'C$', AUD: 'A$', SAR: 'SAR', EGP: 'E£' };
+        setCurrencySymbol(symbols[detectedCurrency] || '$');
+      }
+    } catch (err) {
+      // Silently fail - will use default USD
+      console.log('No existing services found, using default currency');
+    }
+  };
+
   const fetchExistingServices = async () => {
     try {
       setLoading(true);
@@ -117,6 +142,14 @@ const LaundryServiceCreator = () => {
       else if (Array.isArray(res.data?.data)) services = res.data.data;
       else if (Array.isArray(res.data)) services = res.data;
       setExistingServices(services);
+
+      // Detect currency from first service
+      if (services.length > 0 && services[0].pricing?.currency) {
+        const detectedCurrency = services[0].pricing.currency;
+        setCurrency(detectedCurrency);
+        const symbols = { USD: '$', EUR: '€', GBP: '£', CAD: 'C$', AUD: 'A$', SAR: 'SAR', EGP: 'E£' };
+        setCurrencySymbol(symbols[detectedCurrency] || '$');
+      }
     } catch (err) {
       console.error(err);
       toast.error(t('serviceProvider.laundryManagement.messages.failedToLoadServices'));
@@ -206,7 +239,7 @@ const LaundryServiceCreator = () => {
         subcategory: 'item_based',
         serviceType: 'laundry_items',
         laundryItems,
-        pricing: { basePrice: 0, pricingType: 'per-item', currency: 'USD' },
+        pricing: { basePrice: 0, pricingType: 'per-item', currency: currency },
         isActive: true
       };
       await apiClient.post('/service/categories/laundry/items', payload);
@@ -940,10 +973,10 @@ const LaundryServiceCreator = () => {
                               <>
                                 <div>
                                   <label className="block text-xs font-medium text-gray-600 mb-2">
-                                    Price (USD)
+                                    Price ({currency})
                                   </label>
                                   <div className="relative">
-                                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">{currencySymbol}</span>
                                     <input
                                       type="number"
                                       min="0"
@@ -954,11 +987,6 @@ const LaundryServiceCreator = () => {
                                       placeholder="0.00"
                                     />
                                   </div>
-                                  {st.price > 0 && (
-                                    <p className="text-xs text-gray-500 mt-1">
-                                      ({(st.price * 3.75).toFixed(2)} SAR)
-                                    </p>
-                                  )}
                                 </div>
                               </>
                             )}

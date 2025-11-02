@@ -1,10 +1,14 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Package } from 'lucide-react';
+import { selectHotelCurrency } from '../../../redux/slices/hotelSlice';
+import { formatPriceByLanguage } from '../../../utils/currency';
 
 const ServicePopularityTable = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
+  const currency = useSelector(selectHotelCurrency);
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -39,15 +43,6 @@ const ServicePopularityTable = ({ data, loading, error }) => {
       </div>
     );
   }
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat(i18n.language || 'en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value || 0);
-  };
 
   const formatServiceName = (service) => t(`performanceAnalyticsPage.serviceTypes.${service}`, { defaultValue: service });
 
@@ -138,13 +133,13 @@ const ServicePopularityTable = ({ data, loading, error }) => {
                   <div>
                     <p className="text-gray-600">{t('performanceAnalyticsPage.spending.popularity.labels.revenue')}</p>
                     <p className="font-semibold text-gray-900">
-                      {formatCurrency(service.totalRevenue)}
+                      {formatPriceByLanguage(service.totalRevenue, i18n.language, currency)}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-600">{t('performanceAnalyticsPage.spending.popularity.labels.avgSpending')}</p>
                     <p className="font-semibold text-gray-900">
-                      {formatCurrency(service.avgSpending)}
+                      {formatPriceByLanguage(service.avgSpending, i18n.language, currency)}
                     </p>
                   </div>
                   <div>

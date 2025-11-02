@@ -4,14 +4,17 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { HOTEL_API } from '../../config/api.config';
+import { selectHotelCurrency } from '../../redux/slices/hotelSlice';
 import { formatPriceByLanguage } from '../../utils/currency';
 
 const ProviderAnalyticsPage = () => {
   const { i18n } = useTranslation();
+  const currency = useSelector(selectHotelCurrency);
   const [providers, setProviders] = useState([]);
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [timeframe, setTimeframe] = useState('month');
@@ -264,7 +267,7 @@ const ProviderAnalyticsPage = () => {
                             <div className="font-medium text-gray-900">{service.name}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">{service.bookings}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">${service.revenue.toFixed(2)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">{formatPriceByLanguage(service.revenue || 0, i18n.language, currency)}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <span className="mr-1">{service.rating.toFixed(1)}</span>

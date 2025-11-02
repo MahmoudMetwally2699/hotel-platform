@@ -337,7 +337,7 @@ const GuestLaundryBookings = () => {
                              booking.payment?.amount ||
                              booking.totalAmount ||
                              booking.amount;
-                return total ? formatPriceByLanguage(total, i18n.language) : 'N/A';
+                return total ? formatPriceByLanguage(total, i18n.language, booking.payment?.currency || booking.pricing?.currency || 'USD') : 'N/A';
               })()}
             </span>
           </div>
@@ -625,7 +625,7 @@ const GuestLaundryBookings = () => {
                                          selectedBooking.totalAmount ||
                                          selectedBooking.amount;
 
-                            return total ? formatPriceByLanguage(total, i18n.language) : 'N/A';
+                            return total ? formatPriceByLanguage(total, i18n.language, selectedBooking.payment?.currency || selectedBooking.pricing?.currency || 'USD') : 'N/A';
                           })()}
                         </span>
                       </div>
@@ -761,7 +761,7 @@ const GuestLaundryBookings = () => {
                                     itemPrice = bookingTotal * (1 + markupPercentage / 100);
                                   }
 
-                                  return itemPrice ? formatPriceByLanguage(itemPrice, i18n.language) : 'N/A';
+                                  return itemPrice ? formatPriceByLanguage(itemPrice, i18n.language, selectedBooking.payment?.currency || selectedBooking.pricing?.currency || 'USD') : 'N/A';
                                 })()}
                               </div>
                             </div>

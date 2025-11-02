@@ -443,7 +443,7 @@ const serviceSchema = new mongoose.Schema({
     currency: {
       type: String,
       default: 'USD',
-      enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
+      enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'SAR', 'EGP']
     },
 
     pricingType: {
@@ -909,13 +909,52 @@ serviceSchema.virtual('isOperational').get(function() {
 });
 
 // Pre-save middleware
-serviceSchema.pre('save', function(next) {
+serviceSchema.pre('save', async function(next) {
   // Generate slug from name
   if (this.isModified('name')) {
     this.slug = this.name
       .toLowerCase()
       .replace(/[^\w ]+/g, '')
       .replace(/ +/g, '-');
+  }
+
+  // Set currency from provider or hotel if not already set
+  if (this.isNew || this.isModified('hotelId') || this.isModified('providerId')) {
+    try {
+      // First try to get currency from service provider
+      if (this.providerId) {
+        const ServiceProvider = mongoose.model('ServiceProvider');
+        const provider = await ServiceProvider.findById(this.providerId).select('currency hotelId');
+
+        if (provider && provider.currency) {
+          if (!this.pricing) this.pricing = {};
+          this.pricing.currency = provider.currency;
+        } else if (provider && provider.hotelId) {
+          // If provider doesn't have currency, get from hotel
+          const Hotel = mongoose.model('Hotel');
+          const hotel = await Hotel.findById(provider.hotelId).select('paymentSettings.currency');
+
+          if (hotel && hotel.paymentSettings && hotel.paymentSettings.currency) {
+            if (!this.pricing) this.pricing = {};
+            this.pricing.currency = hotel.paymentSettings.currency;
+          }
+        }
+      }
+
+      // If still no currency, try getting directly from hotel
+      if (!this.pricing?.currency && this.hotelId) {
+        const Hotel = mongoose.model('Hotel');
+        const hotel = await Hotel.findById(this.hotelId).select('paymentSettings.currency');
+
+        if (hotel && hotel.paymentSettings && hotel.paymentSettings.currency) {
+          if (!this.pricing) this.pricing = {};
+          this.pricing.currency = hotel.paymentSettings.currency;
+        }
+      }
+    } catch (error) {
+      // If lookup fails, continue with default currency
+      console.error('❌ Error fetching currency for service:', error);
+    }
   }
 
   // Handle transportation items data transformation

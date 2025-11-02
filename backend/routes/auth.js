@@ -101,8 +101,8 @@ const createSendToken = (user, statusCode, res, message = 'Success', rememberMe 
 router.get('/me', protect, catchAsync(async (req, res, next) => {
   // Get fresh user data from database
   const user = await User.findById(req.user.id)
-    .populate('selectedHotelId', 'name address')
-    .populate('hotelId', 'name address')
+    .populate('selectedHotelId', 'name address paymentSettings.currency')
+    .populate('hotelId', 'name address paymentSettings.currency')
     .select('-password');
 
   if (!user) {

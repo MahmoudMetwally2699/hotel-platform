@@ -589,7 +589,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
         providerEarnings: providerAmount,
         hotelEarnings: hotelCommission,
         platformFee: Math.round((finalPrice * 0.05) * 100) / 100, // 5% platform fee
-        currency: service.pricing.currency || 'USD'
+        currency: service.pricing?.currency || hotel.paymentSettings?.currency || 'USD'
       },
 
       // Payment information
@@ -597,7 +597,8 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
         paymentMethod,
         method: paymentMethod === 'online' ? 'credit-card' : 'cash',
         status: 'pending',
-        paymentStatus: 'pending'
+        paymentStatus: 'pending',
+        currency: service.pricing?.currency || hotel.paymentSettings?.currency || 'USD'
       },
 
       specialRequests,
@@ -1968,7 +1969,7 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
         },
         totalBeforeMarkup: totalBeforeMarkup,
         totalAmount: totalAmount,
-        currency: 'USD',        providerEarnings: providerEarnings,
+        currency: service.pricing?.currency || hotel.paymentSettings?.currency || 'USD',        providerEarnings: providerEarnings,
         hotelEarnings: hotelEarnings
       },
 
@@ -1979,7 +1980,8 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
         paymentMethod,
         method: paymentMethod === 'online' ? 'credit-card' : 'cash',
         status: paymentMethod === 'cash' ? 'completed' : 'pending',
-        paymentStatus: paymentMethod === 'cash' ? 'paid' : 'pending'
+        paymentStatus: paymentMethod === 'cash' ? 'paid' : 'pending',
+        currency: service.pricing?.currency || hotel.paymentSettings?.currency || 'USD'
       }
     });
 
@@ -2416,12 +2418,23 @@ router.post('/bookings/transportation', protect, restrictTo('guest'), async (req
       status: paymentMethod === 'cash' ? 'confirmed' : 'pending', // Cash bookings are confirmed immediately
       notes: guestDetails.specialRequests || '',
 
+      // Pricing information with currency
+      pricing: {
+        basePrice: vehiclesTotal,
+        subtotal: subtotal,
+        totalAmount: totalAmount,
+        currency: service.pricing?.currency || hotel.paymentSettings?.currency || 'USD',
+        providerEarnings: providerEarnings,
+        hotelEarnings: hotelEarnings
+      },
+
       // Payment information with method selection
       payment: {
         paymentMethod,
         method: paymentMethod === 'online' ? 'credit-card' : 'cash',
         status: paymentMethod === 'cash' ? 'completed' : 'pending',
-        paymentStatus: paymentMethod === 'cash' ? 'paid' : 'pending'
+        paymentStatus: paymentMethod === 'cash' ? 'paid' : 'pending',
+        currency: service.pricing?.currency || hotel.paymentSettings?.currency || 'USD'
       }
     });
 

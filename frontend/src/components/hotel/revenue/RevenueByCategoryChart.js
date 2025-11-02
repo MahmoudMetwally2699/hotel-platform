@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import {
   PieChart,
@@ -8,9 +9,12 @@ import {
   Legend,
   Tooltip
 } from 'recharts';
+import { selectHotelCurrency } from '../../../redux/slices/hotelSlice';
+import { formatPriceByLanguage } from '../../../utils/currency';
 
 const RevenueByCategoryChart = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
+  const currency = useSelector(selectHotelCurrency);
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -51,15 +55,6 @@ const RevenueByCategoryChart = ({ data, loading, error }) => {
     maintenance: '#6366f1'
   };
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat(i18n.language || 'en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
-  };
-
   const formatPercentDisplay = (value) => {
     // Accepts a 0-100 percentage and returns a locale-aware percent string
     const normalized = (value || 0) / 100;
@@ -87,7 +82,7 @@ const RevenueByCategoryChart = ({ data, loading, error }) => {
         <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-semibold mb-2">{data.name}</p>
           <p className="text-sm text-gray-600">
-            {t('performanceAnalyticsPage.revenue.byCategory.tooltip.revenue')}: <span className="font-semibold text-gray-900">{formatCurrency(data.value)}</span>
+            {t('performanceAnalyticsPage.revenue.byCategory.tooltip.revenue')}: <span className="font-semibold text-gray-900">{formatPriceByLanguage(data.value, i18n.language, currency)}</span>
           </p>
           <p className="text-sm text-gray-600">
             {t('performanceAnalyticsPage.revenue.byCategory.tooltip.share')}: <span className="font-semibold text-gray-900">{formatPercentDisplay(data.percentage)}</span>

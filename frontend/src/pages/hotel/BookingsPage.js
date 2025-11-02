@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchHotelBookings, selectAllBookings, selectBookingLoading } from '../../redux/slices/bookingSlice';
+import { selectHotelCurrency } from '../../redux/slices/hotelSlice';
+import { formatPriceByLanguage } from '../../utils/currency';
+import { useTranslation } from 'react-i18next';
 import useAuth from '../../hooks/useAuth';
 import apiClient from '../../services/api.service';
 
@@ -9,9 +12,11 @@ import apiClient from '../../services/api.service';
  * @returns {JSX.Element} Bookings management page
  */
 const BookingsPage = () => {
+  const { i18n } = useTranslation();
   const dispatch = useDispatch();
   const bookings = useSelector(selectAllBookings);
   const isLoading = useSelector(selectBookingLoading);
+  const currency = useSelector(selectHotelCurrency);
   const { currentUser: user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -173,8 +178,8 @@ const BookingsPage = () => {
                       <div>{formatDate(booking.appointmentDate)}</div>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-medium">${booking.totalAmount.toFixed(2)}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="font-medium">{formatPriceByLanguage(booking.totalAmount, i18n.language, currency)}</div>
+                      <div className="text-xs text-gray-500 mt-1">
                         {booking.payment?.paymentMethod === 'cash' ? (
                           <span className={`px-2 py-1 rounded-full text-xs ${
                             booking.payment?.paymentStatus === 'paid'
@@ -245,7 +250,7 @@ const BookingsPage = () => {
               <div>
                 <h3 className="font-medium text-gray-700 mb-2">Payment Information</h3>
                 <div className="bg-gray-50 p-4 rounded-md">
-                  <p><span className="font-medium">Total Amount:</span> ${selectedBooking.totalAmount?.toFixed(2) || selectedBooking.pricing?.totalAmount?.toFixed(2) || 'N/A'}</p>
+                  <p><span className="font-medium">Total Amount:</span> {formatPriceByLanguage(selectedBooking.totalAmount || selectedBooking.pricing?.totalAmount || 0, i18n.language, currency)}</p>
                   <p><span className="font-medium">Payment Method:</span> {
                     selectedBooking.payment?.paymentMethod === 'cash' ? 'Cash (Pay at Hotel)' :
                     selectedBooking.payment?.paymentMethod === 'online' ? 'Online Payment' :
@@ -303,7 +308,7 @@ const BookingsPage = () => {
                       <p><span className="font-medium">Name:</span> {selectedBooking.service.name}</p>
                       <p><span className="font-medium">Category:</span> {selectedBooking.service.category}</p>
                       <p><span className="font-medium">Provider:</span> {selectedBooking.service.providerName || 'N/A'}</p>
-                      <p><span className="font-medium">Base Price:</span> ${selectedBooking.service.basePrice.toFixed(2)}</p>
+                      <p><span className="font-medium">Base Price:</span> {formatPriceByLanguage(selectedBooking.service.basePrice || 0, i18n.language, currency)}</p>
                     </>
                   ) : (
                     <p className="text-gray-500">Service information not available</p>

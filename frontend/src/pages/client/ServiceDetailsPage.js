@@ -323,7 +323,7 @@ const ServiceDetailsPage = () => {
             <div className="mb-4 sm:mb-6">
               <div className="flex items-baseline">
                 <span className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {formatPriceByLanguage((service.pricing?.finalPrice || service.pricing?.basePrice || service.basePrice || 0), i18n.language)}
+                  {formatPriceByLanguage((service.pricing?.finalPrice || service.pricing?.basePrice || service.basePrice || 0), i18n.language, service.currency || 'USD')}
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-gray-500 mt-1">Per unit • Includes all taxes and fees</p>
@@ -396,7 +396,7 @@ const ServiceDetailsPage = () => {
             <div className="mb-4 sm:mb-6 pb-4 sm:pb-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
                 <span className="font-medium text-sm sm:text-base">Total</span>
-                <span className="text-lg sm:text-xl font-bold">${(calculateTotal() || 0).toFixed(2)}</span>
+                <span className="text-lg sm:text-xl font-bold">{formatPriceByLanguage(calculateTotal() || 0, i18n.language, service.currency || 'USD')}</span>
               </div>
             </div>            {/* Book Now Button */}
             <button

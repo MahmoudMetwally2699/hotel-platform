@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { fetchServices, selectServices, selectIsLoading } from '../../redux/slices/serviceSlice';
+import { selectHotelCurrency } from '../../redux/slices/hotelSlice';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 /**
  * Hotel Admin Services Management Page
@@ -8,8 +11,10 @@ import { fetchServices, selectServices, selectIsLoading } from '../../redux/slic
  */
 const ServicesPage = () => {
   const dispatch = useDispatch();
+  const { i18n } = useTranslation();
   const services = useSelector(selectServices);
   const isLoading = useSelector(selectIsLoading);
+  const currency = useSelector(selectHotelCurrency);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [selectedService, setSelectedService] = useState(null);
@@ -129,11 +134,11 @@ const ServicesPage = () => {
                   <div className="flex justify-between items-center mb-3">
                     <div>
                       <span className="text-gray-500 text-sm">Base Price:</span>
-                      <span className="font-semibold ml-1">${service.basePrice.toFixed(2)}</span>
+                      <span className="font-semibold ml-1">{formatPriceByLanguage(service.basePrice || 0, i18n.language, currency)}</span>
                     </div>
                     <div>
                       <span className="text-gray-500 text-sm">Final Price:</span>
-                      <span className="font-semibold ml-1">${service.finalPrice.toFixed(2)}</span>
+                      <span className="font-semibold ml-1">{formatPriceByLanguage(service.finalPrice || 0, i18n.language, currency)}</span>
                     </div>
                   </div>
 
@@ -164,7 +169,7 @@ const ServicesPage = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4">Set Markup for {selectedService.name}</h2>
             <p className="mb-2 text-gray-600">
-              Base price: ${selectedService.basePrice.toFixed(2)}
+              Base price: {formatPriceByLanguage(selectedService.basePrice || 0, i18n.language, currency)}
             </p>
             <p className="mb-4 text-gray-600">
               Current markup: {selectedService.markupPercentage || 0}%
@@ -184,7 +189,7 @@ const ServicesPage = () => {
               {/* Preview of final price */}
               <div className="mt-3 p-3 bg-gray-50 rounded-md">
                 <p className="text-sm text-gray-600">Preview:</p>
-                <p className="font-medium">Final price: ${selectedService.finalPrice.toFixed(2)}</p>
+                <p className="font-medium">Final price: {formatPriceByLanguage(selectedService.finalPrice || 0, i18n.language, currency)}</p>
               </div>
             </div>
 

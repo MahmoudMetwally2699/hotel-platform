@@ -1,9 +1,13 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { selectHotelCurrency } from '../../../redux/slices/hotelSlice';
+import { formatPriceByLanguage } from '../../../utils/currency';
 
 const SpendingTrendChart = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
+  const currency = useSelector(selectHotelCurrency);
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -35,15 +39,6 @@ const SpendingTrendChart = ({ data, loading, error }) => {
     );
   }
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat(i18n.language || 'en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
-  };
-
   const formatPeriod = (period) => {
     if (period.includes('W')) {
       return period;
@@ -66,7 +61,7 @@ const SpendingTrendChart = ({ data, loading, error }) => {
           <p className="font-semibold mb-2">{formatPeriod(label)}</p>
           {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">
-              {entry.name}: {entry.dataKey === 'avgSpending' ? formatCurrency(entry.value) : entry.value}
+              {entry.name}: {entry.dataKey === 'avgSpending' ? formatPriceByLanguage(entry.value, i18n.language, currency) : entry.value}
             </p>
           ))}
         </div>
@@ -103,7 +98,7 @@ const SpendingTrendChart = ({ data, loading, error }) => {
             yAxisId="left"
             stroke="#6b7280"
             style={{ fontSize: '12px' }}
-            tickFormatter={formatCurrency}
+            tickFormatter={(value) => formatPriceByLanguage(value, i18n.language, currency)}
           />
           <YAxis
             yAxisId="right"

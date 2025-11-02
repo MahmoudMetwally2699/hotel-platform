@@ -246,6 +246,13 @@ const serviceProviderSchema = new mongoose.Schema({
     index: true
   },
 
+  // Currency (inherited from hotel)
+  currency: {
+    type: String,
+    default: 'USD',
+    enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'SAR', 'EGP']
+  },
+
   // Admin Information
   adminId: {
     type: mongoose.Schema.ObjectId,
@@ -691,13 +698,28 @@ serviceProviderSchema.virtual('completionRate').get(function() {
 });
 
 // Pre-save middleware
-serviceProviderSchema.pre('save', function(next) {
+serviceProviderSchema.pre('save', async function(next) {
   // Generate slug from business name
   if (this.isModified('businessName')) {
     this.slug = this.businessName
       .toLowerCase()
       .replace(/[^\w ]+/g, '')
       .replace(/ +/g, '-');
+  }
+
+  // Set currency from hotel if not already set or if hotel is modified
+  if (this.isNew || this.isModified('hotelId')) {
+    try {
+      const Hotel = mongoose.model('Hotel');
+      const hotel = await Hotel.findById(this.hotelId).select('paymentSettings.currency');
+
+      if (hotel && hotel.paymentSettings && hotel.paymentSettings.currency) {
+        this.currency = hotel.paymentSettings.currency;
+      }
+    } catch (error) {
+      // If hotel lookup fails, continue with default currency
+      console.error('Error fetching hotel currency:', error);
+    }
   }
 
   // Enforce markup rules for internal providers

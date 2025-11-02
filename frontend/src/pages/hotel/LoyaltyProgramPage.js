@@ -7,6 +7,8 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { fetchLoyaltyAnalytics, fetchLoyaltyProgram, fetchMembers } from '../../redux/slices/loyaltySlice';
+import { selectHotelCurrency } from '../../redux/slices/hotelSlice';
+import { formatPriceByLanguage } from '../../utils/currency';
 import LoyaltyProgramConfig from '../../components/hotel/loyalty/LoyaltyProgramConfig';
 import {
   Users,
@@ -20,9 +22,10 @@ import {
 } from 'lucide-react';
 
 const LoyaltyProgramPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const { analytics, loyaltyProgram, loading, members } = useSelector((state) => state.loyalty);
+  const currency = useSelector(selectHotelCurrency);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
@@ -425,7 +428,7 @@ const LoyaltyProgramPage = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">{t('loyaltyProgramPage.overviewCards.loyaltyRevenue')}</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
-                ${analytics?.overview?.totalLifetimeSpending?.toFixed(2) || '0.00'}
+                {formatPriceByLanguage(analytics?.overview?.totalLifetimeSpending || 0, i18n.language, currency)}
               </p>
             </div>
             <div className="p-3 bg-yellow-100 rounded-full">
@@ -587,7 +590,7 @@ const LoyaltyProgramPage = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${member.lifetimeSpending?.toFixed(2) || '0.00'}
+                    {formatPriceByLanguage(member.lifetimeSpending || 0, i18n.language, currency)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {member.totalPoints?.toLocaleString() || 0}
@@ -745,7 +748,7 @@ const LoyaltyProgramPage = () => {
                               <span className="font-semibold">{member.tierPoints || member.totalPoints || 0}</span> tier pts
                             </p>
                             <p className="text-lg font-bold text-green-600 mt-1">
-                              ${calculateRedemptionValue(member.availablePoints || 0, member.guest?.channel).toFixed(2)}
+                              {formatPriceByLanguage(calculateRedemptionValue(member.availablePoints || 0, member.guest?.channel), i18n.language, currency)}
                             </p>
                             <button
                               onClick={() => {
@@ -866,7 +869,7 @@ const LoyaltyProgramPage = () => {
                     </p>
                     <p className="text-xs text-gray-500 uppercase tracking-wide mt-3 mb-1">{t('loyaltyProgramPage.adjustPointsModal.cashValue')}</p>
                     <p className="text-xl font-bold text-green-600">
-                      ${calculateRedemptionValue(selectedMember.availablePoints || 0, selectedMember.guest?.channel).toFixed(2)}
+                      {formatPriceByLanguage(calculateRedemptionValue(selectedMember.availablePoints || 0, selectedMember.guest?.channel), i18n.language, currency)}
                     </p>
                   </div>
                 </div>
@@ -978,7 +981,7 @@ const LoyaltyProgramPage = () => {
                       placeholder="Enter points amount"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Equivalent to ${cashAdjustment.toFixed(2)} cash value
+                      Equivalent to {formatPriceByLanguage(cashAdjustment, i18n.language, currency)} cash value
                     </p>
                   </>
                 ) : (

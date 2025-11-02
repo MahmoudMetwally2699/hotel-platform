@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { BarChart3, Package } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { selectHotelCurrency } from '../../../redux/slices/hotelSlice';
+import { formatPriceByLanguage } from '../../../utils/currency';
 
 const CompleteSummaryTable = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
+  const currency = useSelector(selectHotelCurrency);
   const [filterCategory, setFilterCategory] = useState('all');
 
   if (loading) {
@@ -41,15 +45,6 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
       </div>
     );
   }
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat(i18n.language || 'en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value || 0);
-  };
 
   const formatServiceName = (type) => {
     return t(`performanceAnalyticsPage.serviceTypes.${type}`, { defaultValue: type });
@@ -145,15 +140,15 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div>
             <p className="text-sm opacity-90 mb-1">{t('performanceAnalyticsPage.revenue.complete.banner.grandTotalRevenue')}</p>
-            <p className="text-3xl font-bold">{formatCurrency(data.totals.grandTotalRevenue)}</p>
+            <p className="text-3xl font-bold">{formatPriceByLanguage(data.totals.grandTotalRevenue, i18n.language, currency)}</p>
           </div>
           <div>
             <p className="text-sm opacity-90 mb-1">{t('performanceAnalyticsPage.revenue.complete.banner.basePrice')}</p>
-            <p className="text-2xl font-bold">{formatCurrency(data.totals.totalBasePrice)}</p>
+            <p className="text-2xl font-bold">{formatPriceByLanguage(data.totals.totalBasePrice, i18n.language, currency)}</p>
           </div>
           <div>
             <p className="text-sm opacity-90 mb-1">{t('performanceAnalyticsPage.revenue.complete.banner.hotelProfit')}</p>
-            <p className="text-2xl font-bold">{formatCurrency(data.totals.totalHotelProfit)}</p>
+            <p className="text-2xl font-bold">{formatPriceByLanguage(data.totals.totalHotelProfit, i18n.language, currency)}</p>
           </div>
           <div>
             <p className="text-sm opacity-90 mb-1">{t('performanceAnalyticsPage.revenue.complete.banner.overallProfitMargin')}</p>
@@ -197,14 +192,14 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
                   {getCategoryBadge(service.category)}
                 </td>
                 <td className="py-4 px-4 text-right font-semibold text-gray-900">
-                  {formatCurrency(service.totalRevenue)}
+                  {formatPriceByLanguage(service.totalRevenue, i18n.language, currency)}
                 </td>
                 <td className="py-4 px-4 text-right text-gray-700">
-                  {formatCurrency(service.basePrice)}
+                  {formatPriceByLanguage(service.basePrice, i18n.language, currency)}
                 </td>
                 <td className="py-4 px-4 text-right">
                   <span className="font-semibold text-green-600">
-                    {formatCurrency(service.hotelProfit)}
+                    {formatPriceByLanguage(service.hotelProfit, i18n.language, currency)}
                   </span>
                 </td>
                 <td className="py-4 px-4 text-center">
@@ -214,7 +209,7 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
                   </span>
                 </td>
                 <td className="py-4 px-4 text-right text-gray-700">
-                  {formatCurrency(service.avgRevenue)}
+                  {formatPriceByLanguage(service.avgRevenue, i18n.language, currency)}
                 </td>
                 <td className="py-4 px-4 text-right">
                   <div className="flex items-center justify-end gap-2">
@@ -250,13 +245,13 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
                 {t('performanceAnalyticsPage.revenue.complete.totalLabel', { count: filteredServices.length })}
               </td>
               <td className="py-4 px-4 text-right text-gray-900">
-                {formatCurrency(filteredServices.reduce((sum, s) => sum + s.totalRevenue, 0))}
+                {formatPriceByLanguage(filteredServices.reduce((sum, s) => sum + s.totalRevenue, 0), i18n.language, currency)}
               </td>
               <td className="py-4 px-4 text-right text-gray-900">
-                {formatCurrency(filteredServices.reduce((sum, s) => sum + s.basePrice, 0))}
+                {formatPriceByLanguage(filteredServices.reduce((sum, s) => sum + s.basePrice, 0), i18n.language, currency)}
               </td>
               <td className="py-4 px-4 text-right text-green-600">
-                {formatCurrency(filteredServices.reduce((sum, s) => sum + s.hotelProfit, 0))}
+                {formatPriceByLanguage(filteredServices.reduce((sum, s) => sum + s.hotelProfit, 0), i18n.language, currency)}
               </td>
               <td className="py-4 px-4 text-center text-gray-900">
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">

@@ -44,6 +44,9 @@ const ReportsPage = () => {
   const loading = useSelector(selectReportsLoading);
   const error = useSelector(selectReportsError);
 
+  // Platform default currency for aggregated super admin reports
+  const platformCurrency = 'USD';
+
   const [reportType, setReportType] = useState('revenue');
   const [timeRange, setTimeRange] = useState('month');
   const [dateRange, setDateRange] = useState({
@@ -259,10 +262,7 @@ const ReportsPage = () => {
                   label += ': ';
                 }
                 if (context.parsed.y !== null) {
-                  label += new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD'
-                  }).format(context.parsed.y);
+                  label += formatPriceByLanguage(context.parsed.y, i18n.language, platformCurrency);
                 }
                 return label;
               }
@@ -413,7 +413,7 @@ const ReportsPage = () => {
               <div className="bg-white rounded-lg shadow p-4">
                 <h3 className="text-sm font-medium text-gray-500">Total Revenue</h3>
                 <p className="mt-2 text-3xl font-bold text-gray-900">
-                  ${reportsData.summary?.totalRevenue?.toFixed(2) || '0.00'}
+                  {formatPriceByLanguage(reportsData.summary?.totalRevenue || 0, i18n.language, platformCurrency)}
                 </p>
                 <p className={`mt-1 text-sm ${
                   reportsData.summary?.revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'
@@ -426,7 +426,7 @@ const ReportsPage = () => {
               <div className="bg-white rounded-lg shadow p-4">
                 <h3 className="text-sm font-medium text-gray-500">Platform Revenue</h3>
                 <p className="mt-2 text-3xl font-bold text-gray-900">
-                  ${reportsData.summary?.platformRevenue?.toFixed(2) || '0.00'}
+                  {formatPriceByLanguage(reportsData.summary?.platformRevenue || 0, i18n.language, platformCurrency)}
                 </p>
                 <p className="mt-1 text-sm text-gray-500">
                   {reportsData.summary?.platformRevenuePercentage?.toFixed(1) || '0.0'}% of total revenue
@@ -436,7 +436,7 @@ const ReportsPage = () => {
               <div className="bg-white rounded-lg shadow p-4">
                 <h3 className="text-sm font-medium text-gray-500">Hotel Revenue</h3>
                 <p className="mt-2 text-3xl font-bold text-gray-900">
-                  ${reportsData.summary?.hotelRevenue?.toFixed(2) || '0.00'}
+                  {formatPriceByLanguage(reportsData.summary?.hotelRevenue || 0, i18n.language, platformCurrency)}
                 </p>
                 <p className="mt-1 text-sm text-gray-500">
                   {reportsData.summary?.hotelRevenuePercentage?.toFixed(1) || '0.0'}% of total revenue
@@ -446,7 +446,7 @@ const ReportsPage = () => {
               <div className="bg-white rounded-lg shadow p-4">
                 <h3 className="text-sm font-medium text-gray-500">Provider Revenue</h3>
                 <p className="mt-2 text-3xl font-bold text-gray-900">
-                  ${reportsData.summary?.providerRevenue?.toFixed(2) || '0.00'}
+                  {formatPriceByLanguage(reportsData.summary?.providerRevenue || 0, i18n.language, platformCurrency)}
                 </p>
                 <p className="mt-1 text-sm text-gray-500">
                   {reportsData.summary?.providerRevenuePercentage?.toFixed(1) || '0.0'}% of total revenue
@@ -493,7 +493,7 @@ const ReportsPage = () => {
               <div className="bg-white rounded-lg shadow p-4">
                 <h3 className="text-sm font-medium text-gray-500">Average Booking Value</h3>
                 <p className="mt-2 text-3xl font-bold text-gray-900">
-                  ${reportsData.summary?.averageBookingValue?.toFixed(2) || '0.00'}
+                  {formatPriceByLanguage(reportsData.summary?.averageBookingValue || 0, i18n.language, platformCurrency)}
                 </p>
                 <p className={`mt-1 text-sm ${
                   reportsData.summary?.averageValueGrowth >= 0 ? 'text-green-600' : 'text-red-600'
@@ -793,16 +793,16 @@ const ReportsPage = () => {
                           {format(parseISO(row.date), timeRange === 'year' ? 'MMM yyyy' : 'MMM d, yyyy')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${row.totalRevenue?.toFixed(2) || '0.00'}
+                          {formatPriceByLanguage(row.totalRevenue || 0, i18n.language, platformCurrency)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${row.platformRevenue?.toFixed(2) || '0.00'}
+                          {formatPriceByLanguage(row.platformRevenue || 0, i18n.language, platformCurrency)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${row.hotelRevenue?.toFixed(2) || '0.00'}
+                          {formatPriceByLanguage(row.hotelRevenue || 0, i18n.language, platformCurrency)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${row.providerRevenue?.toFixed(2) || '0.00'}
+                          {formatPriceByLanguage(row.providerRevenue || 0, i18n.language, platformCurrency)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {row.totalBookings || '0'}
@@ -825,10 +825,10 @@ const ReportsPage = () => {
                           {row.cancelledBookings || '0'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${row.revenue?.toFixed(2) || '0.00'}
+                          {formatPriceByLanguage(row.revenue || 0, i18n.language, platformCurrency)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${row.averageBookingValue?.toFixed(2) || '0.00'}
+                          {formatPriceByLanguage(row.averageBookingValue || 0, i18n.language, platformCurrency)}
                         </td>
                       </>
                     )}
@@ -851,7 +851,7 @@ const ReportsPage = () => {
                           {row.toursServices || '0'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${row.averageServicePrice?.toFixed(2) || '0.00'}
+                          {formatPriceByLanguage(row.averageServicePrice || 0, i18n.language, platformCurrency)}
                         </td>
                       </>
                     )}
@@ -891,7 +891,7 @@ const ReportsPage = () => {
                           {row.activeHotels || '0'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${row.hotelRevenue?.toFixed(2) || '0.00'}
+                          {formatPriceByLanguage(row.hotelRevenue || 0, i18n.language, platformCurrency)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {row.totalBookings || '0'}

@@ -210,8 +210,9 @@ const RestaurantBookingPage = () => {
       // Store booking data in localStorage and navigate to payment method selection
       localStorage.setItem('pendingBookingData', JSON.stringify(bookingData));
 
-      // Navigate to payment method selection page
-      navigate(`/payment-method?serviceType=restaurant&amount=${calculatePricing().total}&currency=USD`);
+      // Navigate to payment method selection page with hotel currency
+      const hotelCurrency = hotel?.paymentSettings?.currency || service?.currency || 'USD';
+      navigate(`/payment-method?serviceType=restaurant&amount=${calculatePricing().total}&currency=${hotelCurrency}&hotelId=${hotelId}`);
 
     } catch (error) {
       toast.error(error.response?.data?.message || t('guest.restaurant.failedToCreateBooking'));
@@ -481,6 +482,7 @@ const RestaurantBookingPage = () => {
                         {filteredItems.map((item, index) => {
                           const existingItem = selectedItems.find(selected => selected.id === item.id);
                           const quantity = existingItem ? existingItem.quantity : 0;
+                          const currency = service?.currency || hotel?.paymentSettings?.currency || 'USD';
 
                           return (
                             <MenuItemCard
@@ -488,6 +490,7 @@ const RestaurantBookingPage = () => {
                               item={item}
                               quantity={quantity}
                               isMobile={isMobile}
+                              currency={currency}
                               onAdd={() => addToCart(item)}
                               onIncrease={() => updateQuantity(item.id, quantity + 1)}
                               onDecrease={() => updateQuantity(item.id, quantity - 1)}
@@ -568,9 +571,9 @@ const RestaurantBookingPage = () => {
                     <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                       <div>
                         <p className="font-medium">{item.name}</p>
-                        <p className="text-xs text-gray-600">Qty: {item.quantity} × {formatPriceByLanguage(item.price, i18n.language)}</p>
+                        <p className="text-xs text-gray-600">Qty: {item.quantity} × {formatPriceByLanguage(item.price, i18n.language, service?.currency || hotel?.paymentSettings?.currency || 'USD')}</p>
                       </div>
-                      <span className="font-semibold">{formatPriceByLanguage(item.price * item.quantity, i18n.language)}</span>
+                      <span className="font-semibold">{formatPriceByLanguage(item.price * item.quantity, i18n.language, service?.currency || hotel?.paymentSettings?.currency || 'USD')}</span>
                     </div>
                   ))}
                 </div>
@@ -578,7 +581,7 @@ const RestaurantBookingPage = () => {
                 <div className="mt-4 pt-4 border-t">
                   <div className="flex justify-between items-center font-bold text-lg">
                     <span>{t('guest.restaurant.total')}</span>
-                    <span className="text-[#3B5787]">{formatTotalWithSar(pricing.total, i18n.language)}</span>
+                    <span className="text-[#3B5787]">{formatTotalWithSar(pricing.total, i18n.language, service?.currency || hotel?.paymentSettings?.currency || 'USD')}</span>
                   </div>
                 </div>
 
@@ -628,7 +631,7 @@ const RestaurantBookingPage = () => {
                       <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                         <div className="flex-1">
                           <p className="font-medium text-sm">{item.name}</p>
-                          <p className="text-xs text-gray-600">{formatPriceByLanguage(item.price, i18n.language)} each</p>
+                          <p className="text-xs text-gray-600">{formatPriceByLanguage(item.price, i18n.language, service?.currency || hotel?.paymentSettings?.currency || 'USD')} each</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
@@ -654,7 +657,7 @@ const RestaurantBookingPage = () => {
                   <div className="border-t pt-3 mb-4">
                     <div className="flex justify-between items-center font-bold">
                       <span>{t('guest.restaurant.total')}</span>
-                      <span className="text-lg text-[#3B5787]">{formatTotalWithSar(pricing.total, i18n.language)}</span>
+                      <span className="text-lg text-[#3B5787]">{formatTotalWithSar(pricing.total, i18n.language, service?.currency || hotel?.paymentSettings?.currency || 'USD')}</span>
                     </div>
                   </div>
                 </>
@@ -737,7 +740,7 @@ const RestaurantBookingPage = () => {
                         <span className="text-gray-500 ml-1">×{item.quantity}</span>
                       </div>
                       <span className="text-gray-900 font-medium">
-                        {formatPriceByLanguage(item.price * item.quantity, i18n.language)}
+                        {formatPriceByLanguage(item.price * item.quantity, i18n.language, service?.currency || hotel?.paymentSettings?.currency || 'USD')}
                       </span>
                     </div>
                   ))}
@@ -745,7 +748,7 @@ const RestaurantBookingPage = () => {
                   <div className="border-t pt-2 mt-2">
                     <div className="flex justify-between font-bold text-green-600 mt-1">
                       <span>Total</span>
-                      <span>{formatTotalWithSar(pricing.total, i18n.language)}</span>
+                      <span>{formatTotalWithSar(pricing.total, i18n.language, service?.currency || hotel?.paymentSettings?.currency || 'USD')}</span>
                     </div>
                   </div>
                 </div>
@@ -779,7 +782,7 @@ const RestaurantBookingPage = () => {
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold text-green-600">
-                  {formatTotalWithSar(pricing.total, i18n.language)}
+                  {formatTotalWithSar(pricing.total, i18n.language, service?.currency || hotel?.paymentSettings?.currency || 'USD')}
                 </div>
               </div>
             </div>

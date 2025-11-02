@@ -16,7 +16,8 @@ const MenuItemCard = ({
   onAdd,
   onIncrease,
   onDecrease,
-  isMobile = false
+  isMobile = false,
+  currency
 }) => {
   const { isRTL, textAlign } = useRTL();
   const { t, i18n } = useTranslation();
@@ -30,7 +31,7 @@ const MenuItemCard = ({
   const Price = () => (
     <div className={`flex ${isRTL ? 'flex-row-reverse' : ''} items-baseline gap-1 ${textAlign}`}>
       <span className="text-xl font-extrabold tracking-tight text-gray-900">
-        {formatPriceByLanguage(Number(item.price || 0), i18n.language)}
+        {formatPriceByLanguage(Number(item.price || 0), i18n.language, currency)}
       </span>
       <span className="text-[11px] text-gray-500">{isRTL ? '/ للطلب' : '/ item'}</span>
     </div>

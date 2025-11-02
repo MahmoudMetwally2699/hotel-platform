@@ -28,7 +28,7 @@ import {
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { selectCurrentUser } from '../../redux/slices/authSlice';
-import { formatTotalWithSar } from '../../utils/currency';
+import { getCurrencySymbol } from '../../utils/currency';
 
 const LaundryBookingInterface = () => {
   const { hotelId } = useParams();
@@ -49,6 +49,10 @@ const LaundryBookingInterface = () => {
     specialRequests: ''
   });  const [bookingStep, setBookingStep] = useState(1); // 1: Items, 2: Schedule, 3: Confirm
   const [submitting, setSubmitting] = useState(false);
+
+  // Get currency from service or hotel
+  const currency = selectedService?.pricing?.currency || hotel?.paymentSettings?.currency || 'USD';
+  const currencySymbol = getCurrencySymbol(currency);
 
   /**
    * Fetch available laundry services for the hotel
@@ -202,7 +206,7 @@ const LaundryBookingInterface = () => {
         bookingData,
         bookingType: 'laundry',
         amount: calculateTotal().total,
-        currency: 'USD'
+        currency: currency
       });
 
       if (paymentResponse.data.success) {
@@ -470,7 +474,7 @@ const LaundryBookingInterface = () => {
                             </label>
                           </div>
                           <span className="text-lg font-bold text-orange-600">
-                            +SAR {selectedService.expressSurcharge.finalRate}
+                            +{currencySymbol}{selectedService.expressSurcharge.finalRate}
                           </span>
                         </div>
                         <p className="text-sm text-gray-600 mt-2 ml-6">
@@ -578,7 +582,7 @@ const LaundryBookingInterface = () => {
                         </span>
                         <span className="text-gray-600 ml-2">× {item.quantity}</span>
                       </div>
-                      <span className="font-medium">${item.totalPrice}</span>
+                      <span className="font-medium">{currencySymbol}{item.totalPrice}</span>
                     </div>
                   ))}
 
@@ -588,14 +592,14 @@ const LaundryBookingInterface = () => {
                         <FaBolt className="text-yellow-500 mr-2" />
                         Express Service
                       </span>
-                      <span className="font-medium">${pricing.expressTotal}</span>
+                      <span className="font-medium">{currencySymbol}{pricing.expressTotal}</span>
                     </div>
                   )}
 
                   <div className="border-t pt-2">
                     <div className="flex justify-between items-center text-lg font-bold">
                       <span>Total Amount</span>
-                      <span className="text-blue-600">${pricing.total}</span>
+                      <span className="text-blue-600">{currencySymbol}{pricing.total}</span>
                     </div>
                   </div>
                 </div>
@@ -647,7 +651,7 @@ const LaundryBookingInterface = () => {
                           {item.itemName}
                         </p>
                         <p className="text-xs text-gray-600">{item.serviceTypeName}</p>
-                        <p className="text-sm font-medium text-blue-600">${item.totalPrice}</p>
+                        <p className="text-sm font-medium text-blue-600">{currencySymbol}{item.totalPrice}</p>
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
@@ -679,17 +683,17 @@ const LaundryBookingInterface = () => {
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between">
                   <span>Items Total</span>
-                  <span>${pricing.itemsTotal}</span>
+                  <span>{currencySymbol}{pricing.itemsTotal}</span>
                 </div>
                 {expressService.enabled && (
                   <div className="flex justify-between">
                     <span>Express Service</span>
-                    <span>${pricing.expressTotal}</span>
+                    <span>{currencySymbol}{pricing.expressTotal}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-lg font-bold pt-2 border-t">
                   <span>Total</span>
-                  <span className="text-blue-600">{formatTotalWithSar(pricing.total, i18n.language)}</span>
+                  <span className="text-blue-600">{currencySymbol}{pricing.total.toFixed(2)}</span>
                 </div>
               </div>
 

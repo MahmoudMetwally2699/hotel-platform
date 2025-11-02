@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { TrendingUp, TrendingDown, Users, DollarSign, Package, Repeat } from 'lucide-react';
+import { selectHotelCurrency } from '../../../redux/slices/hotelSlice';
+import { formatPriceByLanguage } from '../../../utils/currency';
 
 const ComprehensivePerformanceTable = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
+  const currency = useSelector(selectHotelCurrency);
   const [sortBy, setSortBy] = useState('totalRequests');
   const [sortOrder, setSortOrder] = useState('desc');
 
@@ -41,15 +45,6 @@ const ComprehensivePerformanceTable = ({ data, loading, error }) => {
       </div>
     );
   }
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat(i18n.language || 'en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value || 0);
-  };
 
   const formatServiceName = (service) => t(`performanceAnalyticsPage.serviceTypes.${service}`, { defaultValue: service });
 
@@ -152,10 +147,10 @@ const ComprehensivePerformanceTable = ({ data, loading, error }) => {
                   </span>
                 </td>
                 <td className="py-4 px-4 text-right font-semibold text-gray-900">
-                  {formatCurrency(service.totalRevenue)}
+                  {formatPriceByLanguage(service.totalRevenue, i18n.language, currency)}
                 </td>
                 <td className="py-4 px-4 text-right text-gray-700">
-                  {formatCurrency(service.avgSpending)}
+                  {formatPriceByLanguage(service.avgSpending, i18n.language, currency)}
                 </td>
                 <td className="py-4 px-4 text-right">
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
@@ -190,7 +185,7 @@ const ComprehensivePerformanceTable = ({ data, loading, error }) => {
         <div className="text-center">
           <p className="text-sm text-gray-600 mb-1">{t('performanceAnalyticsPage.spending.comprehensive.totals.totalRevenue')}</p>
           <p className="text-xl font-bold text-gray-900">
-            {formatCurrency(sortedServices.reduce((sum, s) => sum + s.totalRevenue, 0))}
+            {formatPriceByLanguage(sortedServices.reduce((sum, s) => sum + s.totalRevenue, 0), i18n.language, currency)}
           </p>
         </div>
         <div className="text-center">

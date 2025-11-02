@@ -838,4 +838,5 @@ export const selectServiceDetails = selectCurrentService;
 export const selectServicesLoading = selectServiceLoading;
 export const selectServicesByCategory = selectAllServices;
 export const selectServiceProviderStats = (state) => state.service.serviceProviderStats;
+export const selectProviderCurrency = (state) => state.service.providerProfile?.currency || 'USD';
 export const selectServiceProviderStatsLoading = (state) => state.service.isLoading;

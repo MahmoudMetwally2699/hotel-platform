@@ -1,9 +1,13 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { DollarSign, Users, FileText, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { selectHotelCurrency } from '../../../redux/slices/hotelSlice';
+import { formatPriceByLanguage } from '../../../utils/currency';
 
 const SpendingSummaryCards = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
+  const currency = useSelector(selectHotelCurrency);
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -33,21 +37,12 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
     );
   }
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat(i18n.language || 'en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value || 0);
-  };
-
   const formatServiceName = (service) => t(`performanceAnalyticsPage.serviceTypes.${service}`, { defaultValue: service });
 
   const cards = [
     {
       title: t('performanceAnalyticsPage.spending.summary.avgCustomerSpending'),
-      value: formatCurrency(data.avgCustomerSpending),
+      value: formatPriceByLanguage(data.avgCustomerSpending, i18n.language, currency),
       icon: DollarSign,
       gradient: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50',

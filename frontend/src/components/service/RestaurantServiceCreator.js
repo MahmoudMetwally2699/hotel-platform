@@ -140,6 +140,8 @@ const RestaurantServiceCreator = ({ onBack }) => {
   const [existingServices, setExistingServices] = useState([]);
   const [editingService, setEditingService] = useState(null);
   const [editFormData, setEditFormData] = useState({});
+  const [currency, setCurrency] = useState('USD'); // Default currency
+  const [currencySymbol, setCurrencySymbol] = useState('$'); // Default symbol
 
   // Service menu item editing state
   const [editingServiceMenuItem, setEditingServiceMenuItem] = useState(null);
@@ -149,6 +151,38 @@ const RestaurantServiceCreator = ({ onBack }) => {
       fetchExistingServices();
     }
   }, [activeTab]);
+
+  // Fetch services on mount to detect currency
+  useEffect(() => {
+    fetchCurrencyFromServices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * Fetch currency from existing services
+   */
+  const fetchCurrencyFromServices = async () => {
+    try {
+      const response = await apiClient.get('/service/services?category=dining');
+      let services = [];
+      if (response.data.data?.services) {
+        services = response.data.data.services;
+      } else if (Array.isArray(response.data.data)) {
+        services = response.data.data;
+      }
+
+      // Detect currency from first service
+      if (services.length > 0 && services[0].pricing?.currency) {
+        const detectedCurrency = services[0].pricing.currency;
+        setCurrency(detectedCurrency);
+        const symbols = { USD: '$', EUR: '€', GBP: '£', CAD: 'C$', AUD: 'A$', SAR: 'SAR', EGP: 'E£' };
+        setCurrencySymbol(symbols[detectedCurrency] || '$');
+      }
+    } catch (error) {
+      // Silently fail - will use default USD
+      console.log('No existing services found, using default currency');
+    }
+  };
 
   /**
    * Fetch existing restaurant services for management
@@ -167,6 +201,14 @@ const RestaurantServiceCreator = ({ onBack }) => {
       }
 
       setExistingServices(services);
+
+      // Detect currency from first service
+      if (services.length > 0 && services[0].pricing?.currency) {
+        const detectedCurrency = services[0].pricing.currency;
+        setCurrency(detectedCurrency);
+        const symbols = { USD: '$', EUR: '€', GBP: '£', CAD: 'C$', AUD: 'A$', SAR: 'SAR', EGP: 'E£' };
+        setCurrencySymbol(symbols[detectedCurrency] || '$');
+      }
     } catch (error) {
       console.error('❌ Error fetching restaurant services:', error);
       toast.error(t('serviceProvider.restaurant.messages.failedToLoad'));
@@ -368,7 +410,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
         pricing: {
           basePrice: menuItems.length > 0 ? Math.min(...menuItems.map(item => item.price)) : 10,
           pricingType: 'per-item',
-          currency: 'USD'
+          currency: currency
         },
         specifications: {
           duration: {
@@ -563,7 +605,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
             {t('serviceProvider.restaurant.form.addCustomItem')}
           </h3>
 
-          <CustomMenuItemForm onAddItem={addCustomMenuItem} t={t} />
+          <CustomMenuItemForm onAddItem={addCustomMenuItem} t={t} currency={currency} currencySymbol={currencySymbol} />
         </div>
 
         {/* Menu Items List */}
@@ -589,6 +631,8 @@ const RestaurantServiceCreator = ({ onBack }) => {
                       onSave={(updatedItem) => updateMenuItem(itemIndex, updatedItem)}
                       onCancel={cancelEditingItem}
                       t={t}
+                      currency={currency}
+                      currencySymbol={currencySymbol}
                     />
                   ) : (
                     // View Mode
@@ -611,7 +655,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                             <div>
                               <h4 className="text-xl font-bold">{item.name}</h4>
                               <p className="text-blue-100 text-sm">
-                                {getCategoryName(item.category)} • ${item.price} ({(item.price * 3.75).toFixed(2)} SAR) • {item.preparationTime || 15} min
+                                {getCategoryName(item.category)} • {currencySymbol}{item.price} • {item.preparationTime || 15} min
                               </p>
                             </div>
                           </div>
@@ -678,8 +722,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                           <div className="bg-blue-50 rounded-lg p-3">
                             <div className="text-sm font-bold text-gray-700 mb-1">Price</div>
-                            <div className="text-lg font-bold text-blue-600">${item.price}</div>
-                            <div className="text-xs text-gray-500">({(item.price * 3.75).toFixed(2)} SAR)</div>
+                            <div className="text-lg font-bold text-blue-600">{currencySymbol}{item.price}</div>
                           </div>
                           <div className="bg-green-50 rounded-lg p-3">
                             <div className="text-sm font-bold text-gray-700 mb-1">Prep Time</div>
@@ -936,7 +979,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                                         <div>
                                           <h5 className="font-semibold text-gray-800">{item.name}</h5>
                                           <p className="text-sm text-gray-600">
-                                            ${item.price} ({(item.price * 3.75).toFixed(2)} SAR) • {item.preparationTime || 15} min
+                                            {currencySymbol}{item.price} • {item.preparationTime || 15} min
                                             {item.category && ` • ${item.category}`}
                                           </p>
                                         </div>
@@ -1085,11 +1128,11 @@ const RestaurantServiceCreator = ({ onBack }) => {
                         <div className="bg-purple-50 rounded-xl p-4">
                           <div className="flex items-center mb-2">
                             <div className="p-2 rounded-lg bg-purple-500 mr-3">
-                              <span className="text-white text-sm">$</span>
+                              <span className="text-white text-sm">{currencySymbol}</span>
                             </div>
                             <h6 className="font-bold text-gray-800">Revenue</h6>
                           </div>
-                          <p className="text-2xl font-bold text-purple-600">$0</p>
+                          <p className="text-2xl font-bold text-purple-600">{currencySymbol}0</p>
                           <p className="text-sm text-gray-600">Total earned</p>
                         </div>
                       </div>
@@ -1253,7 +1296,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
  * Custom Menu Item Form Component
  * Allows service providers to create completely custom menu items
  */
-const CustomMenuItemForm = ({ onAddItem, t }) => {
+const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '$' }) => {
   const [formData, setFormData] = useState({
     name: '',
     category: 'mains',
@@ -1515,7 +1558,7 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
         {/* Price */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t('serviceProvider.restaurant.form.priceRequired')}
+            Price ({currency}) *
           </label>
           <input
             type="number"
@@ -1523,15 +1566,10 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
             min="0"
             value={formData.price}
             onChange={(e) => handleInputChange('price', e.target.value)}
-            placeholder={t('serviceProvider.restaurant.form.pricePlaceholder')}
+            placeholder="0.00"
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
             required
           />
-          {formData.price > 0 && (
-            <p className="text-xs text-gray-500 mt-1">
-              ({(formData.price * 3.75).toFixed(2)} SAR)
-            </p>
-          )}
         </div>
 
         {/* Preparation Time */}
@@ -1754,7 +1792,7 @@ const CustomMenuItemForm = ({ onAddItem, t }) => {
  * Edit Menu Item Form Component
  * Allows editing all menu item fields in a comprehensive form
  */
-const EditMenuItemForm = ({ item, onSave, onCancel, t }) => {
+const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol }) => {
   const [formData, setFormData] = useState({
     name: item.name || '',
     category: item.category || 'mains',
@@ -1889,7 +1927,7 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t }) => {
               {/* Price */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Price (USD) *
+                  Price ({currency}) *
                 </label>
                 <input
                   type="number"

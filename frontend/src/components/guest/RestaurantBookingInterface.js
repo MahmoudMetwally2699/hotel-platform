@@ -29,6 +29,7 @@ import {
   FaPepperHot
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
+import { getCurrencySymbol } from '../../utils/currency';
 
 const RestaurantBookingInterface = () => {
   const { hotelId } = useParams();
@@ -49,6 +50,10 @@ const RestaurantBookingInterface = () => {
   });
   const [bookingStep, setBookingStep] = useState(1); // 1: Items, 2: Schedule, 3: Confirm
   const [submitting, setSubmitting] = useState(false);
+
+  // Get currency from service or hotel
+  const currency = selectedService?.pricing?.currency || hotel?.paymentSettings?.currency || 'USD';
+  const currencySymbol = getCurrencySymbol(currency);
 
   /**
    * Fetch available restaurant services for the hotel
@@ -524,14 +529,14 @@ const RestaurantBookingInterface = () => {
                         <p className="font-medium">{item.itemName}</p>
                         <p className="text-sm text-gray-600">{t('common.quantity')}: {item.quantity}</p>
                       </div>
-                      <span className="font-semibold">${item.totalPrice}</span>
+                      <span className="font-semibold">{currencySymbol}{item.totalPrice}</span>
                     </div>
                   ))}
 
                   <div className="border-t pt-4">
                     <div className="flex justify-between items-center font-bold text-lg">
                       <span>{t('guest.restaurant.total')}</span>
-                      <span className="text-blue-600">${pricing.total}</span>
+                      <span className="text-blue-600">{currencySymbol}{pricing.total}</span>
                     </div>
                   </div>
                 </div>
@@ -585,7 +590,7 @@ const RestaurantBookingInterface = () => {
                     <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex-1">
                         <p className="font-medium text-sm">{item.itemName}</p>
-                        <p className="text-xs text-gray-600">${item.price} each</p>
+                        <p className="text-xs text-gray-600">{currencySymbol}{item.price} each</p>
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -615,7 +620,7 @@ const RestaurantBookingInterface = () => {
                   <div className="border-t pt-3">
                     <div className="flex justify-between items-center font-bold">
                       <span>Total</span>
-                      <span className="text-lg text-blue-600">${pricing.total}</span>
+                      <span className="text-lg text-blue-600">{currencySymbol}{pricing.total}</span>
                     </div>
                   </div>
                 </div>

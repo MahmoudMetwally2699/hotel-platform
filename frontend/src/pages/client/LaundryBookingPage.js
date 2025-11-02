@@ -45,6 +45,9 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  // Get currency from service or hotel, fallback to USD
+  const currency = service?.currency || hotel?.paymentSettings?.currency || 'USD';
+
   // Booking State
   const [step, setStep] = useState(1); // 1: Items, 2: Service Types, 3: Details, 4: Confirmation
   const [selectedItems, setSelectedItems] = useState([]);
@@ -340,7 +343,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
       localStorage.setItem('pendingBookingData', JSON.stringify(bookingData));
 
       // Navigate to payment method selection page
-      navigate(`/payment-method?serviceType=laundry&amount=${pricing.total}&currency=USD`);
+      navigate(`/payment-method?serviceType=laundry&amount=${pricing.total}&currency=${currency}`);
 
     } catch (error) {
       toast.error(error.response?.data?.message || error.message || t('laundryBooking.bookingError'));
@@ -729,8 +732,8 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                                           isAvailable && hasAvailableServices ? 'text-[#3B5787]' : 'text-gray-400'
                                         }`}>
                                           {availableServiceTypes.length > 0
-                                            ? `${formatPriceByLanguage(Math.min(...availableServiceTypes.map(st => st.price)), i18n.language)}`
-                                            : item.basePrice ? formatPriceByLanguage(item.basePrice, i18n.language) : 'Price N/A'
+                                            ? `${formatPriceByLanguage(Math.min(...availableServiceTypes.map(st => st.price)), i18n.language, currency)}`
+                                            : item.basePrice ? formatPriceByLanguage(item.basePrice, i18n.language, currency) : 'Price N/A'
                                           }
                                         </p>
                                       </div>
@@ -881,7 +884,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                               {/* Price */}
                               <div className="mt-2 pt-2 border-t border-gray-200">
                                 <p className="font-bold text-[#3B5787] text-xs sm:text-sm text-center">
-                                  {formatPriceByLanguage(serviceType.price * item.quantity, i18n.language)}
+                                  {formatPriceByLanguage(serviceType.price * item.quantity, i18n.language, currency)}
                                 </p>
                               </div>
                             </div>
@@ -999,7 +1002,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                               </div>
                             </div>
                           </div>
-                          <span className="font-medium">{formatPriceByLanguage(item.itemPrice, i18n.language)}</span>
+                          <span className="font-medium">{formatPriceByLanguage(item.itemPrice, i18n.language, currency)}</span>
                         </div>
                       ))}
                     </div>
@@ -1029,7 +1032,7 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
 
               <div className="space-y-3">                <div className="flex justify-between">
                   <span>{t('laundryBooking.items')} ({selectedItems.reduce((sum, item) => sum + item.quantity, 0)})</span>
-                  <span>{formatPriceByLanguage(pricing.subtotal, i18n.language)}</span>
+                  <span>{formatPriceByLanguage(pricing.subtotal, i18n.language, currency)}</span>
                 </div>
 
                 {expressService && (
@@ -1038,14 +1041,14 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                       <FaBolt className="mr-1" />
                       {t('laundryBooking.expressService')}
                     </span>
-                    <span>+{formatPriceByLanguage(pricing.expressCharge, i18n.language)}</span>
+                    <span>+{formatPriceByLanguage(pricing.expressCharge, i18n.language, currency)}</span>
                   </div>                )}
 
                 <hr />
 
                 <div className="flex justify-between text-lg font-bold">
                   <span>{t('laundryBooking.total')}</span>
-                  <span className="text-green-600">{formatTotalWithSar(pricing.total, i18n.language)}</span>
+                  <span className="text-green-600">{formatTotalWithSar(pricing.total, i18n.language, currency)}</span>
                 </div>
               </div>
 
@@ -1118,7 +1121,8 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                       <span className="text-gray-900 font-medium">
                         {formatPriceByLanguage(
                           pricing.itemCalculations.find(calc => calc.id === item.id)?.itemPrice || 0,
-                          i18n.language
+                          i18n.language,
+                          currency
                         )}
                       </span>
                     </div>
@@ -1127,17 +1131,17 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                   <div className="border-t pt-2 mt-2">
                     <div className="flex justify-between text-sm">
                       <span>Subtotal</span>
-                      <span>{formatPriceByLanguage(pricing.subtotal, i18n.language)}</span>
+                      <span>{formatPriceByLanguage(pricing.subtotal, i18n.language, currency)}</span>
                     </div>
                     {expressService && (
                       <div className="flex justify-between text-sm text-yellow-600">
                         <span>Express Service</span>
-                        <span>+{formatPriceByLanguage(pricing.expressCharge, i18n.language)}</span>
+                        <span>+{formatPriceByLanguage(pricing.expressCharge, i18n.language, currency)}</span>
                       </div>
                     )}
                     <div className="flex justify-between font-bold text-green-600 mt-1">
                       <span>Total</span>
-                      <span>{formatTotalWithSar(pricing.total, i18n.language)}</span>
+                      <span>{formatTotalWithSar(pricing.total, i18n.language, currency)}</span>
                     </div>
                   </div>
                 </div>
@@ -1171,11 +1175,11 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold text-green-600">
-                  {formatTotalWithSar(pricing.total, i18n.language)}
+                  {formatTotalWithSar(pricing.total, i18n.language, currency)}
                 </div>
                 {expressService && (
                   <div className="text-xs text-yellow-600">
-                    +{formatPriceByLanguage(pricing.expressCharge, i18n.language)} express
+                    +{formatPriceByLanguage(pricing.expressCharge, i18n.language, currency)} express
                   </div>
                 )}
               </div>

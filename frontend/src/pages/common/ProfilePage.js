@@ -224,6 +224,7 @@ const ProfilePage = () => {
               membership={currentMembership}
               tierDetails={programDetails.tierDetails}
               program={programDetails.program}
+              currency={currentUser?.selectedHotelId?.paymentSettings?.currency || currentUser?.hotel?.paymentSettings?.currency || 'USD'}
             />
           </div>
         )}

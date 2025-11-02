@@ -281,7 +281,7 @@ const GuestRestaurantBookings = () => {
                              booking.payment?.amount ||
                              booking.totalAmount ||
                              booking.amount;
-                return total && total > 0 ? formatPriceByLanguage(total, i18n.language) : t('common.notAvailable', 'N/A');
+                return total && total > 0 ? formatPriceByLanguage(total, i18n.language, booking.payment?.currency || booking.pricing?.currency || 'USD') : t('common.notAvailable', 'N/A');
               })()}
             </span>
           </div>
@@ -540,7 +540,7 @@ const GuestRestaurantBookings = () => {
                               'condition check': total && total > 0
                             });
 
-                            return total && total > 0 ? formatPriceByLanguage(total, i18n.language) : t('common.notAvailable', 'N/A');
+                            return total && total > 0 ? formatPriceByLanguage(total, i18n.language, selectedBooking.payment?.currency || selectedBooking.pricing?.currency || 'USD') : t('common.notAvailable', 'N/A');
                           })()}
                         </span>
                       </div>
@@ -596,7 +596,7 @@ const GuestRestaurantBookings = () => {
                               <div className="text-lg font-bold text-emerald-600">
                                 {(() => {
                                   const price = item.totalPrice || (item.price ? item.price * item.quantity : null);
-                                  return price && price > 0 ? formatPriceByLanguage(price, i18n.language) : t('common.notAvailable', 'N/A');
+                                  return price && price > 0 ? formatPriceByLanguage(price, i18n.language, selectedBooking.payment?.currency || selectedBooking.pricing?.currency || 'USD') : t('common.notAvailable', 'N/A');
                                 })()}
                               </div>
                             </div>

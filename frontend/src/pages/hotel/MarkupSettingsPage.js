@@ -4,14 +4,17 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import { HOTEL_API } from '../../config/api.config';
+import { selectHotelCurrency } from '../../redux/slices/hotelSlice';
 import { formatPriceByLanguage } from '../../utils/currency';
 
 const MarkupSettingsPage = () => {
   const { i18n } = useTranslation();
+  const currency = useSelector(selectHotelCurrency);
   const [categories, setCategories] = useState([
     { id: 'laundry', name: 'Laundry', markup: 0, providers: [] },
     { id: 'transportation', name: 'Transportation', markup: 0, providers: [] },
@@ -202,7 +205,7 @@ const MarkupSettingsPage = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="font-medium text-gray-900">{provider.name}</div>
                           </td>                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-gray-500">{formatPriceByLanguage(provider.basePrice, i18n.language)}</div>
+                            <div className="text-gray-500">{formatPriceByLanguage(provider.basePrice, i18n.language, currency)}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <input
@@ -215,7 +218,7 @@ const MarkupSettingsPage = () => {
                               className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 w-20"
                             />
                           </td>                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="font-bold text-green-600">{formatPriceByLanguage(finalPrice, i18n.language)}</div>
+                            <div className="font-bold text-green-600">{formatPriceByLanguage(finalPrice, i18n.language, currency)}</div>
                           </td>
                         </tr>
                       );

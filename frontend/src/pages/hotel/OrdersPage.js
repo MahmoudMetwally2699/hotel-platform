@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { useTranslation, Trans } from 'react-i18next';
 import useAuth from '../../hooks/useAuth';
 import { HOTEL_API } from '../../config/api.config';
 import apiClient from '../../services/api.service';
+import { selectHotelCurrency } from '../../redux/slices/hotelSlice';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 /**
  * Modern Hotel Admin Orders                                    : t('hotelAdmin.dashboard.recentOrders.unknownGuest')}Management Page with Category Filtering and Pagination
@@ -19,8 +22,9 @@ import apiClient from '../../services/api.service';
                       </div>turns {JSX.Element} Orders management page
  */
 const OrdersPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isAuthenticated } = useAuth();
+  const currency = useSelector(selectHotelCurrency);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -421,11 +425,12 @@ const OrdersPage = () => {
                                 if (category === 'housekeeping' || category === 'cleaning') {
                                   return '---';
                                 }
-                                return `$${(order.pricing?.totalAmount ||
+                                const amount = order.pricing?.totalAmount ||
                                            order.payment?.totalAmount ||
                                            order.totalAmount ||
                                            order.finalPrice ||
-                                           order.quotedPrice || 0).toFixed(2)}`;
+                                           order.quotedPrice || 0;
+                                return formatPriceByLanguage(amount, i18n.language, currency);
                               })()}
                             </span>
                           </td>
@@ -552,11 +557,12 @@ const OrdersPage = () => {
                               if (category === 'housekeeping' || category === 'cleaning') {
                                 return '---';
                               }
-                              return `$${(order.pricing?.totalAmount ||
+                              const amount = order.pricing?.totalAmount ||
                                          order.payment?.totalAmount ||
                                          order.totalAmount ||
                                          order.finalPrice ||
-                                         order.quotedPrice || 0).toFixed(2)}`;
+                                         order.quotedPrice || 0;
+                              return formatPriceByLanguage(amount, i18n.language, currency);
                             })()}
                           </div>
                           <div className="text-xs text-gray-600">
@@ -745,11 +751,12 @@ const OrdersPage = () => {
                         if (category === 'housekeeping' || category === 'cleaning') {
                           return '---';
                         }
-                        return `$${(selectedOrder.pricing?.totalAmount ||
+                        const amount = selectedOrder.pricing?.totalAmount ||
                                    selectedOrder.payment?.totalAmount ||
                                    selectedOrder.totalAmount ||
                                    selectedOrder.finalPrice ||
-                                   selectedOrder.quotedPrice || 0).toFixed(2)}`;
+                                   selectedOrder.quotedPrice || 0;
+                        return formatPriceByLanguage(amount, i18n.language, currency);
                       })()}
                     </p>
                   </div>
@@ -1160,7 +1167,7 @@ const OrdersPage = () => {
                           {selectedOrder.bookingConfig.additionalServices.map((service, index) => (
                             <div key={index} className="flex justify-between bg-gray-100 rounded px-2 py-1 text-sm">
                               <span>{service.name}</span>
-                              <span className="font-medium">${service.price.toFixed(2)}</span>
+                              <span className="font-medium">{formatPriceByLanguage(service.price, i18n.language, currency)}</span>
                             </div>
                           ))}
                         </div>

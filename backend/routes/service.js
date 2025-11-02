@@ -293,7 +293,7 @@ router.post('/services', catchAsync(async (req, res, next) => {
     serviceType: req.body.serviceType,
     pricing: {
       basePrice: req.body.pricing?.basePrice || req.body.basePrice,
-      currency: req.body.pricing?.currency || req.body.currency || 'USD',
+      // Don't set currency here - let pre-save hook handle it
       pricingType: req.body.pricing?.pricingType || 'per-item'
     },
     specifications: {
@@ -363,10 +363,7 @@ router.put('/services/:id', catchAsync(async (req, res, next) => {
     }
   });
 
-  // Update currency if provided
-  if (req.body.currency) {
-    service.pricing.currency = req.body.currency;
-  }
+  // Currency is managed by pre-save hook, don't update manually
 
   // Update images if provided
   if (req.body.images) {

@@ -350,7 +350,7 @@ const PaymentSuccess = () => {
                                     </p>
                                   </div>
                                   <div className="text-right font-medium">
-                                    {formatPriceByLanguage(item.finalPrice || item.totalPrice || item.price || item.amount || 0, 'en')}
+                                    {formatPriceByLanguage(item.finalPrice || item.totalPrice || item.price || item.amount || 0, 'en', booking.payment?.currency || booking.pricing?.currency || 'USD')}
                                   </div>
                                 </div>
                               ));
@@ -471,7 +471,7 @@ const PaymentSuccess = () => {
                                   </p>
                                 </div>
                                 <div className="text-right font-medium">
-                                  {formatPriceByLanguage(item.totalPrice || item.price || 0, 'en')}
+                                  {formatPriceByLanguage(item.totalPrice || item.price || 0, 'en', booking.payment?.currency || booking.pricing?.currency || 'USD')}
                                 </div>
                               </div>
                             ))}
@@ -561,10 +561,10 @@ const PaymentSuccess = () => {
                           booking.payment?.totalAmount ||
                           booking.pricing?.total ||
                           0,
-                          'en'
+                          'en',
+                          booking.payment?.currency || booking.pricing?.currency || 'USD'
                         )}
                       </p>
-                      <p className="text-sm text-green-600">{booking.payment?.currency || 'USD'}</p>
                     </div>
                   </div>
 

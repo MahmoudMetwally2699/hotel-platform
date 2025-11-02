@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import {
   FaUser,
   FaUsers,
@@ -12,8 +14,12 @@ import {
 } from 'react-icons/fa';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { selectHotelCurrency } from '../../redux/slices/hotelSlice';
+import { formatPriceByLanguage } from '../../utils/currency';
 
 const ServiceProviderClients = ({ providerId, providerName, onBack }) => {
+  const { i18n } = useTranslation();
+  const currency = useSelector(selectHotelCurrency);
   const [clients, setClients] = useState([]);
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -57,13 +63,6 @@ const ServiceProviderClients = ({ providerId, providerName, onBack }) => {
       month: 'short',
       day: 'numeric'
     });
-  };
-
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(value);
   };
 
   const getClientStats = () => {
@@ -143,7 +142,7 @@ const ServiceProviderClients = ({ providerId, providerName, onBack }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-800">{formatCurrency(stats.totalSpent)}</p>
+              <p className="text-2xl font-bold text-gray-800">{formatPriceByLanguage(stats.totalSpent, i18n.language, currency)}</p>
             </div>
             <div className="p-3 bg-green-100 rounded-full">
               <FaDollarSign className="text-green-600 text-xl" />
@@ -259,10 +258,10 @@ const ServiceProviderClients = ({ providerId, providerName, onBack }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        {formatCurrency(client.totalSpent)}
+                        {formatPriceByLanguage(client.totalSpent, i18n.language, currency)}
                       </div>
                       <div className="text-sm text-gray-500">
-                        Avg: {formatCurrency(client.totalSpent / client.totalBookings)}
+                        Avg: {formatPriceByLanguage(client.totalSpent / client.totalBookings, i18n.language, currency)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

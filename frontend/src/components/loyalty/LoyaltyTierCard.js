@@ -6,6 +6,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaTrophy, FaStar, FaGift, FaChevronRight } from 'react-icons/fa';
+import { getCurrencySymbol } from '../../utils/currency';
 
 // Tier color configurations
 const TIER_COLORS = {
@@ -43,7 +44,7 @@ const TIER_ICONS = {
   PLATINUM: FaTrophy
 };
 
-const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
+const LoyaltyTierCard = ({ membership, tierDetails, program, currency = 'USD' }) => {
   const { t } = useTranslation();
 
   if (!membership || !tierDetails) {
@@ -61,6 +62,9 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
   // Calculate redeemable value
   const pointsToMoneyRatio = program?.redemptionRules?.pointsToMoneyRatio || 100;
   const redeemableValue = membership.availablePoints / pointsToMoneyRatio;
+
+  // Get currency symbol
+  const currencySymbol = getCurrencySymbol(currency);
 
   return (
     <div className="bg-white shadow-lg rounded-2xl overflow-hidden border border-gray-100">
@@ -106,7 +110,7 @@ const LoyaltyTierCard = ({ membership, tierDetails, program }) => {
           <p className="text-xs text-gray-500 mt-1">{t('loyaltyCard.useForRewards')}</p>
         </div>
         <div className="p-4 text-center">
-          <p className="text-2xl font-bold text-green-600">${redeemableValue.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-green-600">{currencySymbol}{redeemableValue.toFixed(2)}</p>
           <p className="text-xs text-gray-600 mt-1">{t('loyaltyCard.cashValue')}</p>
           <p className="text-xs text-gray-500 mt-1">{t('loyaltyCard.currentBalance')}</p>
         </div>

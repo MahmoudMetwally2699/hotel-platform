@@ -314,7 +314,7 @@ const hotelSchema = new mongoose.Schema({
     currency: {
       type: String,
       default: 'USD',
-      enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
+      enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'SAR', 'EGP']
     },
 
     taxRate: {

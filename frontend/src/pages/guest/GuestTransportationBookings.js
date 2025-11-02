@@ -257,7 +257,7 @@ const GuestTransportationBookings = () => {
               <span className="text-xs font-semibold text-gray-700">{t('transportation.labels.quotedPrice')}:</span>
             </div>
             <span className="text-base font-bold text-emerald-600 bg-white/70 px-2 py-0.5 rounded-md">
-              {formatPriceByLanguage(booking.quote.finalPrice, i18n.language)}
+              {formatPriceByLanguage(booking.quote.finalPrice, i18n.language, booking.pricing?.currency || booking.quote?.currency || 'USD')}
             </span>
           </div>
 
@@ -531,11 +531,11 @@ const GuestTransportationBookings = () => {
                       <div className="grid grid-cols-2 gap-4 text-sm mb-3">
                         <div>
                           <span className="font-medium">{t('transportation.modal.basePrice')}:</span>
-                          <p className="text-gray-700">{formatPriceByLanguage(selectedBooking.quote.basePrice, i18n.language)}</p>
+                          <p className="text-gray-700">{formatPriceByLanguage(selectedBooking.quote.basePrice, i18n.language, selectedBooking.pricing?.currency || selectedBooking.quote?.currency || 'USD')}</p>
                         </div>
                         <div>
                           <span className="font-medium">{t('transportation.modal.finalPrice')}:</span>
-                          <p className="text-lg font-bold text-green-600">{formatPriceByLanguage(selectedBooking.quote.finalPrice, i18n.language)}</p>
+                          <p className="text-lg font-bold text-green-600">{formatPriceByLanguage(selectedBooking.quote.finalPrice, i18n.language, selectedBooking.pricing?.currency || selectedBooking.quote?.currency || 'USD')}</p>
                         </div>
                         <div>
                           <span className="font-medium">{t('transportation.modal.quotedAt')}:</span>
