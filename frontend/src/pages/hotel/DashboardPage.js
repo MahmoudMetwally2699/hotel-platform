@@ -545,7 +545,7 @@ const DashboardPage = () => {
                               </div>
                             </div>
                             <div className="text-right">
-                              <span className="font-bold text-2xl text-modern-blue">${category.revenue.toFixed(2)}</span>
+                              <span className="font-bold text-2xl text-modern-blue">{formatPriceByLanguage(category.revenue, i18n.language, currency)}</span>
                               <div className="text-xs text-modern-darkGray">Revenue</div>
                             </div>
                           </div>
@@ -557,7 +557,7 @@ const DashboardPage = () => {
                                 <div className="h-3 w-3 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-full mr-3"></div>
                                 <span className="font-bold text-modern-blue capitalize text-base">{category._id}</span>
                               </div>
-                              <span className="font-bold text-xl text-modern-blue">${category.revenue.toFixed(2)}</span>
+                              <span className="font-bold text-xl text-modern-blue">{formatPriceByLanguage(category.revenue, i18n.language, currency)}</span>
                             </div>
                             <div className="flex items-center justify-between">
                               <div className="flex items-center">

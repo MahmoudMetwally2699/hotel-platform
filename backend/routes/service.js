@@ -571,19 +571,8 @@ router.put('/orders/:id/status', catchAsync(async (req, res, next) => {
     return next(new AppError('No order found with that ID for this provider', 404));
   }
 
-  // Update booking status
-  booking.status = status;
-
-  if (notes) {
-    booking.notes = booking.notes || [];
-    booking.notes.push({
-      content: notes,
-      addedBy: req.user.id,
-      addedAt: Date.now()
-    });
-  }
-
-  await booking.save();
+  // Use the updateStatus method to properly handle feedback requests and other status updates
+  await booking.updateStatus(status, req.user.id, notes);
 
   logger.info(`Order status updated to ${status}`, {
     serviceProviderId: providerId,
@@ -723,25 +712,11 @@ router.patch('/bookings/:id/status', protect, restrictTo('service'), async (req,
     const user = await User.findById(req.user.id).select('serviceProviderId');
     const providerId = user.serviceProviderId;
 
-    // Find and update booking
-    const booking = await Booking.findOneAndUpdate(
-      {
-        _id: bookingId,
-        serviceProviderId: providerId
-      },
-      {
-        status,
-        $push: {
-          statusHistory: {
-            status,
-            notes,
-            updatedBy: req.user.id,
-            updatedAt: new Date()
-          }
-        }
-      },
-      { new: true }
-    ).populate('guestId', 'firstName lastName email')
+    // Find booking first
+    const booking = await Booking.findOne({
+      _id: bookingId,
+      serviceProviderId: providerId
+    }).populate('guestId', 'firstName lastName email')
      .populate('serviceId', 'name');
 
     if (!booking) {
@@ -750,6 +725,9 @@ router.patch('/bookings/:id/status', protect, restrictTo('service'), async (req,
         message: 'Booking not found or unauthorized'
       });
     }
+
+    // Use the updateStatus method to properly handle feedback requests and other status updates
+    await booking.updateStatus(status, req.user.id, notes);
 
     // Send notification email to guest
     try {

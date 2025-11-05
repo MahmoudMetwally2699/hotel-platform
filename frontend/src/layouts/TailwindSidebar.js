@@ -560,7 +560,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         style={{ backgroundColor: '#3B5787' }}
         className="lg:hidden fixed bottom-0 left-0 right-0 text-white border-t border-white/10 z-50 shadow-2xl"
       >
-        <div className="flex justify-around items-center py-2">
+        <div className="flex justify-around items-center py-1">
           {navigationItems.slice(0, 5).map((item) => {
             // Handle expandable items specially on mobile
             if (item.isExpandable || item.submenu) {
@@ -568,10 +568,10 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 <button
                   key={item.key || item.name}
                   onClick={() => setShowMobileCategories(true)}
-                  className="flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[120px] text-white/80 hover:bg-white/10 hover:text-white"
+                  className="flex flex-col items-center justify-center px-1 py-1.5 rounded-lg transition-all duration-200 min-w-0 flex-1 text-white/80 hover:bg-white/10 hover:text-white"
                 >
-                  <span className="mb-1">{getIcon(item.icon)}</span>
-                  <span className="text-xs text-center leading-tight w-full font-medium break-words">
+                  <span className="mb-0.5">{getIcon(item.icon)}</span>
+                  <span className="text-[10px] text-center leading-tight w-full font-medium truncate px-0.5">
                     {item.name}
                   </span>
                 </button>
@@ -585,7 +585,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 className={() => {
                   const isActive = isPathActive(item.path);
                   return `
-                    flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[120px] relative
+                    flex flex-col items-center justify-center px-1 py-1.5 rounded-lg transition-all duration-200 min-w-0 flex-1 relative
                     ${isActive
                       ? 'text-white shadow-lg'
                       : 'text-white/80 hover:bg-white/10 hover:text-white'
@@ -597,8 +597,8 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                   return isActive ? { backgroundColor: '#48ACDA' } : {};
                 }}
               >
-                <span className="mb-1">{getIcon(item.icon)}</span>
-                <span className="text-xs text-center leading-tight w-full font-medium break-words">
+                <span className="mb-0.5">{getIcon(item.icon)}</span>
+                <span className="text-[10px] text-center leading-tight w-full font-medium truncate px-0.5">
                   {item.name}
                 </span>
                 {item.comingSoon && (
@@ -612,12 +612,12 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           {navigationItems.length > 5 && (
             <button
               onClick={toggleSidebar}
-              className="flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 max-w-[120px] text-white/80 hover:bg-white/10 hover:text-white"
+              className="flex flex-col items-center justify-center px-1 py-1.5 rounded-lg transition-all duration-200 min-w-0 flex-1 text-white/80 hover:bg-white/10 hover:text-white"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
-              <span className="text-xs text-center leading-tight font-medium">More</span>
+              <span className="text-[10px] text-center leading-tight font-medium">More</span>
             </button>
           )}
         </div>
@@ -708,10 +708,10 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
       {showMobileCategories && role === 'guest' && (
         <>
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
+            className="fixed inset-0 bg-black bg-opacity-50 z-[60] lg:hidden"
             onClick={() => setShowMobileCategories(false)}
           />
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-xl z-50 lg:hidden max-h-[70vh] overflow-y-auto">
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-xl z-[60] lg:hidden max-h-[70vh] overflow-y-auto">
             <div className="p-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">

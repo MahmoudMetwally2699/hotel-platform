@@ -278,20 +278,82 @@ const FeedbackModal = ({
                   </div>
 
                   {/* Service-specific details */}
-                  <div className="text-sm text-gray-600 space-y-1">
-                    {/* Laundry Details */}
-                    {(booking.bookingType === 'laundry' || booking.serviceType === 'laundry') && (
+                  <div className="text-sm text-gray-600 space-y-2">
+                    {/* Housekeeping Details */}
+                    {(booking.bookingType === 'housekeeping' || booking.serviceType === 'housekeeping') && (
                       <>
-                        {(booking.bookingConfig?.laundryItems?.length || booking.laundryItems?.length) && (
-                          <div className="flex items-center gap-2">
-                            <FaTshirt className="text-gray-400 text-xs" />
-                            <span>
-                              {booking.bookingConfig?.laundryItems?.length || booking.laundryItems?.length} {t('feedback.items', 'items')}
+                        {/* Show housekeeping type */}
+                        {booking.serviceDetails?.housekeepingType && booking.serviceDetails.housekeepingType.length > 0 && (
+                          <div className="flex items-start gap-2 mt-2">
+                            <span className="font-medium text-gray-700">Type:</span>
+                            <span className="capitalize">
+                              {booking.serviceDetails.housekeepingType.replace(/_/g, ' ')}
                             </span>
                           </div>
                         )}
-                        {(booking.schedule?.preferredDate || booking.scheduledDate) && (
-                          <div className="flex items-center gap-2">
+
+                        {/* Show specific issue categories */}
+                        {booking.serviceDetails?.specificCategory &&
+                         Array.isArray(booking.serviceDetails.specificCategory) &&
+                         booking.serviceDetails.specificCategory.length > 0 && (
+                          <div className="mt-2">
+                            <span className="font-medium text-gray-700 block mb-1">Issue Categories:</span>
+                            <div className="flex flex-wrap gap-1">
+                              {booking.serviceDetails.specificCategory.map((category, index) => {
+                                // Format category name
+                                const formattedCategory = category
+                                  .split('_')
+                                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                  .join(' ');
+
+                                return (
+                                  <span
+                                    key={index}
+                                    className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs"
+                                  >
+                                    {formattedCategory}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Show description if available */}
+                        {booking.serviceDetails?.description && booking.serviceDetails.description.length > 0 && (
+                          <div className="mt-2">
+                            <span className="font-medium text-gray-700 block mb-1">Details:</span>
+                            <p className="text-xs text-gray-600 italic">
+                              "{booking.serviceDetails.description}"
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Laundry Details */}
+                    {(booking.bookingType === 'laundry' || booking.serviceType === 'laundry') && (
+                      <>
+                        {((booking.bookingConfig?.laundryItems?.length > 0) || (booking.laundryItems?.length > 0)) && (
+                          <div className="mt-2">
+                            <span className="font-medium text-gray-700 block mb-1">
+                              Laundry Items ({booking.bookingConfig?.laundryItems?.length || booking.laundryItems?.length}):
+                            </span>
+                            <div className="space-y-1 max-h-32 overflow-y-auto">
+                              {(booking.bookingConfig?.laundryItems || booking.laundryItems || []).map((item, index) => (
+                                <div key={index} className="flex justify-between items-center text-xs bg-blue-50 p-2 rounded">
+                                  <span className="font-medium">{item.itemName || item.name}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-gray-600">{item.quantity || 1}x</span>
+                                    <span className="text-blue-600">{item.serviceType || item.type}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {!!(booking.schedule?.preferredDate || booking.scheduledDate) && (
+                          <div className="flex items-center gap-2 mt-2">
                             <FaCalendarAlt className="text-gray-400 text-xs" />
                             <span>
                               {booking.schedule?.preferredDate || booking.scheduledDate}
@@ -304,50 +366,113 @@ const FeedbackModal = ({
                     {/* Transportation Details */}
                     {(booking.bookingType === 'transportation' || booking.serviceType === 'transportation') && (
                       <>
-                        {booking.tripDetails?.destination && (
-                          <div className="flex items-center gap-2">
-                            <FaMapMarkerAlt className="text-gray-400 text-xs" />
-                            <span className="truncate">
-                              {booking.tripDetails.destination}
+                        {!!booking.tripDetails?.pickupLocation && (
+                          <div className="mt-2">
+                            <span className="font-medium text-gray-700 block mb-1">Pickup:</span>
+                            <div className="flex items-center gap-2 text-xs">
+                              <FaMapMarkerAlt className="text-green-500" />
+                              <span>{booking.tripDetails.pickupLocation}</span>
+                            </div>
+                          </div>
+                        )}
+                        {!!booking.tripDetails?.destination && (
+                          <div className="mt-1">
+                            <span className="font-medium text-gray-700 block mb-1">Destination:</span>
+                            <div className="flex items-center gap-2 text-xs">
+                              <FaMapMarkerAlt className="text-red-500" />
+                              <span>{booking.tripDetails.destination}</span>
+                            </div>
+                          </div>
+                        )}
+                        {!!booking.tripDetails?.scheduledDateTime && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <FaCalendarAlt className="text-gray-400 text-xs" />
+                            <span className="text-xs">
+                              {new Date(booking.tripDetails.scheduledDateTime).toLocaleString()}
                             </span>
                           </div>
                         )}
-                        {booking.tripDetails?.scheduledDateTime && (
-                          <div className="flex items-center gap-2">
-                            <FaCalendarAlt className="text-gray-400 text-xs" />
-                            <span>
-                              {new Date(booking.tripDetails.scheduledDateTime).toLocaleDateString()}
+                        {!!booking.tripDetails?.passengers && (
+                          <div className="mt-2">
+                            <span className="text-xs">
+                              <span className="font-medium">Passengers:</span> {booking.tripDetails.passengers}
                             </span>
                           </div>
                         )}
                       </>
                     )}
 
-                    {/* Restaurant Details */}
-                    {(booking.bookingType === 'restaurant' || booking.serviceType === 'restaurant') && (
+                    {/* Restaurant/Dining Details */}
+                    {(booking.bookingType === 'restaurant' || booking.serviceType === 'restaurant' || booking.serviceType === 'dining') && (
                       <>
-                        {(booking.reservationDetails?.date || booking.bookingDate) && (
-                          <div className="flex items-center gap-2">
+                        {/* Show ordered items */}
+                        {((booking.bookingConfig?.selectedItems?.length > 0) || (booking.orderItems?.length > 0) || (booking.items?.length > 0)) && (
+                          <div className="mt-2">
+                            <span className="font-medium text-gray-700 block mb-1">
+                              Order Items:
+                            </span>
+                            <div className="space-y-1 max-h-32 overflow-y-auto">
+                              {(booking.bookingConfig?.selectedItems || booking.orderItems || booking.items || []).map((item, index) => (
+                                <div key={index} className="flex justify-between items-center text-xs bg-orange-50 p-2 rounded">
+                                  <span className="font-medium">{item.itemName || item.name}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-gray-600">{item.quantity || 1}x</span>
+                                    {item.price && (
+                                      <span className="text-orange-600">
+                                        {formatPriceByLanguage(item.price * (item.quantity || 1), 'en')}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Reservation details */}
+                        {!!(booking.reservationDetails?.date || booking.bookingDate) && (
+                          <div className="flex items-center gap-2 mt-2">
                             <FaCalendarAlt className="text-gray-400 text-xs" />
-                            <span>
+                            <span className="text-xs">
                               {booking.reservationDetails?.date || booking.bookingDate}
                               {(booking.reservationDetails?.time || booking.bookingTime) &&
                                 ` at ${booking.reservationDetails?.time || booking.bookingTime}`}
                             </span>
                           </div>
                         )}
+
+                        {!!booking.reservationDetails?.numberOfGuests && (
+                          <div className="mt-1">
+                            <span className="text-xs">
+                              <span className="font-medium">Guests:</span> {booking.reservationDetails.numberOfGuests}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Special requests */}
+                        {!!(booking.specialRequests || booking.reservationDetails?.specialRequests) && (
+                          <div className="mt-2">
+                            <span className="font-medium text-gray-700 block mb-1 text-xs">Special Requests:</span>
+                            <p className="text-xs text-gray-600 italic">
+                              "{booking.specialRequests || booking.reservationDetails.specialRequests}"
+                            </p>
+                          </div>
+                        )}
                       </>
                     )}
 
                     {/* Total Amount */}
-                    {(booking.payment?.totalAmount || booking.pricing?.total) && (
-                      <div className="mt-2 pt-2 border-t border-gray-200">
-                        <span className="font-semibold text-gray-900">
-                          {formatPriceByLanguage(
-                            booking.payment?.totalAmount || booking.pricing?.total,
-                            'en'
-                          )}
-                        </span>
+                    {!!(booking.payment?.totalAmount || booking.pricing?.total || booking.pricing?.totalAmount) && (
+                      <div className="mt-3 pt-2 border-t border-gray-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-700">Total Amount:</span>
+                          <span className="font-semibold text-gray-900">
+                            {formatPriceByLanguage(
+                              booking.payment?.totalAmount || booking.pricing?.total || booking.pricing?.totalAmount,
+                              'en'
+                            )}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>

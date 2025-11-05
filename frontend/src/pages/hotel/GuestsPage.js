@@ -487,27 +487,19 @@ const GuestsPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="relative">
-                        <select
-                          value={guest.channel || 'Direct'}
-                          onChange={(e) => updateGuestChannel(guest._id, e.target.value)}
-                          disabled={channelUpdating.has(guest._id)}
-                          className="appearance-none text-sm font-medium border-2 border-gray-200 rounded-lg px-4 py-2 pr-10 bg-white hover:border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm"
-                          style={{
-                            minWidth: '160px'
-                          }}
-                        >
-                          <option value="Travel Agency" className="py-2">🏢 Travel Agency</option>
-                          <option value="Corporate" className="py-2">💼 Corporate</option>
-                          <option value="Direct" className="py-2">👤 Direct</option>
-                        </select>
-                        {/* Custom dropdown arrow */}
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                      </div>
+                      <select
+                        value={guest.channel || 'Direct'}
+                        onChange={(e) => updateGuestChannel(guest._id, e.target.value)}
+                        disabled={channelUpdating.has(guest._id)}
+                        className="text-xs font-medium border border-gray-300 rounded px-2 py-1 pr-6 bg-white hover:border-blue-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        style={{
+                          minWidth: '110px'
+                        }}
+                      >
+                        <option value="Travel Agency">Travel Agency</option>
+                        <option value="Corporate">Corporate</option>
+                        <option value="Direct">Direct</option>
+                      </select>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {guest.loyaltyTier ? (

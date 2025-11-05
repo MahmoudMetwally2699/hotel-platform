@@ -835,8 +835,8 @@ const LoyaltyProgramPage = () => {
       {/* Points Adjustment Modal */}
       {selectedMember && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-gray-200 flex-shrink-0">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-900">{t('loyaltyProgramPage.adjustPointsModal.title')}</h2>
                 <button
@@ -847,7 +847,7 @@ const LoyaltyProgramPage = () => {
                 </button>
               </div>
             </div>
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto flex-1">
               {/* Member Info */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
                 <p className="font-semibold text-gray-900">{getGuestDisplayName(selectedMember.guest)}</p>
@@ -1103,7 +1103,7 @@ const LoyaltyProgramPage = () => {
             </div>
 
             {/* Actions */}
-            <div className="p-6 border-t border-gray-200 bg-gray-50 flex gap-3">
+            <div className="p-6 border-t border-gray-200 bg-gray-50 flex gap-3 flex-shrink-0">
               <button
                 onClick={() => setSelectedMember(null)}
                 className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
