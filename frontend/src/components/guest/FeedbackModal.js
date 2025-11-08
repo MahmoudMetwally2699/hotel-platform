@@ -207,9 +207,14 @@ const FeedbackModal = ({
                         const housekeepingType = booking.serviceDetails?.housekeepingType;
 
                         if (housekeepingType) {
+                          // Extract the type name - handle both string and object formats
+                          const typeValue = typeof housekeepingType === 'string'
+                            ? housekeepingType
+                            : housekeepingType.name || housekeepingType.id;
+
                           // Use the pre-determined housekeeping type with translation
-                          const translationKey = `feedback.serviceTypes.${housekeepingType}`;
-                          console.log('✅ Using housekeepingType field:', housekeepingType);
+                          const translationKey = `feedback.serviceTypes.${typeValue}`;
+                          console.log('✅ Using housekeepingType field:', typeValue);
                           return `${t(translationKey)} ${t('feedback.serviceTypes.service')}`;
                         }
 
@@ -283,11 +288,14 @@ const FeedbackModal = ({
                     {(booking.bookingType === 'housekeeping' || booking.serviceType === 'housekeeping') && (
                       <>
                         {/* Show housekeeping type */}
-                        {booking.serviceDetails?.housekeepingType && booking.serviceDetails.housekeepingType.length > 0 && (
+                        {booking.serviceDetails?.housekeepingType && (
                           <div className="flex items-start gap-2 mt-2">
                             <span className="font-medium text-gray-700">Type:</span>
                             <span className="capitalize">
-                              {booking.serviceDetails.housekeepingType.replace(/_/g, ' ')}
+                              {typeof booking.serviceDetails.housekeepingType === 'string'
+                                ? booking.serviceDetails.housekeepingType.replace(/_/g, ' ')
+                                : booking.serviceDetails.housekeepingType.name?.replace(/_/g, ' ') || 'N/A'
+                              }
                             </span>
                           </div>
                         )}
@@ -345,7 +353,12 @@ const FeedbackModal = ({
                                   <span className="font-medium">{item.itemName || item.name}</span>
                                   <div className="flex items-center gap-2">
                                     <span className="text-gray-600">{item.quantity || 1}x</span>
-                                    <span className="text-blue-600">{item.serviceType || item.type}</span>
+                                    <span className="text-blue-600">
+                                      {typeof (item.serviceType || item.type) === 'string'
+                                        ? (item.serviceType || item.type)
+                                        : (item.serviceType?.name || item.type?.name || 'N/A')
+                                      }
+                                    </span>
                                   </div>
                                 </div>
                               ))}

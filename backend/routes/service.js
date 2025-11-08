@@ -574,6 +574,31 @@ router.put('/orders/:id/status', catchAsync(async (req, res, next) => {
   // Use the updateStatus method to properly handle feedback requests and other status updates
   await booking.updateStatus(status, req.user.id, notes);
 
+  // Award loyalty points if status is completed
+  if (status === 'completed') {
+    try {
+      const { awardPointsForBooking } = require('../middleware/loyaltyPoints');
+      const pointsResult = await awardPointsForBooking(booking._id, 'regular');
+
+      if (pointsResult.success) {
+        logger.info('Loyalty points awarded for completed order by service provider', {
+          orderId: booking._id,
+          pointsAwarded: pointsResult.pointsAwarded,
+          amountSpent: pointsResult.amountSpent,
+          updatedBy: req.user.id
+        });
+      } else {
+        logger.warn('Failed to award loyalty points for order', {
+          orderId: booking._id,
+          reason: pointsResult.message
+        });
+      }
+    } catch (loyaltyError) {
+      logger.error('Error awarding loyalty points for order:', loyaltyError);
+      // Don't fail the status update if loyalty points fail
+    }
+  }
+
   logger.info(`Order status updated to ${status}`, {
     serviceProviderId: providerId,
     orderId: booking._id
@@ -728,6 +753,25 @@ router.patch('/bookings/:id/status', protect, restrictTo('service'), async (req,
 
     // Use the updateStatus method to properly handle feedback requests and other status updates
     await booking.updateStatus(status, req.user.id, notes);
+
+    // Award loyalty points if status is completed
+    if (status === 'completed') {
+      try {
+        const { awardPointsForBooking } = require('../middleware/loyaltyPoints');
+        const pointsResult = await awardPointsForBooking(booking._id, 'regular');
+
+        if (pointsResult.success) {
+          logger.info('Loyalty points awarded for completed booking by service provider', {
+            bookingId: booking._id,
+            pointsAwarded: pointsResult.pointsAwarded,
+            updatedBy: req.user.id
+          });
+        }
+      } catch (loyaltyError) {
+        logger.error('Error awarding loyalty points:', loyaltyError);
+        // Don't fail the status update if loyalty points fail
+      }
+    }
 
     // Send notification email to guest
     try {
@@ -2957,6 +3001,25 @@ router.put('/housekeeping-bookings/:bookingId/status', catchAsync(async (req, re
   }
 
   await booking.save();
+
+  // Award loyalty points if status is completed
+  if (status === 'completed') {
+    try {
+      const { awardPointsForBooking } = require('../middleware/loyaltyPoints');
+      const pointsResult = await awardPointsForBooking(booking._id, 'regular');
+
+      if (pointsResult.success) {
+        logger.info('Loyalty points awarded for completed housekeeping booking by service provider', {
+          bookingId: booking._id,
+          pointsAwarded: pointsResult.pointsAwarded,
+          updatedBy: req.user.id
+        });
+      }
+    } catch (loyaltyError) {
+      logger.error('Error awarding loyalty points for housekeeping:', loyaltyError);
+      // Don't fail the status update if loyalty points fail
+    }
+  }
 
   // Send WhatsApp notifications based on status change
   if (booking.guestDetails?.phone) {

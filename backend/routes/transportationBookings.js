@@ -1030,6 +1030,24 @@ router.put('/:id/status', protect, restrictTo('service'), async (req, res) => {
       updatedBy: req.user._id
     });
 
+    // Award loyalty points if status is completed
+    if (status === 'completed') {
+      try {
+        const { awardPointsForBooking } = require('../middleware/loyaltyPoints');
+        const pointsResult = await awardPointsForBooking(booking._id, 'transportation');
+
+        if (pointsResult.success) {
+          logger.info('Loyalty points awarded for completed transportation booking', {
+            bookingId: booking._id,
+            pointsAwarded: pointsResult.pointsAwarded
+          });
+        }
+      } catch (loyaltyError) {
+        logger.error('Error awarding loyalty points for transportation booking:', loyaltyError);
+        // Don't fail the status update if loyalty points fail
+      }
+    }
+
     res.json({
       success: true,
       message: 'Booking status updated successfully',

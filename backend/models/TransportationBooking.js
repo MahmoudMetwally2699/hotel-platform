@@ -388,6 +388,25 @@ const transportationBookingSchema = new mongoose.Schema({
     providerFeedbackDate: Date
   },
 
+  // Feedback Request Tracking (similar to regular Booking model)
+  feedbackRequest: {
+    isRequested: {
+      type: Boolean,
+      default: false
+    },
+    requestedAt: Date,
+    isSkipped: {
+      type: Boolean,
+      default: false
+    },
+    skippedAt: Date,
+    isFeedbackSubmitted: {
+      type: Boolean,
+      default: false
+    },
+    submittedAt: Date
+  },
+
   // Cancellation Information
   cancellation: {
     cancelledBy: {
@@ -560,6 +579,12 @@ transportationBookingSchema.pre('save', async function(next) {
     // When service is completed
     if (this.bookingStatus === 'completed') {
       this.sla.completedAt = now;
+
+      // Request feedback when booking is completed
+      if (!this.feedbackRequest.isRequested) {
+        this.feedbackRequest.isRequested = true;
+        this.feedbackRequest.requestedAt = now;
+      }
 
       // If acceptedAt was never set (direct completion), set it to createdAt
       if (!this.sla.acceptedAt) {

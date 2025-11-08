@@ -1280,8 +1280,9 @@ router.get('/pending-feedback', protect, restrictTo('guest'), async (req, res) =
   try {
     logger.info(`Checking pending feedback for guest: ${req.user.id}`);
 
-    const pendingFeedback = await Booking.find({
-      guestId: req.user.id, // Changed from 'guest' to 'guestId'
+    // Check regular bookings
+    const pendingRegularFeedback = await Booking.find({
+      guestId: req.user.id,
       status: 'completed',
       'feedbackRequest.isRequested': true,
       'feedbackRequest.isSkipped': false,
@@ -1290,16 +1291,43 @@ router.get('/pending-feedback', protect, restrictTo('guest'), async (req, res) =
     .populate('serviceId', 'name category images')
     .populate('hotelId', 'name')
     .sort({ 'feedbackRequest.requestedAt': -1 })
-    .limit(1); // Only get the most recent pending feedback
+    .limit(1);
 
-    logger.info(`Found ${pendingFeedback.length} pending feedback requests`);
-    if (pendingFeedback[0]) {
-      logger.info(`Pending feedback booking: ${pendingFeedback[0].bookingNumber}, feedbackRequest:`, pendingFeedback[0].feedbackRequest);
+    // Check transportation bookings
+    const TransportationBooking = require('../models/TransportationBooking');
+    const pendingTransportationFeedback = await TransportationBooking.find({
+      guestId: req.user.id,
+      bookingStatus: 'completed',
+      'feedbackRequest.isRequested': true,
+      'feedbackRequest.isSkipped': false,
+      'feedbackRequest.isFeedbackSubmitted': false
+    })
+    .populate('serviceId', 'name category images')
+    .populate('hotelId', 'name')
+    .sort({ 'feedbackRequest.requestedAt': -1 })
+    .limit(1);
+
+    // Combine results and get the most recent one
+    const allPendingFeedback = [
+      ...pendingRegularFeedback,
+      ...pendingTransportationFeedback
+    ].sort((a, b) => {
+      const dateA = a.feedbackRequest?.requestedAt || a.createdAt;
+      const dateB = b.feedbackRequest?.requestedAt || b.createdAt;
+      return dateB - dateA;
+    });
+
+    const mostRecentPending = allPendingFeedback[0] || null;
+
+    logger.info(`Found ${allPendingFeedback.length} pending feedback requests (${pendingRegularFeedback.length} regular, ${pendingTransportationFeedback.length} transportation)`);
+    if (mostRecentPending) {
+      const bookingType = mostRecentPending.bookingReference ? 'transportation' : 'regular';
+      logger.info(`Pending feedback booking: ${mostRecentPending.bookingNumber || mostRecentPending.bookingReference}, type: ${bookingType}, feedbackRequest:`, mostRecentPending.feedbackRequest);
     }
 
     res.json({
       success: true,
-      data: pendingFeedback[0] || null
+      data: mostRecentPending
     });
   } catch (error) {
     logger.error('Get pending feedback error:', error);
@@ -1387,11 +1415,29 @@ router.get('/bookings/:id/feedback-status', protect, async (req, res) => {
  */
 router.post('/bookings/:id/skip-feedback', protect, restrictTo('guest'), async (req, res) => {
   try {
-    const booking = await Booking.findOne({
+    let booking = null;
+    let bookingType = 'regular';
+
+    // Try to find in regular bookings first
+    booking = await Booking.findOne({
       _id: req.params.id,
-      guestId: req.user.id, // Changed from 'guest' to 'guestId'
+      guestId: req.user.id,
       status: 'completed'
     });
+
+    // If not found in regular bookings, try transportation bookings
+    if (!booking) {
+      const TransportationBooking = require('../models/TransportationBooking');
+      booking = await TransportationBooking.findOne({
+        _id: req.params.id,
+        guestId: req.user.id,
+        bookingStatus: 'completed'
+      });
+
+      if (booking) {
+        bookingType = 'transportation';
+      }
+    }
 
     if (!booking) {
       return res.status(404).json({
@@ -1403,6 +1449,8 @@ router.post('/bookings/:id/skip-feedback', protect, restrictTo('guest'), async (
     booking.feedbackRequest.isSkipped = true;
     booking.feedbackRequest.skippedAt = new Date();
     await booking.save();
+
+    logger.info(`Feedback skipped for ${bookingType} booking: ${booking._id}`);
 
     res.json({
       success: true,
