@@ -128,12 +128,35 @@ const ServiceDetailsTable = ({ data, loading }) => {
                     {t(`performanceAnalyticsPage.serviceTypes.${service.serviceType}`, service.serviceType)}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {service.serviceName || t('common.notAvailable', 'N/A')}
+                    {(() => {
+                      // For transportation, show vehicle type if available
+                      if (service.serviceType === 'transportation') {
+                        return service.serviceName ||
+                               service.vehicleType ||
+                               service.vehicleDetails?.vehicleType ||
+                               'Vehicle';
+                      }
+                      // For other services, show the service name
+                      return service.serviceName || t('common.notAvailable', 'N/A');
+                    })()}
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {service.guestName || t('common.notAvailable', 'N/A')}
+                    {(() => {
+                      if (!service.guestName) return t('common.notAvailable', 'N/A');
+
+                      // Split the name and check for duplicates
+                      const nameParts = service.guestName.trim().split(' ').filter(Boolean);
+
+                      // If we have exactly 2 parts and they're the same, show only one
+                      if (nameParts.length === 2 && nameParts[0] === nameParts[1]) {
+                        return nameParts[0];
+                      }
+
+                      // Otherwise return the full name
+                      return service.guestName;
+                    })()}
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-center">

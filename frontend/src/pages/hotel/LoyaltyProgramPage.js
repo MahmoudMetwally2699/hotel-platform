@@ -560,7 +560,10 @@ const LoyaltyProgramPage = () => {
                   {t('loyaltyProgramPage.topMembers.totalSpending')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('loyaltyProgramPage.topMembers.points')}
+                  {t('loyaltyProgramPage.topMembers.tierPoints')}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('loyaltyProgramPage.topMembers.redeemPoints')}
                 </th>
               </tr>
             </thead>
@@ -595,13 +598,16 @@ const LoyaltyProgramPage = () => {
                     {formatPriceByLanguage(member.lifetimeSpending || 0, i18n.language, currency)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {member.totalPoints?.toLocaleString() || 0}
+                    {member.tierPoints?.toLocaleString() || 0}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {member.availablePoints?.toLocaleString() || 0}
                   </td>
                 </tr>
               ))}
               {(!analytics?.topMembers || analytics.topMembers.length === 0) && (
                 <tr>
-                  <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
                     {t('loyaltyProgramPage.topMembers.noMembers')}
                   </td>
                 </tr>

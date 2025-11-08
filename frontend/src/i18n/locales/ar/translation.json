@@ -171,6 +171,8 @@
       "member": "العضو",
       "tier": "المستوى",
       "totalSpending": "إجمالي الإنفاق",
+      "tierPoints": "نقاط المستوى",
+      "redeemPoints": "نقاط الاسترداد",
       "points": "النقاط",
       "noMembers": "لا يوجد أعضاء بعد"
     },

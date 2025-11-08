@@ -253,7 +253,10 @@ const LoyaltyDashboard = () => {
                   Total Spending
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Points
+                  Tier Points
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Redeem Points
                 </th>
               </tr>
             </thead>
@@ -288,7 +291,10 @@ const LoyaltyDashboard = () => {
                     ${member.lifetimeSpending?.toFixed(2) || '0.00'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {member.totalPoints?.toLocaleString() || 0}
+                    {member.tierPoints?.toLocaleString() || 0}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {member.availablePoints?.toLocaleString() || 0}
                   </td>
                 </tr>
               ))}

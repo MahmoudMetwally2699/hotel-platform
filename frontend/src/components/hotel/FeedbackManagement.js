@@ -340,7 +340,20 @@ const FeedbackManagement = () => {
                       <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                         <div className="flex items-center gap-1">
                           <FaUser />
-                          {feedback.guestName}
+                          {(() => {
+                            if (!feedback.guestName) return 'Anonymous';
+
+                            // Split the name and check for duplicates
+                            const nameParts = feedback.guestName.trim().split(' ').filter(Boolean);
+
+                            // If we have exactly 2 parts and they're the same, show only one
+                            if (nameParts.length === 2 && nameParts[0] === nameParts[1]) {
+                              return nameParts[0];
+                            }
+
+                            // Otherwise return the full name
+                            return feedback.guestName;
+                          })()}
                         </div>
                         <div className="flex items-center gap-1">
                           <FaServicestack />

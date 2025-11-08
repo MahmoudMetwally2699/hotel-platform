@@ -5273,10 +5273,14 @@ router.get('/analytics/operational/service-details', catchAsync(async (req, res)
             else: '$serviceType'
           }
         },
-        serviceName: '$serviceDetails.name',
+        serviceName: { $ifNull: ['$serviceDetails.name', 'Service'] },
         bookingNumber: 1,
         guestName: {
-          $concat: ['$guestDetails.firstName', ' ', '$guestDetails.lastName']
+          $concat: [
+            { $ifNull: ['$guestDetails.firstName', ''] },
+            ' ',
+            { $ifNull: ['$guestDetails.lastName', ''] }
+          ]
         },
         status: 1,
         createdAt: 1,
@@ -5315,10 +5319,19 @@ router.get('/analytics/operational/service-details', catchAsync(async (req, res)
       {
         $project: {
           serviceType: { $literal: 'transportation' },
-          serviceName: '$vehicleDetails.vehicleType',
+          serviceName: {
+            $ifNull: [
+              '$vehicleDetails.vehicleType',
+              { $ifNull: ['$assignment.vehicle', 'Vehicle'] }
+            ]
+          },
           bookingNumber: '$bookingReference',
           guestName: {
-            $concat: ['$guestDetails.firstName', ' ', '$guestDetails.lastName']
+            $concat: [
+              { $ifNull: ['$guestDetails.firstName', ''] },
+              ' ',
+              { $ifNull: ['$guestDetails.lastName', ''] }
+            ]
           },
           status: '$bookingStatus',
           createdAt: 1,

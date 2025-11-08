@@ -236,7 +236,20 @@ const HotelFeedbackView = () => {
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">
-                        {item.guestName || 'Anonymous'}
+                        {(() => {
+                          if (!item.guestName) return 'Anonymous';
+
+                          // Split the name and check for duplicates
+                          const nameParts = item.guestName.trim().split(' ').filter(Boolean);
+
+                          // If we have exactly 2 parts and they're the same, show only one
+                          if (nameParts.length === 2 && nameParts[0] === nameParts[1]) {
+                            return nameParts[0];
+                          }
+
+                          // Otherwise return the full name
+                          return item.guestName;
+                        })()}
                       </h3>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <FaCalendarAlt />

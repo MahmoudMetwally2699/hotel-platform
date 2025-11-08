@@ -322,9 +322,9 @@ const RevenuePage = () => {
                       .map((booking, index) => (
                         <div key={index} className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg hover:shadow-md transition-shadow">
                           <div>
-                            <h3 className="font-semibold text-modern-darkGray">{booking.serviceId?.name || t('hotelAdmin.revenue.recentOrders.serviceName')}</h3>
+                            <h3 className="font-semibold text-modern-darkGray">{booking.serviceId?.category || t('hotelAdmin.revenue.recentOrders.serviceName')}</h3>
                             <p className="text-sm text-modern-gray">
-                              {booking.serviceId?.category || t('hotelAdmin.revenue.recentOrders.category')} • {t('hotelAdmin.revenue.recentOrders.status')}: <span className="font-medium">{booking.status}</span>
+                              {booking.serviceId?.name || t('hotelAdmin.revenue.recentOrders.category')} • {t('hotelAdmin.revenue.recentOrders.status')}: <span className="font-medium">{booking.status}</span>
                             </p>
                             <p className="text-xs text-modern-gray mt-1">
                               {t('hotelAdmin.revenue.recentOrders.guest')}: {booking.guestId?.firstName || t('hotelAdmin.revenue.recentOrders.unknown')} {booking.guestId?.lastName || ''}

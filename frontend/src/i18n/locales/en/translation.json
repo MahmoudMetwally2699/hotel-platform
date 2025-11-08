@@ -185,6 +185,8 @@
       "member": "Member",
       "tier": "Tier",
       "totalSpending": "Total Spending",
+      "tierPoints": "Tier Points",
+      "redeemPoints": "Redeem Points",
       "points": "Points",
       "noMembers": "No members yet"
     },

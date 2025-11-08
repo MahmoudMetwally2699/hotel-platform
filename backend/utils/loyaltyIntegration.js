@@ -23,26 +23,31 @@ const { sendEmail } = require('./email');
  */
 const getOrCreateLoyaltyMember = async (guestId, hotelId) => {
   try {
-    // Check if loyalty program exists and is active
-    const program = await LoyaltyProgram.findOne({
-      hotel: hotelId,
-      isActive: true
-    });
-
-    if (!program) {
-      return null;
-    }
-
     // Check if member already exists and is active
     const member = await LoyaltyMember.findOne({
       guest: guestId,
       hotel: hotelId,
       isActive: true // Only return active members
-    });
+    }).populate('guest', 'channel');
 
     if (!member) {
       // Guest is not enrolled in loyalty program
       // Return null - no automatic enrollment
+      return null;
+    }
+
+    // Get the guest's channel (default to Direct if not specified)
+    const guestChannel = member.guest?.channel || 'Direct';
+
+    // Find the loyalty program for this guest's channel
+    const program = await LoyaltyProgram.findOne({
+      hotel: hotelId,
+      channel: guestChannel,
+      isActive: true
+    });
+
+    if (!program) {
+      console.log(`No active loyalty program found for channel: ${guestChannel}`);
       return null;
     }
 

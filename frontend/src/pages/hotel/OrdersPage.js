@@ -355,29 +355,28 @@ const OrdersPage = () => {
                               </div>
                               <div className="ml-3">
                                 <div className="text-sm font-semibold text-gray-900 truncate max-w-[150px]">
-                                  {order.fullGuestName && order.fullGuestName !== 'undefined' && !order.fullGuestName.includes('undefined')
-                                    ? order.fullGuestName
-                                    : order.guestId?.firstName && order.guestId?.lastName && order.guestId.lastName !== 'undefined'
-                                    ? `${order.guestId.firstName} ${order.guestId.lastName}`
-                                    : order.guestDetails?.firstName && order.guestDetails?.lastName && order.guestDetails.lastName !== 'undefined'
-                                    ? `${order.guestDetails.firstName} ${order.guestDetails.lastName}`
-                                    : order.guestId?.firstName
-                                    ? order.guestId.firstName
-                                    : order.guestDetails?.firstName
-                                    ? order.guestDetails.firstName
-                                    : order.guest?.firstName && order.guest?.lastName
-                                    ? `${order.guest.firstName} ${order.guest.lastName}`
-                                    : order.guest?.name
-                                    ? order.guest.name
-                                    : order.guestId?.name
-                                    ? order.guestId.name
-                                    : order.guestDetails?.name
-                                    ? order.guestDetails.name
-                                    : order.customerName
-                                    ? order.customerName
-                                    : order.guestName
-                                    ? order.guestName
-                                    : 'Unknown Guest'}
+                                  {(() => {
+                                    const guest = order.guestId || order.guestDetails || order.guest || {};
+                                    const firstName = guest.firstName?.trim() || '';
+                                    const lastName = guest.lastName?.trim() || '';
+
+                                    // Check if both names exist and are valid (not 'undefined' string)
+                                    if (firstName && lastName &&
+                                        lastName !== 'undefined' &&
+                                        firstName !== lastName) {
+                                      return `${firstName} ${lastName}`;
+                                    }
+
+                                    // If only first name or names are the same, return first name only
+                                    if (firstName) return firstName;
+
+                                    // Fallback to other name fields
+                                    return guest.name ||
+                                           order.fullGuestName ||
+                                           order.customerName ||
+                                           order.guestName ||
+                                           t('hotelAdmin.dashboard.recentOrders.unknownGuest');
+                                  })()}
                                 </div>
                                 <div className="text-xs text-modern-darkGray truncate max-w-[150px]">
                                   {order.guestId?.email || order.guestDetails?.email || order.guest?.email || t('hotelAdmin.dashboard.recentOrders.noEmail')}
@@ -494,28 +493,26 @@ const OrdersPage = () => {
                         <div className="ml-3">
                           <div className="text-sm font-semibold text-gray-900">
                             {(() => {
-                              // Try fullGuestName first (most common case)
-                              if (order.fullGuestName) return order.fullGuestName;
+                              const guest = order.guestId || order.guestDetails || order.guest || {};
+                              const firstName = guest.firstName?.trim() || '';
+                              const lastName = guest.lastName?.trim() || '';
 
-                              // Try different combinations, filtering out "undefined" strings
-                              const guestIdName = order.guestId?.firstName && order.guestId?.lastName !== "undefined"
-                                ? `${order.guestId.firstName} ${order.guestId.lastName}`.replace(' undefined', '').trim()
-                                : null;
-                              if (guestIdName) return guestIdName;
+                              // Check if both names exist and are valid (not 'undefined' string)
+                              if (firstName && lastName &&
+                                  lastName !== 'undefined' &&
+                                  firstName !== lastName) {
+                                return `${firstName} ${lastName}`;
+                              }
 
-                              const guestDetailsName = order.guestDetails?.firstName && order.guestDetails?.lastName !== "undefined"
-                                ? `${order.guestDetails.firstName} ${order.guestDetails.lastName}`.replace(' undefined', '').trim()
-                                : null;
-                              if (guestDetailsName) return guestDetailsName;
-
-                              const guestName = order.guest?.firstName && order.guest?.lastName !== "undefined"
-                                ? `${order.guest.firstName} ${order.guest.lastName}`.replace(' undefined', '').trim()
-                                : null;
-                              if (guestName) return guestName;
+                              // If only first name or names are the same, return first name only
+                              if (firstName) return firstName;
 
                               // Fallback to other name fields
-                              return order.guest?.name || order.guestId?.name || order.guestDetails?.name ||
-                                     order.customerName || order.guestName || t('hotelAdmin.dashboard.recentOrders.unknownGuest');
+                              return guest.name ||
+                                     order.fullGuestName ||
+                                     order.customerName ||
+                                     order.guestName ||
+                                     t('hotelAdmin.dashboard.recentOrders.unknownGuest');
                             })()}
                           </div>
                           <div className="text-xs text-modern-darkGray">
@@ -773,43 +770,37 @@ const OrdersPage = () => {
                   <div className="flex items-center mb-3">
                     <div className="h-12 w-12 rounded-full bg-gradient-to-br from-modern-blue to-modern-lightBlue flex items-center justify-center text-white font-bold">
                       {(() => {
-                        // Try to get first character from fullGuestName first
-                        if (selectedOrder.fullGuestName) return selectedOrder.fullGuestName.charAt(0).toUpperCase();
-
-                        // Fallback to other name sources
-                        return selectedOrder.guestId?.firstName?.charAt(0) ||
-                               selectedOrder.guestDetails?.firstName?.charAt(0) ||
-                               selectedOrder.guest?.firstName?.charAt(0) ||
-                               selectedOrder.guest?.name?.charAt(0) ||
-                               selectedOrder.customerName?.charAt(0) ||
-                               selectedOrder.guestName?.charAt(0) || 'G';
-                      })().toUpperCase()}
+                        const guest = selectedOrder.guestId || selectedOrder.guestDetails || selectedOrder.guest || {};
+                        const firstName = guest.firstName?.trim() || '';
+                        return firstName?.charAt(0)?.toUpperCase() ||
+                               guest.name?.charAt(0)?.toUpperCase() ||
+                               selectedOrder.customerName?.charAt(0)?.toUpperCase() ||
+                               'G';
+                      })()}
                     </div>
                     <div className="ml-4">
                       <h5 className="font-medium text-gray-900">
                         {(() => {
-                          // Try fullGuestName first (most common case)
-                          if (selectedOrder.fullGuestName) return selectedOrder.fullGuestName;
+                          const guest = selectedOrder.guestId || selectedOrder.guestDetails || selectedOrder.guest || {};
+                          const firstName = guest.firstName?.trim() || '';
+                          const lastName = guest.lastName?.trim() || '';
 
-                          // Try different combinations, filtering out "undefined" strings
-                          const guestIdName = selectedOrder.guestId?.firstName && selectedOrder.guestId?.lastName !== "undefined"
-                            ? `${selectedOrder.guestId.firstName} ${selectedOrder.guestId.lastName}`.replace(' undefined', '').trim()
-                            : null;
-                          if (guestIdName) return guestIdName;
+                          // Check if both names exist and are valid (not 'undefined' string)
+                          if (firstName && lastName &&
+                              lastName !== 'undefined' &&
+                              firstName !== lastName) {
+                            return `${firstName} ${lastName}`;
+                          }
 
-                          const guestDetailsName = selectedOrder.guestDetails?.firstName && selectedOrder.guestDetails?.lastName !== "undefined"
-                            ? `${selectedOrder.guestDetails.firstName} ${selectedOrder.guestDetails.lastName}`.replace(' undefined', '').trim()
-                            : null;
-                          if (guestDetailsName) return guestDetailsName;
-
-                          const guestName = selectedOrder.guest?.firstName && selectedOrder.guest?.lastName !== "undefined"
-                            ? `${selectedOrder.guest.firstName} ${selectedOrder.guest.lastName}`.replace(' undefined', '').trim()
-                            : null;
-                          if (guestName) return guestName;
+                          // If only first name or names are the same, return first name only
+                          if (firstName) return firstName;
 
                           // Fallback to other name fields
-                          return selectedOrder.guest?.name || selectedOrder.guestId?.name || selectedOrder.guestDetails?.name ||
-                                 selectedOrder.customerName || selectedOrder.guestName || t('hotelAdmin.dashboard.recentOrders.unknownGuest');
+                          return guest.name ||
+                                 selectedOrder.fullGuestName ||
+                                 selectedOrder.customerName ||
+                                 selectedOrder.guestName ||
+                                 t('hotelAdmin.dashboard.recentOrders.unknownGuest');
                         })()}
                       </h5>
                       <p className="text-sm text-gray-600">{selectedOrder.guestId?.email || selectedOrder.guestDetails?.email || selectedOrder.guest?.email || t('hotelAdmin.dashboard.recentOrders.noEmail')}</p>
