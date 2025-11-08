@@ -7,7 +7,9 @@ import { formatPriceByLanguage } from '../../../utils/currency';
 
 const CompleteSummaryTable = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
-  const currency = useSelector(selectHotelCurrency);
+  const reduxCurrency = useSelector(selectHotelCurrency);
+  // Prioritize currency from API response, fallback to Redux
+  const currency = data?.currency || reduxCurrency;
   const [filterCategory, setFilterCategory] = useState('all');
 
   if (loading) {

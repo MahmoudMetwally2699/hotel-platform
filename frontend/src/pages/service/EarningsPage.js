@@ -112,7 +112,7 @@ const EarningsPage = () => {
         labels: categories,
         datasets: [
           {
-            label: 'Earnings ($)',
+            label: `Earnings (${currency})`,
             data: [0, 0, 0, 0], // Placeholder data
             backgroundColor: categoryColors,
             borderColor: categoryBorderColors,
@@ -146,7 +146,7 @@ const EarningsPage = () => {
       labels: categoryLabels,
       datasets: [
         {
-          label: 'Earnings ($)',
+          label: `Earnings (${currency})`,
           data: earningsData,
           backgroundColor: categoryColors,
           borderColor: categoryBorderColors,
@@ -628,7 +628,7 @@ const EarningsPage = () => {
                       tooltip: {
                         callbacks: {
                           label: function(context) {
-                            return `${context.dataset.label}: $${context.raw}`;
+                            return `${context.dataset.label}: ${formatPriceByLanguage(context.raw, i18n.language, currency)}`;
                           }
                         }
                       }
@@ -638,7 +638,7 @@ const EarningsPage = () => {
                         beginAtZero: true,
                         ticks: {
                           callback: function(value) {
-                            return '$' + value;
+                            return formatPriceByLanguage(value, i18n.language, currency);
                           }
                         },
                         grid: {
@@ -688,7 +688,7 @@ const EarningsPage = () => {
                       tooltip: {
                         callbacks: {
                           label: function(context) {
-                            return `${context.dataset.label}: $${context.raw}`;
+                            return `${context.dataset.label}: ${formatPriceByLanguage(context.raw, i18n.language, currency)}`;
                           }
                         }
                       }
@@ -698,7 +698,7 @@ const EarningsPage = () => {
                         beginAtZero: true,
                         ticks: {
                           callback: function(value) {
-                            return '$' + value;
+                            return formatPriceByLanguage(value, i18n.language, currency);
                           }
                         },
                         grid: {

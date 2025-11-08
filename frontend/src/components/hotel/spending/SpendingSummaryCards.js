@@ -7,7 +7,9 @@ import { formatPriceByLanguage } from '../../../utils/currency';
 
 const SpendingSummaryCards = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
-  const currency = useSelector(selectHotelCurrency);
+  const reduxCurrency = useSelector(selectHotelCurrency);
+  // Prioritize currency from API response, fallback to Redux
+  const currency = data?.currency || reduxCurrency;
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

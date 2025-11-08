@@ -432,7 +432,11 @@ const FeedbackModal = ({
                                     <span className="text-gray-600">{item.quantity || 1}x</span>
                                     {item.price && (
                                       <span className="text-orange-600">
-                                        {formatPriceByLanguage(item.price * (item.quantity || 1), 'en')}
+                                        {formatPriceByLanguage(
+                                          item.price * (item.quantity || 1),
+                                          'en',
+                                          booking.payment?.currency || booking.pricing?.currency || 'USD'
+                                        )}
                                       </span>
                                     )}
                                   </div>
@@ -482,7 +486,8 @@ const FeedbackModal = ({
                           <span className="font-semibold text-gray-900">
                             {formatPriceByLanguage(
                               booking.payment?.totalAmount || booking.pricing?.total || booking.pricing?.totalAmount,
-                              'en'
+                              'en',
+                              booking.payment?.currency || booking.pricing?.currency || 'USD'
                             )}
                           </span>
                         </div>

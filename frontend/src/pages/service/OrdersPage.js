@@ -14,6 +14,7 @@ import {
   selectServiceLoading,
   selectServiceError
 } from '../../redux/slices/serviceSlice';
+import { getCurrencySymbol } from '../../utils/currency';
 
 const getNested = (obj, path) => {
   if (!obj) return undefined;
@@ -500,7 +501,8 @@ const OrdersPage = () => {
                         </div>
                       </div>
                       <div className="text-[#3B5787] font-semibold">
-                        ${(order.pricing?.totalAmount || order.totalAmount || 0).toFixed(2)}
+                        {getCurrencySymbol(order.pricing?.currency || order.payment?.currency || 'USD')}
+                        {(order.pricing?.totalAmount || order.totalAmount || 0).toFixed(2)}
                       </div>
                     </div>
                     <div className="mt-2 flex items-center justify-between">
@@ -635,7 +637,7 @@ const OrdersPage = () => {
                           {order.hotel?.name || order.hotelId?.name || order.hotelName || 'N/A'}
                         </td>
                         <td className="px-4 lg:px-6 py-4 text-sm font-semibold text-[#3B5787]">
-                          {order.serviceType === 'housekeeping' ? '---' : `$${(order.pricing?.totalAmount || order.totalAmount || 0).toFixed(2)}`}
+                          {order.serviceType === 'housekeeping' ? '---' : `${getCurrencySymbol(order.pricing?.currency || order.payment?.currency || 'USD')}${(order.pricing?.totalAmount || order.totalAmount || 0).toFixed(2)}`}
                         </td>
                         <td className="px-4 lg:px-6 py-4 text-sm text-gray-700">
                           {order.serviceType === 'housekeeping' ? '---' : (order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card')}
@@ -876,11 +878,11 @@ const OrdersPage = () => {
                                 </div>
                                 <div className="text-right">
                                   <div className="text-sm font-medium text-gray-900">
-                                    ${item.finalPrice?.toFixed(2) || '0.00'}
+                                    {getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}{item.finalPrice?.toFixed(2) || '0.00'}
                                   </div>
                                   {item.basePrice !== item.finalPrice && (
                                     <div className="text-xs text-gray-500 line-through">
-                                      ${item.basePrice?.toFixed(2) || '0.00'}
+                                      {getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}{item.basePrice?.toFixed(2) || '0.00'}
                                     </div>
                                   )}
                                 </div>
@@ -1016,10 +1018,10 @@ const OrdersPage = () => {
                                 </div>
                                 <div className="text-right">
                                   <div className="text-sm font-medium text-gray-900">
-                                    ${item.totalPrice?.toFixed(2) || '0.00'}
+                                    {getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}{item.totalPrice?.toFixed(2) || '0.00'}
                                   </div>
                                   <div className="text-xs text-gray-500">
-                                    ${item.price?.toFixed(2) || '0.00'} each
+                                    {getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}{item.price?.toFixed(2) || '0.00'} each
                                   </div>
                                 </div>
                               </div>
@@ -1192,7 +1194,7 @@ const OrdersPage = () => {
                                   <span>{option.name}: {option.value}</span>
                                   {option.priceModifier !== 0 && (
                                     <span className={option.priceModifier > 0 ? 'text-green-600' : 'text-red-600'}>
-                                      {option.priceModifier > 0 ? '+' : ''}${option.priceModifier?.toFixed(2)}
+                                      {option.priceModifier > 0 ? '+' : ''}{getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}{option.priceModifier?.toFixed(2)}
                                     </span>
                                   )}
                                 </div>
@@ -1209,7 +1211,7 @@ const OrdersPage = () => {
                               {currentOrder.bookingConfig.additionalServices.map((service, index) => (
                                 <div key={index} className="flex justify-between text-sm bg-white p-2 rounded border border-indigo-100">
                                   <span>{service.name}</span>
-                                  <span className="text-green-600">+${service.price?.toFixed(2)}</span>
+                                  <span className="text-green-600">+{getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}{service.price?.toFixed(2)}</span>
                                 </div>
                               ))}
                             </div>
@@ -1238,7 +1240,7 @@ const OrdersPage = () => {
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Base Price:</span>
                           <span className="font-medium">
-                            ${(currentOrder.pricing?.basePrice || currentOrder.basePrice || 0).toFixed(2)}
+                            {getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}{(currentOrder.pricing?.basePrice || currentOrder.basePrice || 0).toFixed(2)}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
@@ -1259,7 +1261,7 @@ const OrdersPage = () => {
                             <span className="text-gray-600">⚡ Express Service:</span>
                             <span className="font-medium text-red-600">
                               {currentOrder.pricing?.expressSurcharge > 0
-                                ? `$${currentOrder.pricing.expressSurcharge.toFixed(2)}`
+                                ? `${getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}${currentOrder.pricing.expressSurcharge.toFixed(2)}`
                                 : 'Yes'
                               }
                             </span>
@@ -1270,7 +1272,7 @@ const OrdersPage = () => {
                           <span>
                             {currentOrder.serviceType === 'housekeeping'
                               ? '---'
-                              : `$${(currentOrder.pricing?.totalAmount || currentOrder.totalAmount || 0).toFixed(2)}`
+                              : `${getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}${(currentOrder.pricing?.totalAmount || currentOrder.totalAmount || 0).toFixed(2)}`
                             }
                           </span>
                         </div>

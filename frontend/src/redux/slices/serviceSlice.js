@@ -838,5 +838,10 @@ export const selectServiceDetails = selectCurrentService;
 export const selectServicesLoading = selectServiceLoading;
 export const selectServicesByCategory = selectAllServices;
 export const selectServiceProviderStats = (state) => state.service.serviceProviderStats;
-export const selectProviderCurrency = (state) => state.service.providerProfile?.currency || 'USD';
+export const selectProviderCurrency = (state) => {
+  // Priority: earnings data -> provider profile -> default to EGP
+  return state.service.providerEarnings?.data?.currency ||
+         state.service.providerProfile?.currency ||
+         'EGP';
+};
 export const selectServiceProviderStatsLoading = (state) => state.service.isLoading;

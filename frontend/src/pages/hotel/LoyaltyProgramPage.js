@@ -25,7 +25,9 @@ const LoyaltyProgramPage = () => {
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const { analytics, loyaltyProgram, loading, members } = useSelector((state) => state.loyalty);
-  const currency = useSelector(selectHotelCurrency);
+  const reduxCurrency = useSelector(selectHotelCurrency);
+  // Prioritize currency from API response (analytics or members), fallback to Redux
+  const currency = analytics?.currency || members?.currency || reduxCurrency;
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [showRewardsModal, setShowRewardsModal] = useState(false);

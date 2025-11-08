@@ -76,6 +76,23 @@ const TransportationBookingManagement = () => {
     pages: 0
   });
 
+  // Helper function to get currency from booking data
+  const getCurrency = (booking) => {
+    // For bookings with quotes already created, use the quote currency
+    // For pending quotes (price preview), prioritize hotel currency
+    return booking?.bookingStatus === 'pending_quote'
+      ? (booking?.hotelId?.paymentSettings?.currency ||
+         booking?.hotel?.paymentSettings?.currency ||
+         booking?.quote?.currency ||
+         booking?.payment?.currency ||
+         'EGP')
+      : (booking?.quote?.currency ||
+         booking?.payment?.currency ||
+         booking?.hotelId?.paymentSettings?.currency ||
+         booking?.hotel?.paymentSettings?.currency ||
+         'EGP');
+  };
+
   // Tab configuration
   const tabs = [
     { id: 'pending_quote', label: t('transportation.tabs.pendingQuotes'), icon: FaQuoteLeft },
@@ -232,7 +249,7 @@ const TransportationBookingManagement = () => {
             <div className="flex justify-between items-center">
               <span className="text-sm font-semibold text-gray-700">{t('transportation.labels.quotedPrice')}:</span>
               <span className="text-xl font-bold text-green-600">
-                {formatPriceByLanguage(booking.quote.finalPrice, i18n.language)}
+                {formatPriceByLanguage(booking.quote.finalPrice, i18n.language, getCurrency(booking))}
               </span>
             </div>
             {booking.quote.quoteNotes && (
@@ -514,15 +531,15 @@ const TransportationBookingManagement = () => {
                     <div className="text-sm space-y-1">
                       <div className="flex justify-between">
                         <span>{t('transportation.basePrice')}:</span>
-                        <span>{formatPriceByLanguage(parseFloat(quoteForm.basePrice), i18n.language)}</span>
+                        <span>{formatPriceByLanguage(parseFloat(quoteForm.basePrice), i18n.language, getCurrency(selectedBooking))}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>{t('transportation.hotelMarkup')} ({selectedBooking.hotelMarkup.percentage}%):</span>
-                        <span>{formatPriceByLanguage(parseFloat(quoteForm.basePrice) * (selectedBooking.hotelMarkup.percentage / 100), i18n.language)}</span>
+                        <span>{formatPriceByLanguage(parseFloat(quoteForm.basePrice) * (selectedBooking.hotelMarkup.percentage / 100), i18n.language, getCurrency(selectedBooking))}</span>
                       </div>
                       <div className="border-t pt-1 flex justify-between font-medium text-blue-900">
                         <span>{t('transportation.finalPrice')}:</span>
-                        <span>{formatPriceByLanguage(parseFloat(quoteForm.basePrice) * (1 + selectedBooking.hotelMarkup.percentage / 100), i18n.language)}</span>
+                        <span>{formatPriceByLanguage(parseFloat(quoteForm.basePrice) * (1 + selectedBooking.hotelMarkup.percentage / 100), i18n.language, getCurrency(selectedBooking))}</span>
                       </div>
                     </div>
                   </div>
@@ -634,11 +651,11 @@ const TransportationBookingManagement = () => {
                       <div className="grid grid-cols-2 gap-4 text-sm mb-3">
                         <div>
                           <span className="font-medium">{t('transportation.basePrice')}:</span>
-                          <p className="text-gray-700">{formatPriceByLanguage(selectedBooking.quote.basePrice, i18n.language)}</p>
+                          <p className="text-gray-700">{formatPriceByLanguage(selectedBooking.quote.basePrice, i18n.language, getCurrency(selectedBooking))}</p>
                         </div>
                         <div>
                           <span className="font-medium">{t('transportation.finalPrice')}:</span>
-                          <p className="text-lg font-bold text-green-600">{formatPriceByLanguage(selectedBooking.quote.finalPrice, i18n.language)}</p>
+                          <p className="text-lg font-bold text-green-600">{formatPriceByLanguage(selectedBooking.quote.finalPrice, i18n.language, getCurrency(selectedBooking))}</p>
                         </div>
                         <div>
                           <span className="font-medium">{t('transportation.quotedAt')}:</span>
@@ -671,7 +688,7 @@ const TransportationBookingManagement = () => {
                         </div>
                         <div>
                           <span className="font-medium">{t('transportation.paidAmount')}:</span>
-                          <p className="text-gray-700">{formatPriceByLanguage(selectedBooking.payment.paidAmount, i18n.language)}</p>
+                          <p className="text-gray-700">{formatPriceByLanguage(selectedBooking.payment.paidAmount, i18n.language, getCurrency(selectedBooking))}</p>
                         </div>
                         <div>
                           <span className="font-medium">{t('transportation.paymentDate')}:</span>

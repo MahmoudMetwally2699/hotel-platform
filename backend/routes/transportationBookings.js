@@ -418,7 +418,7 @@ router.get('/guest', protect, restrictTo('guest'), async (req, res) => {
     const bookings = await TransportationBooking.find(query)
       .populate('serviceProvider', 'businessName phone email rating')
       .populate('service', 'name')
-      .populate('hotel', 'name')
+      .populate('hotel', 'name paymentSettings.currency')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -629,7 +629,7 @@ router.get('/provider', protect, restrictTo('service'), async (req, res) => {
     const bookings = await TransportationBooking.find(query)
       .populate('guestId', 'firstName lastName email phone')
       .populate('serviceId', 'serviceName')
-      .populate('hotelId', 'name')
+      .populate('hotelId', 'name paymentSettings.currency')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -696,7 +696,8 @@ router.put('/:bookingId/quote', protect, restrictTo('service'), async (req, res)
     const booking = await TransportationBooking.findOne({
       _id: req.params.bookingId,
       serviceProviderId: serviceProviderId
-    }).populate('guestId', 'firstName lastName email');
+    }).populate('guestId', 'firstName lastName email')
+      .populate('hotelId', 'name paymentSettings.currency');
 
     if (!booking) {
       return res.status(404).json({
@@ -765,7 +766,7 @@ router.get('/:bookingId', protect, async (req, res) => {
         guestId: req.user._id
       }).populate('serviceProvider', 'businessName phone email')
         .populate('service', 'name')
-        .populate('hotel', 'name');
+        .populate('hotel', 'name paymentSettings.currency');
     } else if (req.user.role === 'service') {
       let serviceProviderId;
       if (req.user.serviceProviderId) {
@@ -787,7 +788,7 @@ router.get('/:bookingId', protect, async (req, res) => {
         serviceProviderId: serviceProviderId
       }).populate('guestId', 'firstName lastName email phone')
         .populate('serviceId', 'serviceName')
-        .populate('hotelId', 'name');
+        .populate('hotelId', 'name paymentSettings.currency');
     } else {
       return res.status(403).json({
         success: false,

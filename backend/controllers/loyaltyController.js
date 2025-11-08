@@ -418,9 +418,15 @@ exports.getAllMembers = async (req, res) => {
 
     const total = await LoyaltyMember.countDocuments(query);
 
+    // Get hotel currency
+    const Hotel = require('../models/Hotel');
+    const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+    const currency = hotel?.paymentSettings?.currency || 'USD';
+
     res.status(200).json({
       success: true,
       data: members,
+      currency: currency,
       pagination: {
         page: Number(page),
         limit: Number(limit),
@@ -1073,6 +1079,11 @@ exports.getLoyaltyAnalytics = async (req, res) => {
     const totalDiscountsGiven = discountCosts[0]?.totalDiscounts || 0;
     const roi = calculateLoyaltyROI(totalRevenueFromLoyalMembers, totalRewardsCost, totalDiscountsGiven);
 
+    // Get hotel currency
+    const Hotel = require('../models/Hotel');
+    const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+    const currency = hotel?.paymentSettings?.currency || 'USD';
+
     res.status(200).json({
       success: true,
       data: {
@@ -1099,7 +1110,8 @@ exports.getLoyaltyAnalytics = async (req, res) => {
           roiPercentage: roi.roiPercentage
         },
         recentMembers,
-        topMembers
+        topMembers,
+        currency: currency
       }
     });
   } catch (error) {

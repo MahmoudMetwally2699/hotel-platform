@@ -14,7 +14,9 @@ import { formatPriceByLanguage } from '../../../utils/currency';
 
 const RevenueByCategoryChart = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
-  const currency = useSelector(selectHotelCurrency);
+  const reduxCurrency = useSelector(selectHotelCurrency);
+  // Prioritize currency from API response, fallback to Redux
+  const currency = data?.currency || reduxCurrency;
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">

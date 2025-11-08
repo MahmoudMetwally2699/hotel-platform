@@ -1070,9 +1070,15 @@ router.get('/earnings', catchAsync(async (req, res) => {
   }, 0);
 
   const pendingEarnings = pendingRegularEarnings + pendingTransportationEarnings;
+
+  // Get provider's currency
+  const provider = await ServiceProvider.findById(providerId).select('currency');
+  const currency = provider?.currency || 'EGP';
+
   res.status(200).json({
     success: true,
     data: {
+      currency: currency,
       // Frontend expects these specific field names
       availableBalance: Math.round(totalEarnings * 100) / 100,
       monthlyEarnings: Math.round(totalEarnings * 100) / 100,
@@ -1308,6 +1314,10 @@ router.get('/analytics/categories', catchAsync(async (req, res) => {
     };
   });
 
+  // Get provider currency
+  const provider = await ServiceProvider.findById(providerId).select('currency');
+  const currency = provider?.currency || 'EGP';
+
   res.status(200).json({
     success: true,
     data: {
@@ -1316,7 +1326,8 @@ router.get('/analytics/categories', catchAsync(async (req, res) => {
         startDate,
         endDate
       },
-      categories: completeAnalytics
+      categories: completeAnalytics,
+      currency: currency
     }
   });
 }));

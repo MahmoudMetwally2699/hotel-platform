@@ -5515,6 +5515,10 @@ router.get('/analytics/revenue/summary', catchAsync(async (req, res) => {
     ? ((totalRevenue - previousTotalRevenue) / previousTotalRevenue) * 100
     : 0;
 
+  // Get hotel currency
+  const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+  const currency = hotel?.paymentSettings?.currency || 'USD';
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -5522,7 +5526,8 @@ router.get('/analytics/revenue/summary', catchAsync(async (req, res) => {
       internalRevenue,
       externalRevenue,
       externalCommission,
-      trend: Math.round(trend * 10) / 10
+      trend: Math.round(trend * 10) / 10,
+      currency: currency
     }
   });
 }));
@@ -5634,9 +5639,16 @@ router.get('/analytics/revenue/comparison', catchAsync(async (req, res) => {
     new Date(a.date) - new Date(b.date)
   );
 
+  // Get hotel currency
+  const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+  const currency = hotel?.paymentSettings?.currency || 'USD';
+
   res.status(200).json({
     status: 'success',
-    data: { comparisonData }
+    data: {
+      comparisonData,
+      currency: currency
+    }
   });
 }));
 
@@ -5707,9 +5719,16 @@ router.get('/analytics/revenue/by-category', catchAsync(async (req, res) => {
     percentage: totalRevenue > 0 ? Math.round((cat.totalRevenue / totalRevenue) * 1000) / 10 : 0
   }));
 
+  // Get hotel currency
+  const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+  const currency = hotel?.paymentSettings?.currency || 'USD';
+
   res.status(200).json({
     status: 'success',
-    data: { categoryData }
+    data: {
+      categoryData,
+      currency: currency
+    }
   });
 }));
 
@@ -5817,11 +5836,16 @@ router.get('/analytics/revenue/internal-services', catchAsync(async (req, res) =
       : 0
   }));
 
+  // Get hotel currency
+  const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+  const currency = hotel?.paymentSettings?.currency || 'USD';
+
   res.status(200).json({
     status: 'success',
     data: {
       totalInternalRevenue: Math.round(totalInternalRevenue * 100) / 100,
-      services: serviceData
+      services: serviceData,
+      currency: currency
     }
   });
 }));
@@ -5945,6 +5969,10 @@ router.get('/analytics/revenue/external-providers', catchAsync(async (req, res) 
     totalBookings: providerData.reduce((sum, p) => sum + p.bookingCount, 0)
   };
 
+  // Get hotel currency
+  const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+  const currency = hotel?.paymentSettings?.currency || 'USD';
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -5957,7 +5985,8 @@ router.get('/analytics/revenue/external-providers', catchAsync(async (req, res) 
         avgProfitMargin: totals.totalRevenue > 0
           ? Math.round((totals.totalHotelCommission / totals.totalRevenue) * 1000) / 10
           : 0
-      }
+      },
+      currency: currency
     }
   });
 }));
@@ -6076,6 +6105,10 @@ router.get('/analytics/revenue/complete-summary', catchAsync(async (req, res) =>
     };
   });
 
+  // Get hotel currency
+  const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+  const currency = hotel?.paymentSettings?.currency || 'USD';
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -6088,7 +6121,8 @@ router.get('/analytics/revenue/complete-summary', catchAsync(async (req, res) =>
         overallProfitMargin: grandTotal > 0
           ? Math.round((totalMarkup / grandTotal) * 1000) / 10
           : 0
-      }
+      },
+      currency: currency
     }
   });
 }));
@@ -6182,6 +6216,10 @@ router.get('/analytics/spending/summary', catchAsync(async (req, res) => {
   const uniqueCustomerIds = [...new Set([...regular.uniqueCustomers, ...transport.uniqueCustomers])];
   const avgCustomerSpending = uniqueCustomerIds.length > 0 ? totalSpending / uniqueCustomerIds.length : 0;
 
+  // Get hotel currency
+  const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+  const currency = hotel?.paymentSettings?.currency || 'USD';
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -6190,7 +6228,8 @@ router.get('/analytics/spending/summary', catchAsync(async (req, res) => {
       totalServiceRequests: totalBookings,
       mostPopularService: popularService[0]?._id || 'N/A',
       mostPopularServiceCount: popularService[0]?.count || 0,
-      mostPopularServiceRevenue: popularService[0]?.revenue || 0
+      mostPopularServiceRevenue: popularService[0]?.revenue || 0,
+      currency: currency
     }
   });
 }));
@@ -6308,11 +6347,16 @@ router.get('/analytics/spending/trend', catchAsync(async (req, res) => {
     avgSpending: Math.round((item.totalSpending / item.bookingCount) * 100) / 100
   }));
 
+  // Get hotel currency
+  const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+  const currency = hotel?.paymentSettings?.currency || 'USD';
+
   res.status(200).json({
     status: 'success',
     data: {
       trendData,
-      period
+      period,
+      currency: currency
     }
   });
 }));
@@ -6375,10 +6419,15 @@ router.get('/analytics/spending/service-requests', catchAsync(async (req, res) =
 
   const allRequests = [...serviceRequests, ...transportRequests];
 
+  // Get hotel currency
+  const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+  const currency = hotel?.paymentSettings?.currency || 'USD';
+
   res.status(200).json({
     status: 'success',
     data: {
-      requestData: allRequests
+      requestData: allRequests,
+      currency: currency
     }
   });
 }));
@@ -6453,11 +6502,16 @@ router.get('/analytics/spending/service-popularity', catchAsync(async (req, res)
       : 0
   }));
 
+  // Get hotel currency
+  const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+  const currency = hotel?.paymentSettings?.currency || 'USD';
+
   res.status(200).json({
     status: 'success',
     data: {
       services: popularityData,
-      totalRequests
+      totalRequests,
+      currency: currency
     }
   });
 }));
@@ -6596,10 +6650,15 @@ router.get('/analytics/spending/comprehensive', catchAsync(async (req, res) => {
     };
   });
 
+  // Get hotel currency
+  const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+  const currency = hotel?.paymentSettings?.currency || 'USD';
+
   res.status(200).json({
     status: 'success',
     data: {
-      services: comprehensiveData
+      services: comprehensiveData,
+      currency: currency
     }
   });
 }));

@@ -124,6 +124,10 @@ const transportationBookingSchema = new mongoose.Schema({
     },
     hotelMarkupPercentage: Number,
     finalPrice: Number, // basePrice + markup
+    currency: {
+      type: String,
+      default: 'USD'
+    },
     quotedAt: Date,
     expiresAt: Date,
     quoteNotes: String,
@@ -635,9 +639,17 @@ transportationBookingSchema.pre('save', async function(next) {
 });
 
 // Instance methods
-transportationBookingSchema.methods.createQuote = function(basePrice, notes = '', expirationHours = 24) {
+transportationBookingSchema.methods.createQuote = async function(basePrice, notes = '', expirationHours = 24) {
+  // Populate hotel to get currency if not already populated
+  if (!this.populated('hotelId')) {
+    await this.populate('hotelId', 'paymentSettings.currency');
+  }
+
+  const currency = this.hotelId?.paymentSettings?.currency || 'USD';
+
   this.quote = {
     basePrice: basePrice,
+    currency: currency,
     quotedAt: new Date(),
     expiresAt: new Date(Date.now() + (expirationHours * 60 * 60 * 1000)),
     quoteNotes: notes
@@ -651,14 +663,27 @@ transportationBookingSchema.methods.createQuote = function(basePrice, notes = ''
 
   // Set payment amount for the new simplified workflow
   this.payment.totalAmount = this.quote.finalPrice;
+  this.payment.currency = currency;
 
   // Skip quote_sent and go directly to payment_pending
   this.bookingStatus = 'payment_pending';
 
+  // Get currency symbol
+  const currencySymbols = {
+    'USD': '$',
+    'EUR': '€',
+    'GBP': '£',
+    'CAD': 'CA$',
+    'AUD': 'A$',
+    'SAR': 'ر.س',
+    'EGP': 'E£'
+  };
+  const currencySymbol = currencySymbols[currency] || currency;
+
   // Add communication log
   this.communications.push({
     sender: 'provider',
-    message: `Quote set: $${this.quote.finalPrice}${notes ? `. Notes: ${notes}` : ''} - Ready for payment`,
+    message: `Quote set: ${currencySymbol}${this.quote.finalPrice.toFixed(2)}${notes ? `. Notes: ${notes}` : ''} - Ready for payment`,
     messageType: 'quote'
   });
 

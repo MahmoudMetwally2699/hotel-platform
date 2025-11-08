@@ -7,7 +7,9 @@ import { formatPriceByLanguage } from '../../../utils/currency';
 
 const ComprehensivePerformanceTable = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
-  const currency = useSelector(selectHotelCurrency);
+  const reduxCurrency = useSelector(selectHotelCurrency);
+  // Prioritize currency from API response, fallback to Redux
+  const currency = data?.currency || reduxCurrency;
   const [sortBy, setSortBy] = useState('totalRequests');
   const [sortOrder, setSortOrder] = useState('desc');
 

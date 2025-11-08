@@ -77,9 +77,10 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
   ];
 
   const formatCurrency = (value) => {
+    const currency = data?.currency || 'USD';
     return new Intl.NumberFormat(i18n.language || 'en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(value || 0);
