@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Package } from 'lucide-react';
+import { Home, Package, Utensils, Car, Wrench, Shirt } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const InternalServicesTable = ({ data, loading, error }) => {
@@ -53,12 +53,14 @@ const InternalServicesTable = ({ data, loading, error }) => {
   const formatServiceName = (type) => t(`performanceAnalyticsPage.serviceTypes.${type}`, { defaultValue: type });
 
   const getServiceIcon = (type) => {
-    const icons = {
-      housekeeping: '🧹',
-      roomService: '🍽️',
-      maintenance: '🔧'
+    const iconMap = {
+      housekeeping: <Home className="w-6 h-6 text-blue-600" />,
+      laundry: <Shirt className="w-6 h-6 text-indigo-600" />,
+      dining: <Utensils className="w-6 h-6 text-orange-600" />,
+      transportation: <Car className="w-6 h-6 text-green-600" />,
+      maintenance: <Wrench className="w-6 h-6 text-gray-600" />
     };
-    return icons[type] || '📦';
+    return iconMap[type] || <Package className="w-6 h-6 text-purple-600" />;
   };
 
   return (
@@ -98,7 +100,9 @@ const InternalServicesTable = ({ data, loading, error }) => {
               >
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{getServiceIcon(service.serviceType)}</span>
+                    <div className="flex-shrink-0">
+                      {getServiceIcon(service.serviceType)}
+                    </div>
                     <span className="font-medium text-gray-900">
                       {formatServiceName(service.serviceType)}
                     </span>

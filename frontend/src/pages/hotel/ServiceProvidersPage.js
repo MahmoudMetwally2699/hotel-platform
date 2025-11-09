@@ -33,6 +33,7 @@ const ServiceProvidersPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [licenseExpiry, setLicenseExpiry] = useState('');
   const [isSavingLicense, setIsSavingLicense] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
 
   // Available service categories (only the specified ones)
   const serviceCategories = [
@@ -420,34 +421,83 @@ const ServiceProvidersPage = () => {
                             )}
                           </td>
                           <td className="px-4 py-4 text-center">
-                            <div className="flex space-x-2 justify-center">
-                              {provider.providerType !== 'internal' && (
-                                <button
-                                  onClick={() => handleSetMarkup(provider)}
-                                  className="text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-blue-50 text-sm"
-                                >
-                                  {t('hotelAdmin.serviceProviders.actions.setMarkup')}
-                                </button>
+                            <div className="relative inline-block text-left">
+                              <button
+                                onClick={() => setOpenDropdownId(openDropdownId === provider._id ? null : provider._id)}
+                                className="inline-flex items-center justify-center w-10 h-10 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
+                                aria-label="Actions"
+                              >
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                  <circle cx="12" cy="5" r="2"/>
+                                  <circle cx="12" cy="12" r="2"/>
+                                  <circle cx="12" cy="19" r="2"/>
+                                </svg>
+                              </button>
+
+                              {openDropdownId === provider._id && (
+                                <>
+                                  {/* Backdrop to close dropdown when clicking outside */}
+                                  <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setOpenDropdownId(null)}
+                                  />
+                                  {/* Dropdown menu */}
+                                  <div className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    <div className="py-1">
+                                      {provider.providerType !== 'internal' && (
+                                        <button
+                                          onClick={() => {
+                                            handleSetMarkup(provider);
+                                            setOpenDropdownId(null);
+                                          }}
+                                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-modern-blue flex items-center gap-3 transition-colors duration-150"
+                                        >
+                                          <svg className="w-5 h-5 text-modern-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                          </svg>
+                                          <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.setMarkup')}</span>
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={() => {
+                                          handleManageCategories(provider);
+                                          setOpenDropdownId(null);
+                                        }}
+                                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-[#67BAE0]/10 hover:text-[#3B5787] flex items-center gap-3 transition-colors duration-150"
+                                      >
+                                        <svg className="w-5 h-5 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                        </svg>
+                                        <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.manageServices')}</span>
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          handleResetPassword(provider);
+                                          setOpenDropdownId(null);
+                                        }}
+                                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 flex items-center gap-3 transition-colors duration-150"
+                                      >
+                                        <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                        </svg>
+                                        <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.resetPassword')}</span>
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          handleUpdateLicense(provider);
+                                          setOpenDropdownId(null);
+                                        }}
+                                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition-colors duration-150"
+                                      >
+                                        <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.updateLicense')}</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </>
                               )}
-                              <button
-                                onClick={() => handleManageCategories(provider)}
-                                className="text-[#3B5787] hover:text-[#2A4065] font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-[#67BAE0]/10 text-sm"
-                              >
-                                {t('hotelAdmin.serviceProviders.actions.manageServices')}
-                              </button>
-                              <button
-                                onClick={() => handleResetPassword(provider)}
-                                className="text-red-600 hover:text-red-800 font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-red-50 text-sm"
-                                title={t('hotelAdmin.serviceProviders.actions.resetPassword')}
-                              >
-                                {t('hotelAdmin.serviceProviders.actions.resetPassword')}
-                              </button>
-                              <button
-                                onClick={() => handleUpdateLicense(provider)}
-                                className="text-emerald-700 hover:text-emerald-900 font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-emerald-50 text-sm"
-                              >
-                                {t('hotelAdmin.serviceProviders.actions.updateLicense')}
-                              </button>
                             </div>
                           </td>
                         </tr>
@@ -525,28 +575,84 @@ const ServiceProvidersPage = () => {
                         </span>
                       </div>
 
-                      <div className="flex space-x-2 mt-4">
-                        {provider.providerType !== 'internal' && (
-                          <button
-                            onClick={() => handleSetMarkup(provider)}
-                            className="flex-1 text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 py-2 rounded hover:bg-blue-50 text-sm text-center border border-modern-blue"
-                          >
-                            {t('hotelAdmin.serviceProviders.actions.setMarkup')}
-                          </button>
+                      {/* Mobile Actions Dropdown */}
+                      <div className="relative mt-4">
+                        <button
+                          onClick={() => setOpenDropdownId(openDropdownId === provider._id ? null : provider._id)}
+                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200 font-medium"
+                        >
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="5" r="2"/>
+                            <circle cx="12" cy="12" r="2"/>
+                            <circle cx="12" cy="19" r="2"/>
+                          </svg>
+                          <span>{t('hotelAdmin.serviceProviders.table.actions')}</span>
+                        </button>
+
+                        {openDropdownId === provider._id && (
+                          <>
+                            {/* Backdrop to close dropdown when clicking outside */}
+                            <div
+                              className="fixed inset-0 z-10"
+                              onClick={() => setOpenDropdownId(null)}
+                            />
+                            {/* Dropdown menu */}
+                            <div className="absolute left-0 right-0 z-20 mt-2 w-full origin-top rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                              <div className="py-1">
+                                {provider.providerType !== 'internal' && (
+                                  <button
+                                    onClick={() => {
+                                      handleSetMarkup(provider);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-modern-blue flex items-center gap-3 transition-colors duration-150"
+                                  >
+                                    <svg className="w-5 h-5 text-modern-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.setMarkup')}</span>
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    handleManageCategories(provider);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-[#67BAE0]/10 hover:text-[#3B5787] flex items-center gap-3 transition-colors duration-150"
+                                >
+                                  <svg className="w-5 h-5 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                  </svg>
+                                  <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.manageServices')}</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleResetPassword(provider);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 flex items-center gap-3 transition-colors duration-150"
+                                >
+                                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                  </svg>
+                                  <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.resetPassword')}</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleUpdateLicense(provider);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition-colors duration-150"
+                                >
+                                  <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                  <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.updateLicense')}</span>
+                                </button>
+                              </div>
+                            </div>
+                          </>
                         )}
-                        <button
-                          onClick={() => handleResetPassword(provider)}
-                          className="flex-1 text-red-600 hover:text-red-800 font-medium transition-colors duration-200 py-2 rounded hover:bg-red-50 text-sm text-center border border-red-600"
-                          title={t('hotelAdmin.serviceProviders.actions.resetPassword')}
-                        >
-                          {t('hotelAdmin.serviceProviders.actions.resetPassword')}
-                        </button>
-                        <button
-                          onClick={() => handleUpdateLicense(provider)}
-                          className="flex-1 text-emerald-700 hover:text-emerald-900 font-medium transition-colors duration-200 py-2 rounded hover:bg-emerald-50 text-sm text-center border border-emerald-700"
-                        >
-                          {t('hotelAdmin.serviceProviders.actions.updateLicense')}
-                        </button>
                       </div>
                     </div>
                   </div>

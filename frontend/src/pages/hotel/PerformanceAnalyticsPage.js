@@ -6,7 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { FiCalendar, FiDownload, FiRefreshCw } from 'react-icons/fi';
+import { FiCalendar, FiDownload, FiRefreshCw, FiStar, FiActivity, FiDollarSign, FiShoppingCart } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import RatingSummaryCards from '../../components/hotel/analytics/RatingSummaryCards';
 import RatingsBreakdownTable from '../../components/hotel/analytics/RatingsBreakdownTable';
@@ -314,10 +314,30 @@ const PerformanceAnalyticsPage = () => {
 
   // Tab content
   const tabs = [
-    { id: 'ratings', label: t('performanceAnalyticsPage.tabs.ratings'), active: true },
-    { id: 'operational', label: t('performanceAnalyticsPage.tabs.operational'), active: true },
-    { id: 'revenue', label: t('performanceAnalyticsPage.tabs.revenue'), active: true },
-    { id: 'spending', label: t('performanceAnalyticsPage.tabs.spending'), active: true }
+    {
+      id: 'ratings',
+      label: t('performanceAnalyticsPage.tabs.ratings'),
+      icon: FiStar,
+      active: true
+    },
+    {
+      id: 'operational',
+      label: t('performanceAnalyticsPage.tabs.operational'),
+      icon: FiActivity,
+      active: true
+    },
+    {
+      id: 'revenue',
+      label: t('performanceAnalyticsPage.tabs.revenue'),
+      icon: FiDollarSign,
+      active: true
+    },
+    {
+      id: 'spending',
+      label: t('performanceAnalyticsPage.tabs.spending'),
+      icon: FiShoppingCart,
+      active: true
+    }
   ];
 
   return (
@@ -421,29 +441,33 @@ const PerformanceAnalyticsPage = () => {
         <div className="bg-white rounded-lg shadow mb-6 overflow-hidden">
           <div className="border-b border-gray-200">
             <nav className="flex -mb-px">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => tab.active && setActiveTab(tab.id)}
-                  disabled={!tab.active}
-                  className={`
-                    flex-1 py-4 px-6 text-center font-medium text-sm transition-colors
-                    ${activeTab === tab.id && tab.active
-                      ? 'border-b-2 border-blue-500 text-blue-600'
-                      : tab.active
-                        ? 'text-gray-600 hover:text-gray-800 hover:border-b-2 hover:border-gray-300'
-                        : 'text-gray-400 cursor-not-allowed'
-                    }
-                  `}
-                >
-                  {tab.label}
-                  {!tab.active && (
-                    <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">
-                      {t('performanceAnalyticsPage.tabs.soon')}
-                    </span>
-                  )}
-                </button>
-              ))}
+              {tabs.map((tab) => {
+                const IconComponent = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => tab.active && setActiveTab(tab.id)}
+                    disabled={!tab.active}
+                    className={`
+                      flex-1 py-4 px-6 text-center font-medium text-sm transition-colors flex items-center justify-center gap-2
+                      ${activeTab === tab.id && tab.active
+                        ? 'border-b-2 border-blue-500 text-blue-600'
+                        : tab.active
+                          ? 'text-gray-600 hover:text-gray-800 hover:border-b-2 hover:border-gray-300'
+                          : 'text-gray-400 cursor-not-allowed'
+                      }
+                    `}
+                  >
+                    <IconComponent className="w-5 h-5" />
+                    <span>{tab.label}</span>
+                    {!tab.active && (
+                      <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">
+                        {t('performanceAnalyticsPage.tabs.soon')}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </nav>
           </div>
         </div>

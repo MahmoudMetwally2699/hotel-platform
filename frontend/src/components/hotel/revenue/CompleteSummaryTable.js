@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { BarChart3, Package } from 'lucide-react';
+import { BarChart3, Package, Home, Shirt, Utensils, Car, Bell, Wrench } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { selectHotelCurrency } from '../../../redux/slices/hotelSlice';
 import { formatPriceByLanguage } from '../../../utils/currency';
@@ -53,15 +53,16 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
   };
 
   const getServiceIcon = (type) => {
-    const icons = {
-      housekeeping: '🧹',
-      laundry: '👔',
-      restaurant: '🍽️',
-      transportation: '🚗',
-      roomService: '🛎️',
-      maintenance: '🔧'
+    const iconMap = {
+      housekeeping: <Home className="w-6 h-6 text-blue-600" />,
+      laundry: <Shirt className="w-6 h-6 text-indigo-600" />,
+      dining: <Utensils className="w-6 h-6 text-orange-600" />,
+      restaurant: <Utensils className="w-6 h-6 text-orange-600" />,
+      transportation: <Car className="w-6 h-6 text-green-600" />,
+      roomService: <Bell className="w-6 h-6 text-yellow-600" />,
+      maintenance: <Wrench className="w-6 h-6 text-gray-600" />
     };
-    return icons[type] || '📦';
+    return iconMap[type] || <Package className="w-6 h-6 text-purple-600" />;
   };
 
   const getCategoryBadge = (category) => {
@@ -184,7 +185,9 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
               >
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{getServiceIcon(service.serviceType)}</span>
+                    <div className="flex-shrink-0">
+                      {getServiceIcon(service.serviceType)}
+                    </div>
                     <span className="font-medium text-gray-900">
                       {formatServiceName(service.serviceType)}
                     </span>
