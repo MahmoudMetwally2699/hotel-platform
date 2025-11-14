@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation, Trans } from 'react-i18next';
 import useAuth from '../../hooks/useAuth';
 import { HOTEL_API } from '../../config/api.config';
 import apiClient from '../../services/api.service';
-import { selectHotelCurrency } from '../../redux/slices/hotelSlice';
+import { selectHotelCurrency, fetchHotelStats } from '../../redux/slices/hotelSlice';
 import { formatPriceByLanguage } from '../../utils/currency';
 
 /**
@@ -23,6 +23,7 @@ import { formatPriceByLanguage } from '../../utils/currency';
  */
 const OrdersPage = () => {
   const { t, i18n } = useTranslation();
+  const dispatch = useDispatch();
   const { isAuthenticated } = useAuth();
   const currency = useSelector(selectHotelCurrency);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -138,7 +139,16 @@ const OrdersPage = () => {
     { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
     { value: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800' },
     { value: 'cancelled', label: 'Cancelled', color: 'bg-red-100 text-red-800' }
-  ];  useEffect(() => {
+  ];
+
+  // Fetch hotel stats on mount to get currency settings
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchHotelStats());
+    }
+  }, [dispatch, isAuthenticated]);
+
+  useEffect(() => {
     if (isAuthenticated) {
       fetchBookings();
     }

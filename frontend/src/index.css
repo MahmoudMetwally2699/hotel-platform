@@ -5,10 +5,17 @@
 /* Custom styles that don't conflict with Tailwind */
 body {
   margin: 0;
-  font-family: 'Inter', 'Roboto', 'Arial', sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', 'Roboto', 'Arial', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f8fafc;
+}
+
+/* Arabic font for RTL direction */
+html[dir="rtl"] body,
+body[dir="rtl"],
+.arabic-text {
+  font-family: 'IBM Plex Sans Arabic', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
 }
 
 code {

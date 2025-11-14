@@ -51,8 +51,9 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['Roboto', 'Arial', 'sans-serif'],
-        arabic: ['Segoe UI', 'Tahoma', 'Arial', 'Helvetica', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Roboto', 'Arial', 'sans-serif'],
+        arabic: ['"IBM Plex Sans Arabic"', 'Segoe UI', 'Tahoma', 'Arial', 'sans-serif'],
+        english: ['"Plus Jakarta Sans"', 'Roboto', 'Arial', 'sans-serif'],
       },      spacing: {
         navbar: '64px',
         sidebar: '240px',
