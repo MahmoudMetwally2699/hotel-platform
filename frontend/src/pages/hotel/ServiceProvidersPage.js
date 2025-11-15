@@ -34,6 +34,7 @@ const ServiceProvidersPage = () => {
   const [licenseExpiry, setLicenseExpiry] = useState('');
   const [isSavingLicense, setIsSavingLicense] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [dropdownPosition, setDropdownPosition] = useState({});
 
   // Available service categories (only the specified ones)
   const serviceCategories = [
@@ -423,7 +424,21 @@ const ServiceProvidersPage = () => {
                           <td className="px-4 py-4 text-center">
                             <div className="relative inline-block text-left">
                               <button
-                                onClick={() => setOpenDropdownId(openDropdownId === provider._id ? null : provider._id)}
+                                onClick={(e) => {
+                                  if (openDropdownId === provider._id) {
+                                    setOpenDropdownId(null);
+                                  } else {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const spaceBelow = window.innerHeight - rect.bottom;
+                                    const spaceAbove = rect.top;
+                                    const dropdownHeight = 280;
+
+                                    setDropdownPosition({
+                                      [provider._id]: spaceBelow < dropdownHeight && spaceAbove > spaceBelow ? 'up' : 'down'
+                                    });
+                                    setOpenDropdownId(provider._id);
+                                  }
+                                }}
                                 className="inline-flex items-center justify-center w-10 h-10 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
                                 aria-label="Actions"
                               >
@@ -438,11 +453,13 @@ const ServiceProvidersPage = () => {
                                 <>
                                   {/* Backdrop to close dropdown when clicking outside */}
                                   <div
-                                    className="fixed inset-0 z-10"
+                                    className="fixed inset-0 z-[90]"
                                     onClick={() => setOpenDropdownId(null)}
                                   />
                                   {/* Dropdown menu */}
-                                  <div className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                  <div className={`absolute right-0 z-[100] w-56 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none max-h-[400px] overflow-y-auto ${
+                                    dropdownPosition[provider._id] === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
+                                  }`}>
                                     <div className="py-1">
                                       {provider.providerType !== 'internal' && (
                                         <button
@@ -578,7 +595,21 @@ const ServiceProvidersPage = () => {
                       {/* Mobile Actions Dropdown */}
                       <div className="relative mt-4">
                         <button
-                          onClick={() => setOpenDropdownId(openDropdownId === provider._id ? null : provider._id)}
+                          onClick={(e) => {
+                            if (openDropdownId === provider._id) {
+                              setOpenDropdownId(null);
+                            } else {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const spaceBelow = window.innerHeight - rect.bottom;
+                              const spaceAbove = rect.top;
+                              const dropdownHeight = 280;
+
+                              setDropdownPosition({
+                                [provider._id]: spaceBelow < dropdownHeight && spaceAbove > spaceBelow ? 'up' : 'down'
+                              });
+                              setOpenDropdownId(provider._id);
+                            }
+                          }}
                           className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200 font-medium"
                         >
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -593,11 +624,13 @@ const ServiceProvidersPage = () => {
                           <>
                             {/* Backdrop to close dropdown when clicking outside */}
                             <div
-                              className="fixed inset-0 z-10"
+                              className="fixed inset-0 z-[90]"
                               onClick={() => setOpenDropdownId(null)}
                             />
                             {/* Dropdown menu */}
-                            <div className="absolute left-0 right-0 z-20 mt-2 w-full origin-top rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <div className={`absolute left-0 right-0 z-[100] w-full rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none max-h-[400px] overflow-y-auto ${
+                              dropdownPosition[provider._id] === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
+                            }`}>
                               <div className="py-1">
                                 {provider.providerType !== 'internal' && (
                                   <button

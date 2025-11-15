@@ -46,34 +46,34 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
       title: t('performanceAnalyticsPage.spending.summary.avgCustomerSpending'),
       value: formatPriceByLanguage(data.avgCustomerSpending, i18n.language, currency),
       icon: DollarSign,
-      gradient: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-blue-600'
+      bgColor: '#3B5787',
+      iconBg: 'bg-white',
+      iconColor: '#3B5787'
     },
     {
       title: t('performanceAnalyticsPage.spending.summary.totalCustomersServed'),
       value: data.totalCustomers,
       icon: Users,
-      gradient: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-50',
-      iconColor: 'text-green-600'
+      bgColor: '#2A4065',
+      iconBg: 'bg-white',
+      iconColor: '#2A4065'
     },
     {
       title: t('performanceAnalyticsPage.spending.summary.totalServiceRequests'),
       value: data.totalServiceRequests,
       icon: FileText,
-      gradient: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50',
-      iconColor: 'text-purple-600'
+      bgColor: '#3B5787',
+      iconBg: 'bg-white',
+      iconColor: '#3B5787'
     },
     {
       title: t('performanceAnalyticsPage.spending.summary.mostPopularService'),
       value: formatServiceName(data.mostPopularService),
       subValue: t('performanceAnalyticsPage.spending.summary.requestsSuffix', { count: data.mostPopularServiceCount }),
       icon: Star,
-      gradient: 'from-orange-500 to-orange-600',
-      bgColor: 'bg-orange-50',
-      iconColor: 'text-orange-600'
+      bgColor: '#2A4065',
+      iconBg: 'bg-white',
+      iconColor: '#2A4065'
     }
   ];
 
@@ -85,16 +85,16 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
         return (
           <div
             key={index}
-            className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+            className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
           >
-            <div className={`bg-gradient-to-r ${card.gradient} p-4 rounded-t-lg`}>
+            <div style={{ backgroundColor: card.bgColor }} className="p-4">
               <div className="flex items-center justify-between">
-                <div className={`${card.bgColor} p-3 rounded-lg`}>
-                  <Icon className={`w-6 h-6 ${card.iconColor}`} />
+                <div className={`${card.iconBg} p-3 rounded-lg`}>
+                  <Icon style={{ color: card.iconColor }} className="w-6 h-6" />
                 </div>
               </div>
             </div>
-            <div className="p-4">
+            <div className="p-4 bg-white">
               <p className="text-sm text-gray-600 mb-1">{card.title}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {card.value}

@@ -280,6 +280,92 @@
       "platinum": "PLATINUM"
     }
   },
+  "loyaltyMembersPage": {
+    "title": "Loyalty Members",
+    "subtitle": "Manage all {{count}} loyalty program members",
+    "backToDashboard": "Back to Loyalty Dashboard",
+    "filters": {
+      "title": "Filters & Search",
+      "searchPlaceholder": "Search by name or email...",
+      "allTiers": "All Tiers",
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold",
+      "platinum": "Platinum",
+      "allChannels": "All Channels",
+      "direct": "Direct",
+      "travelAgency": "Travel Agency",
+      "corporate": "Corporate",
+      "sortByPointsDesc": "Points: High to Low",
+      "sortByPointsAsc": "Points: Low to High",
+      "sortBySpendingDesc": "Spending: High to Low",
+      "sortBySpendingAsc": "Spending: Low to High",
+      "sortByJoinDateDesc": "Join Date: Newest First",
+      "sortByJoinDateAsc": "Join Date: Oldest First",
+      "activeFilters": "Active filters:",
+      "search": "Search",
+      "tier": "Tier",
+      "channel": "Channel",
+      "clearAll": "Clear all"
+    },
+    "table": {
+      "member": "Member",
+      "tier": "Tier",
+      "channel": "Channel",
+      "tierPoints": "Tier Points",
+      "cashValue": "Cash Value",
+      "lifetimeSpending": "Lifetime Spending",
+      "nightsStayed": "Nights Stayed",
+      "actions": "Actions",
+      "noEmail": "No email",
+      "managePoints": "Manage Points"
+    },
+    "noMembers": {
+      "title": "No members found",
+      "withFilters": "Try adjusting your filters",
+      "initial": "Members will appear here when guests enroll in the loyalty program"
+    },
+    "pagination": {
+      "showing": "Showing {{from}} to {{to}} of {{total}} members"
+    },
+    "adjustModal": {
+      "title": "Adjust Points",
+      "tierPoints": "Tier Points",
+      "cashValue": "Cash Value",
+      "whatToAdjust": "What to Adjust",
+      "allPoints": "All Points",
+      "allPointsDesc": "Affects tier & cash value",
+      "redeemableOnly": "Redeemable Only",
+      "redeemableOnlyDesc": "Cash value only",
+      "adjustmentType": "Adjustment Type",
+      "addPoints": "Add Points",
+      "deductPoints": "Deduct Points",
+      "pointsAmount": "Points Amount",
+      "pointsPlaceholder": "Enter points amount",
+      "equivalentCash": "Equivalent to {{amount}} cash value",
+      "cashValueAmount": "Cash Value Amount",
+      "equivalentPoints": "Equivalent to {{points}} points",
+      "reason": "Reason for Adjustment",
+      "reasonPlaceholder": "Enter reason (required)",
+      "preview": {
+        "tierPoints": "Tier Points:",
+        "cashValue": "Cash Value:",
+        "unchanged": "(unchanged 🔒)"
+      },
+      "cancel": "Cancel",
+      "add": "Add",
+      "deduct": "Deduct",
+      "pointsButton": "Points",
+      "validAmountError": "Please enter a valid amount",
+      "reasonRequiredError": "Please provide a reason for the adjustment",
+      "successWithPDF": "Points {{action}} successfully! PDF receipt downloaded.",
+      "success": "Points {{action}} successfully!",
+      "error": "Failed to adjust points",
+      "added": "added",
+      "deducted": "deducted"
+    },
+    "loading": "Loading..."
+  },
   "loyaltyProgramConfig": {
     "title": "Loyalty Program",
     "titleUpdate": "Update",
@@ -969,6 +1055,24 @@
         "close": "Close",
         "updateStatus": "Update Status"
       },
+      "statusUpdate": {
+        "title": "Update Order Status",
+        "currentStatus": "Current Status",
+        "newStatus": "New Status",
+        "notesLabel": "Notes (Optional)",
+        "notesPlaceholder": "Add any notes about this status update...",
+        "statusWillBeUpdated": "Status will be updated to",
+        "cancel": "Cancel",
+        "update": "Update Status",
+        "updating": "Updating...",
+        "statuses": {
+          "pending": "Pending",
+          "completed": "Completed",
+          "cancelled": "Cancelled",
+          "confirmed": "Confirmed",
+          "inProgress": "In Progress"
+        }
+      },
       "pagination": {
         "summary": "Page {{page}} of {{totalPages}} • Showing {{count}} orders",
         "showing": "Showing <1>{{from}}</1> to <2>{{to}}</2> of <3>{{total}}</3> results"
@@ -1390,6 +1494,51 @@
       "noGuestsDescription": "Try adjusting your search criteria or filters.",
       "noPhone": "No phone",
       "unknownGuest": "Unknown Guest"
+    },
+    "feedback": {
+      "title": "Hotel Feedback Management",
+      "subtitle": "View and analyze feedback for all services in your hotel",
+      "statistics": {
+        "overallRating": "Overall Rating",
+        "totalReviews": "Total Reviews",
+        "serviceProviders": "Service Providers",
+        "excellent": "Excellent (5★)"
+      },
+      "filters": {
+        "searchPlaceholder": "Search feedback...",
+        "allRatings": "All Ratings",
+        "5stars": "5 Stars",
+        "4stars": "4 Stars",
+        "3stars": "3 Stars",
+        "2stars": "2 Stars",
+        "1star": "1 Star",
+        "allServices": "All Services",
+        "laundry": "Laundry",
+        "transportation": "Transportation",
+        "housekeeping": "Housekeeping",
+        "dining": "Dining",
+        "providerPlaceholder": "Service provider name..."
+      },
+      "loading": "Loading feedback...",
+      "noFeedback": "No feedback found",
+      "anonymous": "Anonymous",
+      "service": "Service",
+      "provider": "Provider",
+      "ratings": {
+        "poor": "Poor",
+        "fair": "Fair",
+        "good": "Good",
+        "veryGood": "Very Good",
+        "excellent": "Excellent"
+      },
+      "actions": {
+        "followUp": "Follow Up"
+      },
+      "pagination": {
+        "showing": "Showing {{from}} to {{to}} of {{total}} results",
+        "previous": "Previous",
+        "next": "Next"
+      }
     },
     "markup": {
       "title": "Markup Settings",

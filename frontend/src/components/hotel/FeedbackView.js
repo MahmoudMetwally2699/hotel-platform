@@ -4,11 +4,13 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FaStar, FaUser, FaCalendarAlt, FaComment, FaSearch, FaBuilding } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
 
 const HotelFeedbackView = () => {
+  const { t } = useTranslation();
   const [feedback, setFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
@@ -80,11 +82,11 @@ const HotelFeedbackView = () => {
 
   const getRatingLabel = (rating) => {
     const labels = {
-      1: 'Poor',
-      2: 'Fair',
-      3: 'Good',
-      4: 'Very Good',
-      5: 'Excellent'
+      1: t('hotelAdmin.feedback.ratings.poor'),
+      2: t('hotelAdmin.feedback.ratings.fair'),
+      3: t('hotelAdmin.feedback.ratings.good'),
+      4: t('hotelAdmin.feedback.ratings.veryGood'),
+      5: t('hotelAdmin.feedback.ratings.excellent')
     };
     return labels[rating] || '';
   };
@@ -93,11 +95,11 @@ const HotelFeedbackView = () => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          Hotel Feedback Management
+        <h1 className="text-2xl font-bold mb-2" style={{ color: '#2A4065' }}>
+          {t('hotelAdmin.feedback.title')}
         </h1>
         <p className="text-gray-600">
-          View and analyze feedback for all services in your hotel
+          {t('hotelAdmin.feedback.subtitle')}
         </p>
       </div>
 
@@ -106,12 +108,12 @@ const HotelFeedbackView = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Overall Rating</p>
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-gray-600 text-sm">{t('hotelAdmin.feedback.statistics.overallRating')}</p>
+              <p className="text-2xl font-bold" style={{ color: '#3B5787' }}>
                 {statistics.averageRating || '0.0'}
               </p>
             </div>
-            <div className="text-blue-600">
+            <div style={{ color: '#3B5787' }}>
               <FaStar size={24} />
             </div>
           </div>
@@ -120,12 +122,12 @@ const HotelFeedbackView = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Total Reviews</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-gray-600 text-sm">{t('hotelAdmin.feedback.statistics.totalReviews')}</p>
+              <p className="text-2xl font-bold" style={{ color: '#2A4065' }}>
                 {statistics.totalCount || 0}
               </p>
             </div>
-            <div className="text-green-600">
+            <div style={{ color: '#2A4065' }}>
               <FaComment size={24} />
             </div>
           </div>
@@ -134,12 +136,12 @@ const HotelFeedbackView = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Service Providers</p>
-              <p className="text-2xl font-bold text-purple-600">
+              <p className="text-gray-600 text-sm">{t('hotelAdmin.feedback.statistics.serviceProviders')}</p>
+              <p className="text-2xl font-bold" style={{ color: '#3B5787' }}>
                 {statistics.serviceProvidersCount || 0}
               </p>
             </div>
-            <div className="text-purple-600">
+            <div style={{ color: '#3B5787' }}>
               <FaBuilding size={24} />
             </div>
           </div>
@@ -148,12 +150,12 @@ const HotelFeedbackView = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Excellent (5★)</p>
-              <p className="text-2xl font-bold text-yellow-500">
+              <p className="text-gray-600 text-sm">{t('hotelAdmin.feedback.statistics.excellent')}</p>
+              <p className="text-2xl font-bold" style={{ color: '#2A4065' }}>
                 {(statistics.ratingDistribution && statistics.ratingDistribution[5]) || 0}
               </p>
             </div>
-            <div className="text-yellow-500">
+            <div style={{ color: '#2A4065' }}>
               <FaStar size={24} />
             </div>
           </div>
@@ -168,10 +170,11 @@ const HotelFeedbackView = () => {
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search feedback..."
+              placeholder={t('hotelAdmin.feedback.filters.searchPlaceholder')}
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+              onFocus={(e) => e.target.style.setProperty('--tw-ring-opacity', '1')}
             />
           </div>
 
@@ -179,36 +182,36 @@ const HotelFeedbackView = () => {
           <select
             value={filters.rating}
             onChange={(e) => handleFilterChange('rating', e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
           >
-            <option value="">All Ratings</option>
-            <option value="5">5 Stars</option>
-            <option value="4">4 Stars</option>
-            <option value="3">3 Stars</option>
-            <option value="2">2 Stars</option>
-            <option value="1">1 Star</option>
+            <option value="">{t('hotelAdmin.feedback.filters.allRatings')}</option>
+            <option value="5">{t('hotelAdmin.feedback.filters.5stars')}</option>
+            <option value="4">{t('hotelAdmin.feedback.filters.4stars')}</option>
+            <option value="3">{t('hotelAdmin.feedback.filters.3stars')}</option>
+            <option value="2">{t('hotelAdmin.feedback.filters.2stars')}</option>
+            <option value="1">{t('hotelAdmin.feedback.filters.1star')}</option>
           </select>
 
           {/* Service Type Filter */}
           <select
             value={filters.serviceType}
             onChange={(e) => handleFilterChange('serviceType', e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
           >
-            <option value="all">All Services</option>
-            <option value="laundry">Laundry</option>
-            <option value="transportation">Transportation</option>
-            <option value="housekeeping">Housekeeping</option>
-            <option value="dining">Dining</option>
+            <option value="all">{t('hotelAdmin.feedback.filters.allServices')}</option>
+            <option value="laundry">{t('hotelAdmin.feedback.filters.laundry')}</option>
+            <option value="transportation">{t('hotelAdmin.feedback.filters.transportation')}</option>
+            <option value="housekeeping">{t('hotelAdmin.feedback.filters.housekeeping')}</option>
+            <option value="dining">{t('hotelAdmin.feedback.filters.dining')}</option>
           </select>
 
           {/* Service Provider Filter */}
           <input
             type="text"
-            placeholder="Service provider name..."
+            placeholder={t('hotelAdmin.feedback.filters.providerPlaceholder')}
             value={filters.serviceProvider}
             onChange={(e) => handleFilterChange('serviceProvider', e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
           />
         </div>
       </div>
@@ -217,13 +220,13 @@ const HotelFeedbackView = () => {
       <div className="bg-white rounded-lg shadow-sm">
         {loading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading feedback...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto" style={{ borderColor: '#3B5787' }}></div>
+            <p className="mt-4 text-gray-600">{t('hotelAdmin.feedback.loading')}</p>
           </div>
         ) : feedback.length === 0 ? (
           <div className="p-8 text-center">
             <FaComment className="text-gray-400 text-4xl mx-auto mb-4" />
-            <p className="text-gray-600">No feedback found</p>
+            <p className="text-gray-600">{t('hotelAdmin.feedback.noFeedback')}</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
@@ -231,13 +234,13 @@ const HotelFeedbackView = () => {
               <div key={item._id} className="p-6 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <FaUser className="text-blue-600" />
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E8EDF4', color: '#3B5787' }}>
+                      <FaUser />
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">
                         {(() => {
-                          if (!item.guestName) return 'Anonymous';
+                          if (!item.guestName) return t('hotelAdmin.feedback.anonymous');
 
                           // Split the name and check for duplicates
                           const nameParts = item.guestName.trim().split(' ').filter(Boolean);
@@ -269,11 +272,11 @@ const HotelFeedbackView = () => {
 
                 <div className="mb-3">
                   <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="text-gray-600">Service:</span>
+                    <span className="text-gray-600">{t('hotelAdmin.feedback.service')}:</span>
                     <span className="font-medium text-gray-900">{item.serviceName}</span>
 
                     {item.serviceType && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                      <span className="px-2 py-1 rounded-full text-xs" style={{ backgroundColor: '#E8EDF4', color: '#3B5787' }}>
                         {item.serviceType}
                       </span>
                     )}
@@ -281,7 +284,7 @@ const HotelFeedbackView = () => {
                     {item.serviceProviderName && (
                       <>
                         <span className="text-gray-400">•</span>
-                        <span className="text-gray-600">Provider:</span>
+                        <span className="text-gray-600">{t('hotelAdmin.feedback.provider')}:</span>
                         <span className="font-medium text-gray-900">{item.serviceProviderName}</span>
                       </>
                     )}
@@ -298,7 +301,7 @@ const HotelFeedbackView = () => {
                 {item.rating <= 2 && (
                   <div className="mt-3 flex gap-2">
                     <button className="text-sm px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
-                      Follow Up
+                      {t('hotelAdmin.feedback.actions.followUp')}
                     </button>
                   </div>
                 )}
@@ -312,7 +315,11 @@ const HotelFeedbackView = () => {
           <div className="p-6 border-t border-gray-200">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-600">
-                Showing {((pagination.page - 1) * 10) + 1} to {Math.min(pagination.page * 10, pagination.total)} of {pagination.total} results
+                {t('hotelAdmin.feedback.pagination.showing', {
+                  from: ((pagination.page - 1) * 10) + 1,
+                  to: Math.min(pagination.page * 10, pagination.total),
+                  total: pagination.total
+                })}
               </p>
               <div className="flex gap-2">
                 <button
@@ -320,14 +327,14 @@ const HotelFeedbackView = () => {
                   disabled={!pagination.hasPrev}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
-                  Previous
+                  {t('hotelAdmin.feedback.pagination.previous')}
                 </button>
                 <button
                   onClick={() => handleFilterChange('page', filters.page + 1)}
                   disabled={!pagination.hasNext}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                 >
-                  Next
+                  {t('hotelAdmin.feedback.pagination.next')}
                 </button>
               </div>
             </div>

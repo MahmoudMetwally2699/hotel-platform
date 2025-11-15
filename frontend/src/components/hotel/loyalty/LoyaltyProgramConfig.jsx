@@ -427,9 +427,32 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
                 </div>
               )}
               {(formData.tierConfiguration || []).map((tier, index) => (
-                <div key={tier.name} className="border rounded-lg p-4 bg-gray-50">
+                <div key={tier.name} className="border-2 rounded-lg p-4 bg-gray-50" style={{ borderColor: tier.color }}>
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-gray-900">{getTierName(tier.name)} {t('loyaltyProgramConfig.tiers.tierLabel')}</h4>
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="inline-flex items-center justify-center w-12 h-12 rounded-full"
+                        style={{ backgroundColor: `${tier.color}20` }}
+                      >
+                        <svg
+                          className="w-7 h-7"
+                          style={{ color: tier.color }}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                          />
+                        </svg>
+                      </div>
+                      <h4 className="font-semibold text-gray-900" style={{ color: tier.color }}>
+                        {getTierName(tier.name)} {t('loyaltyProgramConfig.tiers.tierLabel')}
+                      </h4>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">

@@ -33,7 +33,9 @@ const GuestsPage = () => {
   const [loyaltyUpdating, setLoyaltyUpdating] = useState(new Set());
   const [channelUpdating, setChannelUpdating] = useState(new Set());
   const [openDropdown, setOpenDropdown] = useState(null); // Track which dropdown is open
+  const [dropdownPosition, setDropdownPosition] = useState({}); // Track dropdown position
   const dropdownRef = useRef(null); // Ref for dropdown to detect outside clicks
+  const buttonRefs = useRef({}); // Refs for action buttons
 
   // Edit modal state
   const [editModal, setEditModal] = useState({
@@ -541,7 +543,22 @@ const GuestsPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="relative">
                         <button
-                          onClick={() => setOpenDropdown(openDropdown === guest._id ? null : guest._id)}
+                          ref={(el) => (buttonRefs.current[guest._id] = el)}
+                          onClick={(e) => {
+                            if (openDropdown === guest._id) {
+                              setOpenDropdown(null);
+                            } else {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const spaceBelow = window.innerHeight - rect.bottom;
+                              const spaceAbove = rect.top;
+                              const dropdownHeight = 250; // Approximate dropdown height
+
+                              setDropdownPosition({
+                                [guest._id]: spaceBelow < dropdownHeight && spaceAbove > spaceBelow ? 'up' : 'down'
+                              });
+                              setOpenDropdown(guest._id);
+                            }
+                          }}
                           className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                         >
                           <HiDotsVertical className="w-5 h-5" />
@@ -551,7 +568,9 @@ const GuestsPage = () => {
                         {openDropdown === guest._id && (
                           <div
                             ref={dropdownRef}
-                            className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1"
+                            className={`absolute right-0 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-[100] py-1 max-h-[400px] overflow-y-auto ${
+                              dropdownPosition[guest._id] === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
+                            }`}
                           >
                             {/* Edit Room Button - Only for active guests */}
                             {guest.isActive !== false && (

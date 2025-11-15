@@ -70,7 +70,7 @@ const RatingSummaryCards = ({ data, loading }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       {/* Average Rating Card */}
-      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+      <div className="rounded-lg shadow-lg p-6 text-white" style={{ background: 'linear-gradient(to bottom right, #3B5787, #2A4065)' }}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold opacity-90">{t('performanceAnalyticsPage.ratingSummaryCards.averageRating')}</h3>
           <div className="bg-white bg-opacity-20 rounded-full p-2">
@@ -91,7 +91,7 @@ const RatingSummaryCards = ({ data, loading }) => {
       </div>
 
       {/* Total Reviews Card */}
-      <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+      <div className="rounded-lg shadow-lg p-6 text-white" style={{ background: 'linear-gradient(to bottom right, #2A4065, #3B5787)' }}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold opacity-90">{t('performanceAnalyticsPage.ratingSummaryCards.totalReviews')}</h3>
           <div className="bg-white bg-opacity-20 rounded-full p-2">
@@ -110,7 +110,7 @@ const RatingSummaryCards = ({ data, loading }) => {
       </div>
 
       {/* Highest Rated Service Card */}
-      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+      <div className="rounded-lg shadow-lg p-6 text-white" style={{ background: 'linear-gradient(to bottom right, #3B5787, #2A4065)' }}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold opacity-90">{t('performanceAnalyticsPage.ratingSummaryCards.topService')}</h3>
           <div className="bg-white bg-opacity-20 rounded-full p-2">

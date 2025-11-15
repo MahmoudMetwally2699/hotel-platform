@@ -47,12 +47,24 @@ const OrdersPage = () => {
 
   // Service categories
   const categories = [
-    { id: 'all', name: t('hotelAdmin.orders.categories.all'), icon: '📋' },
-    { id: 'laundry', name: t('hotelAdmin.orders.categories.laundry'), icon: '👕' },
-    { id: 'transportation', name: t('hotelAdmin.orders.categories.transportation'), icon: '🚗' },
-    { id: 'housekeeping', name: t('hotelAdmin.orders.categories.housekeeping'), icon: '🧹' },
-    { id: 'dining', name: t('hotelAdmin.orders.categories.dining'), icon: '🍽️' },
+    { id: 'all', name: t('hotelAdmin.orders.categories.all'), icon: 'clipboard' },
+    { id: 'laundry', name: t('hotelAdmin.orders.categories.laundry'), icon: 'shirt' },
+    { id: 'transportation', name: t('hotelAdmin.orders.categories.transportation'), icon: 'car' },
+    { id: 'housekeeping', name: t('hotelAdmin.orders.categories.housekeeping'), icon: 'broom' },
+    { id: 'dining', name: t('hotelAdmin.orders.categories.dining'), icon: 'utensils' },
   ];
+
+  // Get icon SVG based on icon name
+  const getIconSVG = (iconName) => {
+    const icons = {
+      clipboard: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>,
+      shirt: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2L8 6H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-2l-4-4z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M8 6v16M16 6v16" /></svg>,
+      car: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>,
+      broom: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>,
+      utensils: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+    };
+    return icons[iconName] || icons.clipboard;
+  };
 
   // Fetch bookings from API
   const fetchBookings = useCallback(async () => {
@@ -136,9 +148,9 @@ const OrdersPage = () => {
 
   // Available statuses for hotel admin
   const availableStatuses = [
-    { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'completed', label: 'Completed', color: 'bg-green-100 text-green-800' },
-    { value: 'cancelled', label: 'Cancelled', color: 'bg-red-100 text-red-800' }
+    { value: 'pending', label: t('hotelAdmin.orders.statusUpdate.statuses.pending'), color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'completed', label: t('hotelAdmin.orders.statusUpdate.statuses.completed'), color: 'bg-green-100 text-green-800' },
+    { value: 'cancelled', label: t('hotelAdmin.orders.statusUpdate.statuses.cancelled'), color: 'bg-red-100 text-red-800' }
   ];
 
   // Fetch hotel stats on mount to get currency settings
@@ -191,20 +203,19 @@ const OrdersPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-modern-gray to-white">
-      {/* Modern Header Section */}
-      <div className="bg-white shadow-lg border-b border-gray-100">
-        <div className="w-full px-6 py-8">
+      {/* Compact Header Section */}
+      <div className="bg-white shadow border-b border-gray-100">
+        <div className="w-full px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-modern-blue">{t('hotelAdmin.orders.title')}</h1>
-              <p className="text-modern-darkGray mt-1">{t('hotelAdmin.orders.subtitle')}</p>
+              <h1 className="text-xl font-semibold text-modern-blue">{t('hotelAdmin.orders.title')}</h1>
             </div>
             <button
-              className="bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white px-6 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium flex items-center space-x-2"
+              className="bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white px-5 py-2.5 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium flex items-center space-x-2"
               onClick={fetchBookings}
               disabled={isLoading}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               <span>{isLoading ? t('hotelAdmin.dashboard.refreshing') : t('hotelAdmin.dashboard.refreshData')}</span>
@@ -213,33 +224,32 @@ const OrdersPage = () => {
         </div>
       </div>
 
-      <div className="max-w-full mx-auto px-4 py-8">
-        {/* Modern Category Tabs */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-50 overflow-hidden mb-8">
-          <div className="px-8 py-6 bg-gradient-to-r from-modern-blue to-modern-lightBlue">
-            <h2 className="text-xl font-bold text-white flex items-center">
-              <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="max-w-full mx-auto px-4 py-6">
+        {/* Compact Category Tabs */}
+        <div className="bg-white rounded-lg shadow border border-gray-100 overflow-hidden mb-6">
+          <div className="px-6 py-3 bg-gradient-to-r from-modern-blue to-modern-lightBlue">
+            <h2 className="text-sm font-semibold text-white flex items-center">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
               </svg>
               {t('hotelAdmin.orders.filters.filterByCategory')}
             </h2>
-            <p className="text-blue-100 mt-1">{t('hotelAdmin.orders.filters.categoryDescription')}</p>
           </div>
-          <div className="p-6">
-            <div className="flex flex-wrap gap-4">
+          <div className="p-4">
+            <div className="flex flex-wrap gap-3">
               {categories.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`flex items-center space-x-3 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                     selectedCategory === category.id
-                      ? 'bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white shadow-lg'
-                      : 'bg-modern-gray text-modern-darkGray hover:bg-blue-50 hover:text-modern-blue'
+                      ? 'bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white shadow-md'
+                      : 'bg-gray-50 text-gray-700 hover:bg-blue-50 hover:text-modern-blue'
                   }`}
                 >
-                  <span className="text-lg">{category.icon}</span>
+                  {getIconSVG(category.icon)}
                   <span>{category.name}</span>
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                     selectedCategory === category.id
                       ? 'bg-white/20 text-white'
                       : 'bg-modern-blue/10 text-modern-blue'
@@ -252,9 +262,9 @@ const OrdersPage = () => {
           </div>
         </div>
 
-        {/* Modern Search and Filter Bar */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-50 p-6 mb-8">
-          <div className="flex flex-col lg:flex-row gap-4">
+        {/* Compact Search and Filter Bar */}
+        <div className="bg-white rounded-lg shadow border border-gray-100 p-4 mb-6">
+          <div className="flex flex-col lg:flex-row gap-3">
             <div className="flex-1">
               <div className="relative">
                 <input
@@ -262,9 +272,9 @@ const OrdersPage = () => {
                   placeholder={t('hotelAdmin.orders.filters.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-modern-blue focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-modern-blue focus:border-transparent text-sm"
                 />
-                <svg className="w-5 h-5 text-gray-400 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
@@ -273,7 +283,7 @@ const OrdersPage = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-modern-blue focus:border-transparent"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-modern-blue focus:border-transparent text-sm"
               >
                 <option value="all">{t('hotelAdmin.orders.filters.allStatuses')}</option>
                 <option value="pending">{t('hotelAdmin.orders.filters.pending')}</option>
@@ -285,7 +295,7 @@ const OrdersPage = () => {
             </div>
             <button
               onClick={fetchBookings}
-              className="bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white px-8 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium"
+              className="bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white px-6 py-2.5 rounded-lg hover:shadow-md transform hover:scale-105 transition-all duration-300 font-medium text-sm"
             >
               {t('hotelAdmin.common.search')}
             </button>
@@ -1257,7 +1267,7 @@ const OrdersPage = () => {
             {/* Modal Header */}
             <div className="px-6 py-4 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-t-2xl">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white">Update Order Status</h3>
+                <h3 className="text-xl font-bold text-white">{t('hotelAdmin.orders.statusUpdate.title')}</h3>
                 <button
                   onClick={() => setIsStatusModalOpen(false)}
                   className="text-white hover:text-gray-200 transition-colors duration-200"
@@ -1277,7 +1287,7 @@ const OrdersPage = () => {
                   Order #{selectedOrder.bookingId || selectedOrder._id?.slice(-6)}
                 </div>
                 <div className="text-gray-600">
-                  Current Status:
+                  {t('hotelAdmin.orders.statusUpdate.currentStatus')}:
                   <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     selectedOrder.status === 'completed' ? 'bg-green-100 text-green-800' :
                     selectedOrder.status === 'cancelled' ? 'bg-red-100 text-red-800' :
@@ -1293,7 +1303,7 @@ const OrdersPage = () => {
               {/* Status Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  New Status
+                  {t('hotelAdmin.orders.statusUpdate.newStatus')}
                 </label>
                 <div className="space-y-2">
                   {availableStatuses.map((status) => (
@@ -1325,12 +1335,12 @@ const OrdersPage = () => {
               {/* Notes */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notes (Optional)
+                  {t('hotelAdmin.orders.statusUpdate.notesLabel')}
                 </label>
                 <textarea
                   value={statusNotes}
                   onChange={(e) => setStatusNotes(e.target.value)}
-                  placeholder="Add any notes about this status update..."
+                  placeholder={t('hotelAdmin.orders.statusUpdate.notesPlaceholder')}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-modern-blue focus:border-transparent"
                   rows={3}
                 />
@@ -1340,7 +1350,7 @@ const OrdersPage = () => {
               {selectedStatus && (
                 <div className="bg-blue-50 rounded-lg p-3">
                   <div className="text-sm text-blue-800">
-                    Status will be updated to:
+                    {t('hotelAdmin.orders.statusUpdate.statusWillBeUpdated')}:
                     <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       availableStatuses.find(s => s.value === selectedStatus)?.color || 'bg-gray-100 text-gray-800'
                     }`}>
@@ -1357,14 +1367,14 @@ const OrdersPage = () => {
                   onClick={() => setIsStatusModalOpen(false)}
                   className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
                 >
-                  Cancel
+                  {t('hotelAdmin.orders.statusUpdate.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isUpdatingStatus || !selectedStatus}
                   className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-modern-blue to-modern-lightBlue border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isUpdatingStatus ? 'Updating...' : 'Update Status'}
+                  {isUpdatingStatus ? t('hotelAdmin.orders.statusUpdate.updating') : t('hotelAdmin.orders.statusUpdate.update')}
                 </button>
               </div>
             </form>

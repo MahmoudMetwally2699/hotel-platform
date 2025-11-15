@@ -44,7 +44,7 @@ const OperationalSummaryCards = ({ data, loading }) => {
       value: `${data.avgResponseTime} ${t('performanceAnalyticsPage.operational.completionTime.minutesShort')}`,
       trend: data.responseTrend,
       icon: FiClock,
-      gradient: 'from-blue-500 to-blue-600',
+      bgColor: '#3B5787',
       trendText: data.responseTrend > 0
         ? t('performanceAnalyticsPage.operational.summary.faster')
         : t('performanceAnalyticsPage.operational.summary.slower'),
@@ -55,7 +55,7 @@ const OperationalSummaryCards = ({ data, loading }) => {
       value: `${data.avgCompletionTime} ${t('performanceAnalyticsPage.operational.completionTime.minutesShort')}`,
       trend: data.completionTrend,
       icon: FiCheckCircle,
-      gradient: 'from-purple-500 to-purple-600',
+      bgColor: '#2A4065',
       trendText: data.completionTrend > 0
         ? t('performanceAnalyticsPage.operational.summary.faster')
         : t('performanceAnalyticsPage.operational.summary.slower'),
@@ -66,7 +66,7 @@ const OperationalSummaryCards = ({ data, loading }) => {
       value: `${data.slaComplianceRate}%`,
       trend: data.slaTrend,
       icon: FiCheckCircle,
-      gradient: 'from-green-500 to-green-600',
+      bgColor: '#2A4065',
       trendText: t('performanceAnalyticsPage.operational.summary.fromTarget', { value: Math.abs(data.slaTrend).toFixed(1) }),
       isPositive: data.slaTrend > 0
     },
@@ -77,7 +77,7 @@ const OperationalSummaryCards = ({ data, loading }) => {
         ? t('performanceAnalyticsPage.operational.summary.ofTotalRequests', { percent: ((data.delayedRequests / data.totalRequests) * 100).toFixed(1) })
         : t('performanceAnalyticsPage.operational.summary.ofTotalRequests', { percent: '0' }),
       icon: FiAlertTriangle,
-      gradient: 'from-red-500 to-red-600',
+      bgColor: '#DC2626',
       isNegative: true
     }
   ];
@@ -91,13 +91,13 @@ const OperationalSummaryCards = ({ data, loading }) => {
 
         return (
           <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-            <div className={`bg-gradient-to-r ${card.gradient} p-4 text-white`}>
+            <div style={{ backgroundColor: card.bgColor }} className="p-4 text-white">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium opacity-90">{card.title}</span>
                 <Icon className="w-6 h-6 opacity-80" />
               </div>
             </div>
-            <div className="p-6">
+            <div className="p-6 bg-white">
               <div className="flex items-baseline justify-between mb-2">
                 <span className="text-3xl font-bold text-gray-800">{card.value}</span>
                 {showTrend && (

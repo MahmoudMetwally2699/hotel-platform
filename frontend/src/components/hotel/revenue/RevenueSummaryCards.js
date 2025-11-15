@@ -46,33 +46,25 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
       value: data.totalRevenue,
       trend: data.trend,
       icon: DollarSign,
-      gradient: 'from-blue-500 to-blue-600',
-      bgColor: 'bg-blue-50',
-      iconColor: 'text-blue-600'
+      bgColor: '#3B5787'
     },
     {
       title: t('performanceAnalyticsPage.revenue.summary.internalRevenue'),
       value: data.internalRevenue,
       icon: Home,
-      gradient: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-50',
-      iconColor: 'text-green-600'
+      bgColor: '#2A4065'
     },
     {
       title: t('performanceAnalyticsPage.revenue.summary.externalRevenue'),
       value: data.externalRevenue,
       icon: Users,
-      gradient: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50',
-      iconColor: 'text-purple-600'
+      bgColor: '#3B5787'
     },
     {
       title: t('performanceAnalyticsPage.revenue.summary.commissionEarned'),
       value: data.externalCommission,
       icon: Percent,
-      gradient: 'from-orange-500 to-orange-600',
-      bgColor: 'bg-orange-50',
-      iconColor: 'text-orange-600'
+      bgColor: '#2A4065'
     }
   ];
 
@@ -96,12 +88,12 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
         return (
           <div
             key={index}
-            className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+            className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
           >
-            <div className={`bg-gradient-to-r ${card.gradient} p-4 rounded-t-lg`}>
+            <div style={{ backgroundColor: card.bgColor }} className="p-4">
               <div className="flex items-center justify-between">
-                <div className={`${card.bgColor} p-3 rounded-lg`}>
-                  <Icon className={`w-6 h-6 ${card.iconColor}`} />
+                <div className="bg-white p-3 rounded-lg">
+                  <Icon style={{ color: card.bgColor }} className="w-6 h-6" />
                 </div>
                 {showTrend && (
                   <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm font-medium ${
@@ -119,7 +111,7 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
                 )}
               </div>
             </div>
-            <div className="p-4">
+            <div className="p-4 bg-white">
               <p className="text-sm text-gray-600 mb-1">{card.title}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {formatCurrency(card.value)}

@@ -345,7 +345,7 @@ const PerformanceAnalyticsPage = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{t('performanceAnalyticsPage.title')}</h1>
+          <h1 className="text-3xl font-bold" style={{ color: '#2A4065' }}>{t('performanceAnalyticsPage.title')}</h1>
           <p className="mt-2 text-sm text-gray-600">
             {t('performanceAnalyticsPage.subtitle')}
           </p>
@@ -358,11 +358,12 @@ const PerformanceAnalyticsPage = () => {
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
               {/* Service Filter */}
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">{t('performanceAnalyticsPage.controls.service')}</span>
+                <span className="text-sm font-medium" style={{ color: '#2A4065' }}>{t('performanceAnalyticsPage.controls.service')}</span>
                 <select
                   value={selectedService}
                   onChange={(e) => handleServiceFilterChange(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent bg-white"
+                  style={{ focusRingColor: '#3B5787' }}
                 >
                   {serviceTypes.map((service) => (
                     <option key={service.value} value={service.value}>
@@ -375,11 +376,12 @@ const PerformanceAnalyticsPage = () => {
               {/* Date Range Selector */}
               <div className="flex items-center gap-2">
                 <FiCalendar className="w-5 h-5 text-gray-400" />
-                <span className="text-sm font-medium text-gray-700">{t('performanceAnalyticsPage.controls.dateRange')}</span>
+                <span className="text-sm font-medium" style={{ color: '#2A4065' }}>{t('performanceAnalyticsPage.controls.dateRange')}</span>
                 <select
                   value={selectedRange}
                   onChange={(e) => handleDateRangeChange(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent bg-white"
+                  style={{ focusRingColor: '#3B5787' }}
                 >
                   {Object.entries(dateRangePresets).map(([key, preset]) => (
                     <option key={key} value={key}>
@@ -396,18 +398,21 @@ const PerformanceAnalyticsPage = () => {
                     type="date"
                     value={customStartDate}
                     onChange={(e) => setCustomStartDate(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+                    style={{ focusRingColor: '#3B5787' }}
                   />
                   <span className="text-gray-500">{t('performanceAnalyticsPage.controls.to')}</span>
                   <input
                     type="date"
                     value={customEndDate}
                     onChange={(e) => setCustomEndDate(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+                    style={{ focusRingColor: '#3B5787' }}
                   />
                   <button
                     onClick={handleCustomRangeApply}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
+                    style={{ backgroundColor: '#3B5787' }}
                   >
                     {t('performanceAnalyticsPage.controls.apply')}
                   </button>
@@ -428,7 +433,8 @@ const PerformanceAnalyticsPage = () => {
 
               <button
                 onClick={handleExport}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="flex items-center px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
+                style={{ backgroundColor: '#2A4065' }}
               >
                 <FiDownload className="w-4 h-4 mr-2" />
                 {t('performanceAnalyticsPage.controls.exportReport')}
@@ -451,12 +457,13 @@ const PerformanceAnalyticsPage = () => {
                     className={`
                       flex-1 py-4 px-6 text-center font-medium text-sm transition-colors flex items-center justify-center gap-2
                       ${activeTab === tab.id && tab.active
-                        ? 'border-b-2 border-blue-500 text-blue-600'
+                        ? 'border-b-2 text-white'
                         : tab.active
                           ? 'text-gray-600 hover:text-gray-800 hover:border-b-2 hover:border-gray-300'
                           : 'text-gray-400 cursor-not-allowed'
                       }
                     `}
+                    style={activeTab === tab.id && tab.active ? { borderColor: '#3B5787', backgroundColor: '#3B5787' } : {}}
                   >
                     <IconComponent className="w-5 h-5" />
                     <span>{tab.label}</span>
@@ -594,7 +601,7 @@ const PerformanceAnalyticsPage = () => {
             {/* Period Selector for Spending Tab */}
             <div className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-700">{t('performanceAnalyticsPage.spending.viewPeriod')}</span>
+                <span className="text-sm font-medium" style={{ color: '#2A4065' }}>{t('performanceAnalyticsPage.spending.viewPeriod')}</span>
                 <div className="flex gap-2">
                   {['weekly', 'monthly', 'annual'].map((period) => (
                     <button
@@ -603,10 +610,11 @@ const PerformanceAnalyticsPage = () => {
                       className={`
                         px-4 py-2 rounded-lg text-sm font-medium transition-colors
                         ${spendingPeriod === period
-                          ? 'bg-blue-600 text-white'
+                          ? 'text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }
                       `}
+                      style={spendingPeriod === period ? { backgroundColor: '#3B5787' } : {}}
                     >
                       {t(`performanceAnalyticsPage.spending.${period}`)}
                     </button>
