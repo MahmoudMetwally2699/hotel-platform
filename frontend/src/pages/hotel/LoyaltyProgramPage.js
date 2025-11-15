@@ -19,7 +19,8 @@ import {
   DollarSign,
   Activity,
   Settings,
-  BarChart3
+  BarChart3,
+  Info
 } from 'lucide-react';
 
 const LoyaltyProgramPage = () => {
@@ -314,8 +315,31 @@ const LoyaltyProgramPage = () => {
         {/* Program ROI */}
         <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">{t('loyaltyProgramPage.overviewCards.programROI')}</p>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-gray-600">{t('loyaltyProgramPage.overviewCards.programROI')}</p>
+                <div className="group relative">
+                  <button className="w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center text-gray-600 hover:border-gray-600 hover:bg-gray-50 transition text-xs font-bold">
+                    i
+                  </button>
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-80 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl z-50">
+                    <div className="space-y-2">
+                      <p className="font-semibold">{t('loyaltyProgramPage.roiTooltip.title')}</p>
+                      <p className="text-gray-300">{t('loyaltyProgramPage.roiTooltip.description')}</p>
+                      <div className="border-t border-gray-700 pt-2 mt-2">
+                        <p className="font-semibold mb-1">{t('loyaltyProgramPage.roiTooltip.formulaLabel')}</p>
+                        <p className="font-mono text-xs bg-gray-800 p-1 rounded">{t('loyaltyProgramPage.roiTooltip.formula')}</p>
+                      </div>
+                      <div className="border-t border-gray-700 pt-2 mt-2">
+                        <p className="font-semibold mb-1">{t('loyaltyProgramPage.roiTooltip.exampleLabel')}</p>
+                        <p className="text-gray-300">{t('loyaltyProgramPage.roiTooltip.exampleDescription')}</p>
+                        <p className="font-mono text-xs bg-gray-800 p-1 rounded mt-1">{t('loyaltyProgramPage.roiTooltip.exampleCalculation')}</p>
+                      </div>
+                    </div>
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              </div>
               <p className="text-3xl font-bold text-gray-900 mt-2">
                 {analytics?.roi?.roiPercentage?.toFixed(1) || 0}%
               </p>

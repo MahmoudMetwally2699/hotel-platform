@@ -8,7 +8,8 @@ import {
   TrendingUp,
   Gift,
   DollarSign,
-  Activity
+  Activity,
+  Info
 } from 'lucide-react';
 
 const LoyaltyDashboard = () => {
@@ -86,7 +87,7 @@ const LoyaltyDashboard = () => {
       })()}
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" style={{ position: 'relative' }}>
         {/* Total Members */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between">
@@ -133,11 +134,50 @@ const LoyaltyDashboard = () => {
         </div>
 
         {/* Program ROI */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-6" style={{ position: 'static' }}>
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Program ROI</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <p className="text-sm font-medium text-gray-600">Program ROI</p>
+                <div className="relative inline-block group">
+                  <button
+                    type="button"
+                    className="w-5 h-5 rounded-full border-2 border-gray-400 hover:border-blue-600 flex items-center justify-center text-gray-400 hover:text-blue-600 text-xs font-bold transition-colors focus:outline-none hover:bg-blue-50"
+                    aria-label="ROI Information"
+                    title="Click to see how ROI is calculated"
+                  >
+                    i
+                  </button>
+                  {/* Tooltip */}
+                  <div className="hidden group-hover:block absolute left-0 bottom-full mb-2 w-80 p-4 bg-gray-900 text-white text-xs rounded-lg shadow-2xl z-[9999]">
+                    <div className="mb-2 font-semibold text-sm">Return on Investment (ROI)</div>
+                    <div className="space-y-2">
+                      <p className="leading-relaxed">Measures the profitability of your loyalty program.</p>
+                      <div className="border-t border-gray-700 pt-2">
+                        <p className="font-semibold mb-1">Calculation:</p>
+                        <p className="font-mono text-yellow-300 bg-gray-800 p-2 rounded">
+                          ROI = (Revenue - Costs) / Costs × 100%
+                        </p>
+                      </div>
+                      <div className="border-t border-gray-700 pt-2">
+                        <p className="font-semibold mb-1">Where:</p>
+                        <ul className="space-y-1 ml-2">
+                          <li>• Revenue = Total from loyalty members</li>
+                          <li>• Costs = Rewards + Discounts</li>
+                        </ul>
+                      </div>
+                      <div className="border-t border-gray-700 pt-2">
+                        <p className="italic text-gray-300 text-xs">
+                          Example: $10,000 revenue with $2,000 costs = 400% ROI
+                        </p>
+                      </div>
+                    </div>
+                    {/* Arrow pointing down */}
+                    <div className="absolute bottom-[-4px] left-4 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                  </div>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-gray-900">
                 {analytics?.roi?.roiPercentage?.toFixed(1) || 0}%
               </p>
             </div>
