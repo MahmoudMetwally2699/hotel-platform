@@ -117,6 +117,7 @@ exports.createOrUpdateProgram = async (req, res) => {
     // Recalculate all member tiers if tier configuration changed
     let tierUpdateCount = 0;
     if (tierConfigChanged) {
+      // Only recalculate tiers for members of THIS hotel
       const members = await LoyaltyMember.find({ hotel: hotelId });
 
       for (const member of members) {
@@ -328,10 +329,88 @@ exports.getAllMembers = async (req, res) => {
       search
     } = req.query;
 
-    // Build query
-    const query = { hotel: hotelId, isActive: true };
+    // Check if hotel is in a group
+    const hotel = await Hotel.findById(hotelId).select('hotelGroupId paymentSettings.currency');
+    const hotelGroupId = hotel?.hotelGroupId;
 
-    if (tier) {
+    // If hotel is in a group, sync points across all group members first
+    if (hotelGroupId) {
+      console.log(`🔄 Syncing group loyalty points for hotel group ${hotelGroupId}`);
+
+      // Get all members in this hotel group
+      const allGroupMembers = await LoyaltyMember.find({
+        hotelGroupId: hotelGroupId
+      }).populate('guest', 'email');
+
+      // Group by email
+      const membersByEmail = {};
+      for (const member of allGroupMembers) {
+        const email = member.guest?.email || member.guestEmail;
+        if (email) {
+          if (!membersByEmail[email]) {
+            membersByEmail[email] = [];
+          }
+          membersByEmail[email].push(member);
+        }
+      }
+
+      // Sync points for each email group
+      for (const [email, members] of Object.entries(membersByEmail)) {
+        if (members.length > 1) {
+          // Find max points across all members
+          const maxPoints = Math.max(...members.map(m => m.totalPoints || 0));
+          const maxTierPoints = Math.max(...members.map(m => m.tierPoints || 0));
+          const maxAvailablePoints = Math.max(...members.map(m => m.availablePoints || 0));
+          const maxSpending = Math.max(...members.map(m => m.lifetimeSpending || 0));
+          const maxEarned = Math.max(...members.map(m => m.lifetimePointsEarned || 0));
+
+          // Update all members with max points
+          let updated = false;
+          for (const member of members) {
+            if (member.totalPoints !== maxPoints ||
+                member.tierPoints !== maxTierPoints ||
+                member.availablePoints !== maxAvailablePoints) {
+              member.totalPoints = maxPoints;
+              member.tierPoints = maxTierPoints;
+              member.availablePoints = maxAvailablePoints;
+              member.lifetimeSpending = maxSpending;
+              member.lifetimePointsEarned = maxEarned;
+
+              // Recalculate tier based on THIS hotel's program
+              const memberHotelProgram = await LoyaltyProgram.findOne({
+                hotel: member.hotel
+              });
+
+              if (memberHotelProgram && memberHotelProgram.tierConfiguration) {
+                const { determineTier } = require('../utils/loyaltyHelper');
+                const correctTier = determineTier(member.tierPoints, memberHotelProgram.tierConfiguration);
+
+                if (correctTier && correctTier.name !== member.currentTier) {
+                  member.updateTier(correctTier.name, 'Synced from group member');
+                  console.log(`🔄 Updated tier for ${email} at hotel ${member.hotel}: ${member.currentTier} → ${correctTier.name}`);
+                }
+
+                member.calculateTierProgress(memberHotelProgram.tierConfiguration);
+              }
+
+              await member.save();
+              updated = true;
+            }
+          }
+
+          if (updated) {
+            console.log(`✅ Synced ${members.length} members for ${email} to ${maxPoints} points`);
+          }
+        }
+      }
+    }
+
+    // Build query - always show only this hotel's members
+    // But if hotel is in a group, those members will have shared points via hotelGroupId
+    const query = {
+      hotel: hotelId,
+      isActive: true
+    };    if (tier) {
       query.currentTier = tier;
     }
 
@@ -418,9 +497,7 @@ exports.getAllMembers = async (req, res) => {
 
     const total = await LoyaltyMember.countDocuments(query);
 
-    // Get hotel currency
-    const Hotel = require('../models/Hotel');
-    const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+    // Get hotel currency (hotel was already fetched at the beginning of this function)
     const currency = hotel?.paymentSettings?.currency || 'USD';
 
     res.status(200).json({
@@ -937,17 +1014,27 @@ exports.getLoyaltyAnalytics = async (req, res) => {
       });
     }
 
+    // Check if hotel is in a group
+    const hotel = await Hotel.findById(hotelId).select('hotelGroupId paymentSettings.currency');
+    const hotelGroupId = hotel?.hotelGroupId;
+
+    // Build match query - always show only this hotel's members
+    const matchQuery = {
+      hotel: hotelId,
+      isActive: true
+    };
+
     // Get member statistics
-    const totalMembers = await LoyaltyMember.countDocuments({ hotel: hotelId, isActive: true });
+    const totalMembers = await LoyaltyMember.countDocuments(matchQuery);
 
     const membersByTier = await LoyaltyMember.aggregate([
-      { $match: { hotel: hotelId, isActive: true } },
+      { $match: matchQuery },
       { $group: { _id: '$currentTier', count: { $sum: 1 } } }
     ]);
 
     // Get points statistics
     const pointsStats = await LoyaltyMember.aggregate([
-      { $match: { hotel: hotelId, isActive: true } },
+      { $match: matchQuery },
       {
         $group: {
           _id: null,
@@ -974,7 +1061,7 @@ exports.getLoyaltyAnalytics = async (req, res) => {
     ]);
 
     // Get recent activity (only active members)
-    let recentMembers = await LoyaltyMember.find({ hotel: hotelId, isActive: true })
+    let recentMembers = await LoyaltyMember.find(matchQuery)
       .sort({ joinDate: -1 })
       .limit(5)
       .populate('guest', 'firstName lastName name email phone checkInDate checkOutDate stayHistory');
@@ -1008,7 +1095,7 @@ exports.getLoyaltyAnalytics = async (req, res) => {
     });
 
     // Top members by spending
-    let topMembers = await LoyaltyMember.find({ hotel: hotelId, isActive: true })
+    let topMembers = await LoyaltyMember.find(matchQuery)
       .sort({ lifetimeSpending: -1 })
       .limit(10)
       .populate('guest', 'firstName lastName name email phone checkInDate checkOutDate stayHistory');
@@ -1079,9 +1166,7 @@ exports.getLoyaltyAnalytics = async (req, res) => {
     const totalDiscountsGiven = discountCosts[0]?.totalDiscounts || 0;
     const roi = calculateLoyaltyROI(totalRevenueFromLoyalMembers, totalRewardsCost, totalDiscountsGiven);
 
-    // Get hotel currency
-    const Hotel = require('../models/Hotel');
-    const hotel = await Hotel.findById(hotelId).select('paymentSettings.currency');
+    // Get hotel currency (hotel is already fetched earlier in this function)
     const currency = hotel?.paymentSettings?.currency || 'USD';
 
     res.status(200).json({
@@ -1326,10 +1411,97 @@ exports.getMyMembership = async (req, res) => {
       });
     }
 
-    let member = await LoyaltyMember.findOne({
-      guest: guestId,
-      hotel: hotelId
-    }).populate('guest', 'channel');
+    // Check if hotel is in a group
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: 'Hotel not found'
+      });
+    }
+
+    const guestEmail = req.user.email;
+    let member;
+
+    // If hotel is in a group, find member by email + groupId
+    if (hotel.hotelGroupId && guestEmail) {
+      // First, check if member exists at this specific hotel
+      member = await LoyaltyMember.findOne({
+        guest: guestId,
+        hotel: hotelId
+      }).populate('guest', 'channel');
+
+      if (!member) {
+        // Member doesn't exist at this hotel - check if they have membership at other hotels in group
+        const existingGroupMember = await LoyaltyMember.findOne({
+          hotelGroupId: hotel.hotelGroupId,
+          guestEmail: guestEmail
+        }).populate('guest', 'channel');
+
+        if (existingGroupMember) {
+          // Create new member at this hotel with shared points from group
+          member = new LoyaltyMember({
+            guest: guestId,
+            hotel: hotelId,
+            hotelGroupId: hotel.hotelGroupId,
+            guestEmail: guestEmail,
+            currentTier: 'BRONZE', // Will be recalculated below
+            totalPoints: existingGroupMember.totalPoints,
+            tierPoints: existingGroupMember.tierPoints,
+            availablePoints: existingGroupMember.availablePoints,
+            lifetimeSpending: existingGroupMember.lifetimeSpending,
+            lifetimePointsEarned: existingGroupMember.lifetimePointsEarned,
+            linkedAccounts: [{
+              hotelId: hotelId,
+              userId: guestId,
+              userName: req.user.name || guestEmail,
+              userEmail: guestEmail,
+              linkedDate: new Date()
+            }]
+          });
+          await member.save();
+
+          console.log(`✅ Auto-created linked loyalty member at hotel ${hotelId} for ${guestEmail} with ${member.totalPoints} shared points`);
+        }
+      } else {
+        // Member exists - ensure group fields are set and sync points
+        if (!member.hotelGroupId) {
+          member.hotelGroupId = hotel.hotelGroupId;
+          member.guestEmail = guestEmail;
+        }
+
+        // Check if there are other group members with more points and sync
+        const otherGroupMembers = await LoyaltyMember.find({
+          hotelGroupId: hotel.hotelGroupId,
+          guestEmail: guestEmail,
+          _id: { $ne: member._id }
+        });
+
+        if (otherGroupMembers.length > 0) {
+          // Find the member with most points
+          const maxPoints = Math.max(member.totalPoints, ...otherGroupMembers.map(m => m.totalPoints));
+
+          if (maxPoints > member.totalPoints) {
+            const sourceMember = otherGroupMembers.find(m => m.totalPoints === maxPoints);
+            member.totalPoints = sourceMember.totalPoints;
+            member.tierPoints = sourceMember.tierPoints;
+            member.availablePoints = sourceMember.availablePoints;
+            member.lifetimeSpending = sourceMember.lifetimeSpending;
+            member.lifetimePointsEarned = sourceMember.lifetimePointsEarned;
+
+            console.log(`🔄 Synced points from other group member: ${member.totalPoints} points`);
+          }
+        }
+
+        await member.save();
+      }
+    } else {
+      // Traditional per-hotel lookup
+      member = await LoyaltyMember.findOne({
+        guest: guestId,
+        hotel: hotelId
+      }).populate('guest', 'channel');
+    }
 
     if (!member) {
       return res.status(404).json({
@@ -1717,6 +1889,7 @@ exports.exportMemberReport = async (req, res) => {
   try {
     const hotelId = getHotelId(req.user);
 
+    // Always show only this hotel's members
     const members = await LoyaltyMember.find({ hotel: hotelId })
       .populate('guest', 'name email phone')
       .sort({ totalPoints: -1 });

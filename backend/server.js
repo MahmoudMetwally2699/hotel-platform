@@ -215,6 +215,13 @@ try {
   }
 
   try {
+    app.use('/api/hotel-groups', require('./routes/hotelGroups'));
+    console.log('✅ Hotel groups routes loaded');
+  } catch (error) {
+    console.error('❌ Hotel groups routes failed:', error.message);
+  }
+
+  try {
     app.use('/api/feedback', require('./routes/feedback'));
     console.log('✅ Feedback routes loaded');
   } catch (error) {

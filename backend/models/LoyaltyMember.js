@@ -17,6 +17,40 @@ const loyaltyMemberSchema = new mongoose.Schema({
     required: true
   },
 
+  // Hotel Group Support (for shared loyalty across hotels)
+  hotelGroupId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'HotelGroup',
+    default: null,
+    index: true
+  },
+
+  // Guest Email (for cross-hotel account linking in groups)
+  guestEmail: {
+    type: String,
+    lowercase: true,
+    trim: true,
+    index: true
+  },
+
+  // Linked Accounts (for hotel group members)
+  linkedAccounts: [{
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel'
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    userName: String,
+    userEmail: String,
+    linkedDate: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+
   // Current Tier Status
   currentTier: {
     type: String,
@@ -110,6 +144,11 @@ const loyaltyMemberSchema = new mongoose.Schema({
     date: {
       type: Date,
       default: Date.now
+    },
+    // Track which hotel in group earned the points
+    earnedAtHotel: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel'
     },
     bookingReference: {
       type: mongoose.Schema.Types.ObjectId,
@@ -208,6 +247,9 @@ const loyaltyMemberSchema = new mongoose.Schema({
 // Compound index to ensure one membership per guest per hotel
 loyaltyMemberSchema.index({ guest: 1, hotel: 1 }, { unique: true });
 
+// Index for hotel group + email (for cross-hotel lookup)
+loyaltyMemberSchema.index({ hotelGroupId: 1, guestEmail: 1 });
+
 // Indexes for faster queries
 loyaltyMemberSchema.index({ hotel: 1, currentTier: 1 });
 loyaltyMemberSchema.index({ hotel: 1, totalPoints: -1 });
@@ -222,7 +264,7 @@ loyaltyMemberSchema.pre('save', function(next) {
 });
 
 // Method to add points
-loyaltyMemberSchema.methods.addPoints = function(points, description, bookingRef = null, transportationBookingRef = null, expirationMonths = 12) {
+loyaltyMemberSchema.methods.addPoints = function(points, description, bookingRef = null, transportationBookingRef = null, expirationMonths = 12, earnedAtHotelId = null) {
   const expirationDate = new Date();
   expirationDate.setMonth(expirationDate.getMonth() + expirationMonths);
 
@@ -242,6 +284,7 @@ loyaltyMemberSchema.methods.addPoints = function(points, description, bookingRef
     points: points,
     description: description,
     date: new Date(),
+    earnedAtHotel: earnedAtHotelId,
     bookingReference: bookingRef,
     transportationBookingReference: transportationBookingRef,
     expirationDate: expirationDate,
@@ -410,6 +453,54 @@ loyaltyMemberSchema.methods.expireOldPoints = function() {
   }
 
   return expiredPoints;
+};
+
+// ============================================
+// HOTEL GROUP METHODS
+// ============================================
+
+/**
+ * Link a new account from another hotel in the same group
+ * @param {ObjectId} hotelId - Hotel ID
+ * @param {ObjectId} userId - User ID
+ * @param {String} userName - User name
+ * @param {String} userEmail - User email
+ */
+loyaltyMemberSchema.methods.linkAccount = function(hotelId, userId, userName, userEmail) {
+  // Check if already linked
+  const existing = this.linkedAccounts.find(
+    acc => acc.hotelId.toString() === hotelId.toString() && acc.userId.toString() === userId.toString()
+  );
+
+  if (!existing) {
+    this.linkedAccounts.push({
+      hotelId,
+      userId,
+      userName,
+      userEmail,
+      linkedDate: new Date()
+    });
+  }
+};
+
+/**
+ * Check if a hotel/user combination is linked
+ * @param {ObjectId} hotelId - Hotel ID
+ * @param {ObjectId} userId - User ID
+ * @returns {Boolean}
+ */
+loyaltyMemberSchema.methods.isLinked = function(hotelId, userId) {
+  return this.linkedAccounts.some(
+    acc => acc.hotelId.toString() === hotelId.toString() && acc.userId.toString() === userId.toString()
+  );
+};
+
+/**
+ * Get all linked hotel IDs
+ * @returns {Array<ObjectId>}
+ */
+loyaltyMemberSchema.methods.getLinkedHotels = function() {
+  return this.linkedAccounts.map(acc => acc.hotelId);
 };
 
 module.exports = mongoose.model('LoyaltyMember', loyaltyMemberSchema);

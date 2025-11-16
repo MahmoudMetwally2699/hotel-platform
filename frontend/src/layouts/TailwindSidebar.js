@@ -79,6 +79,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           { name: t('navigation.dashboard'), path: '/superadmin/dashboard', icon: 'home' },
           { name: t('navigation.hotels'), path: '/superadmin/hotels', icon: 'building' },
           { name: t('navigation.superHotels'), path: '/superadmin/super-hotels', icon: 'star' },
+          { name: 'Hotel Groups', path: '/superadmin/hotel-groups', icon: 'users' },
           { name: t('navigation.feedback'), path: '/superadmin/feedback', icon: 'feedback' },
           { name: 'Payment Management', path: '/superadmin/payment-management', icon: 'credit-card' }
         ];

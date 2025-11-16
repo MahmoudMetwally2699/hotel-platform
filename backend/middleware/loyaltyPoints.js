@@ -9,6 +9,7 @@
 
 const LoyaltyProgram = require('../models/LoyaltyProgram');
 const LoyaltyMember = require('../models/LoyaltyMember');
+const Hotel = require('../models/Hotel');
 const User = require('../models/User');
 const Booking = require('../models/Booking');
 const TransportationBooking = require('../models/TransportationBooking');
@@ -78,29 +79,93 @@ const awardPointsForBooking = async (bookingId, bookingType = 'regular') => {
       multipliers: program.pointsRules?.serviceMultipliers
     });
 
-    // Get or create loyalty member
-    let member = await LoyaltyMember.findOne({
-      guest: guestId,
-      hotel: hotelId
+    // ============================================
+    // HOTEL GROUP SUPPORT
+    // ============================================
+    // Check if hotel is part of a group
+    const hotel = await Hotel.findById(hotelId);
+    const hotelGroupId = hotel?.hotelGroupId;
+    const guest = await User.findById(guestId);
+    const guestEmail = guest?.email;
+
+    console.log(`🏨 Hotel group check:`, {
+      hotelId,
+      hotelGroupId: hotelGroupId || 'None',
+      guestEmail: guestEmail || 'No email'
     });
 
-    if (!member) {
-      console.log(`➕ Creating new loyalty member for guest ${guestId}`);
-      // Create new member
-      member = new LoyaltyMember({
-        guest: guestId,
-        hotel: hotelId,
-        currentTier: 'BRONZE',
-        totalPoints: 0,
-        availablePoints: 0
+    // Get or create loyalty member
+    let member;
+
+    if (hotelGroupId && guestEmail) {
+      // Hotel is in a group - find member by email + groupId (shared across hotels)
+      console.log(`🔍 Looking for group member by email: ${guestEmail} and groupId: ${hotelGroupId}`);
+
+      member = await LoyaltyMember.findOne({
+        hotelGroupId: hotelGroupId,
+        guestEmail: guestEmail
       });
+
+      if (member) {
+        console.log(`✅ Found existing group loyalty member:`, {
+          memberId: member._id,
+          primaryHotel: member.hotel,
+          linkedAccounts: member.linkedAccounts.length,
+          currentPoints: member.totalPoints
+        });
+
+        // Link this hotel/user combination if not already linked
+        if (!member.isLinked(hotelId, guestId)) {
+          console.log(`🔗 Linking new account: hotel ${hotelId}, user ${guestId}`);
+          member.linkAccount(hotelId, guestId, guest.name || guest.email, guestEmail);
+        }
+      } else {
+        // Create new group member
+        console.log(`➕ Creating new group loyalty member for email ${guestEmail}`);
+        member = new LoyaltyMember({
+          guest: guestId,
+          hotel: hotelId,
+          hotelGroupId: hotelGroupId,
+          guestEmail: guestEmail,
+          currentTier: 'BRONZE',
+          totalPoints: 0,
+          availablePoints: 0,
+          linkedAccounts: [{
+            hotelId: hotelId,
+            userId: guestId,
+            userName: guest.name || guest.email,
+            userEmail: guestEmail,
+            linkedDate: new Date()
+          }]
+        });
+      }
     } else {
-      console.log(`✅ Existing loyalty member found:`, {
-        memberId: member._id,
-        currentPoints: member.totalPoints,
-        currentTier: member.currentTier,
-        lifetimeSpending: member.lifetimeSpending
+      // Hotel is NOT in a group - use traditional per-hotel loyalty
+      console.log(`🏨 Hotel not in group - using traditional per-hotel loyalty`);
+
+      member = await LoyaltyMember.findOne({
+        guest: guestId,
+        hotel: hotelId
       });
+
+      if (!member) {
+        console.log(`➕ Creating new loyalty member for guest ${guestId} at hotel ${hotelId}`);
+        member = new LoyaltyMember({
+          guest: guestId,
+          hotel: hotelId,
+          guestEmail: guestEmail,
+          currentTier: 'BRONZE',
+          totalPoints: 0,
+          availablePoints: 0
+        });
+      } else {
+        console.log(`✅ Existing loyalty member found:`, {
+          memberId: member._id,
+          currentPoints: member.totalPoints,
+          currentTier: member.currentTier,
+          lifetimeSpending: member.lifetimeSpending
+        });
+      }
     }
 
     // Calculate points
@@ -205,7 +270,8 @@ const awardPointsForBooking = async (bookingId, bookingType = 'regular') => {
         description,
         bookingType === 'regular' ? bookingId : null,
         bookingType === 'transportation' ? bookingId : null,
-        program.expirationMonths || 12
+        program.expirationMonths || 12,
+        hotelId  // Track which hotel earned the points (for group analytics)
       );
 
       // Update lifetime spending
@@ -221,6 +287,45 @@ const awardPointsForBooking = async (bookingId, bookingType = 'regular') => {
       member.calculateTierProgress(program.tierConfiguration);
 
       await member.save();
+
+      // If hotel is in a group, sync points to all other members with same email
+      if (hotel.hotelGroupId && member.guestEmail) {
+        const otherGroupMembers = await LoyaltyMember.find({
+          hotelGroupId: hotel.hotelGroupId,
+          guestEmail: member.guestEmail,
+          _id: { $ne: member._id } // Exclude the current member
+        });
+
+        if (otherGroupMembers.length > 0) {
+          console.log(`🔄 Syncing points to ${otherGroupMembers.length} other member(s) in the group`);
+
+          for (const otherMember of otherGroupMembers) {
+            otherMember.totalPoints = member.totalPoints;
+            otherMember.tierPoints = member.tierPoints;
+            otherMember.availablePoints = member.availablePoints;
+            otherMember.lifetimeSpending = member.lifetimeSpending;
+            otherMember.lifetimePointsEarned = member.lifetimePointsEarned;
+
+            // Recalculate tier based on that hotel's program configuration
+            const otherHotelProgram = await LoyaltyProgram.findOne({
+              hotel: otherMember.hotel,
+              channel: program.channel
+            });
+
+            if (otherHotelProgram) {
+              const otherTier = otherHotelProgram.getTierByPoints(otherMember.totalPoints);
+              if (otherTier && otherTier.name !== otherMember.currentTier) {
+                otherMember.updateTier(otherTier.name, 'Synced from group member points');
+              }
+              otherMember.calculateTierProgress(otherHotelProgram.tierConfiguration);
+            }
+
+            await otherMember.save();
+          }
+
+          console.log(`✅ Synced ${pointsToAward} points to ${otherGroupMembers.length} group member(s)`);
+        }
+      }
 
       // Update program statistics
       program.statistics.totalPointsIssued += pointsToAward;
@@ -436,9 +541,128 @@ const calculateLoyaltyDiscount = async (guestId, hotelId, amount) => {
   }
 };
 
+/**
+ * Get or create loyalty member for guest at hotel
+ * Supports hotel groups - links accounts by email
+ * @param {ObjectId} guestId - Guest user ID
+ * @param {ObjectId} hotelId - Hotel ID
+ * @returns {LoyaltyMember} Member document
+ */
+const getOrCreateMember = async (guestId, hotelId) => {
+  try {
+    // Get hotel and guest info
+    const hotel = await Hotel.findById(hotelId);
+    const guest = await User.findById(guestId);
+
+    if (!hotel || !guest) {
+      throw new Error('Hotel or guest not found');
+    }
+
+    const hotelGroupId = hotel.hotelGroupId;
+    const guestEmail = guest.email;
+
+    // If hotel is in a group, create separate members per hotel but with shared points
+    if (hotelGroupId && guestEmail) {
+      // Find this guest's member at this specific hotel
+      let member = await LoyaltyMember.findOne({
+        guest: guestId,
+        hotel: hotelId
+      });
+
+      if (member) {
+        // Member exists at this hotel
+        // Ensure group fields are set
+        if (!member.hotelGroupId) {
+          member.hotelGroupId = hotelGroupId;
+          member.guestEmail = guestEmail;
+          await member.save();
+        }
+        return member;
+      }
+
+      // Member doesn't exist at this hotel - check if they exist at other hotels in group
+      const existingGroupMember = await LoyaltyMember.findOne({
+        hotelGroupId: hotelGroupId,
+        guestEmail: guestEmail
+      });
+
+      if (existingGroupMember) {
+        // Guest has loyalty at another hotel in the group - create new member with shared points
+        member = new LoyaltyMember({
+          guest: guestId,
+          hotel: hotelId,
+          hotelGroupId: hotelGroupId,
+          guestEmail: guestEmail,
+          currentTier: 'BRONZE', // Will be recalculated based on this hotel's tier config
+          totalPoints: existingGroupMember.totalPoints,
+          tierPoints: existingGroupMember.tierPoints,
+          availablePoints: existingGroupMember.availablePoints,
+          lifetimeSpending: existingGroupMember.lifetimeSpending,
+          lifetimePointsEarned: existingGroupMember.lifetimePointsEarned,
+          linkedAccounts: [{
+            hotelId: hotelId,
+            userId: guestId,
+            userName: guest.name || guest.email,
+            userEmail: guestEmail,
+            linkedDate: new Date()
+          }]
+        });
+        await member.save();
+
+        console.log(`✅ Created linked loyalty member at hotel ${hotelId} for ${guestEmail} with ${member.totalPoints} shared points`);
+        return member;
+      } else {
+        // First time in the group - create new member
+        member = new LoyaltyMember({
+          guest: guestId,
+          hotel: hotelId,
+          hotelGroupId: hotelGroupId,
+          guestEmail: guestEmail,
+          currentTier: 'BRONZE',
+          totalPoints: 0,
+          availablePoints: 0,
+          linkedAccounts: [{
+            hotelId: hotelId,
+            userId: guestId,
+            userName: guest.name || guest.email,
+            userEmail: guestEmail,
+            linkedDate: new Date()
+          }]
+        });
+        await member.save();
+        return member;
+      }
+    } else {
+      // Hotel not in group - traditional per-hotel loyalty
+      let member = await LoyaltyMember.findOne({
+        guest: guestId,
+        hotel: hotelId
+      });
+
+      if (!member) {
+        member = new LoyaltyMember({
+          guest: guestId,
+          hotel: hotelId,
+          guestEmail: guestEmail,
+          currentTier: 'BRONZE',
+          totalPoints: 0,
+          availablePoints: 0
+        });
+        await member.save();
+      }
+
+      return member;
+    }
+  } catch (error) {
+    console.error('Error in getOrCreateMember:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   awardPointsForBooking,
   awardPointsForNights,
   autoAwardPoints,
-  calculateLoyaltyDiscount
+  calculateLoyaltyDiscount,
+  getOrCreateMember
 };

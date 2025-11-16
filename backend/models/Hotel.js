@@ -476,6 +476,14 @@ const hotelSchema = new mongoose.Schema({
     }
   }],
 
+  // Hotel Group (for shared loyalty points)
+  hotelGroupId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'HotelGroup',
+    default: null,
+    index: true
+  },
+
   // Metadata
   metadata: {
     createdBy: {

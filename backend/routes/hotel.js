@@ -2186,13 +2186,46 @@ router.post('/guests/:guestId/loyalty/activate', catchAsync(async (req, res, nex
   }
 
   // Create new loyalty member
+  const hotel = await Hotel.findById(hotelId).select('hotelGroupId');
+  const hotelGroupId = hotel?.hotelGroupId;
+  const guestEmail = guest.email;
+
+  // If hotel is in a group, check if guest has membership at other hotels
+  let initialPoints = 0;
+  let initialTierPoints = 0;
+  let initialAvailablePoints = 0;
+  let initialSpending = 0;
+  let initialEarned = 0;
+
+  if (hotelGroupId && guestEmail) {
+    const existingGroupMember = await LoyaltyMember.findOne({
+      hotelGroupId: hotelGroupId,
+      guestEmail: guestEmail
+    });
+
+    if (existingGroupMember) {
+      // Copy points from existing group member
+      initialPoints = existingGroupMember.totalPoints;
+      initialTierPoints = existingGroupMember.tierPoints;
+      initialAvailablePoints = existingGroupMember.availablePoints;
+      initialSpending = existingGroupMember.lifetimeSpending;
+      initialEarned = existingGroupMember.lifetimePointsEarned;
+
+      logger.info(`Enrolling guest ${guestEmail} with ${initialPoints} shared points from group`);
+    }
+  }
+
   member = new LoyaltyMember({
     guest: guestId,
     hotel: hotelId,
+    hotelGroupId: hotelGroupId || undefined,
+    guestEmail: guestEmail,
     currentTier: 'BRONZE',
-    totalPoints: 0,
-    availablePoints: 0,
-    lifetimeSpending: 0,
+    totalPoints: initialPoints,
+    tierPoints: initialTierPoints,
+    availablePoints: initialAvailablePoints,
+    lifetimeSpending: initialSpending,
+    lifetimePointsEarned: initialEarned,
     tierHistory: [{
       tier: 'BRONZE',
       date: new Date(),
@@ -2200,6 +2233,16 @@ router.post('/guests/:guestId/loyalty/activate', catchAsync(async (req, res, nex
     }],
     isActive: true
   });
+
+  // Recalculate tier based on shared points
+  if (initialTierPoints > 0 && program.tierConfiguration) {
+    const correctTier = program.getTierByPoints(initialTierPoints);
+    if (correctTier && correctTier.name !== 'BRONZE') {
+      member.currentTier = correctTier.name;
+      member.tierHistory[0].tier = correctTier.name;
+      logger.info(`Guest enrolled with tier ${correctTier.name} based on ${initialTierPoints} shared points`);
+    }
+  }
 
   // Calculate tier progress
   member.calculateTierProgress(program.tierConfiguration);
