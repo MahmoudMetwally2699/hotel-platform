@@ -340,7 +340,7 @@ const ServiceProvidersPage = () => {
           ) : (
             <>
               {/* Desktop Table View */}
-              <div className="hidden lg:block overflow-x-auto">
+              <div className="hidden lg:block overflow-visible">
                 <div className="min-w-full inline-block align-middle">
                   <table className="min-w-full divide-y divide-gray-200">                    <thead className="bg-modern-gray">
                       <tr>
@@ -421,45 +421,44 @@ const ServiceProvidersPage = () => {
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-4 text-center">
-                            <div className="relative inline-block text-left">
-                              <button
-                                onClick={(e) => {
-                                  if (openDropdownId === provider._id) {
-                                    setOpenDropdownId(null);
-                                  } else {
-                                    const rect = e.currentTarget.getBoundingClientRect();
-                                    const spaceBelow = window.innerHeight - rect.bottom;
-                                    const spaceAbove = rect.top;
-                                    const dropdownHeight = 280;
+                          <td className="px-4 py-4 text-center relative">
+                            <button
+                              onClick={(e) => {
+                                if (openDropdownId === provider._id) {
+                                  setOpenDropdownId(null);
+                                } else {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  const spaceBelow = window.innerHeight - rect.bottom;
+                                  const spaceAbove = rect.top;
+                                  const dropdownHeight = 280;
 
-                                    setDropdownPosition({
-                                      [provider._id]: spaceBelow < dropdownHeight && spaceAbove > spaceBelow ? 'up' : 'down'
-                                    });
-                                    setOpenDropdownId(provider._id);
-                                  }
-                                }}
-                                className="inline-flex items-center justify-center w-10 h-10 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
-                                aria-label="Actions"
-                              >
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                  <circle cx="12" cy="5" r="2"/>
-                                  <circle cx="12" cy="12" r="2"/>
-                                  <circle cx="12" cy="19" r="2"/>
-                                </svg>
-                              </button>
+                                  setDropdownPosition({
+                                    [provider._id]: spaceBelow < dropdownHeight && spaceAbove > spaceBelow ? 'up' : 'down'
+                                  });
+                                  setOpenDropdownId(provider._id);
+                                }
+                              }}
+                              className="inline-flex items-center justify-center w-10 h-10 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
+                              aria-label="Actions"
+                            >
+                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="5" r="2"/>
+                                <circle cx="12" cy="12" r="2"/>
+                                <circle cx="12" cy="19" r="2"/>
+                              </svg>
+                            </button>
 
-                              {openDropdownId === provider._id && (
-                                <>
-                                  {/* Backdrop to close dropdown when clicking outside */}
-                                  <div
-                                    className="fixed inset-0 z-[90]"
-                                    onClick={() => setOpenDropdownId(null)}
-                                  />
-                                  {/* Dropdown menu */}
-                                  <div className={`absolute right-0 z-[100] w-56 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none max-h-[400px] overflow-y-auto ${
-                                    dropdownPosition[provider._id] === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
-                                  }`}>
+                            {openDropdownId === provider._id && (
+                              <>
+                                {/* Backdrop to close dropdown when clicking outside */}
+                                <div
+                                  className="fixed inset-0 z-[90]"
+                                  onClick={() => setOpenDropdownId(null)}
+                                />
+                                {/* Dropdown menu */}
+                                <div className={`absolute right-0 z-[100] w-56 origin-top-right rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none ${
+                                  dropdownPosition[provider._id] === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
+                                }`}>
                                     <div className="py-1">
                                       {provider.providerType !== 'internal' && (
                                         <button
@@ -515,8 +514,7 @@ const ServiceProvidersPage = () => {
                                   </div>
                                 </>
                               )}
-                            </div>
-                          </td>
+                            </td>
                         </tr>
                       ))}
                     </tbody>
