@@ -87,17 +87,17 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         ];
       case 'hotel':
         return [
-          { name: t('navigation.dashboard'), path: '/hotel/dashboard', icon: 'home' },
-          { name: t('navigation.orders'), path: '/hotel/orders', icon: 'shopping-bag' },
-          { name: t('navigation.guests'), path: '/hotel/guests', icon: 'users' },
-          { name: t('navigation.serviceProviders'), path: '/hotel/service-providers', icon: 'briefcase' },
-          { name: t('navigation.feedback'), path: '/hotel/feedback', icon: 'feedback' },
-          { name: t('navigation.revenue'), path: '/hotel/revenue', icon: 'cash' },
-          { name: t('navigation.qrCodes'), path: '/hotel/qr-codes', icon: 'qr-code' },
-          { name: t('navigation.loyaltyProgram'), path: '/hotel/loyalty-program', icon: 'gift' },
-          { name: t('navigation.performanceAnalytics'), path: '/hotel/performance-analytics', icon: 'chart-line' },
+          { name: t('navigation.dashboard'), path: '/hotel/dashboard', icon: 'view-structure-up' },
+          { name: t('navigation.orders'), path: '/hotel/orders', icon: 'underline-square-outline' },
+          { name: t('navigation.guests'), path: '/hotel/guests', icon: 'group' },
+          { name: t('navigation.serviceProviders'), path: '/hotel/service-providers', icon: 'briefcase-custom' },
+          { name: t('navigation.feedback'), path: '/hotel/feedback', icon: 'bubble-star' },
+          { name: t('navigation.revenue'), path: '/hotel/revenue', icon: 'wallet' },
+          { name: t('navigation.qrCodes'), path: '/hotel/qr-codes', icon: 'scan-qr-code' },
+          { name: t('navigation.loyaltyProgram'), path: '/hotel/loyalty-program', icon: '1st-medal' },
+          { name: t('navigation.performanceAnalytics'), path: '/hotel/performance-analytics', icon: 'graph-up' },
           { name: 'Branding', path: '/hotel/branding', icon: 'palette' },
-          { name: t('navigation.settings'), path: '/hotel/settings', icon: 'cog' }
+          { name: t('navigation.settings'), path: '/hotel/settings', icon: 'settings-custom' }
         ];
       case 'service':
         // Build dynamic navigation based on allowed categories
@@ -384,6 +384,27 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
           </svg>
         );
+      // Custom image-based icons with theme color
+      case 'view-structure-up':
+        return <div className="h-5 w-5" style={{ backgroundColor: 'currentColor', maskImage: 'url(/icons/view-structure-up.png)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/view-structure-up.png)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>;
+      case 'underline-square-outline':
+        return <div className="h-5 w-5" style={{ backgroundColor: 'currentColor', maskImage: 'url(/icons/underline-square-outline.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/underline-square-outline.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>;
+      case 'group':
+        return <div className="h-5 w-5" style={{ backgroundColor: 'currentColor', maskImage: 'url(/icons/group.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/group.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>;
+      case 'briefcase-custom':
+        return <div className="h-5 w-5" style={{ backgroundColor: 'currentColor', maskImage: 'url(/icons/briefcase.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/briefcase.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>;
+      case 'bubble-star':
+        return <div className="h-5 w-5" style={{ backgroundColor: 'currentColor', maskImage: 'url(/icons/bubble-star.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/bubble-star.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>;
+      case 'wallet':
+        return <div className="h-5 w-5" style={{ backgroundColor: 'currentColor', maskImage: 'url(/icons/wallet.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/wallet.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>;
+      case 'scan-qr-code':
+        return <div className="h-5 w-5" style={{ backgroundColor: 'currentColor', maskImage: 'url(/icons/scan-qr-code.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/scan-qr-code.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>;
+      case '1st-medal':
+        return <div className="h-5 w-5" style={{ backgroundColor: 'currentColor', maskImage: 'url(/icons/1st-medal.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/1st-medal.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>;
+      case 'graph-up':
+        return <div className="h-5 w-5" style={{ backgroundColor: 'currentColor', maskImage: 'url(/icons/graph-up.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/graph-up.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>;
+      case 'settings-custom':
+        return <div className="h-5 w-5" style={{ backgroundColor: 'currentColor', maskImage: 'url(/icons/settings.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/settings.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>;
       default:
         return (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

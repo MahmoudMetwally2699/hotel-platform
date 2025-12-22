@@ -97,6 +97,11 @@ const StarIcon = () => (
   </svg>
 );
 
+// Custom Icon Component for image icons
+const CustomIcon = ({ src }) => (
+  <img src={src} alt="" className="h-5 w-5" />
+);
+
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -126,9 +131,16 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
       { text: t('navigation.superHotels'), icon: <StarIcon />, path: '/superadmin/super-hotels' }
     ],
     hotel: [
-      { text: t('navigation.dashboard'), icon: <HomeIcon />, path: '/hotel/dashboard' },
-      { text: t('navigation.revenue'), icon: <CurrencyDollarIcon />, path: '/hotel/revenue' },
-      { text: t('navigation.settings'), icon: <CogIcon />, path: '/hotel/settings' }
+      { text: t('navigation.dashboard'), icon: <CustomIcon src="/icons/view-structure-up.png" />, path: '/hotel/dashboard' },
+      { text: t('navigation.orders'), icon: <CustomIcon src="/icons/underline-square-outline.svg" />, path: '/hotel/orders' },
+      { text: t('navigation.clients'), icon: <CustomIcon src="/icons/groups.svg" />, path: '/hotel/clients' },
+      { text: t('navigation.serviceProviders'), icon: <CustomIcon src="/icons/briefcase.svg" />, path: '/hotel/service-providers' },
+      { text: t('navigation.feedback'), icon: <CustomIcon src="/icons/bubble-star.svg" />, path: '/hotel/feedback' },
+      { text: t('navigation.revenue'), icon: <CustomIcon src="/icons/wallet.svg" />, path: '/hotel/revenue' },
+      { text: t('navigation.qrCode'), icon: <CustomIcon src="/icons/scan-qr-code.svg" />, path: '/hotel/qr-code' },
+      { text: 'Loyalty Programs', icon: <CustomIcon src="/icons/1st-medal.svg" />, path: '/hotel/loyalty/channels' },
+      { text: t('navigation.analysis'), icon: <CustomIcon src="/icons/graph-up.svg" />, path: '/hotel/analysis' },
+      { text: t('navigation.settings'), icon: <CustomIcon src="/icons/settings.svg" />, path: '/hotel/settings' }
     ],
     service: [
       { text: t('navigation.dashboard'), icon: <HomeIcon />, path: '/service/dashboard' },

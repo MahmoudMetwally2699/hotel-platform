@@ -42,6 +42,20 @@ import useAuth from '../../hooks/useAuth';
 // Drawer width
 const drawerWidth = 240;
 
+// Custom Icon Component for image icons
+const CustomIcon = ({ src, alt }) => (
+  <Box
+    component="img"
+    src={src}
+    alt={alt}
+    sx={{
+      width: 24,
+      height: 24,
+      objectFit: 'contain',
+    }}
+  />
+);
+
 // Navigation items by role
 const getNavigationItems = (t) => ({
   super_admin: [
@@ -52,13 +66,16 @@ const getNavigationItems = (t) => ({
     { text: t('navigation.feedback'), icon: <FeedbackIcon />, path: '/superadmin/feedback' },
   ],
   hotel_admin: [
-    { text: t('navigation.dashboard'), icon: <DashboardIcon />, path: '/hotel/dashboard' },
-    { text: t('navigation.orders'), icon: <AssignmentIcon />, path: '/hotel/orders' },
-    { text: t('navigation.serviceProviders'), icon: <CategoryIcon />, path: '/hotel/service-providers' },
-    { text: t('navigation.feedback'), icon: <FeedbackIcon />, path: '/hotel/feedback' },
-    { text: 'Loyalty Programs', icon: <StarIcon />, path: '/hotel/loyalty/channels' },
-    { text: t('navigation.revenue'), icon: <MoneyIcon />, path: '/hotel/revenue' },
-    { text: t('navigation.settings'), icon: <SettingsIcon />, path: '/hotel/settings' },
+    { text: t('navigation.dashboard'), icon: <CustomIcon src="/icons/view-structure-up.png" alt="Dashboard" />, path: '/hotel/dashboard' },
+    { text: t('navigation.orders'), icon: <CustomIcon src="/icons/underline-square-outline.svg" alt="Orders" />, path: '/hotel/orders' },
+    { text: t('navigation.clients'), icon: <CustomIcon src="/icons/groups.svg" alt="Clients" />, path: '/hotel/clients' },
+    { text: t('navigation.serviceProviders'), icon: <CustomIcon src="/icons/briefcase.svg" alt="Service Providers" />, path: '/hotel/service-providers' },
+    { text: t('navigation.feedback'), icon: <CustomIcon src="/icons/bubble-star.svg" alt="Feedback" />, path: '/hotel/feedback' },
+    { text: t('navigation.revenue'), icon: <CustomIcon src="/icons/wallet.svg" alt="Revenue" />, path: '/hotel/revenue' },
+    { text: t('navigation.qrCode'), icon: <CustomIcon src="/icons/scan-qr-code.svg" alt="QR Code" />, path: '/hotel/qr-code' },
+    { text: 'Loyalty Programs', icon: <CustomIcon src="/icons/1st-medal.svg" alt="Loyalty" />, path: '/hotel/loyalty/channels' },
+    { text: t('navigation.analysis'), icon: <CustomIcon src="/icons/graph-up.svg" alt="Analysis" />, path: '/hotel/analysis' },
+    { text: t('navigation.settings'), icon: <CustomIcon src="/icons/settings.svg" alt="Settings" />, path: '/hotel/settings' },
   ],
   service_provider: [
     { text: t('navigation.dashboard'), icon: <DashboardIcon />, path: '/service/dashboard' },
