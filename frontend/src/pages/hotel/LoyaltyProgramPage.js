@@ -11,6 +11,7 @@ import { fetchLoyaltyAnalytics, fetchLoyaltyProgram } from '../../redux/slices/l
 import { selectHotelCurrency } from '../../redux/slices/hotelSlice';
 import { formatPriceByLanguage } from '../../utils/currency';
 import LoyaltyProgramConfig from '../../components/hotel/loyalty/LoyaltyProgramConfig';
+import { useTheme } from '../../context/ThemeContext';
 import {
   Users,
   Award,
@@ -26,6 +27,7 @@ import {
 const LoyaltyProgramPage = () => {
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
+  const { theme } = useTheme();
   const { analytics, loyaltyProgram, loading } = useSelector((state) => state.loyalty);
   const reduxCurrency = useSelector(selectHotelCurrency);
   // Prioritize currency from API response (analytics or members), fallback to Redux
@@ -114,7 +116,10 @@ const LoyaltyProgramPage = () => {
         <div className="flex gap-3">
           <button
             onClick={() => setShowConfigModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+            className="px-4 py-2 text-white rounded-lg transition flex items-center gap-2"
+            style={{ backgroundColor: theme.primaryColor }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = theme.secondaryColor}
+            onMouseLeave={(e) => e.target.style.backgroundColor = theme.primaryColor}
           >
             <Settings className="h-4 w-4" />
             {t('loyaltyProgramPage.configureProgram')}
@@ -155,13 +160,13 @@ const LoyaltyProgramPage = () => {
           : Boolean(loyaltyProgram);
 
         return !hasProgramConfigured && !loading && (
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+          <div className="border-l-4 p-4 rounded" style={{ backgroundColor: `${theme.primaryColor}10`, borderColor: theme.primaryColor }}>
             <div className="flex">
               <div className="flex-shrink-0">
-                <Activity className="h-5 w-5 text-blue-400" />
+                <Activity className="h-5 w-5" style={{ color: theme.primaryColor }} />
               </div>
               <div className="ml-3">
-                <p className="text-sm text-blue-700">
+                <p className="text-sm" style={{ color: theme.primaryColor }}>
                   {t('loyaltyProgramPage.programStatus.notConfiguredMessage')}
                 </p>
               </div>
@@ -193,7 +198,7 @@ const LoyaltyProgramPage = () => {
         return hasTierConfig && (
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <Award className="h-6 w-6 text-blue-600" />
+              <Award className="h-6 w-6" style={{ color: theme.primaryColor }} />
               {t('loyaltyProgramPage.tierBenefits.title')}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -276,8 +281,8 @@ const LoyaltyProgramPage = () => {
                 {analytics?.overview?.totalMembers || 0}
               </p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Users className="h-8 w-8 text-blue-600" />
+            <div className="p-3 rounded-full" style={{ backgroundColor: `${theme.primaryColor}20` }}>
+              <Users className="h-8 w-8" style={{ color: theme.primaryColor }} />
             </div>
           </div>
         </div>
@@ -519,9 +524,11 @@ const LoyaltyProgramPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link
             to="/hotel/loyalty/members"
-            className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition"
+            className="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:shadow-md transition"
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = theme.primaryColor}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
           >
-            <Users className="h-8 w-8 text-blue-600 mr-3" />
+            <Users className="h-8 w-8 mr-3" style={{ color: theme.primaryColor }} />
             <div className="text-left">
               <p className="font-semibold text-gray-900">{t('loyaltyProgramPage.quickActions.viewMembers')}</p>
               <p className="text-sm text-gray-600">{t('loyaltyProgramPage.quickActions.viewMembersDesc')}</p>

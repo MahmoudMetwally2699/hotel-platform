@@ -7,6 +7,7 @@ import apiClient from '../../services/api.service';
 import hotelService from '../../services/hotel.service';
 import { HOTEL_ADMIN_API } from '../../config/api.config';
 import { toast } from 'react-toastify';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
  * Hotel Admin Service Providers Management Page
@@ -16,7 +17,8 @@ const ServiceProvidersPage = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const serviceProviders = useSelector(selectServiceProviders) || [];
-  const isLoading = useSelector(selectServiceProviderLoading);  const [searchTerm, setSearchTerm] = useState('');
+  const isLoading = useSelector(selectServiceProviderLoading);  const { theme } = useTheme();
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -244,18 +246,19 @@ const ServiceProvidersPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-modern-gray to-white">
+    <div className="min-h-screen" style={{ backgroundColor: theme.backgroundColor }}>
       {/* Modern Header Section */}
       <div className="bg-white shadow-lg border-b border-gray-100">
         <div className="w-full px-6 py-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-modern-blue">{t('hotelAdmin.serviceProviders.title')}</h1>
+              <h1 className="text-3xl font-bold" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.title')}</h1>
               <p className="text-modern-darkGray mt-1">{t('hotelAdmin.serviceProviders.subtitle')}</p>
             </div>
             <button
               onClick={handleAddProvider}
-              className="bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white px-6 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium flex items-center space-x-2"
+              className="text-white px-6 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium flex items-center space-x-2"
+              style={{ backgroundColor: theme.primaryColor }}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -268,7 +271,7 @@ const ServiceProvidersPage = () => {
 
       <div className="max-w-full mx-auto px-4 py-8">        {/* Search Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-50 mb-8">
-          <div className="px-8 py-6 bg-gradient-to-r from-modern-blue to-modern-lightBlue">
+          <div className="px-8 py-6" style={{ backgroundColor: theme.primaryColor }}>
             <h2 className="text-xl font-bold text-white flex items-center">
               <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -295,7 +298,8 @@ const ServiceProvidersPage = () => {
               </div>
               <button
                 onClick={() => dispatch(fetchServiceProviders({}))}
-                className="bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white px-8 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium flex items-center space-x-2"
+                className="text-white px-8 py-3 rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium flex items-center space-x-2"
+                style={{ backgroundColor: theme.primaryColor }}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -308,7 +312,7 @@ const ServiceProvidersPage = () => {
 
         {/* Modern Service Providers Table */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-50">
-          <div className="px-8 py-6 bg-gradient-to-r from-modern-blue to-modern-lightBlue">
+          <div className="px-8 py-6" style={{ backgroundColor: theme.primaryColor }}>
             <h2 className="text-xl font-bold text-white flex items-center">
               <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -342,22 +346,27 @@ const ServiceProvidersPage = () => {
               {/* Desktop Table View */}
               <div className="hidden lg:block overflow-visible">
                 <div className="min-w-full inline-block align-middle">
-                  <table className="min-w-full divide-y divide-gray-200">                    <thead className="bg-modern-gray">
+                  <table className="min-w-full divide-y divide-gray-200">                    <thead style={{ backgroundColor: theme.backgroundColor }}>
                       <tr>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[200px]">{t('hotelAdmin.serviceProviders.table.businessName')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">Provider Type</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[180px]">{t('hotelAdmin.serviceProviders.table.contact')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.serviceProviders.table.status')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">{t('hotelAdmin.serviceProviders.table.markup')}</th>
-                        <th className="px-4 py-4 text-center text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">{t('hotelAdmin.serviceProviders.table.actions')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[200px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.businessName')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>Provider Type</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[180px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.contact')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.status')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.markup')}</th>
+                        <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.actions')}</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
                       {filteredProviders.map((provider) => (
-                        <tr key={provider._id} className="hover:bg-modern-gray transition-colors duration-200">
+                        <tr
+                          key={provider._id}
+                          className="transition-colors duration-200"
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.backgroundColor}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                        >
                           <td className="px-4 py-4">
                             <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-modern-blue to-modern-lightBlue flex items-center justify-center text-white font-bold">
+                              <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: theme.primaryColor }}>
                                 {provider.businessName?.charAt(0) || 'P'}
                               </div>
                               <div className="ml-4">
@@ -466,9 +475,11 @@ const ServiceProvidersPage = () => {
                                             handleSetMarkup(provider);
                                             setOpenDropdownId(null);
                                           }}
-                                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-modern-blue flex items-center gap-3 transition-colors duration-150"
+                                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-3 transition-colors duration-150"
+                                          onMouseEnter={(e) => e.currentTarget.style.color = theme.primaryColor}
+                                          onMouseLeave={(e) => e.currentTarget.style.color = '#374151'}
                                         >
-                                          <svg className="w-5 h-5 text-modern-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.primaryColor }}>
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                           </svg>
                                           <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.setMarkup')}</span>

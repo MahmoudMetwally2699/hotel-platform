@@ -484,6 +484,84 @@ const hotelSchema = new mongoose.Schema({
     index: true
   },
 
+  // Branding Settings
+  branding: {
+    primaryColor: {
+      type: String,
+      default: '#3B5787',
+      validate: {
+        validator: function(v) {
+          return /^#([0-9A-F]{3}){1,2}$/i.test(v);
+        },
+        message: 'Please provide a valid hex color'
+      }
+    },
+    secondaryColor: {
+      type: String,
+      default: '#67BAE0',
+      validate: {
+        validator: function(v) {
+          return /^#([0-9A-F]{3}){1,2}$/i.test(v);
+        },
+        message: 'Please provide a valid hex color'
+      }
+    },
+    sidebarColor: {
+      type: String,
+      default: '#1F2937',
+      validate: {
+        validator: function(v) {
+          return /^#([0-9A-F]{3}){1,2}$/i.test(v);
+        },
+        message: 'Please provide a valid hex color'
+      }
+    },
+    sidebarTextColor: {
+      type: String,
+      default: '#FFFFFF',
+      validate: {
+        validator: function(v) {
+          return /^#([0-9A-F]{3}){1,2}$/i.test(v);
+        },
+        message: 'Please provide a valid hex color'
+      }
+    },
+    headerColor: {
+      type: String,
+      default: '#FFFFFF',
+      validate: {
+        validator: function(v) {
+          return /^#([0-9A-F]{3}){1,2}$/i.test(v);
+        },
+        message: 'Please provide a valid hex color'
+      }
+    },
+    backgroundColor: {
+      type: String,
+      default: '#F8FAFC',
+      validate: {
+        validator: function(v) {
+          return /^#([0-9A-F]{3}){1,2}$/i.test(v);
+        },
+        message: 'Please provide a valid hex color'
+      }
+    },
+    accentColor: {
+      type: String,
+      default: '#10B981',
+      validate: {
+        validator: function(v) {
+          return /^#([0-9A-F]{3}){1,2}$/i.test(v);
+        },
+        message: 'Please provide a valid hex color'
+      }
+    },
+    logo: {
+      type: String,
+      default: null
+    }
+  },
+
   // Metadata
   metadata: {
     createdBy: {

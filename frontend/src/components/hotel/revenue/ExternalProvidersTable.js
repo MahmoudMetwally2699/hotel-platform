@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useTheme } from '../../../context/ThemeContext';
 import { Users, TrendingUp, DollarSign, Percent } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const ExternalProvidersTable = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
   const [sortBy, setSortBy] = useState('totalRevenue');
   const [sortOrder, setSortOrder] = useState('desc');
 
@@ -92,7 +94,7 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+        <div className="rounded-lg p-4 text-white" style={{ backgroundColor: theme.primaryColor }}>
           <div className="flex items-center gap-2 mb-1">
             <DollarSign className="w-5 h-5" />
             <p className="text-sm opacity-90">{t('performanceAnalyticsPage.revenue.external.cards.totalRevenue')}</p>
@@ -100,7 +102,7 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
           <p className="text-2xl font-bold">{formatCurrency(data.totals.totalRevenue)}</p>
         </div>
 
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+        <div className="rounded-lg p-4 text-white" style={{ backgroundColor: theme.primaryColor }}>
           <div className="flex items-center gap-2 mb-1">
             <Users className="w-5 h-5" />
             <p className="text-sm opacity-90">{t('performanceAnalyticsPage.revenue.external.cards.providerEarnings')}</p>
@@ -108,7 +110,7 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
           <p className="text-2xl font-bold">{formatCurrency(data.totals.totalProviderEarnings)}</p>
         </div>
 
-        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
+        <div className="rounded-lg p-4 text-white" style={{ backgroundColor: theme.primaryColor }}>
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-5 h-5" />
             <p className="text-sm opacity-90">{t('performanceAnalyticsPage.revenue.external.cards.hotelCommission')}</p>
@@ -116,7 +118,7 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
           <p className="text-2xl font-bold">{formatCurrency(data.totals.totalHotelCommission)}</p>
         </div>
 
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-4 text-white">
+        <div className="rounded-lg p-4 text-white" style={{ backgroundColor: theme.accentColor }}>
           <div className="flex items-center gap-2 mb-1">
             <Percent className="w-5 h-5" />
             <p className="text-sm opacity-90">{t('performanceAnalyticsPage.revenue.external.cards.avgProfitMargin')}</p>
@@ -181,7 +183,7 @@ const ExternalProvidersTable = ({ data, loading, error }) => {
                   </span>
                 </td>
                 <td className="py-4 px-4 text-center">
-                  <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: theme.accentColor, color: 'white' }}>
                     {provider.bookingCount}
                   </span>
                 </td>

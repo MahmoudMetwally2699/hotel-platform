@@ -1,9 +1,11 @@
 import React from 'react';
+import { useTheme } from '../../../context/ThemeContext';
 import { Home, Package, Utensils, Car, Wrench, Shirt } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const InternalServicesTable = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -74,7 +76,7 @@ const InternalServicesTable = ({ data, loading, error }) => {
       </div>
 
       {/* Total Revenue Card */}
-      <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 mb-6 text-white">
+      <div className="rounded-lg p-4 mb-6 text-white" style={{ backgroundColor: theme.primaryColor }}>
         <p className="text-sm opacity-90">{t('performanceAnalyticsPage.revenue.internal.totalInternalRevenue')}</p>
         <p className="text-3xl font-bold">{formatCurrency(data.totalInternalRevenue)}</p>
       </div>
@@ -129,8 +131,8 @@ const InternalServicesTable = ({ data, loading, error }) => {
                   <div className="flex items-center justify-end gap-2">
                     <div className="w-16 bg-gray-200 rounded-full h-2">
                       <div
-                        className="bg-green-500 h-2 rounded-full"
-                        style={{ width: `${service.percentage}%` }}
+                        className="h-2 rounded-full"
+                        style={{ width: `${service.percentage}%`, backgroundColor: theme.primaryColor }}
                       ></div>
                     </div>
                     <span className="font-semibold text-gray-700 text-sm w-12 text-right">

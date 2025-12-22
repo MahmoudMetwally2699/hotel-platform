@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../context/ThemeContext';
 import { fetchHotelProfile, updateHotelProfile, selectCurrentHotel, selectHotelLoading } from '../../redux/slices/hotelSlice';
 import useAuth from '../../hooks/useAuth';
 
@@ -11,6 +12,7 @@ import useAuth from '../../hooks/useAuth';
 const SettingsPage = () => {
   // IMMEDIATE ALERT TO CATCH REDIRECT ISSUES
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const dispatch = useDispatch();
   const hotel = useSelector(selectCurrentHotel);
   const isLoading = useSelector(selectHotelLoading);
@@ -223,10 +225,10 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#67BAE0]/10 via-white to-[#3B5787]/10">
+    <div className="min-h-screen" style={{ backgroundColor: theme.backgroundColor }}>
       <div className="w-full p-6">
         {/* Header Section */}
-        <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-2xl shadow-xl p-8 mb-8">
+        <div className="rounded-2xl shadow-xl p-8 mb-8" style={{ backgroundColor: theme.primaryColor }}>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">{t('hotelAdmin.settings.title')}</h1>
@@ -248,11 +250,8 @@ const SettingsPage = () => {
             <nav className="flex">
               <button
                 onClick={() => setActiveTab('profile')}
-                className={`flex-1 py-4 px-6 text-center font-medium text-sm transition-all duration-200 ${
-                  activeTab === 'profile'
-                    ? 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white shadow-lg'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
+                className="flex-1 py-4 px-6 text-center font-medium text-sm transition-all duration-200"
+                style={activeTab === 'profile' ? { backgroundColor: theme.primaryColor, color: 'white' } : { color: '#6b7280' }}
               >
                 <div className="flex items-center justify-center space-x-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -267,14 +266,14 @@ const SettingsPage = () => {
 
         {/* Success and Error Messages */}
         {successMessage && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-[#67BAE0]/20 to-[#3B5787]/20 border border-[#67BAE0] rounded-xl shadow-lg">
+          <div className="mb-6 p-4 rounded-xl shadow-lg" style={{ backgroundColor: `${theme.primaryColor}20`, borderColor: theme.primaryColor, borderWidth: '1px' }}>
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0">
-                <svg className="w-6 h-6 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.primaryColor }}>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="text-[#3B5787] font-medium">{successMessage}</p>
+              <p className="font-medium" style={{ color: theme.primaryColor }}>{successMessage}</p>
             </div>
           </div>
         )}
@@ -295,7 +294,7 @@ const SettingsPage = () => {
         {isLoading ? (
           <div className="flex justify-center items-center h-64 bg-white rounded-xl shadow-lg">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0]/30 border-t-[#3B5787] mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-4 mx-auto mb-4" style={{ borderColor: `${theme.primaryColor}30`, borderTopColor: theme.primaryColor }}></div>
               <p className="text-gray-600 font-medium">{t('hotelAdmin.settings.loading')}</p>
             </div>
           </div>
@@ -306,9 +305,9 @@ const SettingsPage = () => {
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Basic Information Section */}
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-                  <div className="bg-gradient-to-r from-[#67BAE0]/20 to-[#3B5787]/20 px-6 py-4 border-b border-gray-200">
+                  <div className="px-6 py-4 border-b border-gray-200" style={{ background: `linear-gradient(to right, ${theme.primaryColor}20, ${theme.primaryColor}20)` }}>
                     <h2 className="text-xl font-semibold text-gray-800 flex items-center space-x-2">
-                      <svg className="w-6 h-6 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.primaryColor }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <span>{t('hotelAdmin.settings.sections.basicInfo')}</span>
@@ -324,7 +323,10 @@ const SettingsPage = () => {
                           name="name"
                           value={formData.name}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#3B5787] focus:ring-4 focus:ring-[#67BAE0]/30 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                          style={{ ':focus': { borderColor: theme.primaryColor, boxShadow: `0 0 0 4px ${theme.primaryColor}30` } }}
+                          onFocus={(e) => { e.target.style.borderColor = theme.primaryColor; e.target.style.boxShadow = `0 0 0 4px ${theme.primaryColor}30`; }}
+                          onBlur={(e) => { e.target.style.borderColor = ''; e.target.style.boxShadow = ''; }}
                           required
                         />
                       </div>
@@ -337,7 +339,9 @@ const SettingsPage = () => {
                           name="website"
                           value={formData.website}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#3B5787] focus:ring-4 focus:ring-[#67BAE0]/30 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                          onFocus={(e) => { e.target.style.borderColor = theme.primaryColor; e.target.style.boxShadow = `0 0 0 4px ${theme.primaryColor}30`; }}
+                          onBlur={(e) => { e.target.style.borderColor = ''; e.target.style.boxShadow = ''; }}
                         />
                       </div>
 
@@ -349,7 +353,9 @@ const SettingsPage = () => {
                           value={formData.description}
                           onChange={handleInputChange}
                           rows="4"
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#3B5787] focus:ring-4 focus:ring-[#67BAE0]/30 transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all duration-200 bg-gray-50 focus:bg-white resize-none"
+                          onFocus={(e) => { e.target.style.borderColor = theme.primaryColor; e.target.style.boxShadow = `0 0 0 4px ${theme.primaryColor}30`; }}
+                          onBlur={(e) => { e.target.style.borderColor = ''; e.target.style.boxShadow = ''; }}
                           placeholder={t('hotelAdmin.settings.placeholders.description')}
                         />
                       </div>
@@ -359,9 +365,9 @@ const SettingsPage = () => {
 
                 {/* Hotel Logo Section */}
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-                  <div className="bg-gradient-to-r from-[#67BAE0]/20 to-[#3B5787]/20 px-6 py-4 border-b border-gray-200">
+                  <div className="px-6 py-4 border-b border-gray-200" style={{ background: `linear-gradient(to right, ${theme.primaryColor}20, ${theme.primaryColor}20)` }}>
                     <h2 className="text-xl font-semibold text-gray-800 flex items-center space-x-2">
-                      <svg className="w-6 h-6 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.primaryColor }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       <span>Hotel Logo</span>
@@ -375,7 +381,12 @@ const SettingsPage = () => {
                           type="file"
                           accept="image/*"
                           onChange={handleLogoChange}
-                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#67BAE0]/20 file:text-[#3B5787] hover:file:bg-[#67BAE0]/30 transition-all duration-200 file:cursor-pointer cursor-pointer"
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold transition-all duration-200 file:cursor-pointer cursor-pointer"
+                          style={{ '--file-bg': `${theme.primaryColor}20`, '--file-color': theme.primaryColor, '--file-hover-bg': `${theme.primaryColor}30` }}
+                          onMouseEnter={(e) => {
+                            const fileInput = e.currentTarget.querySelector('input[type="file"]::file-selector-button');
+                            if (fileInput) fileInput.style.backgroundColor = `${theme.primaryColor}30`;
+                          }}
                         />
                         <p className="text-xs text-gray-500 mt-2">Upload a new logo for your hotel (PNG, JPG, or GIF). Leave empty to keep current logo.</p>
                       </div>
@@ -402,9 +413,9 @@ const SettingsPage = () => {
 
                 {/* Contact Information Section */}
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-                  <div className="bg-gradient-to-r from-[#3B5787]/20 to-[#67BAE0]/20 px-6 py-4 border-b border-gray-200">
+                  <div className="px-6 py-4 border-b border-gray-200" style={{ background: `linear-gradient(to right, ${theme.primaryColor}20, ${theme.primaryColor}20)` }}>
                     <h2 className="text-xl font-semibold text-gray-800 flex items-center space-x-2">
-                      <svg className="w-6 h-6 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.primaryColor }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                       <span>{t('hotelAdmin.settings.sections.contactInfo')}</span>
@@ -420,7 +431,9 @@ const SettingsPage = () => {
                           name="contactEmail"
                           value={formData.contactEmail}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#3B5787] focus:ring-4 focus:ring-[#67BAE0]/30 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                          onFocus={(e) => { e.target.style.borderColor = theme.primaryColor; e.target.style.boxShadow = `0 0 0 4px ${theme.primaryColor}30`; }}
+                          onBlur={(e) => { e.target.style.borderColor = ''; e.target.style.boxShadow = ''; }}
                           required
                         />
                       </div>
@@ -433,7 +446,9 @@ const SettingsPage = () => {
                           name="contactPhone"
                           value={formData.contactPhone}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#3B5787] focus:ring-4 focus:ring-[#67BAE0]/30 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                          onFocus={(e) => { e.target.style.borderColor = theme.primaryColor; e.target.style.boxShadow = `0 0 0 4px ${theme.primaryColor}30`; }}
+                          onBlur={(e) => { e.target.style.borderColor = ''; e.target.style.boxShadow = ''; }}
                           required
                         />
                       </div>
@@ -443,9 +458,9 @@ const SettingsPage = () => {
 
                 {/* Address Information Section */}
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
-                  <div className="bg-gradient-to-r from-[#67BAE0]/20 to-[#3B5787]/20 px-6 py-4 border-b border-gray-200">
+                  <div className="px-6 py-4 border-b border-gray-200" style={{ background: `linear-gradient(to right, ${theme.primaryColor}20, ${theme.primaryColor}20)` }}>
                     <h2 className="text-xl font-semibold text-gray-800 flex items-center space-x-2">
-                      <svg className="w-6 h-6 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.primaryColor }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
@@ -462,7 +477,9 @@ const SettingsPage = () => {
                           name="address.street"
                           value={formData.address.street}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#3B5787] focus:ring-4 focus:ring-[#67BAE0]/30 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                          onFocus={(e) => { e.target.style.borderColor = theme.primaryColor; e.target.style.boxShadow = `0 0 0 4px ${theme.primaryColor}30`; }}
+                          onBlur={(e) => { e.target.style.borderColor = ''; e.target.style.boxShadow = ''; }}
                           required
                         />
                       </div>
@@ -475,7 +492,9 @@ const SettingsPage = () => {
                           name="address.city"
                           value={formData.address.city}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#3B5787] focus:ring-4 focus:ring-[#67BAE0]/30 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                          onFocus={(e) => { e.target.style.borderColor = theme.primaryColor; e.target.style.boxShadow = `0 0 0 4px ${theme.primaryColor}30`; }}
+                          onBlur={(e) => { e.target.style.borderColor = ''; e.target.style.boxShadow = ''; }}
                           required
                         />
                       </div>
@@ -488,7 +507,9 @@ const SettingsPage = () => {
                           name="address.state"
                           value={formData.address.state}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#3B5787] focus:ring-4 focus:ring-[#67BAE0]/30 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                          onFocus={(e) => { e.target.style.borderColor = theme.primaryColor; e.target.style.boxShadow = `0 0 0 4px ${theme.primaryColor}30`; }}
+                          onBlur={(e) => { e.target.style.borderColor = ''; e.target.style.boxShadow = ''; }}
                           required
                         />
                       </div>
@@ -501,7 +522,9 @@ const SettingsPage = () => {
                           name="address.zipCode"
                           value={formData.address.zipCode}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#3B5787] focus:ring-4 focus:ring-[#67BAE0]/30 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                          onFocus={(e) => { e.target.style.borderColor = theme.primaryColor; e.target.style.boxShadow = `0 0 0 4px ${theme.primaryColor}30`; }}
+                          onBlur={(e) => { e.target.style.borderColor = ''; e.target.style.boxShadow = ''; }}
                           required
                         />
                       </div>
@@ -514,7 +537,9 @@ const SettingsPage = () => {
                           name="address.country"
                           value={formData.address.country}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#3B5787] focus:ring-4 focus:ring-[#67BAE0]/30 transition-all duration-200 bg-gray-50 focus:bg-white"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                          onFocus={(e) => { e.target.style.borderColor = theme.primaryColor; e.target.style.boxShadow = `0 0 0 4px ${theme.primaryColor}30`; }}
+                          onBlur={(e) => { e.target.style.borderColor = ''; e.target.style.boxShadow = ''; }}
                           required
                         />
                       </div>
@@ -526,7 +551,10 @@ const SettingsPage = () => {
                 <div className="flex justify-end pt-6">
                   <button
                     type="submit"
-                    className="px-8 py-3 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white rounded-xl hover:from-[#2A4065] hover:to-[#3B5787] transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
+                    className="px-8 py-3 text-white rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
+                    style={{ backgroundColor: theme.primaryColor }}
+                    onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+                    onMouseLeave={(e) => e.target.style.opacity = '1'}
                     disabled={isLoading}
                   >
                     {isLoading ? (

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
+import { useTheme } from '../../../context/ThemeContext';
 import { DollarSign, Users, FileText, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { selectHotelCurrency } from '../../../redux/slices/hotelSlice';
@@ -7,6 +8,7 @@ import { formatPriceByLanguage } from '../../../utils/currency';
 
 const SpendingSummaryCards = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
   const reduxCurrency = useSelector(selectHotelCurrency);
   // Prioritize currency from API response, fallback to Redux
   const currency = data?.currency || reduxCurrency;
@@ -46,34 +48,34 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
       title: t('performanceAnalyticsPage.spending.summary.avgCustomerSpending'),
       value: formatPriceByLanguage(data.avgCustomerSpending, i18n.language, currency),
       icon: DollarSign,
-      bgColor: '#3B5787',
+      bgColor: theme.primaryColor,
       iconBg: 'bg-white',
-      iconColor: '#3B5787'
+      iconColor: theme.primaryColor
     },
     {
       title: t('performanceAnalyticsPage.spending.summary.totalCustomersServed'),
       value: data.totalCustomers,
       icon: Users,
-      bgColor: '#2A4065',
+      bgColor: theme.primaryColor,
       iconBg: 'bg-white',
-      iconColor: '#2A4065'
+      iconColor: theme.primaryColor
     },
     {
       title: t('performanceAnalyticsPage.spending.summary.totalServiceRequests'),
       value: data.totalServiceRequests,
       icon: FileText,
-      bgColor: '#3B5787',
+      bgColor: theme.primaryColor,
       iconBg: 'bg-white',
-      iconColor: '#3B5787'
+      iconColor: theme.primaryColor
     },
     {
       title: t('performanceAnalyticsPage.spending.summary.mostPopularService'),
       value: formatServiceName(data.mostPopularService),
       subValue: t('performanceAnalyticsPage.spending.summary.requestsSuffix', { count: data.mostPopularServiceCount }),
       icon: Star,
-      bgColor: '#2A4065',
+      bgColor: theme.primaryColor,
       iconBg: 'bg-white',
-      iconColor: '#2A4065'
+      iconColor: theme.primaryColor
     }
   ];
 

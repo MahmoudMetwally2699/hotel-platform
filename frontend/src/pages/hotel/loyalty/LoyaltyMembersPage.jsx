@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { fetchMembers, fetchLoyaltyProgram, fetchLoyaltyAnalytics } from '../../../redux/slices/loyaltySlice';
 import { selectHotelCurrency } from '../../../redux/slices/hotelSlice';
 import { formatPriceByLanguage } from '../../../utils/currency';
+import { useTheme } from '../../../context/ThemeContext';
 import {
   Users,
   Search,
@@ -26,6 +27,7 @@ const LoyaltyMembersPage = () => {
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const { members, membersPagination, loyaltyProgram, loading } = useSelector((state) => state.loyalty);
   const reduxCurrency = useSelector(selectHotelCurrency);
   const currency = members?.currency || reduxCurrency;
@@ -385,9 +387,9 @@ const LoyaltyMembersPage = () => {
           <div className="mt-4 flex items-center gap-2 flex-wrap">
             <span className="text-sm text-gray-600">{t('loyaltyMembersPage.filters.activeFilters')}</span>
             {searchTerm && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full text-sm flex items-center gap-2" style={{ backgroundColor: `${theme.primaryColor}20`, color: theme.primaryColor }}>
                 {t('loyaltyMembersPage.filters.search')}: "{searchTerm}"
-                <button onClick={() => handleSearchChange('')} className="hover:text-blue-900">×</button>
+                <button onClick={() => handleSearchChange('')} className="hover:opacity-70">×</button>
               </span>
             )}
             {tierFilter && (
@@ -539,7 +541,10 @@ const LoyaltyMembersPage = () => {
                           setAdjustmentType('add');
                           setAdjustmentMode('all');
                         }}
-                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                        className="px-3 py-1 text-white rounded transition"
+                        style={{ backgroundColor: theme.primaryColor }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = theme.secondaryColor}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = theme.primaryColor}
                       >
                         {t('loyaltyMembersPage.table.managePoints')}
                       </button>
@@ -594,11 +599,12 @@ const LoyaltyMembersPage = () => {
                       disabled={page === '...'}
                       className={`px-3 py-1 rounded-lg ${
                         page === currentPage
-                          ? 'bg-blue-600 text-white'
+                          ? 'text-white'
                           : page === '...'
                           ? 'text-gray-400 cursor-default'
                           : 'text-gray-700 hover:bg-gray-200'
                       }`}
+                      style={page === currentPage ? { backgroundColor: theme.primaryColor } : {}}
                     >
                       {page}
                     </button>
@@ -679,9 +685,12 @@ const LoyaltyMembersPage = () => {
                     }}
                     className={`px-4 py-3 rounded-lg border-2 transition text-left ${
                       adjustmentMode === 'all'
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-300 text-gray-700 hover:border-blue-300'
+                        ? 'text-gray-700'
+                        : 'border-gray-300 text-gray-700'
                     }`}
+                    style={adjustmentMode === 'all' ? { borderColor: theme.primaryColor, backgroundColor: `${theme.primaryColor}10`, color: theme.primaryColor } : { borderColor: '#d1d5db' }}
+                    onMouseEnter={(e) => adjustmentMode !== 'all' && (e.currentTarget.style.borderColor = theme.primaryColor + '80')}
+                    onMouseLeave={(e) => adjustmentMode !== 'all' && (e.currentTarget.style.borderColor = '#d1d5db')}
                   >
                     <div className="font-semibold">{t('loyaltyMembersPage.adjustModal.allPoints')}</div>
                     <div className="text-xs mt-1">{t('loyaltyMembersPage.adjustModal.allPointsDesc')}</div>
@@ -807,14 +816,15 @@ const LoyaltyMembersPage = () => {
 
               {/* Preview */}
               {(adjustmentMode === 'all' ? pointsAdjustment > 0 : cashAdjustment > 0) && (
-                <div className={`border-2 rounded-lg p-4 mb-4 ${
-                  adjustmentMode === 'redeemable'
-                    ? 'bg-purple-50 border-purple-200'
-                    : 'bg-blue-50 border-blue-200'
-                }`}>
+                <div className="border-2 rounded-lg p-4 mb-4"
+                  style={{
+                    backgroundColor: adjustmentMode === 'redeemable' ? '#f3e8ff' : `${theme.primaryColor}10`,
+                    borderColor: adjustmentMode === 'redeemable' ? '#c084fc' : `${theme.primaryColor}40`
+                  }}
+                >
                   {adjustmentMode === 'all' ? (
                     <>
-                      <p className="text-sm text-blue-800 mb-2">
+                      <p className="text-sm mb-2" style={{ color: theme.primaryColor }}>
                         <span className="font-semibold">{t('loyaltyMembersPage.adjustModal.preview.tierPoints')}</span>{' '}
                         {(selectedMember.tierPoints || selectedMember.totalPoints || 0)} → {' '}
                         <span className="font-bold">
@@ -823,7 +833,7 @@ const LoyaltyMembersPage = () => {
                             : Math.max(0, (selectedMember.tierPoints || selectedMember.totalPoints || 0) - pointsAdjustment)}
                         </span>
                       </p>
-                      <p className="text-sm text-blue-800">
+                      <p className="text-sm" style={{ color: theme.primaryColor }}>
                         <span className="font-semibold">{t('loyaltyMembersPage.adjustModal.preview.cashValue')}</span>{' '}
                         {formatPriceByLanguage(calculateRedemptionValue(selectedMember.availablePoints || 0, selectedMember.guest?.channel), i18n.language, currency)} → {' '}
                         <span className="font-bold">

@@ -8,9 +8,11 @@ import { useTranslation } from 'react-i18next';
 import { FaStar, FaUser, FaCalendarAlt, FaComment, FaSearch, FaBuilding } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
+import { useTheme } from '../../context/ThemeContext';
 
 const HotelFeedbackView = () => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [feedback, setFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({});
@@ -95,7 +97,7 @@ const HotelFeedbackView = () => {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h1 className="text-2xl font-bold mb-2" style={{ color: '#2A4065' }}>
+        <h1 className="text-2xl font-bold mb-2" style={{ color: theme.primaryColor }}>
           {t('hotelAdmin.feedback.title')}
         </h1>
         <p className="text-gray-600">
@@ -109,11 +111,11 @@ const HotelFeedbackView = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">{t('hotelAdmin.feedback.statistics.overallRating')}</p>
-              <p className="text-2xl font-bold" style={{ color: '#3B5787' }}>
+              <p className="text-2xl font-bold" style={{ color: theme.primaryColor }}>
                 {statistics.averageRating || '0.0'}
               </p>
             </div>
-            <div style={{ color: '#3B5787' }}>
+            <div style={{ color: theme.primaryColor }}>
               <FaStar size={24} />
             </div>
           </div>
@@ -123,11 +125,11 @@ const HotelFeedbackView = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">{t('hotelAdmin.feedback.statistics.totalReviews')}</p>
-              <p className="text-2xl font-bold" style={{ color: '#2A4065' }}>
+              <p className="text-2xl font-bold" style={{ color: theme.primaryColor }}>
                 {statistics.totalCount || 0}
               </p>
             </div>
-            <div style={{ color: '#2A4065' }}>
+            <div style={{ color: theme.primaryColor }}>
               <FaComment size={24} />
             </div>
           </div>
@@ -137,11 +139,11 @@ const HotelFeedbackView = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">{t('hotelAdmin.feedback.statistics.serviceProviders')}</p>
-              <p className="text-2xl font-bold" style={{ color: '#3B5787' }}>
+              <p className="text-2xl font-bold" style={{ color: theme.primaryColor }}>
                 {statistics.serviceProvidersCount || 0}
               </p>
             </div>
-            <div style={{ color: '#3B5787' }}>
+            <div style={{ color: theme.primaryColor }}>
               <FaBuilding size={24} />
             </div>
           </div>
@@ -151,11 +153,11 @@ const HotelFeedbackView = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm">{t('hotelAdmin.feedback.statistics.excellent')}</p>
-              <p className="text-2xl font-bold" style={{ color: '#2A4065' }}>
+              <p className="text-2xl font-bold" style={{ color: theme.primaryColor }}>
                 {(statistics.ratingDistribution && statistics.ratingDistribution[5]) || 0}
               </p>
             </div>
-            <div style={{ color: '#2A4065' }}>
+            <div style={{ color: theme.primaryColor }}>
               <FaStar size={24} />
             </div>
           </div>

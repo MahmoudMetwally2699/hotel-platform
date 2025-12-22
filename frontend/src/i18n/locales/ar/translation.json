@@ -962,6 +962,30 @@
         "viewRevenue": "عرض الإيرادات"
       }
     },
+    "roomOverview": {
+      "title": "نظرة عامة على طلبات الغرف",
+      "subtitle": "حالات خدمة الغرف المباشرة",
+      "refresh": "تحديث",
+      "filterByType": "تصفية حسب النوع",
+      "allTypes": "جميع الأنواع",
+      "room": "غرفة",
+      "requests": "طلب/طلبات",
+      "serviceRequests": "طلبات الخدمة",
+      "external": "خارجي",
+      "noRoomsFound": "لم يتم العثور على غرف بالمرشحات المحددة",
+      "tryAdjustingFilters": "حاول تعديل إعدادات المرشح",
+      "totalRooms": "إجمالي الغرف",
+      "occupiedRooms": "الغرف المشغولة",
+      "activeRequests": "الطلبات النشطة",
+      "statusLabels": {
+        "noRequests": "لا توجد طلبات",
+        "housekeeping": "التنظيف",
+        "laundry": "الغسيل",
+        "dining": "الطعام",
+        "transportation": "النقل",
+        "external": "خدمة خارجية"
+      }
+    },
     "orders": {
       "title": "إدارة الطلبات",
       "subtitle": "إدارة وتتبع جميع طلبات الخدمات لفندقك",

@@ -5,6 +5,7 @@ import { fetchUsers, selectAllUsers, selectUserLoading } from '../../redux/slice
 import { HiSearch, HiFilter, HiUserAdd, HiCheckCircle, HiXCircle, HiPencil, HiStar, HiBan, HiDotsVertical } from 'react-icons/hi';
 import { useAuth } from '../../hooks/useAuth';
 import hotelService from '../../services/hotel.service';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
  * Hotel Admin Guests Management Page
@@ -16,6 +17,7 @@ const GuestsPage = () => {
   const users = useSelector(selectAllUsers);
   const isLoading = useSelector(selectUserLoading);
   const { currentUser } = useAuth();
+  const { theme } = useTheme();
 
   // State management
   const [searchTerm, setSearchTerm] = useState('');
@@ -371,7 +373,7 @@ const GuestsPage = () => {
   return (
     <div className="p-6">
       {/* Header with gradient */}
-      <div className="bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-lg p-6 mb-6 text-white">
+      <div className="rounded-lg p-6 mb-6 text-white" style={{ backgroundColor: theme.primaryColor }}>
         <h1 className="text-2xl font-bold mb-2">{t('hotelAdmin.guests.title')}</h1>
         <p className="text-blue-100">{t('hotelAdmin.guests.subtitle')}</p>
       </div>
@@ -386,7 +388,7 @@ const GuestsPage = () => {
               <input
                 type="text"
                 placeholder={t('hotelAdmin.guests.searchPlaceholder')}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-modern-blue focus:border-modern-blue"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
                 value={searchTerm}
                 onChange={handleSearch}
               />
@@ -396,7 +398,7 @@ const GuestsPage = () => {
           {/* Channel Filter */}
           <div className="lg:w-48">
             <select
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-modern-blue focus:border-modern-blue"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
               value={channelFilter}
               onChange={(e) => {
                 setChannelFilter(e.target.value);
@@ -477,7 +479,7 @@ const GuestsPage = () => {
                   <tr key={guest._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-modern-blue to-modern-lightBlue flex items-center justify-center text-white font-bold text-sm">
+                        <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: theme.primaryColor }}>
                           {getGuestInitials(guest)}
                         </div>
                         <div className="ml-4">
@@ -665,7 +667,7 @@ const GuestsPage = () => {
               <div key={guest._id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-modern-blue to-modern-lightBlue flex items-center justify-center text-white font-bold text-sm">
+                    <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: theme.primaryColor }}>
                       {getGuestInitials(guest)}
                     </div>
                     <div className="ml-3">
@@ -830,9 +832,10 @@ const GuestsPage = () => {
                         onClick={() => setPagination(prev => ({ ...prev, page: pageNumber }))}
                         className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                           pagination.page === pageNumber
-                            ? 'z-10 bg-modern-blue border-modern-blue text-white'
+                            ? 'z-10 text-white'
                             : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
                         }`}
+                        style={pagination.page === pageNumber ? { backgroundColor: theme.primaryColor, borderColor: theme.primaryColor } : {}}
                       >
                         {pageNumber}
                       </button>

@@ -68,6 +68,19 @@ class HotelService {
   }
 
   /**
+   * Get room status overview (for hotel admin)
+   * @returns {Promise} - Response from API
+   */
+  async getRoomStatusOverview() {
+    try {
+      const response = await apiClient.get('/hotel/room-status-overview');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Get hotel profile (for hotel admin)
    * @returns {Promise} - Response from API
    */

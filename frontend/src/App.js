@@ -8,6 +8,7 @@ import AppRouter from './routes/AppRouter';
 import { selectIsAuthenticated, selectAuthRole, checkAuth } from './redux/slices/authSlice';
 import sessionMonitor from './services/sessionMonitor.service';
 import { isProtectedRoute } from './utils/secureLogout';
+import { ThemeProvider } from './context/ThemeContext';
 import './i18n'; // Initialize i18n
 import './App.css';
 
@@ -223,38 +224,39 @@ function App() {
   }, [isAuthenticated, user]);
 
   return (
-    <div className="min-h-screen bg-background-default">
-      <Toaster
-        position="top-center"
-        reverseOrder={false}
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#363636',
-            color: '#fff',
-            fontSize: '14px',
-          },
-          success: {
-            duration: 3000,
-            iconTheme: {
-              primary: '#10b981',
-              secondary: '#fff',
+    <ThemeProvider>
+      <div className="min-h-screen bg-background-default">
+        <Toaster
+          position="top-center"
+          reverseOrder={false}
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+              fontSize: '14px',
             },
-          },
-          error: {
-            duration: 5000,
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
+            success: {
+              duration: 3000,
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#fff',
+              },
             },
-          },
-        }}
-      />
-      <BrowserRouter>
-        <AuthGuard />
-      </BrowserRouter>
-
-    </div>
+            error: {
+              duration: 5000,
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
+        <BrowserRouter>
+          <AuthGuard />
+        </BrowserRouter>
+      </div>
+    </ThemeProvider>
   );
 }
 

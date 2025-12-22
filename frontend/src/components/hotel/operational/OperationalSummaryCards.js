@@ -10,10 +10,12 @@
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../../context/ThemeContext';
 import { FiClock, FiCheckCircle, FiAlertTriangle, FiTrendingDown, FiTrendingUp } from 'react-icons/fi';
 
 const OperationalSummaryCards = ({ data, loading }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -44,7 +46,7 @@ const OperationalSummaryCards = ({ data, loading }) => {
       value: `${data.avgResponseTime} ${t('performanceAnalyticsPage.operational.completionTime.minutesShort')}`,
       trend: data.responseTrend,
       icon: FiClock,
-      bgColor: '#3B5787',
+      bgColor: theme.primaryColor,
       trendText: data.responseTrend > 0
         ? t('performanceAnalyticsPage.operational.summary.faster')
         : t('performanceAnalyticsPage.operational.summary.slower'),
@@ -55,7 +57,7 @@ const OperationalSummaryCards = ({ data, loading }) => {
       value: `${data.avgCompletionTime} ${t('performanceAnalyticsPage.operational.completionTime.minutesShort')}`,
       trend: data.completionTrend,
       icon: FiCheckCircle,
-      bgColor: '#2A4065',
+      bgColor: theme.primaryColor,
       trendText: data.completionTrend > 0
         ? t('performanceAnalyticsPage.operational.summary.faster')
         : t('performanceAnalyticsPage.operational.summary.slower'),
@@ -66,7 +68,7 @@ const OperationalSummaryCards = ({ data, loading }) => {
       value: `${data.slaComplianceRate}%`,
       trend: data.slaTrend,
       icon: FiCheckCircle,
-      bgColor: '#2A4065',
+      bgColor: theme.primaryColor,
       trendText: t('performanceAnalyticsPage.operational.summary.fromTarget', { value: Math.abs(data.slaTrend).toFixed(1) }),
       isPositive: data.slaTrend > 0
     },

@@ -2,13 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Variables for Dynamic Theming */
+:root {
+  --color-primary: #3B5787;
+  --color-secondary: #67BAE0;
+  --color-sidebar: #1F2937;
+  --color-sidebar-text: #FFFFFF;
+  --color-header: #FFFFFF;
+  --color-background: #F8FAFC;
+  --color-accent: #10B981;
+  --color-primary-hover: #2A4065;
+  --color-secondary-hover: #5AA8CC;
+  --color-sidebar-hover: #374151;
+}
+
 /* Custom styles that don't conflict with Tailwind */
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', 'Inter', 'Roboto', 'Arial', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f8fafc;
+  background-color: var(--color-background);
 }
 
 /* Arabic font for RTL direction */

@@ -19,9 +19,11 @@ import {
   DocumentDuplicateIcon
 } from '@heroicons/react/24/outline';
 import hotelService from '../../services/hotel.service';
+import { useTheme } from '../../context/ThemeContext';
 
 const QRCodeManager = () => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const [qrData, setQrData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
@@ -223,7 +225,7 @@ const QRCodeManager = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-300 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <QrCodeIcon className="h-8 w-8" style={{ color: '#3B5787' }} />
+            <QrCodeIcon className="h-8 w-8" style={{ color: theme.primaryColor }} />
             <div>
               <h1 className="text-2xl font-bold text-black">{t('hotelAdmin.qrCode.title')}</h1>
               <p className="text-black">{t('hotelAdmin.qrCode.subtitle')}</p>
@@ -233,9 +235,9 @@ const QRCodeManager = () => {
           <button
             onClick={() => setShowInfo(!showInfo)}
             className="flex items-center space-x-2 px-4 py-2 text-white rounded-lg transition-colors"
-            style={{ backgroundColor: '#67BAE0' }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#3B5787'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#67BAE0'}
+            style={{ backgroundColor: theme.secondaryColor }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = theme.primaryColor}
+            onMouseLeave={(e) => e.target.style.backgroundColor = theme.secondaryColor}
           >
             <InformationCircleIcon className="h-5 w-5" />
             <span>{t('hotelAdmin.qrCode.info')}</span>
@@ -245,7 +247,7 @@ const QRCodeManager = () => {
 
       {/* Information Panel */}
       {showInfo && (
-        <div className="bg-white border rounded-lg p-6" style={{ borderColor: '#67BAE0' }}>
+        <div className="bg-white border rounded-lg p-6" style={{ borderColor: theme.secondaryColor }}>
           <h3 className="text-lg font-semibold text-black mb-4">{t('hotelAdmin.qrCode.infoPanel.title')}</h3>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
@@ -278,7 +280,7 @@ const QRCodeManager = () => {
 
             {loading ? (
               <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#3B5787' }}></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: theme.primaryColor }}></div>
               </div>
             ) : qrData ? (
               <div className="space-y-4">
@@ -301,11 +303,11 @@ const QRCodeManager = () => {
 
                 {/* QR Code Details */}
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-center space-x-2" style={{ color: '#3B5787' }}>
+                  <div className="flex items-center justify-center space-x-2" style={{ color: theme.primaryColor }}>
                     <ShieldCheckIcon className="h-4 w-4" />
                     <span>{t('hotelAdmin.qrCode.secureToken')}</span>
                   </div>
-                  <div className="flex items-center justify-center space-x-2" style={{ color: '#67BAE0' }}>
+                  <div className="flex items-center justify-center space-x-2" style={{ color: theme.secondaryColor }}>
                     <ClockIcon className="h-4 w-4" />
                     <span>{t('hotelAdmin.qrCode.expires')} {formatDate(qrData.expiresAt)}</span>
                   </div>
@@ -330,9 +332,9 @@ const QRCodeManager = () => {
                 onClick={generateQRCode}
                 disabled={loading}
                 className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                style={{ backgroundColor: loading ? '#gray' : '#3B5787' }}
-                onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = '#67BAE0')}
-                onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = '#3B5787')}
+                style={{ backgroundColor: loading ? '#gray' : theme.primaryColor }}
+                onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = theme.secondaryColor)}
+                onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = theme.primaryColor)}
               >
                 <QrCodeIcon className="h-5 w-5" />
                 <span>{loading ? t('hotelAdmin.qrCode.actions.generating') : t('hotelAdmin.qrCode.actions.generateNew')}</span>
@@ -342,9 +344,9 @@ const QRCodeManager = () => {
                 onClick={regenerateQRCode}
                 disabled={!qrData || regenerating}
                 className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                style={{ backgroundColor: (!qrData || regenerating) ? '#gray' : '#67BAE0' }}
-                onMouseEnter={(e) => (!qrData || regenerating) || (e.target.style.backgroundColor = '#3B5787')}
-                onMouseLeave={(e) => (!qrData || regenerating) || (e.target.style.backgroundColor = '#67BAE0')}
+                style={{ backgroundColor: (!qrData || regenerating) ? '#gray' : theme.secondaryColor }}
+                onMouseEnter={(e) => (!qrData || regenerating) || (e.target.style.backgroundColor = theme.primaryColor)}
+                onMouseLeave={(e) => (!qrData || regenerating) || (e.target.style.backgroundColor = theme.secondaryColor)}
               >
                 <ArrowPathIcon className="h-5 w-5" />
                 <span>{regenerating ? t('hotelAdmin.qrCode.actions.regenerating') : t('hotelAdmin.qrCode.actions.regenerate')}</span>
@@ -361,9 +363,9 @@ const QRCodeManager = () => {
                   onClick={() => downloadQRCode(600)}
                   disabled={!qrData || downloading}
                   className="flex items-center justify-center space-x-2 px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  style={{ backgroundColor: (!qrData || downloading) ? '#gray' : '#3B5787' }}
-                  onMouseEnter={(e) => (!qrData || downloading) || (e.target.style.backgroundColor = '#67BAE0')}
-                  onMouseLeave={(e) => (!qrData || downloading) || (e.target.style.backgroundColor = '#3B5787')}
+                  style={{ backgroundColor: (!qrData || downloading) ? '#gray' : theme.primaryColor }}
+                  onMouseEnter={(e) => (!qrData || downloading) || (e.target.style.backgroundColor = theme.secondaryColor)}
+                  onMouseLeave={(e) => (!qrData || downloading) || (e.target.style.backgroundColor = theme.primaryColor)}
                 >
                   <ArrowDownTrayIcon className="h-4 w-4" />
                   <span>{t('hotelAdmin.qrCode.downloadPrint.download')}</span>
@@ -373,9 +375,9 @@ const QRCodeManager = () => {
                   onClick={printQRCode}
                   disabled={!qrData}
                   className="flex items-center justify-center space-x-2 px-4 py-2 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  style={{ backgroundColor: !qrData ? '#gray' : '#67BAE0' }}
-                  onMouseEnter={(e) => !qrData || (e.target.style.backgroundColor = '#3B5787')}
-                  onMouseLeave={(e) => !qrData || (e.target.style.backgroundColor = '#67BAE0')}
+                  style={{ backgroundColor: !qrData ? '#gray' : theme.secondaryColor }}
+                  onMouseEnter={(e) => !qrData || (e.target.style.backgroundColor = theme.primaryColor)}
+                  onMouseLeave={(e) => !qrData || (e.target.style.backgroundColor = theme.secondaryColor)}
                 >
                   <PrinterIcon className="h-4 w-4" />
                   <span>{t('hotelAdmin.qrCode.downloadPrint.print')}</span>

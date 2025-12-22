@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../context/ThemeContext';
 import { FiCalendar, FiDownload, FiRefreshCw, FiStar, FiActivity, FiDollarSign, FiShoppingCart } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import RatingSummaryCards from '../../components/hotel/analytics/RatingSummaryCards';
@@ -66,6 +67,7 @@ import {
 const PerformanceAnalyticsPage = () => {
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  const { theme } = useTheme();
 
   // Redux state - Ratings
   const summaryState = useSelector(selectRatingSummary);
@@ -345,7 +347,7 @@ const PerformanceAnalyticsPage = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold" style={{ color: '#2A4065' }}>{t('performanceAnalyticsPage.title')}</h1>
+          <h1 className="text-3xl font-bold" style={{ color: theme.primaryColor }}>{t('performanceAnalyticsPage.title')}</h1>
           <p className="mt-2 text-sm text-gray-600">
             {t('performanceAnalyticsPage.subtitle')}
           </p>
@@ -358,12 +360,12 @@ const PerformanceAnalyticsPage = () => {
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
               {/* Service Filter */}
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium" style={{ color: '#2A4065' }}>{t('performanceAnalyticsPage.controls.service')}</span>
+                <span className="text-sm font-medium" style={{ color: theme.primaryColor }}>{t('performanceAnalyticsPage.controls.service')}</span>
                 <select
                   value={selectedService}
                   onChange={(e) => handleServiceFilterChange(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent bg-white"
-                  style={{ focusRingColor: '#3B5787' }}
+                  style={{ focusRingColor: theme.primaryColor }}
                 >
                   {serviceTypes.map((service) => (
                     <option key={service.value} value={service.value}>
@@ -376,12 +378,12 @@ const PerformanceAnalyticsPage = () => {
               {/* Date Range Selector */}
               <div className="flex items-center gap-2">
                 <FiCalendar className="w-5 h-5 text-gray-400" />
-                <span className="text-sm font-medium" style={{ color: '#2A4065' }}>{t('performanceAnalyticsPage.controls.dateRange')}</span>
+                <span className="text-sm font-medium" style={{ color: theme.primaryColor }}>{t('performanceAnalyticsPage.controls.dateRange')}</span>
                 <select
                   value={selectedRange}
                   onChange={(e) => handleDateRangeChange(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent bg-white"
-                  style={{ focusRingColor: '#3B5787' }}
+                  style={{ focusRingColor: theme.primaryColor }}
                 >
                   {Object.entries(dateRangePresets).map(([key, preset]) => (
                     <option key={key} value={key}>
@@ -399,7 +401,7 @@ const PerformanceAnalyticsPage = () => {
                     value={customStartDate}
                     onChange={(e) => setCustomStartDate(e.target.value)}
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                    style={{ focusRingColor: '#3B5787' }}
+                    style={{ focusRingColor: theme.primaryColor }}
                   />
                   <span className="text-gray-500">{t('performanceAnalyticsPage.controls.to')}</span>
                   <input
@@ -407,12 +409,12 @@ const PerformanceAnalyticsPage = () => {
                     value={customEndDate}
                     onChange={(e) => setCustomEndDate(e.target.value)}
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                    style={{ focusRingColor: '#3B5787' }}
+                    style={{ focusRingColor: theme.primaryColor }}
                   />
                   <button
                     onClick={handleCustomRangeApply}
                     className="px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
-                    style={{ backgroundColor: '#3B5787' }}
+                    style={{ backgroundColor: theme.primaryColor }}
                   >
                     {t('performanceAnalyticsPage.controls.apply')}
                   </button>
@@ -434,7 +436,7 @@ const PerformanceAnalyticsPage = () => {
               <button
                 onClick={handleExport}
                 className="flex items-center px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
-                style={{ backgroundColor: '#2A4065' }}
+                style={{ backgroundColor: theme.primaryColor }}
               >
                 <FiDownload className="w-4 h-4 mr-2" />
                 {t('performanceAnalyticsPage.controls.exportReport')}
@@ -463,7 +465,7 @@ const PerformanceAnalyticsPage = () => {
                           : 'text-gray-400 cursor-not-allowed'
                       }
                     `}
-                    style={activeTab === tab.id && tab.active ? { borderColor: '#3B5787', backgroundColor: '#3B5787' } : {}}
+                    style={activeTab === tab.id && tab.active ? { borderColor: theme.primaryColor, backgroundColor: theme.primaryColor } : {}}
                   >
                     <IconComponent className="w-5 h-5" />
                     <span>{tab.label}</span>
@@ -614,7 +616,7 @@ const PerformanceAnalyticsPage = () => {
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }
                       `}
-                      style={spendingPeriod === period ? { backgroundColor: '#3B5787' } : {}}
+                      style={spendingPeriod === period ? { backgroundColor: theme.primaryColor } : {}}
                     >
                       {t(`performanceAnalyticsPage.spending.${period}`)}
                     </button>

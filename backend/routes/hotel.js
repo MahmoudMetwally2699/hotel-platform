@@ -165,6 +165,120 @@ router.put('/profile', protect, restrictTo('hotel'), catchAsync(async (req, res,
 }));
 
 /**
+ * @route   GET /api/hotel/branding
+ * @desc    Get hotel branding settings
+ * @access  Private/HotelAdmin
+ */
+router.get('/branding', catchAsync(async (req, res, next) => {
+  try {
+    const hotelId = req.user.hotelId;
+
+    if (!hotelId) {
+      return next(new AppError('Hotel ID not found in user profile', 400));
+    }
+
+    const hotel = await Hotel.findById(hotelId).select('branding name');
+
+    if (!hotel) {
+      return next(new AppError('Hotel not found', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        branding: hotel.branding || {},
+        hotelName: hotel.name
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching hotel branding:', error);
+    return next(new AppError('Failed to fetch hotel branding', 500));
+  }
+}));
+
+/**
+ * @route   PATCH /api/hotel/branding
+ * @desc    Update hotel branding settings
+ * @access  Private/HotelAdmin
+ */
+router.patch('/branding', catchAsync(async (req, res, next) => {
+  try {
+    const hotelId = req.user.hotelId;
+
+    if (!hotelId) {
+      return next(new AppError('Hotel ID not found in user profile', 400));
+    }
+
+    const {
+      primaryColor,
+      secondaryColor,
+      sidebarColor,
+      sidebarTextColor,
+      headerColor,
+      backgroundColor,
+      accentColor,
+      logo
+    } = req.body;
+
+    // Validate hex colors
+    const hexColorRegex = /^#([0-9A-F]{3}){1,2}$/i;
+    const colors = {
+      primaryColor,
+      secondaryColor,
+      sidebarColor,
+      sidebarTextColor,
+      headerColor,
+      backgroundColor,
+      accentColor
+    };
+
+    for (const [key, value] of Object.entries(colors)) {
+      if (value && !hexColorRegex.test(value)) {
+        return next(new AppError(`Invalid hex color for ${key}`, 400));
+      }
+    }
+
+    const updateData = { branding: {} };
+
+    if (primaryColor) updateData.branding.primaryColor = primaryColor;
+    if (secondaryColor) updateData.branding.secondaryColor = secondaryColor;
+    if (sidebarColor) updateData.branding.sidebarColor = sidebarColor;
+    if (sidebarTextColor) updateData.branding.sidebarTextColor = sidebarTextColor;
+    if (headerColor) updateData.branding.headerColor = headerColor;
+    if (backgroundColor) updateData.branding.backgroundColor = backgroundColor;
+    if (accentColor) updateData.branding.accentColor = accentColor;
+    if (logo !== undefined) updateData.branding.logo = logo;
+
+    const hotel = await Hotel.findByIdAndUpdate(
+      hotelId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select('branding name');
+
+    if (!hotel) {
+      return next(new AppError('Hotel not found', 404));
+    }
+
+    logger.info('Hotel branding updated', {
+      hotelId,
+      adminId: req.user._id,
+      updatedFields: Object.keys(updateData.branding)
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        branding: hotel.branding,
+        hotelName: hotel.name
+      }
+    });
+  } catch (error) {
+    logger.error('Error updating hotel branding:', error);
+    return next(new AppError('Failed to update hotel branding', 500));
+  }
+}));
+
+/**
  * @route   GET /api/hotel/qr/generate
  * @desc    Generate QR code for hotel guest registration
  * @access  Private/HotelAdmin
@@ -382,6 +496,136 @@ router.get('/qr/info', catchAsync(async (req, res, next) => {
     logger.error('Error getting QR info:', error);
     return next(new AppError('Failed to get QR code information', 500));
   }
+}));
+
+/**
+ * @route   GET /api/hotel/room-status-overview
+ * @desc    Get room status overview showing occupied rooms and service requests
+ * @access  Private/HotelAdmin
+ */
+router.get('/room-status-overview', protect, restrictTo('hotel'), catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+
+  // Get all active guests with their room numbers
+  const activeGuests = await User.find({
+    role: 'guest',
+    selectedHotelId: hotelId,
+    roomNumber: { $exists: true, $ne: null, $ne: '' },
+    isActive: true
+  }).select('roomNumber firstName lastName checkInDate checkOutDate');
+
+  // Get recent pending/active service requests (bookings) grouped by room
+  const recentBookings = await Booking.find({
+    hotelId: hotelId,
+    'guestDetails.roomNumber': { $exists: true, $ne: null, $ne: '' },
+    status: { $in: ['pending', 'confirmed', 'in-progress'] },
+    createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+  })
+  .populate('serviceId', 'category name')
+  .populate('serviceProviderId', 'providerType businessName')
+  .populate('guestId', 'firstName lastName')
+  .select('guestDetails.roomNumber serviceDetails.category serviceType status createdAt serviceDetails.housekeepingType')
+  .sort({ createdAt: -1 });
+
+  // Get recent transportation bookings
+  const recentTransportationBookings = await TransportationBooking.find({
+    hotelId: hotelId,
+    'guestDetails.roomNumber': { $exists: true, $ne: null, $ne: '' },
+    bookingStatus: { $in: ['pending_quote', 'quote_sent', 'payment_pending', 'quote_accepted', 'payment_completed', 'service_active'] },
+    createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24 hours
+  })
+  .populate('serviceId', 'category name')
+  .populate('serviceProviderId', 'providerType businessName')
+  .populate('guestId', 'firstName lastName')
+  .select('guestDetails.roomNumber bookingStatus createdAt')
+  .sort({ createdAt: -1 });
+
+  // Create a map of rooms with their service requests
+  const roomStatusMap = new Map();
+
+  // Add occupied rooms from active guests
+  activeGuests.forEach(guest => {
+    if (guest.roomNumber) {
+      roomStatusMap.set(guest.roomNumber, {
+        roomNumber: guest.roomNumber,
+        guestName: `${guest.firstName} ${guest.lastName || ''}`.trim(),
+        isOccupied: true,
+        serviceRequests: []
+      });
+    }
+  });
+
+  // Add service requests to rooms
+  recentBookings.forEach(booking => {
+    const roomNumber = booking.guestDetails?.roomNumber;
+    if (roomNumber) {
+      if (!roomStatusMap.has(roomNumber)) {
+        roomStatusMap.set(roomNumber, {
+          roomNumber: roomNumber,
+          isOccupied: false,
+          serviceRequests: []
+        });
+      }
+
+      const room = roomStatusMap.get(roomNumber);
+      const category = booking.serviceDetails?.category || booking.serviceId?.category || booking.serviceType;
+
+      // Determine service type based on housekeeping subcategory
+      let serviceType = category;
+      if (category === 'housekeeping' && booking.serviceDetails?.housekeepingType) {
+        serviceType = booking.serviceDetails.housekeepingType;
+      }
+
+      room.serviceRequests.push({
+        type: serviceType,
+        status: booking.status,
+        createdAt: booking.createdAt,
+        bookingId: booking._id,
+        isExternal: booking.serviceProviderId?.providerType === 'external'
+      });
+    }
+  });
+
+  // Add transportation bookings to rooms
+  recentTransportationBookings.forEach(booking => {
+    const roomNumber = booking.guestDetails?.roomNumber;
+    if (roomNumber) {
+      if (!roomStatusMap.has(roomNumber)) {
+        roomStatusMap.set(roomNumber, {
+          roomNumber: roomNumber,
+          isOccupied: false,
+          serviceRequests: []
+        });
+      }
+
+      const room = roomStatusMap.get(roomNumber);
+      room.serviceRequests.push({
+        type: 'transportation',
+        status: booking.bookingStatus,
+        createdAt: booking.createdAt,
+        bookingId: booking._id,
+        isExternal: booking.serviceProviderId?.providerType === 'external'
+      });
+    }
+  });
+
+  // Convert map to array and sort by room number
+  const roomStatuses = Array.from(roomStatusMap.values()).sort((a, b) => {
+    // Extract numbers from room strings for proper numeric sorting
+    const numA = parseInt(a.roomNumber.match(/\d+/)?.[0] || 0);
+    const numB = parseInt(b.roomNumber.match(/\d+/)?.[0] || 0);
+    return numA - numB;
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      rooms: roomStatuses,
+      totalRooms: roomStatuses.length,
+      occupiedRooms: roomStatuses.filter(r => r.isOccupied).length,
+      roomsWithRequests: roomStatuses.filter(r => r.serviceRequests.length > 0).length
+    }
+  });
 }));
 
 /**

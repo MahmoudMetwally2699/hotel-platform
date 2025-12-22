@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../../context/ThemeContext';
 import {
   TrendingUp,
   TrendingDown,
@@ -11,6 +12,7 @@ import {
 
 const RevenueSummaryCards = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -46,25 +48,25 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
       value: data.totalRevenue,
       trend: data.trend,
       icon: DollarSign,
-      bgColor: '#3B5787'
+      bgColor: theme.primaryColor
     },
     {
       title: t('performanceAnalyticsPage.revenue.summary.internalRevenue'),
       value: data.internalRevenue,
       icon: Home,
-      bgColor: '#2A4065'
+      bgColor: theme.primaryColor
     },
     {
       title: t('performanceAnalyticsPage.revenue.summary.externalRevenue'),
       value: data.externalRevenue,
       icon: Users,
-      bgColor: '#3B5787'
+      bgColor: theme.primaryColor
     },
     {
       title: t('performanceAnalyticsPage.revenue.summary.commissionEarned'),
       value: data.externalCommission,
       icon: Percent,
-      bgColor: '#2A4065'
+      bgColor: theme.primaryColor
     }
   ];
 

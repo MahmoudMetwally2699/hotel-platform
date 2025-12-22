@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useTheme } from '../../../context/ThemeContext';
 import { BarChart3, Package, Home, Shirt, Utensils, Car, Bell, Wrench } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { selectHotelCurrency } from '../../../redux/slices/hotelSlice';
@@ -7,6 +8,7 @@ import { formatPriceByLanguage } from '../../../utils/currency';
 
 const CompleteSummaryTable = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
   const reduxCurrency = useSelector(selectHotelCurrency);
   // Prioritize currency from API response, fallback to Redux
   const currency = data?.currency || reduxCurrency;
@@ -74,7 +76,7 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
       );
     }
     return (
-      <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: theme.accentColor, color: 'white' }}>
         {t('performanceAnalyticsPage.revenue.complete.badges.external')}
       </span>
     );
@@ -107,11 +109,8 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
         <div className="flex gap-2">
           <button
             onClick={() => setFilterCategory('all')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filterCategory === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            style={filterCategory === 'all' ? { backgroundColor: theme.primaryColor, color: 'white' } : { backgroundColor: '#f3f4f6', color: '#374151' }}
           >
             {t('performanceAnalyticsPage.revenue.complete.filters.all')}
           </button>
@@ -127,11 +126,8 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
           </button>
           <button
             onClick={() => setFilterCategory('External')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filterCategory === 'External'
-                ? 'bg-purple-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            style={filterCategory === 'External' ? { backgroundColor: theme.primaryColor, color: 'white' } : { backgroundColor: '#f3f4f6', color: '#374151' }}
           >
             {t('performanceAnalyticsPage.revenue.complete.filters.external')}
           </button>
@@ -139,7 +135,7 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
       </div>
 
       {/* Grand Totals Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 mb-6 text-white">
+      <div className="rounded-lg p-6 mb-6 text-white" style={{ backgroundColor: theme.primaryColor }}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div>
             <p className="text-sm opacity-90 mb-1">{t('performanceAnalyticsPage.revenue.complete.banner.grandTotalRevenue')}</p>
@@ -208,7 +204,7 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
                   </span>
                 </td>
                 <td className="py-4 px-4 text-center">
-                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: theme.accentColor, color: 'white' }}>
                     <Package className="w-4 h-4" />
                     {service.bookingCount}
                   </span>
@@ -220,8 +216,8 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
                   <div className="flex items-center justify-end gap-2">
                     <div className="w-16 bg-gray-200 rounded-full h-2">
                       <div
-                        className="bg-blue-500 h-2 rounded-full"
-                        style={{ width: `${Math.min(service.revenueShare, 100)}%` }}
+                        className="h-2 rounded-full"
+                        style={{ width: `${Math.min(service.revenueShare, 100)}%`, backgroundColor: theme.primaryColor }}
                       ></div>
                     </div>
                     <span className="font-semibold text-gray-700 text-sm w-12 text-right">
@@ -259,7 +255,7 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
                 {formatPriceByLanguage(filteredServices.reduce((sum, s) => sum + s.hotelProfit, 0), i18n.language, currency)}
               </td>
               <td className="py-4 px-4 text-center text-gray-900">
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium" style={{ backgroundColor: theme.accentColor, color: 'white' }}>
                   <Package className="w-4 h-4" />
                   {filteredServices.reduce((sum, s) => sum + s.bookingCount, 0)}
                 </span>

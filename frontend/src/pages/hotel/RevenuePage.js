@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { fetchHotelStats, selectHotelStats, selectHotelStatsLoading, selectHotelCurrency } from '../../redux/slices/hotelSlice';
 import { formatPriceByLanguage } from '../../utils/currency';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
  * Hotel Admin Revenue Management Page
@@ -11,6 +12,7 @@ import { formatPriceByLanguage } from '../../utils/currency';
 const RevenuePage = () => {
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
+  const { theme } = useTheme();
   const dashboardStats = useSelector(selectHotelStats);
   const isLoading = useSelector(selectHotelStatsLoading);
   const currency = useSelector(selectHotelCurrency);
@@ -63,7 +65,7 @@ const RevenuePage = () => {
       <div className="p-6 w-full">
         {/* Modern Header Section */}
         <div className="mb-8">
-          <div className="bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-2xl p-6 shadow-xl">
+          <div className="rounded-2xl p-6 shadow-xl" style={{ background: `linear-gradient(to right, ${theme.primaryColor}, ${theme.secondaryColor})` }}>
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center space-x-3 mb-2">
@@ -95,9 +97,10 @@ const RevenuePage = () => {
                 onClick={() => handleDateRangeChange('week')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                   dateRange === 'week'
-                    ? 'bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white shadow-md'
+                    ? 'text-white shadow-md'
                     : 'bg-gray-50 text-modern-darkGray hover:bg-gray-100 hover:shadow-sm'
                 }`}
+                style={dateRange === 'week' ? { background: `linear-gradient(to right, ${theme.primaryColor}, ${theme.secondaryColor})` } : {}}
               >
                 {t('hotelAdmin.revenue.timePeriod.thisWeek')}
               </button>
@@ -105,9 +108,10 @@ const RevenuePage = () => {
                 onClick={() => handleDateRangeChange('month')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                   dateRange === 'month'
-                    ? 'bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white shadow-md'
+                    ? 'text-white shadow-md'
                     : 'bg-gray-50 text-modern-darkGray hover:bg-gray-100 hover:shadow-sm'
                 }`}
+                style={dateRange === 'month' ? { background: `linear-gradient(to right, ${theme.primaryColor}, ${theme.secondaryColor})` } : {}}
               >
                 {t('hotelAdmin.revenue.timePeriod.thisMonth')}
               </button>
@@ -115,9 +119,10 @@ const RevenuePage = () => {
                 onClick={() => handleDateRangeChange('quarter')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                   dateRange === 'quarter'
-                    ? 'bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white shadow-md'
+                    ? 'text-white shadow-md'
                     : 'bg-gray-50 text-modern-darkGray hover:bg-gray-100 hover:shadow-sm'
                 }`}
+                style={dateRange === 'quarter' ? { background: `linear-gradient(to right, ${theme.primaryColor}, ${theme.secondaryColor})` } : {}}
               >
                 {t('hotelAdmin.revenue.timePeriod.thisQuarter')}
               </button>
@@ -125,9 +130,10 @@ const RevenuePage = () => {
                 onClick={() => handleDateRangeChange('year')}
                 className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                   dateRange === 'year'
-                    ? 'bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white shadow-md'
+                    ? 'text-white shadow-md'
                     : 'bg-gray-50 text-modern-darkGray hover:bg-gray-100 hover:shadow-sm'
                 }`}
+                style={dateRange === 'year' ? { background: `linear-gradient(to right, ${theme.primaryColor}, ${theme.secondaryColor})` } : {}}
               >
                 {t('hotelAdmin.revenue.timePeriod.thisYear')}
               </button>
@@ -137,13 +143,13 @@ const RevenuePage = () => {
 
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3B5787]"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: theme.primaryColor }}></div>
         </div>
       ) : (
         <>
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-gradient-to-r from-modern-blue to-modern-lightBlue p-6 rounded-xl shadow-lg text-white">
+            <div className="p-6 rounded-xl shadow-lg text-white" style={{ backgroundColor: theme.primaryColor }}>
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-blue-100 text-sm">{t('hotelAdmin.revenue.metrics.totalRevenue')}</p>
@@ -160,7 +166,7 @@ const RevenuePage = () => {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-[#67BAE0] to-[#3B5787] p-6 rounded-xl shadow-lg text-white">
+            <div className="p-6 rounded-xl shadow-lg text-white" style={{ backgroundColor: theme.secondaryColor }}>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-white/80 text-sm">{t('hotelAdmin.revenue.metrics.totalBookings')}</p>
@@ -177,7 +183,7 @@ const RevenuePage = () => {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-[#2A4065] to-[#3B5787] p-6 rounded-xl shadow-lg text-white">
+            <div className="p-6 rounded-xl shadow-lg text-white" style={{ backgroundColor: theme.primaryColor }}>
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-white/80 text-sm">{t('hotelAdmin.revenue.metrics.avgBookingValue')}</p>
@@ -194,7 +200,7 @@ const RevenuePage = () => {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] p-6 rounded-xl shadow-lg text-white">
+            <div className="p-6 rounded-xl shadow-lg text-white" style={{ backgroundColor: theme.accentColor }}>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-white/80 text-sm">{t('hotelAdmin.revenue.metrics.completionRate')}</p>
@@ -214,7 +220,7 @@ const RevenuePage = () => {
 
           {/* Revenue Chart */}
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 mb-8 overflow-hidden">
-            <div className="bg-gradient-to-r from-modern-blue to-modern-lightBlue p-6">
+            <div className="p-6" style={{ backgroundColor: theme.primaryColor }}>
               <h2 className="text-xl font-semibold text-white">{t('hotelAdmin.revenue.chart.title')}</h2>
               <p className="text-blue-100 text-sm mt-1">{t('hotelAdmin.revenue.chart.subtitle')}</p>
             </div>
@@ -222,24 +228,24 @@ const RevenuePage = () => {
               {monthlyTrends.length > 0 ? (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: `${theme.secondaryColor}20` }}>
                       <p className="text-sm text-modern-darkGray font-medium">{t('hotelAdmin.revenue.chart.totalMonths')}</p>
-                      <p className="text-3xl font-bold text-modern-blue mt-1">{monthlyTrends.length}</p>
+                      <p className="text-3xl font-bold mt-1" style={{ color: theme.primaryColor }}>{monthlyTrends.length}</p>
                     </div>
-                    <div className="text-center p-4 bg-gradient-to-br from-[#67BAE0]/20 to-[#67BAE0]/40 rounded-lg">
+                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: `${theme.primaryColor}20` }}>
                       <p className="text-sm text-modern-darkGray font-medium">{t('hotelAdmin.revenue.chart.peakMonthRevenue')}</p>
-                      <p className="text-3xl font-bold text-[#3B5787] mt-1">
+                      <p className="text-3xl font-bold mt-1" style={{ color: theme.primaryColor }}>
                         {formatPriceByLanguage(Math.max(...chartRevenue), i18n.language, currency)}
                       </p>
                     </div>
-                    <div className="text-center p-4 bg-gradient-to-br from-[#3B5787]/20 to-[#3B5787]/40 rounded-lg">
+                    <div className="text-center p-4 rounded-lg" style={{ backgroundColor: `${theme.accentColor}20` }}>
                       <p className="text-sm text-modern-darkGray font-medium">{t('hotelAdmin.revenue.chart.avgMonthlyRevenue')}</p>
-                      <p className="text-3xl font-bold text-[#2A4065] mt-1">
+                      <p className="text-3xl font-bold mt-1" style={{ color: theme.primaryColor }}>
                         {formatPriceByLanguage((chartRevenue.reduce((a, b) => a + b, 0) / chartRevenue.length), i18n.language, currency)}
                       </p>
                     </div>
                   </div>
-                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl">
+                  <div className="p-6 rounded-xl" style={{ backgroundColor: `${theme.backgroundColor}` }}>
                     <p className="text-modern-darkGray font-semibold mb-4">{t('hotelAdmin.revenue.chart.monthlyRevenueData')}</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {monthlyTrends.slice(-8).map((trend, index) => (
@@ -247,7 +253,7 @@ const RevenuePage = () => {
                           <p className="font-semibold text-modern-darkGray">
                             {new Date(2024, trend._id.month - 1).toLocaleString('default', { month: 'short' })} {trend._id.year}
                           </p>
-                          <p className="text-[#3B5787] font-bold text-lg">{formatPriceByLanguage(trend.revenue, i18n.language, currency)}</p>
+                          <p className="font-bold text-lg" style={{ color: theme.primaryColor }}>{formatPriceByLanguage(trend.revenue, i18n.language, currency)}</p>
                           <p className="text-modern-gray text-sm">{trend.count} {t('hotelAdmin.revenue.chart.orders')}</p>
                         </div>
                       ))}
@@ -273,7 +279,7 @@ const RevenuePage = () => {
           {/* Revenue by Category & Service */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] p-6">
+              <div className="p-6" style={{ backgroundColor: theme.primaryColor }}>
                 <h2 className="text-xl font-semibold text-white">{t('hotelAdmin.revenue.categoryRevenue.title')}</h2>
                 <p className="text-white/80 text-sm mt-1">{t('hotelAdmin.revenue.categoryRevenue.subtitle')}</p>
               </div>
@@ -285,19 +291,19 @@ const RevenuePage = () => {
                         ? ((category.revenue / totalCategoryRevenue) * 100).toFixed(0)
                         : 0;
                       return (
-                        <div key={index} className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg hover:shadow-md transition-shadow">
+                        <div key={index} className="flex justify-between items-center p-4 rounded-lg hover:shadow-md transition-shadow" style={{ backgroundColor: theme.backgroundColor }}>
                           <div>
                             <h3 className="font-semibold capitalize text-modern-darkGray">{category._id || t('hotelAdmin.revenue.categoryRevenue.unknown')}</h3>
                             <p className="text-sm text-modern-gray">{percentage}% {t('hotelAdmin.revenue.categoryRevenue.ofTotal')} • {category.bookings} {t('hotelAdmin.revenue.categoryRevenue.bookings')}</p>
                           </div>
-                          <span className="font-bold text-[#3B5787] text-lg">{formatPriceByLanguage(category.revenue, i18n.language, currency)}</span>
+                          <span className="font-bold text-lg" style={{ color: theme.primaryColor }}>{formatPriceByLanguage(category.revenue, i18n.language, currency)}</span>
                         </div>
                       );
                     })
                   ) : (
                     <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-[#67BAE0]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: `${theme.secondaryColor}20` }}>
+                        <svg className="w-8 h-8" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
                       </div>
@@ -309,7 +315,7 @@ const RevenuePage = () => {
             </div>
 
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-[#67BAE0] to-[#3B5787] p-6">
+              <div className="p-6" style={{ backgroundColor: theme.secondaryColor }}>
                 <h2 className="text-xl font-semibold text-white">{t('hotelAdmin.revenue.recentOrders.title')}</h2>
                 <p className="text-white/80 text-sm mt-1">{t('hotelAdmin.revenue.recentOrders.subtitle')}</p>
               </div>
@@ -320,7 +326,7 @@ const RevenuePage = () => {
                       .filter(booking => booking.pricing?.totalAmount > 0)
                       .slice(0, 5)
                       .map((booking, index) => (
-                        <div key={index} className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg hover:shadow-md transition-shadow">
+                        <div key={index} className="flex justify-between items-center p-4 rounded-lg hover:shadow-md transition-shadow" style={{ backgroundColor: theme.backgroundColor }}>
                           <div>
                             <h3 className="font-semibold text-modern-darkGray">{booking.serviceId?.category || t('hotelAdmin.revenue.recentOrders.serviceName')}</h3>
                             <p className="text-sm text-modern-gray">
@@ -330,7 +336,7 @@ const RevenuePage = () => {
                               {t('hotelAdmin.revenue.recentOrders.guest')}: {booking.guestId?.firstName || t('hotelAdmin.revenue.recentOrders.unknown')} {booking.guestId?.lastName || ''}
                             </p>
                           </div>
-                          <span className="font-bold text-[#3B5787] text-lg">{formatPriceByLanguage(booking.pricing?.totalAmount || 0, i18n.language, currency)}</span>
+                          <span className="font-bold text-lg" style={{ color: theme.primaryColor }}>{formatPriceByLanguage(booking.pricing?.totalAmount || 0, i18n.language, currency)}</span>
                         </div>
                       ))
                   ) : (

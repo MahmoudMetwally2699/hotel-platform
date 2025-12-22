@@ -1012,6 +1012,30 @@
         "viewRevenue": "View Revenue"
       }
     },
+    "roomOverview": {
+      "title": "Room Request Overview",
+      "subtitle": "Live guestroom service statuses",
+      "refresh": "Refresh",
+      "filterByType": "Filter by Type",
+      "allTypes": "All Types",
+      "room": "Room",
+      "requests": "request(s)",
+      "serviceRequests": "Service Requests",
+      "external": "EXT",
+      "noRoomsFound": "No rooms found with the selected filters",
+      "tryAdjustingFilters": "Try adjusting your filter settings",
+      "totalRooms": "Total Rooms",
+      "occupiedRooms": "Occupied Rooms",
+      "activeRequests": "Active Requests",
+      "statusLabels": {
+        "noRequests": "No Requests",
+        "housekeeping": "Housekeeping",
+        "laundry": "Laundry",
+        "dining": "Dining",
+        "transportation": "Transportation",
+        "external": "External Service"
+      }
+    },
     "orders": {
       "title": "Orders Management",
       "subtitle": "Manage and track all service orders for your hotel",

@@ -8,6 +8,7 @@ import PropTypes from 'prop-types';
 import { Link, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../context/ThemeContext';
 
 // SVG Icons
 const HomeIcon = () => (
@@ -113,6 +114,7 @@ const categoryIcons = {
 const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
   const { currentUser: user } = useAuth();
   const { t } = useTranslation();
+  const { theme } = useTheme();
   const location = useLocation();
   const userRole = user ? user.role : 'guest';
 
@@ -159,18 +161,20 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         ></div>
       )}      {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 w-full lg:w-72 max-w-full lg:max-w-xs transform overflow-y-auto bg-white shadow-xl transition duration-300 ease-in-out lg:static lg:inset-0 lg:translate-x-0 lg:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-40 w-full lg:w-72 max-w-full lg:max-w-xs transform overflow-y-auto shadow-xl transition duration-300 ease-in-out lg:static lg:inset-0 lg:translate-x-0 lg:shadow-none ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
+        style={{ backgroundColor: theme.sidebarColor }}
       >
-        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
+        <div className="flex h-16 items-center justify-between border-b px-6" style={{ borderBottomColor: `${theme.sidebarTextColor}20` }}>
           <img
             src="/qickroom.png"
             alt="Qickroom"
             className="h-10 w-auto object-contain"
           />
           <button
-            className="rounded-md p-2 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 lg:hidden"
+            className="rounded-md p-2 hover:bg-opacity-20 focus:outline-none focus:ring-2 lg:hidden"
+            style={{ color: theme.sidebarTextColor, backgroundColor: `${theme.sidebarTextColor}10` }}
             onClick={toggleSidebar}
             aria-label="Close sidebar"
           >
@@ -181,10 +185,10 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         <div className="px-4 py-4">
           {/* User info */}
           {user && (
-            <div className="mb-6 rounded-lg bg-gray-50 p-4">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Logged in as</p>
-              <p className="text-sm font-bold text-gray-900 mt-1">{user.firstName} {user.lastName}</p>
-              <p className="text-xs text-gray-600 mt-1 px-2 py-1 bg-white rounded-full inline-block">
+            <div className="mb-6 rounded-lg p-4" style={{ backgroundColor: `${theme.sidebarTextColor}10` }}>
+              <p className="text-xs font-medium uppercase tracking-wide" style={{ color: theme.sidebarTextColor, opacity: 0.7 }}>Logged in as</p>
+              <p className="text-sm font-bold mt-1" style={{ color: theme.sidebarTextColor }}>{user.firstName} {user.lastName}</p>
+              <p className="text-xs mt-1 px-2 py-1 rounded-full inline-block" style={{ color: theme.sidebarTextColor, backgroundColor: `${theme.sidebarTextColor}20` }}>
                 {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
               </p>
             </div>
@@ -196,19 +200,22 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 <Link
                   key={item.text}
                   to={item.path}
-                  className={`group flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors min-h-[48px] ${
-                    isActive
-                      ? 'bg-indigo-100 text-indigo-700 border-l-4 border-indigo-500'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
+                  className="group flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors min-h-[48px]"
+                  style={isActive ? {
+                    backgroundColor: `${theme.accentColor}40`,
+                    color: theme.accentColor,
+                    borderLeft: `4px solid ${theme.accentColor}`
+                  } : {
+                    color: theme.sidebarTextColor
+                  }}
                   onClick={() => {
                     if (window.innerWidth < 1024) {
                       toggleSidebar();
                     }
                   }}
                 >
-                  <span className="mr-4 flex-shrink-0">{item.icon}</span>
-                  <span className="truncate">{item.text}</span>
+                  <span className="mr-4 flex-shrink-0" style={{ color: 'inherit' }}>{item.icon}</span>
+                  <span className="truncate" style={{ color: 'inherit' }}>{item.text}</span>
                 </Link>
               );
             })}
@@ -217,7 +224,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           {/* Categories - only show for guest users */}
           {userRole === 'guest' && (
             <div className="mt-8">
-              <h3 className="px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+              <h3 className="px-4 text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: theme.sidebarTextColor, opacity: 0.6 }}>
                 Service Categories
               </h3>
               <div className="space-y-1">
@@ -225,15 +232,16 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                   <Link
                     key={category}
                     to={`/services/${category}`}
-                    className="group flex items-center rounded-lg px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors min-h-[48px]"
+                    className="group flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors min-h-[48px]"
+                    style={{ color: theme.sidebarTextColor }}
                     onClick={() => {
                       if (window.innerWidth < 1024) {
                         toggleSidebar();
                       }
                     }}
                   >
-                    <span className="mr-4 flex-shrink-0">{icon}</span>
-                    <span className="truncate">{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                    <span className="mr-4 flex-shrink-0" style={{ color: 'inherit' }}>{icon}</span>
+                    <span className="truncate" style={{ color: 'inherit' }}>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
                   </Link>
                 ))}
               </div>

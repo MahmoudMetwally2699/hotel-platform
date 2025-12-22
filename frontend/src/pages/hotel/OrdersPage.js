@@ -6,6 +6,7 @@ import { HOTEL_API } from '../../config/api.config';
 import apiClient from '../../services/api.service';
 import { selectHotelCurrency, fetchHotelStats } from '../../redux/slices/hotelSlice';
 import { formatPriceByLanguage } from '../../utils/currency';
+import { useTheme } from '../../context/ThemeContext';
 
 /**
  * Modern Hotel Admin Orders                                    : t('hotelAdmin.dashboard.recentOrders.unknownGuest')}Management Page with Category Filtering and Pagination
@@ -26,6 +27,7 @@ const OrdersPage = () => {
   const dispatch = useDispatch();
   const { isAuthenticated } = useAuth();
   const currency = useSelector(selectHotelCurrency);
+  const { theme } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -202,16 +204,17 @@ const OrdersPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-modern-gray to-white">
+    <div className="min-h-screen" style={{ backgroundColor: theme.backgroundColor }}>
       {/* Compact Header Section */}
       <div className="bg-white shadow border-b border-gray-100">
         <div className="w-full px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-semibold text-modern-blue">{t('hotelAdmin.orders.title')}</h1>
+              <h1 className="text-xl font-semibold" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.title')}</h1>
             </div>
             <button
-              className="bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white px-5 py-2.5 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium flex items-center space-x-2"
+              className="text-white px-5 py-2.5 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 font-medium flex items-center space-x-2"
+              style={{ backgroundColor: theme.primaryColor }}
               onClick={fetchBookings}
               disabled={isLoading}
             >
@@ -227,7 +230,7 @@ const OrdersPage = () => {
       <div className="max-w-full mx-auto px-4 py-6">
         {/* Compact Category Tabs */}
         <div className="bg-white rounded-lg shadow border border-gray-100 overflow-hidden mb-6">
-          <div className="px-6 py-3 bg-gradient-to-r from-modern-blue to-modern-lightBlue">
+          <div className="px-6 py-3" style={{ backgroundColor: theme.primaryColor }}>
             <h2 className="text-sm font-semibold text-white flex items-center">
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -243,17 +246,20 @@ const OrdersPage = () => {
                   onClick={() => setSelectedCategory(category.id)}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                     selectedCategory === category.id
-                      ? 'bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white shadow-md'
-                      : 'bg-gray-50 text-gray-700 hover:bg-blue-50 hover:text-modern-blue'
+                      ? 'text-white shadow-md'
+                      : 'bg-gray-50 text-gray-700 hover:bg-blue-50'
                   }`}
+                  style={selectedCategory === category.id ? { backgroundColor: theme.primaryColor } : {}}
                 >
                   {getIconSVG(category.icon)}
                   <span>{category.name}</span>
                   <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                     selectedCategory === category.id
                       ? 'bg-white/20 text-white'
-                      : 'bg-modern-blue/10 text-modern-blue'
-                  }`}>
+                      : ''
+                  }`}
+                  style={selectedCategory !== category.id ? { backgroundColor: `${theme.primaryColor}10`, color: theme.primaryColor } : {}}
+                  >
                     {getCategoryCount(category.id)}
                   </span>
                 </button>
@@ -295,7 +301,8 @@ const OrdersPage = () => {
             </div>
             <button
               onClick={fetchBookings}
-              className="bg-gradient-to-r from-modern-blue to-modern-lightBlue text-white px-6 py-2.5 rounded-lg hover:shadow-md transform hover:scale-105 transition-all duration-300 font-medium text-sm"
+              className="text-white px-6 py-2.5 rounded-lg hover:shadow-md transform hover:scale-105 transition-all duration-300 font-medium text-sm"
+              style={{ backgroundColor: theme.primaryColor }}
             >
               {t('hotelAdmin.common.search')}
             </button>
@@ -304,7 +311,7 @@ const OrdersPage = () => {
 
         {/* Modern Orders Table */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-50">
-          <div className="px-8 py-6 bg-gradient-to-r from-modern-blue to-modern-lightBlue">
+          <div className="px-8 py-6" style={{ backgroundColor: theme.primaryColor }}>
             <h2 className="text-xl font-bold text-white flex items-center">
               <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -347,30 +354,35 @@ const OrdersPage = () => {
               <div className="hidden lg:block overflow-x-auto">
                 <div className="min-w-full inline-block align-middle">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-modern-gray">
+                    <thead style={{ backgroundColor: theme.backgroundColor }}>
                       <tr>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">{t('hotelAdmin.orders.table.orderId')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[200px]">{t('hotelAdmin.orders.table.guest')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">Room Number</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[180px]">{t('hotelAdmin.orders.table.service')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.orders.table.date')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.orders.table.amount')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">Payment Method</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[100px]">{t('hotelAdmin.orders.table.status')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold text-modern-blue uppercase tracking-wider min-w-[120px]">{t('hotelAdmin.orders.table.actions')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.orderId')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[200px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.guest')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>Room Number</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[180px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.service')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.date')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.amount')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>Payment Method</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.status')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.actions')}</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
                       {bookings.map((order) => (
-                        <tr key={order._id} className="hover:bg-modern-gray transition-colors duration-200">
+                        <tr
+                          key={order._id}
+                          className="transition-colors duration-200"
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.backgroundColor}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                        >
                           <td className="px-4 py-4 whitespace-nowrap">
-                            <span className="text-sm font-bold text-modern-blue bg-blue-50 px-3 py-1 rounded-full">
+                            <span className="text-sm font-bold px-3 py-1 rounded-full" style={{ color: theme.primaryColor, backgroundColor: `${theme.primaryColor}10` }}>
                               #{order.bookingId || order._id?.slice(-6)}
                             </span>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-modern-blue to-modern-lightBlue flex items-center justify-center text-white font-bold text-sm">
+                              <div className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: theme.primaryColor }}>
                                 {order.guestId?.firstName?.charAt(0) || order.guestDetails?.firstName?.charAt(0) || 'G'}
                               </div>
                               <div className="ml-3">
@@ -474,7 +486,8 @@ const OrdersPage = () => {
                                 setSelectedOrder(order);
                                 setIsModalOpen(true);
                               }}
-                              className="text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-blue-50"
+                              className="font-medium transition-colors duration-200 px-3 py-1 rounded hover:bg-blue-50"
+                              style={{ color: theme.primaryColor }}
                             >
                               {t('hotelAdmin.orders.details.title')}
                             </button>
@@ -489,7 +502,7 @@ const OrdersPage = () => {
                 {bookings.map((order) => (
                   <div key={order._id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                     <div className="flex justify-between items-start mb-3">
-                      <span className="text-sm font-bold text-modern-blue bg-blue-50 px-3 py-1 rounded-full">
+                      <span className="text-sm font-bold px-3 py-1 rounded-full" style={{ color: theme.primaryColor, backgroundColor: `${theme.primaryColor}10` }}>
                         #{order.bookingId || order._id?.slice(-6)}
                       </span>
                       <span
@@ -507,7 +520,7 @@ const OrdersPage = () => {
 
                     <div className="space-y-2">
                       <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-modern-blue to-modern-lightBlue flex items-center justify-center text-white font-bold text-sm">
+                        <div className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: theme.primaryColor }}>
                           {order.guestId?.firstName?.charAt(0) || order.guestDetails?.firstName?.charAt(0) || 'G'}
                         </div>
                         <div className="ml-3">
@@ -590,7 +603,8 @@ const OrdersPage = () => {
                           setSelectedOrder(order);
                           setIsModalOpen(true);
                         }}
-                        className="w-full mt-3 text-modern-blue hover:text-modern-darkBlue font-medium transition-colors duration-200 text-sm"
+                        className="w-full mt-3 font-medium transition-colors duration-200 text-sm"
+                        style={{ color: theme.primaryColor }}
                       >
                         {t('hotelAdmin.orders.details.title')}
                       </button>
@@ -670,9 +684,10 @@ const OrdersPage = () => {
                           onClick={() => setPagination(prev => ({ ...prev, page: pageNumber }))}
                           className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                             pagination.page === pageNumber
-                              ? 'z-10 bg-modern-blue border-modern-blue text-white'
+                              ? 'z-10 text-white'
                               : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
                           }`}
+                          style={pagination.page === pageNumber ? { backgroundColor: theme.primaryColor, borderColor: theme.primaryColor } : {}}
                         >
                           {pageNumber}
                         </button>
@@ -709,7 +724,7 @@ const OrdersPage = () => {
         >
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="px-6 py-4 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-t-2xl">
+            <div className="px-6 py-4 rounded-t-2xl" style={{ backgroundColor: theme.primaryColor }}>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white">{t('hotelAdmin.orders.details.title')}</h3>
                 <button
@@ -788,7 +803,7 @@ const OrdersPage = () => {
                 <h4 className="font-semibold text-gray-900 mb-3">{t('hotelAdmin.orders.details.guestInformation')}</h4>
                 <div className="bg-white border rounded-lg p-4">
                   <div className="flex items-center mb-3">
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-modern-blue to-modern-lightBlue flex items-center justify-center text-white font-bold">
+                    <div className="h-12 w-12 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: theme.primaryColor }}>
                       {(() => {
                         const guest = selectedOrder.guestId || selectedOrder.guestDetails || selectedOrder.guest || {};
                         const firstName = guest.firstName?.trim() || '';
@@ -1243,7 +1258,8 @@ const OrdersPage = () => {
                     setIsStatusModalOpen(true);
                     setSelectedStatus(selectedOrder.status || 'pending');
                   }}
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-modern-blue to-modern-lightBlue border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
+                  className="px-4 py-2 text-sm font-medium text-white border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  style={{ backgroundColor: theme.primaryColor }}
                 >
                   {t('hotelAdmin.orders.details.updateStatus')}
                 </button>
@@ -1265,7 +1281,7 @@ const OrdersPage = () => {
         >
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
             {/* Modal Header */}
-            <div className="px-6 py-4 bg-gradient-to-r from-modern-blue to-modern-lightBlue rounded-t-2xl">
+            <div className="px-6 py-4 rounded-t-2xl" style={{ backgroundColor: theme.primaryColor }}>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white">{t('hotelAdmin.orders.statusUpdate.title')}</h3>
                 <button
@@ -1321,7 +1337,8 @@ const OrdersPage = () => {
                         value={status.value}
                         checked={selectedStatus === status.value}
                         onChange={(e) => setSelectedStatus(e.target.value)}
-                        className="w-4 h-4 text-modern-blue focus:ring-modern-blue"
+                        className="w-4 h-4 focus:ring-2"
+                        style={{ accentColor: theme.primaryColor }}
                         required
                       />
                       <span className={`ml-3 px-3 py-1 rounded-full text-sm font-semibold ${status.color}`}>
@@ -1372,7 +1389,8 @@ const OrdersPage = () => {
                 <button
                   type="submit"
                   disabled={isUpdatingStatus || !selectedStatus}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-modern-blue to-modern-lightBlue border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white border border-transparent rounded-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: theme.primaryColor }}
                 >
                   {isUpdatingStatus ? t('hotelAdmin.orders.statusUpdate.updating') : t('hotelAdmin.orders.statusUpdate.update')}
                 </button>

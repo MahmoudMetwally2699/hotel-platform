@@ -15,12 +15,14 @@ import {
 import useAuth from '../hooks/useAuth';
 import useServiceProviderCategories from '../hooks/useServiceProviderCategories';
 import { resolveAuthConflicts } from '../utils/authCleanup';
+import { useTheme } from '../context/ThemeContext';
 
 const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
   const { t, i18n } = useTranslation();
   const { role } = useAuth();
   const { hasCategory } = useServiceProviderCategories();
   const location = useLocation();
+  const { theme } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
   const [showMobileCategories, setShowMobileCategories] = useState(false);
@@ -94,6 +96,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           { name: t('navigation.qrCodes'), path: '/hotel/qr-codes', icon: 'qr-code' },
           { name: t('navigation.loyaltyProgram'), path: '/hotel/loyalty-program', icon: 'gift' },
           { name: t('navigation.performanceAnalytics'), path: '/hotel/performance-analytics', icon: 'chart-line' },
+          { name: 'Branding', path: '/hotel/branding', icon: 'palette' },
           { name: t('navigation.settings'), path: '/hotel/settings', icon: 'cog' }
         ];
       case 'service':
@@ -261,6 +264,12 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         );
+      case 'palette':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+          </svg>
+        );
       case 'qr-code':
         return (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -395,8 +404,8 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
     <>
       {/* Desktop Sidebar */}
       <aside
-        style={{ backgroundColor: '#3B5787' }}
-        className={`text-white min-h-screen transition-all duration-300 ease-in-out z-30 shadow-xl
+        style={{ backgroundColor: theme.sidebarColor, color: theme.sidebarTextColor }}
+        className={`min-h-screen transition-all duration-300 ease-in-out z-30 shadow-xl
           ${collapsed ? 'lg:w-16' : 'lg:w-56 xl:w-64 2xl:w-72'}
           lg:relative lg:translate-x-0
           hidden lg:block
@@ -416,16 +425,16 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
               </div>
               <div className={`flex flex-col ${isRTL ? 'mr-5 items-end' : 'ml-5 items-start'}`}>
                 <div className="flex items-center gap-2">
-                  <span className={`text-lg font-bold text-white leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
+                  <span className={`text-lg font-bold leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
                     Qickroom
                   </span>
                   {(role === 'hotel' || role === 'service') && (
-                    <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider bg-white/20 text-white/90 rounded-md">
+                    <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider bg-white/20 rounded-md" style={{ opacity: 0.9 }}>
                       DEMO
                     </span>
                   )}
                 </div>
-                <span className={`text-sm font-medium text-white/75 leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
+                <span className={`text-sm font-medium leading-tight ${isRTL ? 'text-right' : 'text-left'}`} style={{ opacity: 0.75 }}>
                   {role === 'service' ? t('platform.servicePlatform') : t('platform.hotelPlatform')}
                 </span>
               </div>
@@ -447,11 +456,11 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
             title={collapsed ? t('common.expand') : t('common.collapse')}
           >
             {collapsed ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" style={{ opacity: 0.9 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={isRTL ? "M11 19l-7-7 7-7m8 14l-7-7 7-7" : "M13 5l7 7-7 7M5 5l7 7-7 7"} />
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white/90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" style={{ opacity: 0.9 }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={isRTL ? "M13 5l7 7-7 7M5 5l7 7-7 7" : "M11 19l-7-7 7-7m8 14l-7-7 7-7"} />
               </svg>
             )}
@@ -469,10 +478,10 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                       onClick={() => toggleMenu(item.key || item.name)}
                       className={`w-full flex items-center ${collapsed ? 'justify-center' : 'justify-between'} px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px] group ${
                         expandedMenus[item.key || item.name]
-                          ? 'text-white shadow-lg'
-                          : 'text-white/80 hover:text-white hover:bg-white/10'
+                          ? 'shadow-lg'
+                          : 'hover:bg-white/10'
                       }`}
-                      style={expandedMenus[item.key || item.name] ? { backgroundColor: '#48ACDA' } : {}}
+                      style={expandedMenus[item.key || item.name] ? { backgroundColor: '#48ACDA' } : { opacity: expandedMenus[item.key || item.name] ? 1 : 0.8 }}
                     >
                       <div className={`flex items-center ${collapsed ? 'justify-center' : ''}`}>
                         <span className={`${collapsed ? '' : (isRTL ? 'ml-3' : 'mr-3')} transition-transform group-hover:scale-110`}>
@@ -498,14 +507,14 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                                 return `
                                   flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 min-h-[36px] group max-w-full
                                   ${isActive
-                                    ? 'text-white shadow-lg'
-                                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                                    ? 'shadow-lg'
+                                    : 'hover:bg-white/10'
                                   }
                                 `;
                               }}
                               style={() => {
                                 const isActive = isPathActive(child.path);
-                                return isActive ? { backgroundColor: '#48ACDA' } : {};
+                                return isActive ? { backgroundColor: theme.secondaryColor } : { opacity: 0.7 };
                               }}
                             >
                               <span className={`${isRTL ? 'ml-2' : 'mr-2'} transition-transform group-hover:scale-110 flex-shrink-0`}>
@@ -527,14 +536,14 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                       return `
                         flex items-center ${collapsed ? 'justify-center' : 'justify-between'} px-4 py-3 rounded-xl transition-all duration-200 min-h-[48px] group
                         ${isActive
-                          ? 'text-white shadow-lg'
-                          : 'text-white/80 hover:text-white hover:bg-white/10'
+                          ? 'shadow-lg'
+                          : 'hover:bg-white/10'
                         }
                       `;
                     }}
                     style={() => {
                       const isActive = isPathActive(item.path);
-                      return isActive ? { backgroundColor: '#48ACDA' } : {};
+                      return isActive ? { backgroundColor: '#48ACDA' } : { opacity: 0.8 };
                     }}
                   >
                     <div className="flex items-center">
@@ -544,7 +553,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                       <span className={`${collapsed ? 'hidden' : ''} font-medium`}>{item.name}</span>
                     </div>
                     {item.comingSoon && !collapsed && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-white/20 text-white/90 rounded-md">
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-white/20 rounded-md" style={{ opacity: 0.9 }}>
                         {t('common.comingSoon') || 'COMING SOON'}
                       </span>
                     )}
@@ -558,8 +567,8 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
 
       {/* Mobile Bottom Navigation Bar */}
       <div
-        style={{ backgroundColor: '#3B5787' }}
-        className="lg:hidden fixed bottom-0 left-0 right-0 text-white border-t border-white/10 z-50 shadow-2xl"
+        style={{ backgroundColor: theme.sidebarColor, color: theme.sidebarTextColor }}
+        className="lg:hidden fixed bottom-0 left-0 right-0 border-t border-white/10 z-50 shadow-2xl"
       >
         <div className="flex justify-around items-center py-1">
           {navigationItems.slice(0, 5).map((item) => {
@@ -569,7 +578,8 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                 <button
                   key={item.key || item.name}
                   onClick={() => setShowMobileCategories(true)}
-                  className="flex flex-col items-center justify-center px-1 py-1.5 rounded-lg transition-all duration-200 min-w-0 flex-1 text-white/80 hover:bg-white/10 hover:text-white"
+                  className="flex flex-col items-center justify-center px-1 py-1.5 rounded-lg transition-all duration-200 min-w-0 flex-1 hover:bg-white/10"
+                  style={{ opacity: 0.8 }}
                 >
                   <span className="mb-0.5">{getIcon(item.icon)}</span>
                   <span className="text-[10px] text-center leading-tight w-full font-medium truncate px-0.5">
@@ -588,14 +598,14 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                   return `
                     flex flex-col items-center justify-center px-1 py-1.5 rounded-lg transition-all duration-200 min-w-0 flex-1 relative
                     ${isActive
-                      ? 'text-white shadow-lg'
-                      : 'text-white/80 hover:bg-white/10 hover:text-white'
+                      ? 'shadow-lg'
+                      : 'hover:bg-white/10'
                     }
                   `;
                 }}
                 style={() => {
                   const isActive = isPathActive(item.path);
-                  return isActive ? { backgroundColor: '#48ACDA' } : {};
+                  return isActive ? { backgroundColor: theme.secondaryColor } : { opacity: 0.8 };
                 }}
               >
                 <span className="mb-0.5">{getIcon(item.icon)}</span>
@@ -603,7 +613,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                   {item.name}
                 </span>
                 {item.comingSoon && (
-                  <span className="absolute top-0 right-0 px-1 py-0.5 text-[8px] font-bold bg-white/20 text-white/90 rounded-md">
+                  <span className="absolute top-0 right-0 px-1 py-0.5 text-[8px] font-bold bg-white/20 rounded-md" style={{ opacity: 0.9 }}>
                     SOON
                   </span>
                 )}
@@ -613,7 +623,8 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           {navigationItems.length > 5 && (
             <button
               onClick={toggleSidebar}
-              className="flex flex-col items-center justify-center px-1 py-1.5 rounded-lg transition-all duration-200 min-w-0 flex-1 text-white/80 hover:bg-white/10 hover:text-white"
+              className="flex flex-col items-center justify-center px-1 py-1.5 rounded-lg transition-all duration-200 min-w-0 flex-1 hover:bg-white/10"
+              style={{ opacity: 0.8 }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -783,13 +794,13 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
             }`}
             onClick={toggleSidebar}
           />          <div
-            style={{ backgroundColor: '#3B5787' }}
-            className={`text-white fixed bottom-16 left-0 right-0 z-50 lg:hidden transition-all duration-300 ease-in-out shadow-2xl ${
+            style={{ backgroundColor: theme.sidebarColor, color: theme.sidebarTextColor }}
+            className={`fixed bottom-16 left-0 right-0 z-50 lg:hidden transition-all duration-300 ease-in-out shadow-2xl ${
               isOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
             }`}
           >
             <div className="p-6">
-              <h3 className="text-lg font-bold mb-4 text-white">{t('common.moreOptions') || 'More Options'}</h3>
+              <h3 className="text-lg font-bold mb-4">{t('common.moreOptions') || 'More Options'}</h3>
               <div className="space-y-2">
                 {navigationItems.slice(5).map((item) => (
                   <NavLink
@@ -801,14 +812,14 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                       return `
                         flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200
                         ${isActive
-                          ? 'text-white shadow-lg'
-                          : 'text-white/80 hover:bg-white/10 hover:text-white'
+                          ? 'shadow-lg'
+                          : 'hover:bg-white/10'
                         }
                       `;
                     }}
                     style={() => {
                       const isActive = isPathActive(item.path);
-                      return isActive ? { backgroundColor: '#48ACDA' } : {};
+                      return isActive ? { backgroundColor: theme.secondaryColor } : { opacity: 0.8 };
                     }}
                   >
                     <div className="flex items-center">
@@ -816,7 +827,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                       <span className="font-medium">{item.name}</span>
                     </div>
                     {item.comingSoon && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-white/20 text-white/90 rounded-md">
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-white/20 rounded-md" style={{ opacity: 0.9 }}>
                         {t('common.comingSoon') || 'COMING SOON'}
                       </span>
                     )}
