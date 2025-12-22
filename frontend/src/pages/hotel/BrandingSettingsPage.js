@@ -73,13 +73,13 @@ const BrandingSettingsPage = () => {
         backgroundColor: '#F8FAFC',
         accentColor: '#85C8E6'
       };
-      
+
       setColors(defaultColors);
       setIsSaving(true);
-      
+
       // Save the default colors to the database
       const result = await updateBranding(defaultColors);
-      
+
       if (result.success) {
         resetTheme();
         setHasChanges(false);
@@ -87,7 +87,7 @@ const BrandingSettingsPage = () => {
       } else {
         setMessage({ type: 'error', text: result.error || 'Failed to save default colors' });
       }
-      
+
       setIsSaving(false);
     }
   };
