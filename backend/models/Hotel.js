@@ -488,7 +488,7 @@ const hotelSchema = new mongoose.Schema({
   branding: {
     primaryColor: {
       type: String,
-      default: '#3B5787',
+      default: '#48ACDA',
       validate: {
         validator: function(v) {
           return /^#([0-9A-F]{3}){1,2}$/i.test(v);
@@ -498,7 +498,7 @@ const hotelSchema = new mongoose.Schema({
     },
     secondaryColor: {
       type: String,
-      default: '#67BAE0',
+      default: '#48ACDA',
       validate: {
         validator: function(v) {
           return /^#([0-9A-F]{3}){1,2}$/i.test(v);
@@ -508,7 +508,7 @@ const hotelSchema = new mongoose.Schema({
     },
     sidebarColor: {
       type: String,
-      default: '#1F2937',
+      default: '#FFFFFF',
       validate: {
         validator: function(v) {
           return /^#([0-9A-F]{3}){1,2}$/i.test(v);
@@ -518,7 +518,7 @@ const hotelSchema = new mongoose.Schema({
     },
     sidebarTextColor: {
       type: String,
-      default: '#FFFFFF',
+      default: '#3B5787',
       validate: {
         validator: function(v) {
           return /^#([0-9A-F]{3}){1,2}$/i.test(v);
@@ -548,7 +548,7 @@ const hotelSchema = new mongoose.Schema({
     },
     accentColor: {
       type: String,
-      default: '#10B981',
+      default: '#85C8E6',
       validate: {
         validator: function(v) {
           return /^#([0-9A-F]{3}){1,2}$/i.test(v);

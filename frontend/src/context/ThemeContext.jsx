@@ -11,13 +11,13 @@ const ThemeContext = createContext();
 
 // Default theme colors
 const defaultTheme = {
-  primaryColor: '#3B5787',
-  secondaryColor: '#67BAE0',
-  sidebarColor: '#1F2937',
-  sidebarTextColor: '#FFFFFF',
+  primaryColor: '#48ACDA',
+  secondaryColor: '#48ACDA',
+  sidebarColor: '#FFFFFF',
+  sidebarTextColor: '#3B5787',
   headerColor: '#FFFFFF',
   backgroundColor: '#F8FAFC',
-  accentColor: '#10B981',
+  accentColor: '#85C8E6',
   logo: null
 };
 

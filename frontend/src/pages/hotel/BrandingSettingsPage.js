@@ -62,20 +62,33 @@ const BrandingSettingsPage = () => {
     setIsSaving(false);
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (window.confirm('Are you sure you want to reset to default colors?')) {
-      resetTheme();
-      setColors({
-        primaryColor: '#3B5787',
-        secondaryColor: '#67BAE0',
-        sidebarColor: '#1F2937',
-        sidebarTextColor: '#FFFFFF',
+      const defaultColors = {
+        primaryColor: '#48ACDA',
+        secondaryColor: '#48ACDA',
+        sidebarColor: '#FFFFFF',
+        sidebarTextColor: '#3B5787',
         headerColor: '#FFFFFF',
         backgroundColor: '#F8FAFC',
-        accentColor: '#10B981'
-      });
-      setHasChanges(false);
-      setMessage({ type: 'info', text: 'Colors reset to default' });
+        accentColor: '#85C8E6'
+      };
+      
+      setColors(defaultColors);
+      setIsSaving(true);
+      
+      // Save the default colors to the database
+      const result = await updateBranding(defaultColors);
+      
+      if (result.success) {
+        resetTheme();
+        setHasChanges(false);
+        setMessage({ type: 'success', text: 'Colors reset to default and saved successfully!' });
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to save default colors' });
+      }
+      
+      setIsSaving(false);
     }
   };
 
