@@ -69,7 +69,7 @@
     "service": "Service"
   },
   "platform": {
-    "hotelPlatform": "Hotel Platform",
+    "hotelPlatform": "Demo",
     "servicePlatform": "Service Platform"
   },
   "categorySelection": {
@@ -118,7 +118,8 @@
     "scheduleNotSet": "Schedule not set",
     "notAvailable": "Not available",
     "loyaltyProgram": "Loyalty Program",
-    "performanceAnalytics": "Performance Analytics"
+    "performanceAnalytics": "Performance Analytics",
+    "branding": "Branding"
   },
 
   "loyaltyProgram": {

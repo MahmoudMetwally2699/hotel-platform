@@ -68,7 +68,7 @@
     "service": "خدمة"
   },
   "platform": {
-    "hotelPlatform": "منصة الفندق",
+    "hotelPlatform": "تجريبي",
     "servicePlatform": "منصة الخدمات"
   },
   "navigation": {
@@ -105,7 +105,8 @@
     "housekeepingBookings": "التنظيف",
     "feedback": "الملاحظات",
     "loyaltyProgram": "برنامج الولاء",
-    "performanceAnalytics": "تحليلات الأداء"
+    "performanceAnalytics": "تحليلات الأداء",
+    "branding": "العلامة التجارية"
   },
   "loyaltyProgram": {
     "subtitle": "نظام مكافآت وولاء النزلاء",

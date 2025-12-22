@@ -102,11 +102,6 @@ const TailwindHeader = () => {
                 src={logoInfo.src}
                 alt={logoInfo.alt}
               />
-              {(user?.role === 'hotel' || user?.role === 'service') && (
-                <span className="px-2 py-1 text-[10px] font-bold tracking-wider bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-md shadow-lg animate-pulse">
-                  DEMO
-                </span>
-              )}
             </div>
           </div>
           <div className="flex items-center">

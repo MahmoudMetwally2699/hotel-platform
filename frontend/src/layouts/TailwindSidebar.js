@@ -96,7 +96,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           { name: t('navigation.qrCodes'), path: '/hotel/qr-codes', icon: 'scan-qr-code' },
           { name: t('navigation.loyaltyProgram'), path: '/hotel/loyalty-program', icon: '1st-medal' },
           { name: t('navigation.performanceAnalytics'), path: '/hotel/performance-analytics', icon: 'graph-up' },
-          { name: 'Branding', path: '/hotel/branding', icon: 'palette' },
+          { name: t('navigation.branding'), path: '/hotel/branding', icon: 'palette' },
           { name: t('navigation.settings'), path: '/hotel/settings', icon: 'settings-custom' }
         ];
       case 'service':
@@ -435,7 +435,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
       >
         <div className={`px-6 py-6 border-b border-white/20 min-h-[5rem] ${collapsed ? 'flex justify-center items-center' : 'flex items-center justify-between'}`}>
           {!collapsed && (
-            <div className={`flex items-center flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="flex items-center flex-1">
               <div className="relative flex-shrink-0">
                 <div className="absolute inset-0 bg-white/10 rounded-full blur-sm"></div>
                 <img
@@ -444,20 +444,17 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
                   className="relative h-11 w-auto object-contain rounded-lg p-1 bg-white/5 backdrop-blur-sm"
                 />
               </div>
-              <div className={`flex flex-col ${isRTL ? 'mr-5 items-end' : 'ml-5 items-start'}`}>
+              <div className={`flex flex-col ${isRTL ? 'mr-6 items-end' : 'ml-6 items-start'}`}>
                 <div className="flex items-center gap-2">
                   <span className={`text-lg font-bold leading-tight ${isRTL ? 'text-right' : 'text-left'}`}>
                     Qickroom
                   </span>
-                  {(role === 'hotel' || role === 'service') && (
-                    <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider bg-white/20 rounded-md" style={{ opacity: 0.9 }}>
-                      DEMO
-                    </span>
-                  )}
                 </div>
-                <span className={`text-sm font-medium leading-tight ${isRTL ? 'text-right' : 'text-left'}`} style={{ opacity: 0.75 }}>
-                  {role === 'service' ? t('platform.servicePlatform') : t('platform.hotelPlatform')}
-                </span>
+                {(role === 'hotel' || role === 'service') && (
+                  <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider bg-white/20 border border-white/40 rounded-md shadow-sm mt-1" style={{ opacity: 0.9 }}>
+                    {role === 'service' ? t('platform.servicePlatform') : t('platform.hotelPlatform')}
+                  </span>
+                )}
               </div>
             </div>
           )}
