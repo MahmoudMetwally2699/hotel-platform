@@ -14,7 +14,31 @@ const RoomOverview = () => {
   const [roomData, setRoomData] = useState({ rooms: [], totalRooms: 0, occupiedRooms: 0, roomsWithRequests: 0 });
   const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState('all');
-  const isRtl = i18n.dir() === 'rtl';
+  const titleText = t('hotelAdmin.roomOverview.title');
+  const subtitleText = t('hotelAdmin.roomOverview.subtitle');
+  const textLooksRtl = /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(
+    `${titleText} ${subtitleText}`
+  );
+  const storedLang =
+    typeof window !== 'undefined' && typeof window?.localStorage?.getItem === 'function'
+      ? window.localStorage.getItem('i18nextLng')
+      : '';
+  const resolvedLang =
+    (typeof i18n?.resolvedLanguage === 'string' && i18n.resolvedLanguage) ||
+    (typeof i18n?.language === 'string' && i18n.language) ||
+    (Array.isArray(i18n?.languages) && typeof i18n.languages[0] === 'string' && i18n.languages[0]) ||
+    (typeof storedLang === 'string' && storedLang) ||
+    '';
+  const normalizedLang = String(resolvedLang).toLowerCase();
+  const isRtl =
+    (typeof document !== 'undefined' && document?.documentElement?.dir === 'rtl') ||
+    (typeof document !== 'undefined' && document?.body?.dir === 'rtl') ||
+    (typeof i18n?.dir === 'function' && i18n.dir() === 'rtl') ||
+    normalizedLang.startsWith('ar') ||
+    normalizedLang.startsWith('fa') ||
+    normalizedLang.startsWith('he') ||
+    normalizedLang.startsWith('ur') ||
+    textLooksRtl;
 
   useEffect(() => {
     fetchRoomStatus();
@@ -144,26 +168,26 @@ const RoomOverview = () => {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* Header Bar (matches screenshot style) */}
       <div
         className="p-4 sm:p-5 border-b"
         style={{ borderColor: `${theme.primaryColor}55`, backgroundColor: '#fff' }}
       >
         <div className="flex items-center justify-between gap-4">
-          <div className={`flex items-center gap-3 ${isRtl ? 'order-2 text-right' : 'order-1 text-left'}`}>
+          <div className={`flex items-center gap-3 ${isRtl ? 'text-right' : 'text-left'}`}>
             <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${theme.primaryColor}12` }}>
               <svg className="w-6 h-6" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
             <div>
-              <div className="text-lg sm:text-xl font-bold" style={{ color: theme.primaryColor }}>{t('hotelAdmin.roomOverview.title')}</div>
-              <div className="text-sm text-modern-darkGray">{t('hotelAdmin.roomOverview.subtitle')}</div>
+              <div className="text-lg sm:text-xl font-bold" style={{ color: theme.primaryColor }}>{titleText}</div>
+              <div className="text-sm text-modern-darkGray">{subtitleText}</div>
             </div>
           </div>
 
-          <div className={`flex items-center gap-3 flex-wrap ${isRtl ? 'order-1' : 'order-2'}`}>
+          <div className="flex items-center gap-3 flex-wrap">
             {/* Type dropdown (existing functionality) */}
             <select
               value={selectedType}
@@ -195,7 +219,7 @@ const RoomOverview = () => {
 
       {/* Legend row */}
       <div className="px-4 sm:px-5 py-3 border-b border-gray-200">
-        <div className={`flex flex-wrap items-center gap-4 ${isRtl ? 'justify-end' : 'justify-start'}`}>
+        <div className={`flex flex-wrap items-center gap-4 ${isRtl ? 'justify-end flex-row-reverse' : 'justify-start'}`}>
           {statusLegend.map(status => (
             <div key={status.type} className="flex items-center gap-2">
               <span className={`inline-block w-2.5 h-2.5 rounded-full ${status.color}`}></span>

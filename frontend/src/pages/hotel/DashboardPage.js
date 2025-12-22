@@ -18,7 +18,25 @@ const DashboardPage = () => {
   const dashboardStats = useSelector(selectHotelStats);
   const isLoading = useSelector(selectHotelStatsLoading);
   const currency = useSelector(selectHotelCurrency);
-  const isRtl = i18n.dir() === 'rtl';
+  const storedLang =
+    typeof window !== 'undefined' && typeof window?.localStorage?.getItem === 'function'
+      ? window.localStorage.getItem('i18nextLng')
+      : '';
+  const resolvedLang =
+    (typeof i18n?.resolvedLanguage === 'string' && i18n.resolvedLanguage) ||
+    (typeof i18n?.language === 'string' && i18n.language) ||
+    (Array.isArray(i18n?.languages) && typeof i18n.languages[0] === 'string' && i18n.languages[0]) ||
+    (typeof storedLang === 'string' && storedLang) ||
+    '';
+  const normalizedLang = String(resolvedLang).toLowerCase();
+  const isRtl =
+    (typeof document !== 'undefined' && document?.documentElement?.dir === 'rtl') ||
+    (typeof document !== 'undefined' && document?.body?.dir === 'rtl') ||
+    (typeof i18n?.dir === 'function' && i18n.dir() === 'rtl') ||
+    normalizedLang.startsWith('ar') ||
+    normalizedLang.startsWith('fa') ||
+    normalizedLang.startsWith('he') ||
+    normalizedLang.startsWith('ur');
 
   useEffect(() => {
     dispatch(fetchHotelStats());
@@ -57,7 +75,7 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-transparent">
-      <div className="w-full space-y-6">
+      <div className="w-full">
         {isLoading ? (
           <div className="flex justify-center items-center h-96">
             <div className="relative">
@@ -66,12 +84,16 @@ const DashboardPage = () => {
             </div>
           </div>
         ) : (
-          <>
-            {/* Stats Grid (flat cards like screenshot) */}
+          <div className="max-w-6xl mx-auto w-full space-y-6">
+            {/* Header + Stats Grid (flat cards like screenshot) */}
             <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className={`${isRtl ? 'text-right' : 'text-left'}`}>
-                <h1 className="text-xl sm:text-2xl font-bold" style={{ color: theme.primaryColor }}>{t('hotelAdmin.dashboard.title')}</h1>
-                <p className="text-sm text-modern-darkGray mt-1">{t('hotelAdmin.dashboard.subtitle')}</p>
+              <div className={`flex flex-col ${isRtl ? 'items-start text-right' : 'items-start text-left'}`}>
+                <h1 className="text-xl sm:text-2xl font-bold" style={{ color: theme.primaryColor }}>
+                  {t('hotelAdmin.dashboard.title')}
+                </h1>
+                <p className={`text-sm text-modern-darkGray mt-2 ${isRtl ? 'mr-8' : 'ml-8'}`}>
+                  {t('hotelAdmin.dashboard.subtitle')}
+                </p>
               </div>
               <button
                 className="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-full border bg-white hover:shadow-sm transition"
@@ -168,45 +190,62 @@ const DashboardPage = () => {
             <RoomOverview />
 
             {/* Modern Recent Orders Table */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-50 overflow-hidden">
-              <div className="px-8 py-6" style={{ background: `linear-gradient(to right, ${theme.primaryColor}, ${theme.secondaryColor})` }}>
-                <h2 className="text-xl font-bold text-white flex items-center">
-                  <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-50 overflow-hidden w-full">
+              <div className="px-8 py-6 border-b border-gray-100 bg-white">
+                <h2 className="text-xl font-bold flex items-center" style={{ color: theme.primaryColor }}>
+                  <svg className={`w-6 h-6 ${isRtl ? 'ml-3' : 'mr-3'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   {t('hotelAdmin.dashboard.recentOrders.title')}
                 </h2>
-                <p className="text-blue-100 mt-1">{t('hotelAdmin.dashboard.recentOrders.subtitle')}</p>
+                <p className="text-sm text-modern-darkGray mt-1">{t('hotelAdmin.dashboard.recentOrders.subtitle')}</p>
               </div>
               {/* Desktop Table View */}
               <div className="hidden lg:block overflow-x-auto">
-                <table className="min-w-full">
-                  <thead className="bg-modern-gray">
+                <table className="min-w-full border-separate border-spacing-y-2">
+                  <thead className="bg-modern-gray/60">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider" style={{ color: theme.primaryColor }}>{t('hotelAdmin.dashboard.recentOrders.orderId')}</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider" style={{ color: theme.primaryColor }}>{t('hotelAdmin.dashboard.recentOrders.guest')}</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider" style={{ color: theme.primaryColor }}>{t('hotelAdmin.dashboard.recentOrders.service')}</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider" style={{ color: theme.primaryColor }}>{t('hotelAdmin.dashboard.recentOrders.provider')}</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider" style={{ color: theme.primaryColor }}>{t('hotelAdmin.dashboard.recentOrders.date')}</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider" style={{ color: theme.primaryColor }}>{t('hotelAdmin.dashboard.recentOrders.amount')}</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider" style={{ color: theme.primaryColor }}>{t('hotelAdmin.dashboard.recentOrders.status')}</th>
+                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                        {t('hotelAdmin.dashboard.recentOrders.orderId')}
+                      </th>
+                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                        {t('hotelAdmin.dashboard.recentOrders.guest')}
+                      </th>
+                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                        {t('hotelAdmin.dashboard.recentOrders.service')}
+                      </th>
+                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                        {t('hotelAdmin.dashboard.recentOrders.provider')}
+                      </th>
+                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                        {t('hotelAdmin.dashboard.recentOrders.date')}
+                      </th>
+                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                        {t('hotelAdmin.dashboard.recentOrders.amount')}
+                      </th>
+                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                        {t('hotelAdmin.dashboard.recentOrders.status')}
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-100">
+                  <tbody className="bg-transparent">
                     {recentOrders?.length > 0 ? (
                       recentOrders.map((order) => (
-                        <tr key={order._id} className="hover:bg-modern-gray transition-colors duration-200">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm font-bold px-3 py-1 rounded-full" style={{ color: theme.primaryColor, backgroundColor: `${theme.primaryColor}10` }}>
+                        <tr
+                          key={order._id}
+                          className="bg-white rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                        >
+                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
+                            <span className="text-sm font-bold px-3 py-1 rounded-full inline-flex items-center justify-center" style={{ color: theme.primaryColor, backgroundColor: `${theme.primaryColor}10` }}>
                               #{order.bookingId || order._id?.slice(-6)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
+                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
+                            <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
                               <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: theme.primaryColor }}>
                                 {order.guestId?.firstName?.charAt(0) || order.guestDetails?.firstName?.charAt(0) || 'G'}
                               </div>
-                              <div className="ml-4">
+                              <div className={isRtl ? 'text-right' : 'text-left'}>
                                 <div className="text-sm font-semibold text-gray-900">
                                   {(() => {
                                     const guest = order.guestId || order.guestDetails || order.guest || {};
@@ -237,15 +276,15 @@ const DashboardPage = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
                             <div className="flex flex-col">
                               <span className="text-sm font-medium text-gray-900 capitalize">
                                 {order.serviceId?.category || order.serviceDetails?.category || order.serviceType || t('hotelAdmin.dashboard.recentOrders.unknownService')}
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex flex-col">
+                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
+                            <div className={`flex flex-col ${isRtl ? 'items-end' : 'items-start'}`}>
                               <span className="text-sm text-modern-darkGray">
                                 {order.serviceProviderId?.businessName || t('hotelAdmin.dashboard.recentOrders.unknownProvider')}
                               </span>
@@ -261,12 +300,12 @@ const DashboardPage = () => {
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
                             <span className="text-sm text-modern-darkGray">
                               {new Date(order.createdAt || order.date).toLocaleDateString()}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
                             <span className="text-sm font-bold text-gray-900">
                               {formatPriceByLanguage(
                                 order.pricing?.totalAmount ||
@@ -279,7 +318,7 @@ const DashboardPage = () => {
                               )}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
                             <span
                               className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full
                                 ${(order.status === 'completed' || order.bookingStatus === 'completed') ? 'bg-green-100 text-green-800' :
@@ -312,7 +351,7 @@ const DashboardPage = () => {
                         </tr>
                       ))
                     ) : (
-                      <tr>
+                      <tr className="bg-white rounded-2xl shadow-sm">
                         <td colSpan={7} className="px-6 py-12 text-center">
                           <div className="text-modern-darkGray">
                             <svg className="mx-auto h-12 w-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -333,7 +372,7 @@ const DashboardPage = () => {
                   <div className="space-y-4 p-4">
                     {recentOrders.map((order) => (
                       <div key={order._id} className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <div className="flex items-center justify-between mb-3">
+                        <div className={`flex items-center justify-between mb-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
                           <span className="text-sm font-bold px-3 py-1 rounded-full" style={{ color: theme.primaryColor, backgroundColor: `${theme.primaryColor}10` }}>
                             #{order.bookingId || order._id?.slice(-6)}
                           </span>
@@ -350,11 +389,11 @@ const DashboardPage = () => {
                           </span>
                         </div>
 
-                        <div className="flex items-center mb-3">
+                        <div className={`flex items-center mb-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
                           <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: theme.primaryColor }}>
                             {order.guestId?.firstName?.charAt(0) || order.guestDetails?.firstName?.charAt(0) || 'G'}
                           </div>
-                          <div className="ml-3 flex-1">
+                          <div className={`${isRtl ? 'mr-3 text-right' : 'ml-3'} flex-1`}>
                             <div className="text-sm font-semibold text-gray-900">
                               {(() => {
                                 const guest = order.guestId || order.guestDetails || order.guest || {};
@@ -452,14 +491,15 @@ const DashboardPage = () => {
             </div>
 
             {/* Revenue Overview (match top analytics card style) */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden w-full">
               <div className="px-6 py-5 border-b border-gray-200">
-                <h2 className={`text-lg font-bold ${isRtl ? 'text-right' : 'text-left'}`} style={{ color: theme.primaryColor }}>
+                <h2 className="text-xl font-bold flex items-center" style={{ color: theme.primaryColor }}>
+                  <svg className={`w-6 h-6 ${isRtl ? 'ml-3' : 'mr-3'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
                   {t('hotelAdmin.revenue.title')}
                 </h2>
-                <p className={`text-sm text-modern-darkGray mt-1 ${isRtl ? 'text-right' : 'text-left'}`}>
-                  {t('hotelAdmin.revenue.subtitle')}
-                </p>
+                <p className={`text-sm text-modern-darkGray mt-1 ${isRtl ? 'pr-9' : 'pl-9'}`}>{t('hotelAdmin.revenue.subtitle')}</p>
               </div>
 
               <div className="p-6">
@@ -583,7 +623,7 @@ const DashboardPage = () => {
                 )}
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
