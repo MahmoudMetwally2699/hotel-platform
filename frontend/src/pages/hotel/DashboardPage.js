@@ -56,7 +56,7 @@ const DashboardPage = () => {
   }, [dashboardStats]);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: theme.backgroundColor }}>
+    <div className="min-h-screen bg-transparent">
       <div className="w-full space-y-6">
         {isLoading ? (
           <div className="flex justify-center items-center h-96">
@@ -86,15 +86,15 @@ const DashboardPage = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 justify-items-center">
               {/* Revenue Card */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm min-h-[220px] flex flex-col justify-between w-full max-w-[320px]">
                 <div className="flex items-start justify-between">
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${stats.revenue.trend > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     {stats.revenue.trend > 0 ? '+' : ''}{stats.revenue.trend}%
                   </span>
-                  <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${theme.primaryColor}12` }}>
-                    <svg className="w-6 h-6" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center justify-center">
+                    <svg className="w-12 h-12" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
@@ -107,13 +107,13 @@ const DashboardPage = () => {
               </div>
 
               {/* Bookings Card */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm min-h-[220px] flex flex-col justify-between w-full max-w-[320px]">
                 <div className="flex items-start justify-between">
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${stats.bookings.trend > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     {stats.bookings.trend > 0 ? '+' : ''}{stats.bookings.trend}%
                   </span>
-                  <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${theme.primaryColor}12` }}>
-                    <svg className="w-6 h-6" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center justify-center">
+                    <svg className="w-9 h-9" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                   </div>
@@ -126,13 +126,13 @@ const DashboardPage = () => {
               </div>
 
               {/* Services Card */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm min-h-[220px] flex flex-col justify-between w-full max-w-[320px]">
                 <div className="flex items-start justify-between">
                   <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: `${theme.primaryColor}12`, color: theme.primaryColor }}>
                     {stats.services.categories} {t('hotelAdmin.dashboard.stats.categories')}
                   </span>
-                  <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${theme.primaryColor}12` }}>
-                    <svg className="w-6 h-6" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center justify-center">
+                    <svg className="w-9 h-9" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
@@ -145,13 +145,13 @@ const DashboardPage = () => {
               </div>
 
               {/* Service Providers Card */}
-              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm min-h-[220px] flex flex-col justify-between w-full max-w-[320px]">
                 <div className="flex items-start justify-between">
                   <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">
                     {stats.serviceProviders.active} {t('hotelAdmin.dashboard.stats.active')}
                   </span>
-                  <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${theme.primaryColor}12` }}>
-                    <svg className="w-6 h-6" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex items-center justify-center">
+                    <svg className="w-9 h-9" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
@@ -451,68 +451,76 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            {/* Modern Revenue Overview */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-50 overflow-hidden">
-              <div className="px-8 py-6" style={{ background: `linear-gradient(to right, ${theme.secondaryColor}, ${theme.primaryColor})` }}>
-                <h2 className="text-xl font-bold text-white flex items-center">
-                  <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
+            {/* Revenue Overview (match top analytics card style) */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-6 py-5 border-b border-gray-200">
+                <h2 className={`text-lg font-bold ${isRtl ? 'text-right' : 'text-left'}`} style={{ color: theme.primaryColor }}>
                   {t('hotelAdmin.revenue.title')}
                 </h2>
-                <p className="text-blue-100 mt-1">{t('hotelAdmin.revenue.subtitle')}</p>
+                <p className={`text-sm text-modern-darkGray mt-1 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  {t('hotelAdmin.revenue.subtitle')}
+                </p>
               </div>
 
-              <div className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center mb-8">
                   {/* Hotel Commission Card */}
-                  <div className="relative p-6 rounded-2xl text-white overflow-hidden" style={{ backgroundColor: theme.primaryColor }}>
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-6 -translate-y-6"></div>
-                    <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-4">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm min-h-[220px] flex flex-col justify-between w-full max-w-[320px]">
+                    <div className="flex items-start justify-between">
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: `${theme.primaryColor}12`, color: theme.primaryColor }}>
+                        {t('hotelAdmin.revenue.stats.hotelCommission')}
+                      </span>
+                      <div className="flex items-center justify-center">
+                        <svg className="w-12 h-12" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                         </svg>
                       </div>
-                      <h3 className="text-sm font-medium opacity-90 mb-2">{t('hotelAdmin.revenue.stats.hotelCommission')}</h3>
-                      <p className="text-2xl font-bold mb-2">
+                    </div>
+                    <div className={`${isRtl ? 'text-right' : 'text-left'} mt-4`}>
+                      <div className="text-sm text-modern-darkGray font-semibold">{t('hotelAdmin.revenue.stats.totalRevenue')}</div>
+                      <div className="text-2xl font-bold mt-1" style={{ color: theme.primaryColor }}>
                         {formatPriceByLanguage(dashboardStats?.revenueStats?.[0]?.hotelEarnings || 0, i18n.language, currency)}
-                      </p>
-                      <p className="text-sm opacity-75">{t('hotelAdmin.revenue.stats.totalRevenue')}</p>
+                      </div>
                     </div>
                   </div>
 
                   {/* Total Revenue Card */}
-                  <div className="relative p-6 rounded-2xl text-white overflow-hidden" style={{ backgroundColor: theme.secondaryColor }}>
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-6 -translate-y-6"></div>
-                    <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-4">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm min-h-[220px] flex flex-col justify-between w-full max-w-[320px]">
+                    <div className="flex items-start justify-between">
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: `${theme.primaryColor}12`, color: theme.primaryColor }}>
+                        {t('hotelAdmin.revenue.stats.totalRevenue')}
+                      </span>
+                      <div className="flex items-center justify-center">
+                        <svg className="w-12 h-12" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
                       </div>
-                      <h3 className="text-sm font-medium opacity-90 mb-2">{t('hotelAdmin.revenue.stats.totalRevenue')}</h3>
-                      <p className="text-2xl font-bold mb-2">
+                    </div>
+                    <div className={`${isRtl ? 'text-right' : 'text-left'} mt-4`}>
+                      <div className="text-sm text-modern-darkGray font-semibold">{t('hotelAdmin.revenue.stats.totalBookings')}</div>
+                      <div className="text-2xl font-bold mt-1" style={{ color: theme.primaryColor }}>
                         {formatPriceByLanguage(dashboardStats?.revenueStats?.[0]?.totalRevenue || 0, i18n.language, currency)}
-                      </p>
-                      <p className="text-sm opacity-75">{t('hotelAdmin.revenue.stats.totalBookings')}</p>
+                      </div>
                     </div>
                   </div>
 
                   {/* Average Order Value Card */}
-                  <div className="relative p-6 rounded-2xl text-white overflow-hidden" style={{ backgroundColor: theme.primaryColor }}>
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-10 rounded-full transform translate-x-6 -translate-y-6"></div>
-                    <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-4">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm min-h-[220px] flex flex-col justify-between w-full max-w-[320px]">
+                    <div className="flex items-start justify-between">
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: `${theme.primaryColor}12`, color: theme.primaryColor }}>
+                        {t('hotelAdmin.revenue.stats.averageOrder')}
+                      </span>
+                      <div className="flex items-center justify-center">
+                        <svg className="w-12 h-12" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 8h6m-5 0a3 3 0 110 6H9l3 3-3-3h1m1 4h6m-7-7h7m-7 0V8a3 3 0 013-3h3a3 3 0 013 3v8a3 3 0 01-3 3h-3a3 3 0 01-3-3z" />
                         </svg>
                       </div>
-                      <h3 className="text-sm font-medium opacity-90 mb-2">{t('hotelAdmin.revenue.stats.averageOrder')}</h3>
-                      <p className="text-2xl font-bold mb-2">
+                    </div>
+                    <div className={`${isRtl ? 'text-right' : 'text-left'} mt-4`}>
+                      <div className="text-sm text-modern-darkGray font-semibold">{t('hotelAdmin.revenue.stats.totalBookings')}</div>
+                      <div className="text-2xl font-bold mt-1" style={{ color: theme.primaryColor }}>
                         {formatPriceByLanguage(dashboardStats?.revenueStats?.[0]?.averageOrderValue || 0, i18n.language, currency)}
-                      </p>
-                      <p className="text-sm opacity-75">{t('hotelAdmin.revenue.stats.totalBookings')}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
