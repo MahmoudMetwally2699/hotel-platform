@@ -29,7 +29,7 @@ import useRTL from '../../hooks/useRTL';
 import { formatPriceByLanguage, formatTotalWithSar } from '../../utils/currency';
 
 const RestaurantBookingPage = () => {
-  const { hotelId } = useParams();
+  const { hotelId, serviceId, providerId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
@@ -78,27 +78,41 @@ const RestaurantBookingPage = () => {
 
           const servicesResponse = await apiClient.get(`/client/hotels/${hotelId}/services/dining/items`);
           const responseData = servicesResponse.data.data;
-          const restaurantServices = responseData?.services || [];
+          let restaurantServices = responseData?.services || [];
+
+          // If providerId is provided, filter to services from that provider
+          if (providerId && restaurantServices.length > 0) {
+            restaurantServices = restaurantServices.filter(s =>
+              s.providerId?._id === providerId || s.providerId === providerId
+            );
+          }
+          // If serviceId is provided, filter to that specific service
+          else if (serviceId && restaurantServices.length > 0) {
+            const targetService = restaurantServices.find(s => s._id === serviceId);
+            if (targetService) {
+              restaurantServices = [targetService];
+            }
+          }
 
           if (restaurantServices && restaurantServices.length > 0) {
             setServices(restaurantServices);
             setService(restaurantServices[0]);
           } else {
             toast.error(t('errors.loadServices'));
-            navigate(`/hotels/${hotelId}/categories`);
+            navigate(`/hotels/${hotelId}/services/dining/booking`);
             return;
           }
         }
       } catch (error) {
         toast.error(t('errors.loadServices'));
-        navigate(`/hotels/${hotelId}/categories`);
+        navigate(`/hotels/${hotelId}/services/dining/booking`);
       } finally {
         setLoading(false);
       }
     };
 
     fetchServiceDetails();
-  }, [hotelId, passedService, passedHotel, navigate, t]);
+  }, [hotelId, serviceId, providerId, passedService, passedHotel, navigate, t]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -280,7 +294,7 @@ const RestaurantBookingPage = () => {
         <div className="relative w-full px-2 sm:px-3 lg:px-4 pt-6 pb-8">
           {/* Back Button - Modern Style */}
           <button
-            onClick={() => navigate(`/hotels/${hotelId}/categories`)}
+            onClick={() => navigate(`/hotels/${hotelId}/services/dining/booking`)}
             className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#3B5787] bg-white/80 backdrop-blur-sm hover:bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 mb-6"
           >
             <FaArrowLeft className="mr-2 text-xs" />

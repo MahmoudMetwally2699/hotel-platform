@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchServiceProviders, selectServiceProviders, selectServiceProviderLoading, setServiceProviderMarkup } from '../../redux/slices/serviceSlice';
@@ -36,7 +36,20 @@ const ServiceProvidersPage = () => {
   const [licenseExpiry, setLicenseExpiry] = useState('');
   const [isSavingLicense, setIsSavingLicense] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState(null);
-  const [dropdownPosition, setDropdownPosition] = useState({});
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0, isAbove: false });
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdownId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Available service categories (only the specified ones)
   const serviceCategories = [
@@ -246,7 +259,7 @@ const ServiceProvidersPage = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: theme.backgroundColor }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: theme.backgroundColor }}>
       {/* Modern Header Section */}
       <div className="bg-white shadow-lg border-b border-gray-100">
         <div className="w-full px-6 py-8">
@@ -344,8 +357,9 @@ const ServiceProvidersPage = () => {
           ) : (
             <>
               {/* Desktop Table View */}
-              <div className="hidden lg:block overflow-visible">
-                <div className="min-w-full inline-block align-middle">
+              <div className="hidden lg:block overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <style>{`.sp-hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+                <div className="min-w-full inline-block align-middle sp-hide-scrollbar">
                   <table className="min-w-full divide-y divide-gray-200">                    <thead style={{ backgroundColor: theme.backgroundColor }}>
                       <tr>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[200px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.businessName')}</th>
@@ -353,7 +367,7 @@ const ServiceProvidersPage = () => {
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[180px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.contact')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.status')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.markup')}</th>
-                        <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.actions')}</th>
+                        <th className="px-4 py-4 text-center text-xs font-bold uppercase tracking-wider min-w-[120px] sticky right-0 z-10 shadow-sm" style={{ color: theme.primaryColor, backgroundColor: theme.backgroundColor }}>{t('hotelAdmin.serviceProviders.table.actions')}</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
@@ -430,7 +444,7 @@ const ServiceProvidersPage = () => {
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-4 text-center relative">
+                          <td className="px-4 py-4 text-center">
                             <button
                               onClick={(e) => {
                                 if (openDropdownId === provider._id) {
@@ -438,11 +452,16 @@ const ServiceProvidersPage = () => {
                                 } else {
                                   const rect = e.currentTarget.getBoundingClientRect();
                                   const spaceBelow = window.innerHeight - rect.bottom;
-                                  const spaceAbove = rect.top;
-                                  const dropdownHeight = 280;
+                                  const dropdownHeight = 280; // Approximate dropdown height
+
+                                  // Calculate position
+                                  // If space below is not enough, show above
+                                  const showAbove = spaceBelow < dropdownHeight;
 
                                   setDropdownPosition({
-                                    [provider._id]: spaceBelow < dropdownHeight && spaceAbove > spaceBelow ? 'up' : 'down'
+                                    top: showAbove ? rect.top - 8 : rect.bottom + 8,
+                                    right: window.innerWidth - rect.right,
+                                    isAbove: showAbove
                                   });
                                   setOpenDropdownId(provider._id);
                                 }
@@ -458,74 +477,72 @@ const ServiceProvidersPage = () => {
                             </button>
 
                             {openDropdownId === provider._id && (
-                              <>
-                                {/* Backdrop to close dropdown when clicking outside */}
-                                <div
-                                  className="fixed inset-0 z-[90]"
-                                  onClick={() => setOpenDropdownId(null)}
-                                />
-                                {/* Dropdown menu */}
-                                <div className={`absolute right-0 z-[100] w-56 origin-top-right rounded-lg bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none ${
-                                  dropdownPosition[provider._id] === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
-                                }`}>
-                                    <div className="py-1">
-                                      {provider.providerType !== 'internal' && (
-                                        <button
-                                          onClick={() => {
-                                            handleSetMarkup(provider);
-                                            setOpenDropdownId(null);
-                                          }}
-                                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-3 transition-colors duration-150"
-                                          onMouseEnter={(e) => e.currentTarget.style.color = theme.primaryColor}
-                                          onMouseLeave={(e) => e.currentTarget.style.color = '#374151'}
-                                        >
-                                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.primaryColor }}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                          </svg>
-                                          <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.setMarkup')}</span>
-                                        </button>
-                                      )}
+                              <div
+                                ref={dropdownRef}
+                                className="fixed w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] py-1 max-h-[400px] overflow-y-auto"
+                                style={{
+                                  top: dropdownPosition.isAbove ? 'auto' : dropdownPosition.top,
+                                  bottom: dropdownPosition.isAbove ? (window.innerHeight - dropdownPosition.top) : 'auto',
+                                  right: dropdownPosition.right
+                                }}
+                              >
+                                  <div className="py-1">
+                                    {provider.providerType !== 'internal' && (
                                       <button
                                         onClick={() => {
-                                          handleManageCategories(provider);
+                                          handleSetMarkup(provider);
                                           setOpenDropdownId(null);
                                         }}
-                                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-[#67BAE0]/10 hover:text-[#3B5787] flex items-center gap-3 transition-colors duration-150"
+                                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-3 transition-colors duration-150"
+                                        onMouseEnter={(e) => e.currentTarget.style.color = theme.primaryColor}
+                                        onMouseLeave={(e) => e.currentTarget.style.color = '#374151'}
                                       >
-                                        <svg className="w-5 h-5 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.primaryColor }}>
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.manageServices')}</span>
+                                        <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.setMarkup')}</span>
                                       </button>
-                                      <button
-                                        onClick={() => {
-                                          handleResetPassword(provider);
-                                          setOpenDropdownId(null);
-                                        }}
-                                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 flex items-center gap-3 transition-colors duration-150"
-                                      >
-                                        <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                        </svg>
-                                        <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.resetPassword')}</span>
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          handleUpdateLicense(provider);
-                                          setOpenDropdownId(null);
-                                        }}
-                                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition-colors duration-150"
-                                      >
-                                        <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
-                                        <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.updateLicense')}</span>
-                                      </button>
-                                    </div>
+                                    )}
+                                    <button
+                                      onClick={() => {
+                                        handleManageCategories(provider);
+                                        setOpenDropdownId(null);
+                                      }}
+                                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-[#67BAE0]/10 hover:text-[#3B5787] flex items-center gap-3 transition-colors duration-150"
+                                    >
+                                      <svg className="w-5 h-5 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                      </svg>
+                                      <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.manageServices')}</span>
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        handleResetPassword(provider);
+                                        setOpenDropdownId(null);
+                                      }}
+                                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 flex items-center gap-3 transition-colors duration-150"
+                                    >
+                                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                      </svg>
+                                      <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.resetPassword')}</span>
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        handleUpdateLicense(provider);
+                                        setOpenDropdownId(null);
+                                      }}
+                                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition-colors duration-150"
+                                    >
+                                      <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                      </svg>
+                                      <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.updateLicense')}</span>
+                                    </button>
                                   </div>
-                                </>
-                              )}
-                            </td>
+                                </div>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -610,11 +627,16 @@ const ServiceProvidersPage = () => {
                             } else {
                               const rect = e.currentTarget.getBoundingClientRect();
                               const spaceBelow = window.innerHeight - rect.bottom;
-                              const spaceAbove = rect.top;
-                              const dropdownHeight = 280;
+                              const dropdownHeight = 280; // Approximate dropdown height
+
+                              // Calculate position
+                              // If space below is not enough, show above
+                              const showAbove = spaceBelow < dropdownHeight;
 
                               setDropdownPosition({
-                                [provider._id]: spaceBelow < dropdownHeight && spaceAbove > spaceBelow ? 'up' : 'down'
+                                top: showAbove ? rect.top - 8 : rect.bottom + 8,
+                                right: window.innerWidth - rect.right,
+                                isAbove: showAbove
                               });
                               setOpenDropdownId(provider._id);
                             }
@@ -630,70 +652,68 @@ const ServiceProvidersPage = () => {
                         </button>
 
                         {openDropdownId === provider._id && (
-                          <>
-                            {/* Backdrop to close dropdown when clicking outside */}
-                            <div
-                              className="fixed inset-0 z-[90]"
-                              onClick={() => setOpenDropdownId(null)}
-                            />
-                            {/* Dropdown menu */}
-                            <div className={`absolute left-0 right-0 z-[100] w-full rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none max-h-[400px] overflow-y-auto ${
-                              dropdownPosition[provider._id] === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
-                            }`}>
-                              <div className="py-1">
-                                {provider.providerType !== 'internal' && (
+                          <div
+                            ref={dropdownRef}
+                            className="fixed w-[calc(100%-4rem)] max-w-sm bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] py-1 max-h-[400px] overflow-y-auto"
+                            style={{
+                              top: dropdownPosition.isAbove ? 'auto' : dropdownPosition.top,
+                              bottom: dropdownPosition.isAbove ? (window.innerHeight - dropdownPosition.top) : 'auto',
+                              right: dropdownPosition.right
+                            }}
+                          >
+                                <div className="py-1">
+                                  {provider.providerType !== 'internal' && (
+                                    <button
+                                      onClick={() => {
+                                        handleSetMarkup(provider);
+                                        setOpenDropdownId(null);
+                                      }}
+                                      className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-modern-blue flex items-center gap-3 transition-colors duration-150"
+                                    >
+                                      <svg className="w-5 h-5 text-modern-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                      <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.setMarkup')}</span>
+                                    </button>
+                                  )}
                                   <button
                                     onClick={() => {
-                                      handleSetMarkup(provider);
+                                      handleManageCategories(provider);
                                       setOpenDropdownId(null);
                                     }}
-                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-modern-blue flex items-center gap-3 transition-colors duration-150"
+                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-[#67BAE0]/10 hover:text-[#3B5787] flex items-center gap-3 transition-colors duration-150"
                                   >
-                                    <svg className="w-5 h-5 text-modern-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    <svg className="w-5 h-5 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                     </svg>
-                                    <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.setMarkup')}</span>
+                                    <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.manageServices')}</span>
                                   </button>
-                                )}
-                                <button
-                                  onClick={() => {
-                                    handleManageCategories(provider);
-                                    setOpenDropdownId(null);
-                                  }}
-                                  className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-[#67BAE0]/10 hover:text-[#3B5787] flex items-center gap-3 transition-colors duration-150"
-                                >
-                                  <svg className="w-5 h-5 text-[#3B5787]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                  </svg>
-                                  <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.manageServices')}</span>
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    handleResetPassword(provider);
-                                    setOpenDropdownId(null);
-                                  }}
-                                  className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 flex items-center gap-3 transition-colors duration-150"
-                                >
-                                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                  </svg>
-                                  <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.resetPassword')}</span>
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    handleUpdateLicense(provider);
-                                    setOpenDropdownId(null);
-                                  }}
-                                  className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition-colors duration-150"
-                                >
-                                  <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                  </svg>
-                                  <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.updateLicense')}</span>
-                                </button>
-                              </div>
-                            </div>
-                          </>
+                                  <button
+                                    onClick={() => {
+                                      handleResetPassword(provider);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 flex items-center gap-3 transition-colors duration-150"
+                                  >
+                                    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                    </svg>
+                                    <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.resetPassword')}</span>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleUpdateLicense(provider);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 transition-colors duration-150"
+                                  >
+                                    <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <span className="font-medium">{t('hotelAdmin.serviceProviders.actions.updateLicense')}</span>
+                                  </button>
+                                </div>
+                          </div>
                         )}
                       </div>
                     </div>

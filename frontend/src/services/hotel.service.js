@@ -285,6 +285,20 @@ class HotelService {
   }
 
   /**
+   * Get transportation booking details (for hotel admin)
+   * @param {string} id - Transportation Booking ID
+   * @returns {Promise} - Response from API
+   */
+  async getTransportationBookingDetails(id) {
+    try {
+      const response = await apiClient.get(`/hotel/transportation-bookings/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Update booking status (for hotel admin)
    * @param {string} id - Booking ID
    * @param {string} status - New booking status

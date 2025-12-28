@@ -137,7 +137,19 @@ const userSchema = new mongoose.Schema({
       return this.role === 'guest';
     },
     default: 'Direct'
-  },  checkInDate: {
+  },
+
+  // Reservation Type for meal plan
+  reservationType: {
+    type: String,
+    enum: {
+      values: ['RO', 'BB', 'FB', 'All'],
+      message: 'Reservation type must be one of: RO (Room Only), BB (Bed & Breakfast), FB (Full Board), All (All Inclusive)'
+    },
+    default: 'BB'
+  },
+
+  checkInDate: {
     type: Date,
     required: function() {
       // Only require when making actual bookings

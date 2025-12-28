@@ -116,7 +116,7 @@ const DashboardPage = () => {
                     {stats.revenue.trend > 0 ? '+' : ''}{stats.revenue.trend}%
                   </span>
                   <div className="flex items-center justify-center">
-                    <div className="w-12 h-12" style={{ backgroundColor: theme.primaryColor, maskImage: 'url(/icons/currency-dollar.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/currency-dollar.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>
+                    <div className="w-10 h-10" style={{ backgroundColor: theme.primaryColor, maskImage: 'url(/icons/currency-dollar.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/currency-dollar.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>
                   </div>
                 </div>
                 <div className={`${isRtl ? 'text-right' : 'text-left'} mt-4`}>
@@ -133,7 +133,7 @@ const DashboardPage = () => {
                     {stats.bookings.trend > 0 ? '+' : ''}{stats.bookings.trend}%
                   </span>
                   <div className="flex items-center justify-center">
-                    <div className="w-9 h-9" style={{ backgroundColor: theme.primaryColor, maskImage: 'url(/icons/clipboard-list.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/clipboard-list.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>
+                    <div className="w-10 h-10" style={{ backgroundColor: theme.primaryColor, maskImage: 'url(/icons/clipboard-list.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/clipboard-list.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>
                   </div>
                 </div>
                 <div className={`${isRtl ? 'text-right' : 'text-left'} mt-4`}>
@@ -150,7 +150,7 @@ const DashboardPage = () => {
                     {stats.services.categories} {t('hotelAdmin.dashboard.stats.categories')}
                   </span>
                   <div className="flex items-center justify-center">
-                    <div className="w-9 h-9" style={{ backgroundColor: theme.primaryColor, maskImage: 'url(/icons/office-building.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/office-building.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>
+                    <div className="w-10 h-10" style={{ backgroundColor: theme.primaryColor, maskImage: 'url(/icons/office-building.svg)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/office-building.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>
                   </div>
                 </div>
                 <div className={`${isRtl ? 'text-right' : 'text-left'} mt-4`}>
@@ -167,7 +167,7 @@ const DashboardPage = () => {
                     {stats.serviceProviders.active} {t('hotelAdmin.dashboard.stats.active')}
                   </span>
                   <div className="flex items-center justify-center">
-                    <div className="w-9 h-9" style={{ backgroundColor: theme.primaryColor, maskImage: 'url(/icons/user-group.png)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/user-group.png)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>
+                    <div className="w-10 h-10" style={{ backgroundColor: theme.primaryColor, maskImage: 'url(/icons/user-group.png)', maskSize: 'contain', maskRepeat: 'no-repeat', maskPosition: 'center', WebkitMaskImage: 'url(/icons/user-group.png)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat', WebkitMaskPosition: 'center' }}></div>
                   </div>
                 </div>
                 <div className={`${isRtl ? 'text-right' : 'text-left'} mt-4`}>

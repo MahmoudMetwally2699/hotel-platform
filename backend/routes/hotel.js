@@ -2115,7 +2115,7 @@ router.patch('/guests/:guestId/status', catchAsync(async (req, res, next) => {
  */
 router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
   const { guestId } = req.params;
-  const { roomNumber, checkInDate, checkOutDate, isActive } = req.body;
+  const { roomNumber, checkInDate, checkOutDate, isActive, channel, reservationType } = req.body;
   const hotelId = req.user.hotelId;
 
   // Find the guest
@@ -2178,6 +2178,8 @@ router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
   if (checkInDate !== undefined) updateData.checkInDate = checkInDate;
   if (checkOutDate !== undefined) updateData.checkOutDate = checkOutDate;
   if (isActive !== undefined) updateData.isActive = isActive;
+  if (reservationType !== undefined) updateData.reservationType = reservationType;
+  if (channel !== undefined) updateData.channel = channel;
 
   // Update checkout time if checkout date is changed
   if (checkOutDate) {
@@ -2242,8 +2244,44 @@ router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
   const updatedGuest = await User.findByIdAndUpdate(
     guestId,
     updateData,
-    { new: true, select: '-password -passwordChangedAt -passwordResetToken -passwordResetExpires' }
+    { new: true, runValidators: true, select: '-password -passwordChangedAt -passwordResetToken -passwordResetExpires' }
   );
+
+  // If channel changed, update loyalty tier
+  if (channel && channel !== guest.channel) {
+    try {
+      const member = await LoyaltyMember.findOne({
+        guest: guestId,
+        hotel: hotelId
+      });
+
+      if (member) {
+        const LoyaltyProgram = require('../models/LoyaltyProgram');
+        const newProgram = await LoyaltyProgram.findOne({
+          hotel: hotelId,
+          channel: channel,
+          isActive: true
+        });
+
+        if (newProgram) {
+          const { determineTier } = require('../utils/loyaltyHelper');
+          const newTier = determineTier(member.totalPoints, newProgram.tierConfiguration);
+
+          if (newTier && newTier.name !== member.currentTier) {
+            const oldChannel = guest.channel;
+            member.updateTier(newTier.name, `Channel changed from ${oldChannel} to ${channel}`);
+            member.calculateTierProgress(newProgram.tierConfiguration);
+            await member.save();
+
+            logger.info(`Updated loyalty tier for guest ${guest.email} after channel change: ${member.currentTier}`);
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('Error updating loyalty tier after channel change:', error);
+      // Don't fail the request if loyalty update fails
+    }
+  }
 
   // Log the action
   let actionMessage = `Hotel admin ${req.user.email} updated guest ${guest.email} information`;
@@ -3975,6 +4013,64 @@ router.get('/qr/info', catchAsync(async (req, res, next) => {
   } catch (error) {
     logger.error('QR info retrieval failed:', error);
     return next(new AppError('Failed to get QR information', 500));
+  }
+}));
+
+/**
+ * @route   GET /api/hotel/bookings/:id
+ * @desc    Get a single booking by ID with full details
+ * @access  Private/HotelAdmin
+ */
+router.get('/bookings/:id', protect, restrictTo('hotel'), catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const bookingId = req.params.id;
+
+  try {
+    const booking = await Booking.findOne({ _id: bookingId, hotelId })
+      .populate('guestId', 'firstName lastName email phone')
+      .populate('serviceId', 'name category description')
+      .populate('serviceProviderId', 'businessName providerType');
+
+    if (!booking) {
+      return next(new AppError('Booking not found', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: booking
+    });
+  } catch (error) {
+    logger.error('Error fetching booking details:', error);
+    return next(new AppError('Failed to fetch booking details', 500));
+  }
+}));
+
+/**
+ * @route   GET /api/hotel/transportation-bookings/:id
+ * @desc    Get a single transportation booking by ID with full details
+ * @access  Private/HotelAdmin
+ */
+router.get('/transportation-bookings/:id', protect, restrictTo('hotel'), catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const bookingId = req.params.id;
+
+  try {
+    const booking = await TransportationBooking.findOne({ _id: bookingId, hotelId })
+      .populate('guestId', 'firstName lastName email phone')
+      .populate('serviceId', 'name category description')
+      .populate('serviceProviderId', 'businessName providerType');
+
+    if (!booking) {
+      return next(new AppError('Transportation booking not found', 404));
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: booking
+    });
+  } catch (error) {
+    logger.error('Error fetching transportation booking details:', error);
+    return next(new AppError('Failed to fetch transportation booking details', 500));
   }
 }));
 

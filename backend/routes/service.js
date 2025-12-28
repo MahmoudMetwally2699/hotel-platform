@@ -365,9 +365,12 @@ router.put('/services/:id', catchAsync(async (req, res, next) => {
 
   // Currency is managed by pre-save hook, don't update manually
 
-  // Update images if provided
+  // Update images if provided - save to media.images (not root images)
   if (req.body.images) {
-    service.images = req.body.images;
+    if (!service.media) {
+      service.media = { images: [], videos: [], documents: [] };
+    }
+    service.media.images = req.body.images;
   }
 
   await service.save();

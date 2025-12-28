@@ -130,6 +130,11 @@ const RestaurantServiceCreator = ({ onBack }) => {
     mealTypes: []
   });
 
+  // Restaurant image state
+  const [restaurantImage, setRestaurantImage] = useState(null);
+  const [restaurantImagePreview, setRestaurantImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   // Menu items state
   const [menuItems, setMenuItems] = useState([]);
 
@@ -146,11 +151,124 @@ const RestaurantServiceCreator = ({ onBack }) => {
   // Service menu item editing state
   const [editingServiceMenuItem, setEditingServiceMenuItem] = useState(null);
 
+  // Restaurant settings state (for Settings tab)
+  const [restaurantName, setRestaurantName] = useState('');
+  const [restaurantDescription, setRestaurantDescription] = useState('');
+  const [infoChanged, setInfoChanged] = useState(false);
+  const WORD_LIMIT = 100;
+
+  /**
+   * Handle restaurant image upload to Cloudinary
+   */
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error(t('serviceProvider.restaurant.messages.invalidImageType') || 'Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t('serviceProvider.restaurant.messages.imageTooLarge') || 'Image must be less than 5MB');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+
+      // Create local preview immediately
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setRestaurantImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+
+      // Check if Cloudinary is properly configured
+      const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+
+      console.log('Cloudinary Config:', { cloudName, uploadPreset });
+
+      if (!cloudName || !uploadPreset) {
+        console.warn('Cloudinary not configured. cloudName:', cloudName, 'preset:', uploadPreset);
+        toast.error('Cloudinary not configured. Please check your .env file and restart the server.');
+        // Use blob URL as fallback
+        const localUrl = URL.createObjectURL(file);
+        setRestaurantImage(localUrl);
+        setUploadingImage(false);
+        return;
+      }
+
+      // Prepare form data for Cloudinary upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', uploadPreset);
+      formData.append('folder', 'hotel-platform/restaurants');
+
+      console.log('Uploading to Cloudinary...');
+
+      // Upload to Cloudinary
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Cloudinary upload error:', errorData);
+        toast.error(`Upload failed: ${errorData.error?.message || 'Unknown error'}`);
+
+        // Fallback to local blob URL
+        const localUrl = URL.createObjectURL(file);
+        setRestaurantImage(localUrl);
+        setUploadingImage(false);
+        return;
+      }
+
+      const data = await response.json();
+      console.log('Cloudinary upload success:', data.secure_url);
+      setRestaurantImage(data.secure_url);
+      toast.success(t('serviceProvider.restaurant.messages.imageUploaded') || 'Image uploaded successfully!');
+    } catch (error) {
+      console.error('Image upload error:', error);
+      toast.error(`Upload error: ${error.message}`);
+      // Fallback to local blob URL
+      const localUrl = URL.createObjectURL(file);
+      setRestaurantImage(localUrl);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  /**
+   * Remove restaurant image
+   */
+  const removeRestaurantImage = () => {
+    setRestaurantImage(null);
+    setRestaurantImagePreview(null);
+  };
+
   useEffect(() => {
-    if (activeTab === 'manage') {
+    if (activeTab === 'manage' || activeTab === 'settings') {
       fetchExistingServices();
     }
   }, [activeTab]);
+
+  // Initialize restaurant settings from existing services
+  useEffect(() => {
+    if (existingServices.length > 0) {
+      const firstService = existingServices[0];
+      setRestaurantName(firstService.providerId?.businessName || firstService.name || '');
+      setRestaurantDescription(firstService.description || '');
+      setInfoChanged(false);
+    }
+  }, [existingServices]);
 
   // Fetch services on mount to detect currency
   useEffect(() => {
@@ -418,12 +536,16 @@ const RestaurantServiceCreator = ({ onBack }) => {
             unit: 'minutes'
           }
         },
+        // Include restaurant image in media
+        media: {
+          images: restaurantImage ? [restaurantImage] : []
+        },
         menuItems: menuItems.map(item => ({
           name: item.name,
           category: item.category,
           description: item.description,
           price: item.price,
-          imageUrl: item.imageUrl, // Add the missing imageUrl field!
+          imageUrl: item.imageUrl,
           isAvailable: item.isAvailable,
           allergens: item.allergens || [],
           spicyLevel: item.spicyLevel || 'normal',
@@ -442,6 +564,8 @@ const RestaurantServiceCreator = ({ onBack }) => {
         // Reset form
         setServiceDetails({ name: '', description: '', cuisineType: '', mealTypes: [] });
         setMenuItems([]);
+        setRestaurantImage(null);
+        setRestaurantImagePreview(null);
         // Refresh the services list to show the new service
         await fetchExistingServices();
         // Switch to manage tab to see the created service
@@ -1216,6 +1340,317 @@ const RestaurantServiceCreator = ({ onBack }) => {
     );
   };
 
+  /**
+   * Save restaurant image to all existing services
+   */
+  const saveRestaurantImage = async () => {
+    console.log('saveRestaurantImage called. restaurantImage:', restaurantImage);
+    console.log('existingServices:', existingServices);
+
+    if (!restaurantImage) {
+      toast.error(t('serviceProvider.restaurant.messages.noImageToSave') || 'Please upload an image first');
+      return;
+    }
+
+    if (existingServices.length === 0) {
+      toast.error(t('serviceProvider.restaurant.messages.noServicesToUpdate') || 'No services found. Create a service first.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Update all dining services with the new image
+      for (const service of existingServices) {
+        console.log(`Updating service ${service._id} with image:`, restaurantImage);
+        const response = await apiClient.put(`/service/services/${service._id}`, {
+          images: [restaurantImage]
+        });
+        console.log(`Service ${service._id} update response:`, response.data);
+      }
+
+      toast.success(t('serviceProvider.restaurant.messages.imageSaved') || 'Restaurant image saved successfully!');
+      await fetchExistingServices();
+    } catch (error) {
+      console.error('Error saving restaurant image:', error);
+      console.error('Error response:', error.response?.data);
+      toast.error(t('serviceProvider.restaurant.messages.imageSaveFailed') || 'Failed to save image');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Render Settings Tab - Restaurant Settings (Name, Description, Image)
+   */
+  const renderSettingsTab = () => {
+    // Get current data from first existing service
+    const savedImage = existingServices[0]?.images?.[0] || existingServices[0]?.media?.images?.[0];
+    const displayImage = restaurantImagePreview || restaurantImage || savedImage;
+
+    // Calculate word count
+    const wordCount = restaurantDescription.trim() ? restaurantDescription.trim().split(/\s+/).length : 0;
+
+    // Handle description change with word limit
+    const handleDescriptionChange = (e) => {
+      const text = e.target.value;
+      const words = text.trim() ? text.trim().split(/\s+/) : [];
+      if (words.length <= WORD_LIMIT || text.length < restaurantDescription.length) {
+        setRestaurantDescription(text);
+        setInfoChanged(true);
+      }
+    };
+
+    // Save restaurant info (name and description)
+    const saveRestaurantInfo = async () => {
+      if (existingServices.length === 0) {
+        toast.error('No services found. Create a service first.');
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        // Update all dining services with the new info
+        for (const service of existingServices) {
+          await apiClient.put(`/service/services/${service._id}`, {
+            name: restaurantName,
+            description: restaurantDescription
+          });
+        }
+
+        toast.success('Restaurant info saved successfully!');
+        setInfoChanged(false);
+        await fetchExistingServices();
+      } catch (error) {
+        console.error('Error saving restaurant info:', error);
+        toast.error('Failed to save restaurant info');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Show loading state while fetching services
+    if (loading && existingServices.length === 0) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-8">
+        {/* Restaurant Info Section */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+          <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+            <div className="p-2 rounded-lg bg-blue-500 mr-3">
+              <FaUtensils className="text-white text-sm" />
+            </div>
+            {t('serviceProvider.restaurant.form.restaurantInfo') || 'Restaurant Information'}
+          </h3>
+
+          <div className="space-y-6">
+            {/* Restaurant Name */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                {t('serviceProvider.restaurant.form.restaurantNameLabel') || 'Restaurant Name'}
+              </label>
+              <input
+                type="text"
+                value={restaurantName}
+                onChange={(e) => { setRestaurantName(e.target.value); setInfoChanged(true); }}
+                className={INPUT + " transition-all duration-300 focus:scale-[1.01]"}
+                placeholder={t('serviceProvider.restaurant.form.restaurantNamePlaceholder') || 'Enter your restaurant name'}
+              />
+            </div>
+
+            {/* Restaurant Description */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                {t('serviceProvider.restaurant.form.restaurantDescriptionLabel') || 'Restaurant Description'}
+                <span className="text-sm font-normal text-gray-500 ml-2">
+                  ({wordCount}/{WORD_LIMIT} {t('common.words') || 'words'})
+                </span>
+              </label>
+              <textarea
+                value={restaurantDescription}
+                onChange={handleDescriptionChange}
+                className={INPUT + " resize-none transition-all duration-300 focus:scale-[1.01]"}
+                rows="4"
+                placeholder={t('serviceProvider.restaurant.form.restaurantDescriptionPlaceholder') || 'Describe your restaurant, cuisine style, specialties...'}
+              />
+              {wordCount >= WORD_LIMIT && (
+                <p className="text-xs text-orange-600 mt-1">
+                  {t('serviceProvider.restaurant.form.wordLimitReached') || 'Word limit reached'}
+                </p>
+              )}
+            </div>
+
+            {/* Save Info Button */}
+            <div className="flex justify-start">
+              <button
+                onClick={saveRestaurantInfo}
+                disabled={loading || !infoChanged}
+                className={BTN.primary + " px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"}
+              >
+                {loading ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" />
+                    {t('common.saving') || 'Saving...'}
+                  </>
+                ) : (
+                  <>
+                    <FaSave className="mr-2" />
+                    {t('serviceProvider.restaurant.actions.saveInfo') || 'Save Info'}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Restaurant Image Section */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
+          <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+            <div className="p-2 rounded-lg bg-purple-500 mr-3">
+              <FaCamera className="text-white text-sm" />
+            </div>
+            {t('serviceProvider.restaurant.form.restaurantImage') || 'Restaurant Image'}
+          </h3>
+
+          <p className="text-gray-600 mb-6">
+            {t('serviceProvider.restaurant.form.imageDescription') || 'Upload a logo or cover photo for your restaurant. This image will be shown to guests when they browse restaurants.'}
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-start gap-6">
+            {/* Image Preview/Upload */}
+            <div className="flex-shrink-0">
+              {/* Hidden file input for changing image */}
+              <input
+                type="file"
+                id="restaurant-image-input"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                disabled={uploadingImage}
+              />
+
+              {displayImage ? (
+                <div className="relative inline-block">
+                  <img
+                    src={displayImage}
+                    alt="Restaurant"
+                    className="w-48 h-48 object-cover rounded-2xl border-2 border-gray-200 shadow-lg"
+                  />
+                  {/* Remove button */}
+                  <button
+                    type="button"
+                    onClick={removeRestaurantImage}
+                    className="absolute -top-2 -right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg transition-all duration-200"
+                  >
+                    <FaTimes className="text-xs" />
+                  </button>
+                  {uploadingImage && (
+                    <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center">
+                      <FaSpinner className="animate-spin text-white text-2xl" />
+                    </div>
+                  )}
+                  {/* Change image button */}
+                  <label
+                    htmlFor="restaurant-image-input"
+                    className="absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-medium rounded-lg cursor-pointer hover:bg-white shadow-md transition-all duration-200"
+                  >
+                    {uploadingImage ? t('common.uploading') || 'Uploading...' : t('common.change') || 'Change'}
+                  </label>
+                </div>
+              ) : (
+                <label
+                  htmlFor="restaurant-image-input"
+                  className="flex flex-col items-center justify-center w-48 h-48 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:border-[#3B5787] hover:bg-blue-50/50 transition-all duration-300"
+                >
+                  {uploadingImage ? (
+                    <FaSpinner className="animate-spin text-[#3B5787] text-2xl mb-2" />
+                  ) : (
+                    <FaCamera className="text-gray-400 text-4xl mb-3" />
+                  )}
+                  <span className="text-sm text-gray-500 text-center px-2">
+                    {uploadingImage
+                      ? (t('common.uploading') || 'Uploading...')
+                      : (t('serviceProvider.restaurant.form.uploadImage') || 'Click to upload')
+                    }
+                  </span>
+                </label>
+              )}
+            </div>
+
+            {/* Instructions */}
+            <div className="flex-1">
+              <h4 className="font-semibold text-gray-800 mb-3">
+                {t('serviceProvider.restaurant.form.imageGuidelines') || 'Image Guidelines'}
+              </h4>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                  {t('serviceProvider.restaurant.form.imageTip1') || 'Use a high-quality image (recommended 800x800px)'}
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                  {t('serviceProvider.restaurant.form.imageTip2') || 'Logo or restaurant photo works best'}
+                </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                  {t('serviceProvider.restaurant.form.imageTip3') || 'Maximum file size: 5MB'}
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Save Button - only show if there's a new image to save */}
+          <div className="mt-8 flex justify-start">
+            <button
+              onClick={saveRestaurantImage}
+              disabled={loading || !restaurantImage}
+              className={BTN.primary + " px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"}
+            >
+              {loading ? (
+                <>
+                  <FaSpinner className="animate-spin mr-2" />
+                  {t('common.saving') || 'Saving...'}
+                </>
+              ) : (
+                <>
+                  <FaSave className="mr-2" />
+                  {t('serviceProvider.restaurant.actions.saveImage') || 'Save Image'}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Info about existing services */}
+        {existingServices.length > 0 && (
+          <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+            <p className="text-sm text-blue-800">
+              <strong>{t('common.note') || 'Note'}:</strong> {t('serviceProvider.restaurant.form.imageWillApplyTo') || 'This image will be applied to all your'} {existingServices.length} {t('serviceProvider.restaurant.form.diningServices') || 'dining services'}.
+            </p>
+          </div>
+        )}
+
+        {/* No services message */}
+        {existingServices.length === 0 && !loading && (
+          <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+            <p className="text-sm text-yellow-800">
+              <strong>{t('common.note') || 'Note'}:</strong> {t('serviceProvider.restaurant.messages.createServiceFirst') || 'Create a restaurant service first before uploading an image.'}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
       <div className="w-full p-4 sm:p-6 lg:p-8">
@@ -1279,12 +1714,22 @@ const RestaurantServiceCreator = ({ onBack }) => {
                 <FaCog className="mr-2" />
                 {t('serviceProvider.restaurant.tabs.manageServices')}
               </button>
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`${BTN.tab} ${
+                  activeTab === 'settings' ? BTN.tabActive : BTN.tabInactive
+                }`}
+              >
+                <FaCamera className="mr-2" />
+                {t('serviceProvider.restaurant.tabs.settings') || 'Restaurant Image'}
+              </button>
             </nav>
           </div>
 
           <div className="p-8">
             {activeTab === 'add' && renderAddItemsTab()}
             {activeTab === 'manage' && renderManageItemsTab()}
+            {activeTab === 'settings' && renderSettingsTab()}
           </div>
         </div>
       </div>

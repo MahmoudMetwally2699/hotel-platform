@@ -204,7 +204,7 @@ const OrdersPage = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: theme.backgroundColor }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: theme.backgroundColor }}>
       {/* Compact Header Section */}
       <div className="bg-white shadow border-b border-gray-100">
         <div className="w-full px-6 py-4">
@@ -351,8 +351,9 @@ const OrdersPage = () => {
           ) : (
             <>
               {/* Desktop Table View */}
-              <div className="hidden lg:block overflow-x-auto">
-                <div className="min-w-full inline-block align-middle">
+              <div className="hidden lg:block overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+                <div className="min-w-full inline-block align-middle hide-scrollbar">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead style={{ backgroundColor: theme.backgroundColor }}>
                       <tr>
@@ -364,7 +365,7 @@ const OrdersPage = () => {
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.amount')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>Payment Method</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.status')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.actions')}</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px] sticky right-0 z-10 shadow-sm" style={{ color: theme.primaryColor, backgroundColor: theme.backgroundColor }}>{t('hotelAdmin.orders.table.actions')}</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
@@ -480,7 +481,7 @@ const OrdersPage = () => {
                               {order.status || 'processing'}
                             </span>
                           </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-center text-sm font-medium">
+                          <td className="px-4 py-4 whitespace-nowrap text-center text-sm font-medium sticky right-0 z-0 shadow-sm" style={{ backgroundColor: 'inherit' }}>
                             <button
                               onClick={() => {
                                 setSelectedOrder(order);

@@ -35,7 +35,7 @@ const GuestsPage = () => {
   const [loyaltyUpdating, setLoyaltyUpdating] = useState(new Set());
   const [channelUpdating, setChannelUpdating] = useState(new Set());
   const [openDropdown, setOpenDropdown] = useState(null); // Track which dropdown is open
-  const [dropdownPosition, setDropdownPosition] = useState({}); // Track dropdown position
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 }); // Track dropdown position
   const dropdownRef = useRef(null); // Ref for dropdown to detect outside clicks
   const buttonRefs = useRef({}); // Refs for action buttons
 
@@ -45,7 +45,9 @@ const GuestsPage = () => {
     guest: null,
     roomNumber: '',
     checkInDate: '',
-    checkOutDate: ''
+    checkOutDate: '',
+    channel: 'Direct',
+    reservationType: 'BB'
   });
 
   // Fetch guests with pagination
@@ -190,7 +192,9 @@ const GuestsPage = () => {
       guest,
       roomNumber: guest.roomNumber || '',
       checkInDate: guest.checkInDate ? new Date(guest.checkInDate).toISOString().split('T')[0] : '',
-      checkOutDate: guest.checkOutDate ? new Date(guest.checkOutDate).toISOString().split('T')[0] : ''
+      checkOutDate: guest.checkOutDate ? new Date(guest.checkOutDate).toISOString().split('T')[0] : '',
+      channel: guest.channel || 'Direct',
+      reservationType: guest.reservationType || 'BB'
     });
   };
 
@@ -201,7 +205,9 @@ const GuestsPage = () => {
       guest: null,
       roomNumber: '',
       checkInDate: '',
-      checkOutDate: ''
+      checkOutDate: '',
+      channel: 'Direct',
+      reservationType: 'BB'
     });
   };
 
@@ -215,7 +221,9 @@ const GuestsPage = () => {
       const updateData = {
         roomNumber: editModal.roomNumber,
         checkInDate: editModal.checkInDate,
-        checkOutDate: editModal.checkOutDate
+        checkOutDate: editModal.checkOutDate,
+        channel: editModal.channel,
+        reservationType: editModal.reservationType
       };
 
       // If guest is inactive, also activate them
@@ -440,25 +448,28 @@ const GuestsPage = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('hotelAdmin.guests.table.guest')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Channel
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Res. Type
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Loyalty Tier
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Room & Dates
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('hotelAdmin.guests.table.contact')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('hotelAdmin.guests.table.status')}
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('hotelAdmin.guests.table.actions')}
                 </th>
               </tr>
@@ -477,35 +488,28 @@ const GuestsPage = () => {
               ) : (
                 filteredGuests.map((guest) => (
                   <tr key={guest._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: theme.primaryColor }}>
+                        <div className="h-10 w-10 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: theme.primaryColor }}>
                           {getGuestInitials(guest)}
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                        <div className="ml-4 min-w-0">
+                          <div className="text-sm font-medium text-gray-900 truncate">
                             {getGuestName(guest)}
                           </div>
-                          <div className="text-sm text-gray-500">{guest.email}</div>
+                          <div className="text-sm text-gray-500 truncate">{guest.email}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={guest.channel || 'Direct'}
-                        onChange={(e) => updateGuestChannel(guest._id, e.target.value)}
-                        disabled={channelUpdating.has(guest._id)}
-                        className="text-xs font-medium border border-gray-300 rounded px-2 py-1 pr-6 bg-white hover:border-blue-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                        style={{
-                          minWidth: '110px'
-                        }}
-                      >
-                        <option value="Travel Agency">Travel Agency</option>
-                        <option value="Corporate">Corporate</option>
-                        <option value="Direct">Direct</option>
-                      </select>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-900">{guest.channel || 'Direct'}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {guest.reservationType || 'BB'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
                       {guest.loyaltyTier ? (
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTierBadgeColor(guest.loyaltyTier)}`}>
                           {guest.loyaltyTier.toUpperCase()}
@@ -516,7 +520,7 @@ const GuestsPage = () => {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4">
                       <div className="space-y-1">
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-gray-900">
@@ -529,11 +533,11 @@ const GuestsPage = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4">
                       <div className="text-sm text-gray-900">{guest.phone || t('hotelAdmin.guests.noPhone')}</div>
                       <div className="text-sm text-gray-500">Joined: {formatDate(guest.createdAt)}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         guest.isActive !== false
                           ? 'bg-green-100 text-green-800'
@@ -542,7 +546,7 @@ const GuestsPage = () => {
                         {guest.isActive !== false ? t('hotelAdmin.guests.filters.active') : t('hotelAdmin.guests.filters.inactive')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="relative">
                         <button
                           ref={(el) => (buttonRefs.current[guest._id] = el)}
@@ -552,11 +556,16 @@ const GuestsPage = () => {
                             } else {
                               const rect = e.currentTarget.getBoundingClientRect();
                               const spaceBelow = window.innerHeight - rect.bottom;
-                              const spaceAbove = rect.top;
                               const dropdownHeight = 250; // Approximate dropdown height
 
+                              // Calculate position
+                              // If space below is not enough, show above
+                              const showAbove = spaceBelow < dropdownHeight;
+
                               setDropdownPosition({
-                                [guest._id]: spaceBelow < dropdownHeight && spaceAbove > spaceBelow ? 'up' : 'down'
+                                top: showAbove ? rect.top - 8 : rect.bottom + 8,
+                                right: window.innerWidth - rect.right,
+                                isAbove: showAbove
                               });
                               setOpenDropdown(guest._id);
                             }
@@ -570,9 +579,12 @@ const GuestsPage = () => {
                         {openDropdown === guest._id && (
                           <div
                             ref={dropdownRef}
-                            className={`absolute right-0 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-[100] py-1 max-h-[400px] overflow-y-auto ${
-                              dropdownPosition[guest._id] === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'
-                            }`}
+                            className="fixed w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-[9999] py-1 max-h-[400px] overflow-y-auto"
+                            style={{
+                              top: dropdownPosition.isAbove ? 'auto' : dropdownPosition.top,
+                              bottom: dropdownPosition.isAbove ? (window.innerHeight - dropdownPosition.top) : 'auto',
+                              right: dropdownPosition.right
+                            }}
                           >
                             {/* Edit Room Button - Only for active guests */}
                             {guest.isActive !== false && (
@@ -875,6 +887,39 @@ const GuestsPage = () => {
                   </label>
                   <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">
                     {getGuestName(editModal.guest)}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Channel
+                    </label>
+                    <select
+                      value={editModal.channel}
+                      onChange={(e) => setEditModal(prev => ({ ...prev, channel: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Direct">Direct</option>
+                      <option value="Travel Agency">Travel Agency</option>
+                      <option value="Corporate">Corporate</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Reservation Type
+                    </label>
+                    <select
+                      value={editModal.reservationType}
+                      onChange={(e) => setEditModal(prev => ({ ...prev, reservationType: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="RO">RO (Room Only)</option>
+                      <option value="BB">BB (Bed & Breakfast)</option>
+                      <option value="FB">FB (Full Board)</option>
+                      <option value="All">All (All Inclusive)</option>
+                    </select>
                   </div>
                 </div>
 

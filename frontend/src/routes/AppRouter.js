@@ -31,6 +31,7 @@ const HotelListPage = lazy(() => import('../pages/client/HotelListPage'));
 const HotelCategoryServicesPage = lazy(() => import('../pages/client/HotelCategoryServicesPage'));
 const LaundryBookingPage = lazy(() => import('../pages/client/LaundryBookingPage'));
 const RestaurantBookingPage = lazy(() => import('../pages/client/RestaurantBookingPage'));
+const RestaurantListPage = lazy(() => import('../pages/client/RestaurantListPage'));
 const TransportationBookingPage = lazy(() => import('../pages/client/TransportationBookingPage'));
 const HousekeepingBookingPage = lazy(() => import('../pages/guest/HousekeepingBookingPage'));
 const GuestTransportationBookings = lazy(() => import('../pages/guest/GuestTransportationBookings'));
@@ -171,6 +172,26 @@ const AppRouter = () => {
         />
         <Route
           path="/hotels/:hotelId/services/dining/booking"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <RestaurantListPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotels/:hotelId/services/dining/:serviceId/menu"
+          element={
+            <ProtectedRoute allowedRoles="guest">
+              <TailwindLayout>
+                <RestaurantBookingPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotels/:hotelId/services/dining/provider/:providerId/menu"
           element={
             <ProtectedRoute allowedRoles="guest">
               <TailwindLayout>
