@@ -4281,5 +4281,38 @@
       "amenities": "طلب مستلزمات",
       "service": "خدمة"
     }
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "overview": "نظرة عامة على أعمالك",
+    "totalEarnings": "إجمالي الأرباح",
+    "thisMonth": "هذا الشهر",
+    "totalBookings": "إجمالي الحجوزات",
+    "active": "نشط",
+    "completionRate": "معدل الإنجاز",
+    "avgRating": "متوسط التقييم",
+    "earnings": "الأرباح",
+    "completed": "مكتمل",
+    "earningsTrend": "اتجاه الأرباح",
+    "noData": "لا توجد بيانات أرباح بعد",
+    "bookingStatus": "حالة الحجوزات",
+    "noBookings": "لا توجد حجوزات بعد",
+    "totalServices": "إجمالي الخدمات",
+    "activeServices": "الخدمات النشطة",
+    "completedBookings": "مكتمل",
+    "recentBookings": "الحجوزات الأخيرة",
+    "viewAll": "عرض الكل",
+    "service": "الخدمة",
+    "status": "الحالة",
+    "date": "التاريخ",
+    "view": "عرض",
+    "noRecentBookings": "لا توجد حجوزات حديثة",
+    "orderStatus": {
+      "completed": "مكتمل",
+      "pending": "قيد الانتظار",
+      "in-progress": "قيد التنفيذ",
+      "confirmed": "مؤكد",
+      "cancelled": "ملغى"
+    }
   }
 }

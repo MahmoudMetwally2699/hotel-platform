@@ -226,7 +226,11 @@ feedbackSchema.statics.getAverageRating = async function(query = {}) {
 };
 
 feedbackSchema.statics.getServiceProviderRating = async function(serviceProviderId) {
-  return this.getAverageRating({ serviceProviderId });
+  const mongoose = require('mongoose');
+  const objectId = typeof serviceProviderId === 'string'
+    ? new mongoose.Types.ObjectId(serviceProviderId)
+    : serviceProviderId;
+  return this.getAverageRating({ serviceProviderId: objectId });
 };
 
 feedbackSchema.statics.getHotelRating = async function(hotelId) {

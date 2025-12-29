@@ -497,10 +497,10 @@ const DashboardPage = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {order.orderId}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.service.name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.hotel.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.service?.name || 'N/A'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.hotel?.name || 'N/A'}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {order.guest.firstName} {order.guest.lastName}
+                            {order.guest?.firstName || ''} {order.guest?.lastName || ''}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
@@ -547,7 +547,7 @@ const DashboardPage = () => {
               <div>
                 <dt className="text-sm font-medium text-gray-500">{t('dashboard.nextBooking')}</dt>
                 <dd className="mt-1 text-lg font-semibold text-gray-900">
-                  {stats?.nextBooking?.service.name || t('dashboard.na')}
+                  {stats?.nextBooking?.service?.name || t('dashboard.na')}
                 </dd>
               </div>
               <div>
@@ -572,9 +572,9 @@ const DashboardPage = () => {
                 stats.upcomingBookings.map((booking) => (
                   <div key={booking._id} className="px-4 py-3 sm:px-6 flex justify-between items-center">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{booking.service.name}</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{booking.service?.name || 'N/A'}</p>
                       <p className="text-sm text-gray-500 truncate">
-                        {booking.guest.firstName} {booking.guest.lastName}
+                        {booking.guest?.firstName || ''} {booking.guest?.lastName || ''}
                       </p>
                     </div>
                     <div className="ml-4 flex-shrink-0">

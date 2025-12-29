@@ -86,6 +86,7 @@ const ServiceProviderClients = lazy(() => import('../components/hotel/ServicePro
 const HotelServiceProviderAnalytics = lazy(() => import('../components/hotel/HotelServiceProviderAnalytics'));
 
 // Service Provider Pages
+const ServiceDashboard = lazy(() => import('../pages/service/ServiceDashboard'));
 const TwoTierServiceDashboard = lazy(() => import('../components/service/TwoTierServiceDashboard'));
 const MultiCategoryDashboard = lazy(() => import('../pages/service/MultiCategoryDashboard'));
 const ServiceProviderOrdersPage = lazy(() => import('../pages/service/OrdersPage'));
@@ -614,7 +615,7 @@ const AppRouter = () => {
           element={
             <ProtectedRoute allowedRoles="service">
               <TailwindLayout>
-                <TwoTierServiceDashboard />
+                <ServiceDashboard />
               </TailwindLayout>
             </ProtectedRoute>
           }

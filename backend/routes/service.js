@@ -16,6 +16,7 @@ const Service = require('../models/Service');
 const Booking = require('../models/Booking');
 const TransportationBooking = require('../models/TransportationBooking');
 const Hotel = require('../models/Hotel');
+const Feedback = require('../models/Feedback');
 const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
 const {
@@ -40,8 +41,9 @@ router.use(restrictToOwnServiceProvider);
  * @access  Private/ServiceProvider
  */
 router.get('/dashboard', catchAsync(async (req, res) => {
-  const providerId = req.user.serviceProviderId;
-  const hotelId = req.user.hotelId;
+  // Handle both populated object and plain ID
+  const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
+  const hotelId = req.user.hotelId?._id || req.user.hotelId;
 
   // Get service provider and hotel info
   const [
@@ -57,24 +59,24 @@ router.get('/dashboard', catchAsync(async (req, res) => {
     hotelMarkupSettings
   ] = await Promise.all([
     ServiceProvider.findById(providerId),
-    Hotel.findById(hotelId).select('name markupSettings'),    Service.countDocuments({ providerId: providerId }),
+    Hotel.findById(hotelId).select('name markupSettings branding images paymentSettings'),    Service.countDocuments({ providerId: providerId }),
     Service.countDocuments({ providerId: providerId, isActive: true, isApproved: true }),
     Booking.countDocuments({ serviceProviderId: providerId }),
     Booking.countDocuments({
-      providerId: providerId,
+      serviceProviderId: providerId,
       status: { $nin: ['completed', 'cancelled', 'refunded'] }
     }),
     Booking.find({ serviceProviderId: providerId })
       .sort({ createdAt: -1 })
       .limit(10)      .populate('serviceId', 'name category'),
     Booking.aggregate([
-      { $match: { providerId: new mongoose.Types.ObjectId(providerId) } },
+      { $match: { serviceProviderId: new mongoose.Types.ObjectId(providerId) } },
       {
         $group: {
           _id: null,
           totalBookings: { $sum: 1 },
           completedBookings: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
-          totalEarnings: { $sum: '$providerAmount' },
+          totalEarnings: { $sum: '$pricing.providerEarnings' },
           thisMonthEarnings: {
             $sum: {
               $cond: [
@@ -84,7 +86,7 @@ router.get('/dashboard', catchAsync(async (req, res) => {
                     { $eq: [{ $year: '$createdAt' }, { $year: new Date() }] }
                   ]
                 },
-                '$providerAmount',
+                '$pricing.providerEarnings',
                 0
               ]
             }
@@ -101,7 +103,7 @@ router.get('/dashboard', catchAsync(async (req, res) => {
 
   // Get monthly earnings trend
   const monthlyEarnings = await Booking.aggregate([
-    { $match: { providerId: new mongoose.Types.ObjectId(providerId) } },
+    { $match: { serviceProviderId: new mongoose.Types.ObjectId(providerId) } },
     {
       $group: {
         _id: {
@@ -109,11 +111,14 @@ router.get('/dashboard', catchAsync(async (req, res) => {
           month: { $month: '$createdAt' }
         },
         bookings: { $sum: 1 },
-        earnings: { $sum: '$providerAmount' }
+        earnings: { $sum: '$pricing.providerEarnings' }
       }
     },
     { $sort: { '_id.year': 1, '_id.month': 1 } }
   ]);
+
+  // Get average rating from Feedback model
+  const feedbackRating = await Feedback.getServiceProviderRating(providerId);
 
   res.status(200).json({
     status: 'success',
@@ -124,7 +129,14 @@ router.get('/dashboard', catchAsync(async (req, res) => {
         markupDefault: hotelMarkupSettings ? hotelMarkupSettings.markupSettings.default : 15,
         markupCategory: provider.category && hotelMarkupSettings &&
           hotelMarkupSettings.markupSettings.categories ?
-          hotelMarkupSettings.markupSettings.categories[provider.category] : null
+          hotelMarkupSettings.markupSettings.categories[provider.category] : null,
+        branding: hotel.branding || {
+          primaryColor: '#2563eb',
+          secondaryColor: '#3b82f6',
+          accentColor: '#60a5fa'
+        },
+        logo: hotel.images?.logo || null,
+        currency: hotel.paymentSettings?.currency || 'USD'
       },
       counts: {
         totalServices,
@@ -133,12 +145,15 @@ router.get('/dashboard', catchAsync(async (req, res) => {
         activeBookings
       },
       recentBookings,
-      metrics: revenueStats.length > 0 ? revenueStats[0] : {
-        totalBookings: 0,
-        completedBookings: 0,
-        totalEarnings: 0,
-        thisMonthEarnings: 0,
-        averageRating: 0
+      metrics: {
+        ...(revenueStats.length > 0 ? revenueStats[0] : {
+          totalBookings: 0,
+          completedBookings: 0,
+          totalEarnings: 0,
+          thisMonthEarnings: 0
+        }),
+        averageRating: feedbackRating.averageRating || 0,
+        totalFeedbacks: feedbackRating.totalFeedbacks || 0
       },
       topServices,
       monthlyEarnings
@@ -519,6 +534,33 @@ router.get('/orders', catchAsync(async (req, res) => {
       pages: Math.ceil(total / limit)
     },
     data: orders
+  });
+}));
+
+/**
+ * @route   GET /api/service/orders/:id
+ * @desc    Get single order details (alias for bookings/:id)
+ * @access  Private/ServiceProvider
+ */
+router.get('/orders/:id', catchAsync(async (req, res, next) => {
+  const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
+  const orderId = req.params.id;
+
+  const order = await Booking.findOne({
+    _id: orderId,
+    serviceProviderId: providerId
+  })
+    .populate('serviceId', 'name category description pricing')
+    .populate('guestId', 'firstName lastName email phone roomNumber')
+    .populate('hotelId', 'name address');
+
+  if (!order) {
+    return next(new AppError('No order found with that ID for this provider', 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    data: order
   });
 }));
 

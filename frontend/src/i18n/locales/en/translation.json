@@ -4269,5 +4269,38 @@
       "confirmed": "Confirmed",
       "completed": "Completed"
     }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "overview": "Your business at a glance",
+    "totalEarnings": "Total Earnings",
+    "thisMonth": "This month",
+    "totalBookings": "Total Bookings",
+    "active": "Active",
+    "completionRate": "Completion Rate",
+    "avgRating": "Average Rating",
+    "earnings": "Earnings",
+    "completed": "Completed",
+    "earningsTrend": "Earnings Trend",
+    "noData": "No earnings data yet",
+    "bookingStatus": "Booking Status",
+    "noBookings": "No bookings yet",
+    "totalServices": "Total Services",
+    "activeServices": "Active Services",
+    "completedBookings": "Completed",
+    "recentBookings": "Recent Bookings",
+    "viewAll": "View All",
+    "service": "Service",
+    "status": "Status",
+    "date": "Date",
+    "view": "View",
+    "noRecentBookings": "No recent bookings",
+    "orderStatus": {
+      "completed": "Completed",
+      "pending": "Pending",
+      "in-progress": "In Progress",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled"
+    }
   }
 }
