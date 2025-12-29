@@ -612,6 +612,20 @@ class HotelService {
     }
   }
 
+  /**
+   * Mark a guest as viewed by admin (removes "New" indicator)
+   * @param {string} guestId - Guest ID
+   * @returns {Promise} - Response from API
+   */
+  async markGuestAsViewed(guestId) {
+    try {
+      const response = await apiClient.patch(`${HOTEL_ADMIN_API.GUESTS}/${guestId}/mark-viewed`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 }
 
 const hotelService = new HotelService();

@@ -202,6 +202,12 @@ const userSchema = new mongoose.Schema({
     // Removed select: false so hotel admins can manage guest status
   },
 
+  // Whether hotel admin has viewed this guest (for new guest indicator)
+  isViewedByAdmin: {
+    type: Boolean,
+    default: false
+  },
+
   // Checkout-related fields
   checkoutTime: {
     type: Date,

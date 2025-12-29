@@ -494,8 +494,13 @@ const GuestsPage = () => {
                           {getGuestInitials(guest)}
                         </div>
                         <div className="ml-4 min-w-0">
-                          <div className="text-sm font-medium text-gray-900 truncate">
+                          <div className="text-sm font-medium text-gray-900 truncate flex items-center gap-2">
                             {getGuestName(guest)}
+                            {!guest.isViewedByAdmin && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-green-500 text-white animate-pulse">
+                                New
+                              </span>
+                            )}
                           </div>
                           <div className="text-sm text-gray-500 truncate">{guest.email}</div>
                         </div>
@@ -550,7 +555,7 @@ const GuestsPage = () => {
                       <div className="relative">
                         <button
                           ref={(el) => (buttonRefs.current[guest._id] = el)}
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             if (openDropdown === guest._id) {
                               setOpenDropdown(null);
                             } else {
@@ -568,11 +573,28 @@ const GuestsPage = () => {
                                 isAbove: showAbove
                               });
                               setOpenDropdown(guest._id);
+
+                              // Mark guest as viewed if not already viewed
+                              if (!guest.isViewedByAdmin) {
+                                try {
+                                  await hotelService.markGuestAsViewed(guest._id);
+                                  // Update local state to reflect the change
+                                  setGuests(prev => prev.map(g =>
+                                    g._id === guest._id ? { ...g, isViewedByAdmin: true } : g
+                                  ));
+                                } catch (error) {
+                                  console.error('Failed to mark guest as viewed:', error);
+                                }
+                              }
                             }
                           }}
-                          className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                          className="relative inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                         >
                           <HiDotsVertical className="w-5 h-5" />
+                          {/* Red circle indicator for new guests */}
+                          {!guest.isViewedByAdmin && (
+                            <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white"></span>
+                          )}
                         </button>
 
                         {/* Dropdown Menu */}
@@ -683,7 +705,14 @@ const GuestsPage = () => {
                       {getGuestInitials(guest)}
                     </div>
                     <div className="ml-3">
-                      <div className="font-medium text-gray-900">{getGuestName(guest)}</div>
+                      <div className="font-medium text-gray-900 flex items-center gap-2">
+                        {getGuestName(guest)}
+                        {!guest.isViewedByAdmin && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-green-500 text-white animate-pulse">
+                            New
+                          </span>
+                        )}
+                      </div>
                       <div className="text-sm text-gray-500">{guest.email}</div>
                     </div>
                   </div>
@@ -724,6 +753,26 @@ const GuestsPage = () => {
                 </div>
 
                 <div className="space-y-2 mt-4">
+                  {/* Mark as Viewed Button - Only for new guests */}
+                  {!guest.isViewedByAdmin && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          await hotelService.markGuestAsViewed(guest._id);
+                          setGuests(prev => prev.map(g =>
+                            g._id === guest._id ? { ...g, isViewedByAdmin: true } : g
+                          ));
+                        } catch (error) {
+                          console.error('Failed to mark guest as viewed:', error);
+                        }
+                      }}
+                      className="w-full inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
+                    >
+                      <HiCheckCircle className="w-5 h-5 mr-2" />
+                      Mark as Viewed
+                    </button>
+                  )}
+
                   {/* Loyalty Program Button */}
                   <button
                     onClick={() => toggleLoyaltyMembership(guest._id, guest.loyaltyTier !== null && guest.loyaltyTier !== undefined)}
@@ -971,7 +1020,8 @@ const GuestsPage = () => {
                 <button
                   onClick={updateGuestInfo}
                   disabled={updating.has(editModal.guest?._id)}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                  style={{ backgroundColor: theme.primaryColor }}
                 >
                   {updating.has(editModal.guest?._id) ? (
                     <div className="flex items-center">

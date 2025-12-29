@@ -2109,6 +2109,46 @@ router.patch('/guests/:guestId/status', catchAsync(async (req, res, next) => {
 }));
 
 /**
+ * @route   PATCH /api/hotel/guests/:guestId/mark-viewed
+ * @desc    Mark a guest as viewed by hotel admin (removes "New" indicator)
+ * @access  Private/HotelAdmin
+ */
+router.patch('/guests/:guestId/mark-viewed', catchAsync(async (req, res, next) => {
+  const hotelId = req.user.hotelId;
+  const { guestId } = req.params;
+
+  // Find the guest
+  const guest = await User.findById(guestId);
+  if (!guest) {
+    return next(new AppError('Guest not found', 404));
+  }
+
+  if (guest.role !== 'guest') {
+    return next(new AppError('User is not a guest', 400));
+  }
+
+  // Check if this guest is associated with this hotel
+  if (guest.selectedHotelId?.toString() !== hotelId.toString()) {
+    return next(new AppError('Guest not associated with this hotel', 403));
+  }
+
+  // Mark as viewed
+  const updatedGuest = await User.findByIdAndUpdate(
+    guestId,
+    { isViewedByAdmin: true },
+    { new: true, select: '-password -passwordChangedAt -passwordResetToken -passwordResetExpires' }
+  );
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Guest marked as viewed',
+    data: {
+      guest: updatedGuest
+    }
+  });
+}));
+
+/**
  * @route   PATCH /api/hotel/guests/:guestId
  * @desc    Update guest information (room number, check-in/out dates) and reactivate if needed
  * @access  Private/HotelAdmin
