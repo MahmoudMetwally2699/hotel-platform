@@ -12,6 +12,7 @@
     "submit": "إرسال",
     "cancel": "إلغاء",
     "save": "حفظ",
+    "saving": "جاري الحفظ...",
     "markAsCompleted": "وضع علامة مكتمل",
     "delete": "حذف",
     "edit": "تعديل",
@@ -65,7 +66,10 @@
     "comingSoon": "قريباً",
     "deactivate": "إلغاء التفعيل",
     "tip": "نصيحة",
-    "service": "خدمة"
+    "service": "خدمة",
+    "words": "كلمات",
+    "change": "تغيير",
+    "note": "ملاحظة"
   },
   "platform": {
     "hotelPlatform": "تجريبي",
@@ -1771,6 +1775,18 @@
     "title": "لوحة التحكم",
     "welcome": "مرحباً بعودتك، {{providerName}}!",
     "overview": "نظرة عامة",
+    "active": "نشط",
+    "completed": "مكتمل",
+    "totalServices": "إجمالي الخدمات",
+    "pendingRequests": "الطلبات المعلقة",
+    "awaitingAction": "في انتظار إجراءك",
+    "bookingsTrend": "اتجاه الحجوزات",
+    "totalBookings": "إجمالي الحجوزات",
+    "completedBookings": "الحجوزات المكتملة",
+    "bookingStatus": "حالة الحجز",
+    "noData": "لا توجد بيانات بعد",
+    "noBookings": "لا توجد حجوزات بعد",
+    "noRecentBookings": "لا توجد حجوزات حديثة",
     "recentBookings": "الحجوزات الأخيرة",
     "revenueChart": "مخطط الإيرادات",
     "popularServices": "الخدمات الشائعة",
@@ -1817,11 +1833,6 @@
       "confirmed": "مؤكد",
       "in-progress": "قيد التنفيذ",
       "completed": "مكتمل",
-      "cancelled": "ملغي"
-    },
-    "bookingStatus": {
-      "pending": "معلق",
-      "confirmed": "مؤكد",
       "cancelled": "ملغي"
     }
   },
@@ -2346,9 +2357,34 @@
       "subtitle": "إنشاء وإدارة خدمات مطعمك وقوائم الطعام لنزلاء الفندق",
       "tabs": {
         "addService": "إضافة خدمة مطعم",
-        "manageServices": "إدارة الخدمات"
+        "manageServices": "إدارة الخدمات",
+        "settings": "إعدادات المطعم"
       },
       "form": {
+        "restaurantInfo": "معلومات المطعم",
+        "restaurantNameLabel": "اسم المطعم",
+        "restaurantNamePlaceholder": "أدخل اسم مطعمك",
+        "restaurantDescriptionLabel": "وصف المطعم",
+        "restaurantDescriptionPlaceholder": "صف مطعمك، نوع المطبخ، التخصصات...",
+        "wordLimitReached": "تم الوصول إلى الحد الأقصى للكلمات",
+        "restaurantImage": "صورة المطعم",
+        "imageDescription": "ارفع شعاراً أو صورة غلاف لمطعمك. سيتم عرض هذه الصورة للضيوف عند تصفح المطاعم.",
+        "uploadImage": "انقر للتحميل",
+        "imageGuidelines": "إرشادات الصورة",
+        "imageTip1": "استخدم صورة عالية الجودة (يوصى بـ 800x800 بكسل)",
+        "imageTip2": "الشعار أو صورة المطعم هي الأفضل",
+        "imageTip3": "الحد الأقصى لحجم الملف: 5 ميجابايت",
+        "imageWillApplyTo": "سيتم تطبيق هذه الصورة على جميع ",
+        "diningServices": "خدمات الطعام",
+        "workingHours": "ساعات العمل",
+        "workingHoursDescription": "حدد ساعات عمل مطعمك. ستكون قائمتك مرئية للضيوف خلال هذه الساعات فقط.",
+        "from": "من",
+        "to": "إلى",
+        "open": "مفتوح",
+        "closed": "مغلق",
+        "deliveryService": "خدمة التوصيل",
+        "offerDelivery": "هل تقدم خدمة التوصيل؟",
+        "deliveryDescription": "فعّل هذا إذا كنت تستطيع توصيل الطلبات إلى غرف الضيوف",
         "serviceDetails": "تفاصيل خدمة المطعم",
         "serviceName": "اسم الخدمة",
         "serviceNameRequired": "اسم الخدمة *",
@@ -2413,6 +2449,9 @@
         "veryHot": "حار جداً"
       },
       "actions": {
+        "saveInfo": "حفظ المعلومات",
+        "saveImage": "حفظ الصورة",
+        "saveWorkingHours": "حفظ ساعات العمل",
         "addItem": "إضافة عنصر",
         "edit": "تعديل",
         "save": "حفظ",
@@ -2446,7 +2485,20 @@
         "created": "تم الإنشاء",
         "notAvailable": "غير متاح"
       },
+      "days": {
+        "saturday": "السبت",
+        "sunday": "الأحد",
+        "monday": "الإثنين",
+        "tuesday": "الثلاثاء",
+        "wednesday": "الأربعاء",
+        "thursday": "الخميس",
+        "friday": "الجمعة"
+      },
       "messages": {
+        "imageSaved": "تم حفظ صورة المطعم بنجاح!",
+        "workingHoursSaved": "تم حفظ ساعات العمل بنجاح!",
+        "workingHoursSaveFailed": "فشل في حفظ ساعات العمل",
+        "deliverySaved": "تم حفظ إعدادات التوصيل!",
         "loadingServices": "جاري تحميل خدمات المطعم المتاحة...",
         "failedToLoad": "فشل في تحميل خدمات المطعم",
         "itemAlreadyExists": "عنصر القائمة بهذا الاسم موجود بالفعل",
@@ -4281,38 +4333,6 @@
       "amenities": "طلب مستلزمات",
       "service": "خدمة"
     }
-  },
-  "dashboard": {
-    "title": "لوحة التحكم",
-    "overview": "نظرة عامة على أعمالك",
-    "totalEarnings": "إجمالي الأرباح",
-    "thisMonth": "هذا الشهر",
-    "totalBookings": "إجمالي الحجوزات",
-    "active": "نشط",
-    "completionRate": "معدل الإنجاز",
-    "avgRating": "متوسط التقييم",
-    "earnings": "الأرباح",
-    "completed": "مكتمل",
-    "earningsTrend": "اتجاه الأرباح",
-    "noData": "لا توجد بيانات أرباح بعد",
-    "bookingStatus": "حالة الحجوزات",
-    "noBookings": "لا توجد حجوزات بعد",
-    "totalServices": "إجمالي الخدمات",
-    "activeServices": "الخدمات النشطة",
-    "completedBookings": "مكتمل",
-    "recentBookings": "الحجوزات الأخيرة",
-    "viewAll": "عرض الكل",
-    "service": "الخدمة",
-    "status": "الحالة",
-    "date": "التاريخ",
-    "view": "عرض",
-    "noRecentBookings": "لا توجد حجوزات حديثة",
-    "orderStatus": {
-      "completed": "مكتمل",
-      "pending": "قيد الانتظار",
-      "in-progress": "قيد التنفيذ",
-      "confirmed": "مؤكد",
-      "cancelled": "ملغى"
-    }
   }
+
 }

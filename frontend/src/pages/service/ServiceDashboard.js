@@ -8,7 +8,6 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
-  FaDollarSign,
   FaClipboardList,
   FaStar,
   FaClock,
@@ -69,17 +68,16 @@ const ServiceDashboard = () => {
       totalServices: 0,
       activeServices: 0,
       totalBookings: 0,
-      activeBookings: 0
+      activeBookings: 0,
+      pendingRequests: 0
     },
     metrics: {
       totalBookings: 0,
       completedBookings: 0,
-      totalEarnings: 0,
-      thisMonthEarnings: 0,
       averageRating: 0
     },
     recentBookings: [],
-    monthlyEarnings: []
+    monthlyBookings: []
   });
 
   useEffect(() => {
@@ -116,12 +114,12 @@ const ServiceDashboard = () => {
     : 0;
 
   // Chart configurations with hotel colors
-  const revenueChartData = {
-    labels: dashboardData.monthlyEarnings?.map(e => `${e._id?.month}/${e._id?.year}`) || [],
+  const bookingsChartData = {
+    labels: dashboardData.monthlyBookings?.map(e => `${e._id?.month}/${e._id?.year}`) || [],
     datasets: [
       {
-        label: t('dashboard.earnings') || 'Earnings',
-        data: dashboardData.monthlyEarnings?.map(e => e.earnings) || [],
+        label: t('dashboard.bookingsTrend') || 'Bookings',
+        data: dashboardData.monthlyBookings?.map(e => e.bookings) || [],
         borderColor: branding.primaryColor,
         backgroundColor: `${branding.primaryColor}20`,
         tension: 0.4,
@@ -248,26 +246,24 @@ const ServiceDashboard = () => {
       <div className="px-6 py-8 -mt-4">
         {/* Key Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          {/* Total Earnings */}
+          {/* Pending Requests */}
           <div
             className="rounded-2xl shadow-lg p-6 text-white"
             style={{
-              background: `linear-gradient(135deg, ${branding.primaryColor} 0%, ${branding.secondaryColor || branding.primaryColor} 100%)`
+              background: `linear-gradient(135deg, #66CFFF 0%, #5AB9E8 100%)`
             }}
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-white/80 text-sm font-medium">{t('dashboard.totalEarnings') || 'Total Earnings'}</p>
+                <p className="text-white/80 text-sm font-medium">{t('dashboard.pendingRequests') || 'Pending Requests'}</p>
                 <p className="text-3xl font-bold mt-2">
-                  {formatPriceByLanguage(dashboardData.metrics?.totalEarnings || 0, i18n.language, currency)}
+                  {dashboardData.counts?.pendingRequests || 0}
                 </p>
                 <p className="text-white/60 text-sm mt-2">
-                  {t('dashboard.thisMonth') || 'This month'}: {formatPriceByLanguage(dashboardData.metrics?.thisMonthEarnings || 0, i18n.language, currency)}
+                  {t('dashboard.awaitingAction') || 'Awaiting your action'}
                 </p>
               </div>
-              <div className="bg-white/20 rounded-xl p-3">
-                <FaDollarSign className="w-6 h-6" />
-              </div>
+              <FaBell className="w-6 h-6" />
             </div>
           </div>
 
@@ -284,12 +280,7 @@ const ServiceDashboard = () => {
                   {t('dashboard.active') || 'Active'}: {dashboardData.counts?.activeBookings || 0}
                 </p>
               </div>
-              <div
-                className="rounded-xl p-3"
-                style={{ backgroundColor: `${branding.primaryColor}15` }}
-              >
-                <FaClipboardList className="w-6 h-6" style={{ color: branding.primaryColor }} />
-              </div>
+              <FaClipboardList className="w-6 h-6" style={{ color: branding.primaryColor }} />
             </div>
           </div>
 
@@ -308,9 +299,7 @@ const ServiceDashboard = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-green-100 rounded-xl p-3">
-                <FaCheckCircle className="w-6 h-6 text-green-600" />
-              </div>
+              <FaCheckCircle className="w-6 h-6 text-green-600" />
             </div>
           </div>
 
@@ -331,31 +320,29 @@ const ServiceDashboard = () => {
                   ))}
                 </div>
               </div>
-              <div className="bg-yellow-100 rounded-xl p-3">
-                <FaStar className="w-6 h-6 text-yellow-600" />
-              </div>
+              <FaStar className="w-6 h-6 text-yellow-600" />
             </div>
           </div>
         </div>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Earnings Chart */}
+          {/* Bookings Trend Chart */}
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900">
                 <FaChartLine className="inline-block mr-2" style={{ color: branding.primaryColor }} />
-                {t('dashboard.earningsTrend') || 'Earnings Trend'}
+                {t('dashboard.bookingsTrend') || 'Bookings Trend'}
               </h3>
             </div>
             <div className="h-64">
-              {dashboardData.monthlyEarnings && dashboardData.monthlyEarnings.length > 0 ? (
-                <Line data={revenueChartData} options={chartOptions} />
+              {dashboardData.monthlyBookings && dashboardData.monthlyBookings.length > 0 ? (
+                <Line data={bookingsChartData} options={chartOptions} />
               ) : (
                 <div className="flex items-center justify-center h-full text-gray-400">
                   <div className="text-center">
                     <FaChartLine className="w-12 h-12 mx-auto mb-2" />
-                    <p>{t('dashboard.noData') || 'No earnings data yet'}</p>
+                    <p>{t('dashboard.noData') || 'No bookings data yet'}</p>
                   </div>
                 </div>
               )}
@@ -385,12 +372,7 @@ const ServiceDashboard = () => {
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="bg-white rounded-2xl shadow-lg p-6 flex items-center gap-4">
-            <div
-              className="rounded-xl p-4"
-              style={{ backgroundColor: `${branding.primaryColor}15` }}
-            >
-              <FaConciergeBell className="w-8 h-8" style={{ color: branding.primaryColor }} />
-            </div>
+            <FaConciergeBell className="w-8 h-8" style={{ color: branding.primaryColor }} />
             <div>
               <p className="text-gray-500 text-sm">{t('dashboard.totalServices') || 'Total Services'}</p>
               <p className="text-2xl font-bold text-gray-900">{dashboardData.counts?.totalServices || 0}</p>
@@ -398,9 +380,7 @@ const ServiceDashboard = () => {
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-6 flex items-center gap-4">
-            <div className="bg-green-100 rounded-xl p-4">
-              <FaCheckCircle className="w-8 h-8 text-green-600" />
-            </div>
+            <FaCheckCircle className="w-8 h-8 text-green-600" />
             <div>
               <p className="text-gray-500 text-sm">{t('dashboard.activeServices') || 'Active Services'}</p>
               <p className="text-2xl font-bold text-gray-900">{dashboardData.counts?.activeServices || 0}</p>
@@ -408,9 +388,7 @@ const ServiceDashboard = () => {
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-6 flex items-center gap-4">
-            <div className="bg-green-100 rounded-xl p-4">
-              <FaCheckCircle className="w-8 h-8 text-green-600" />
-            </div>
+            <FaCheckCircle className="w-8 h-8 text-green-600" />
             <div>
               <p className="text-gray-500 text-sm">{t('dashboard.completedBookings') || 'Completed'}</p>
               <p className="text-2xl font-bold text-gray-900">{dashboardData.metrics?.completedBookings || 0}</p>

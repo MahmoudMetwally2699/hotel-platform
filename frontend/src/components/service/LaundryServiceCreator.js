@@ -1,79 +1,58 @@
 /**
  * Enhanced Laundry Service Management System (Modern + Responsive) - JS version
- * - Mobile-first, clean cards, accessible controls
- * - Brand colors: #3B5787 (primary), #67BAE0 (accent)
+ * - Modern UI with #66CFFF primary color
+ * - React Icons instead of Emojis
+ * - Gradient Header & Clean Cards
  */
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
+import {
+  FiPlus, FiEdit2, FiTrash2, FiSave, FiX,
+  FiPackage, FiList, FiCheck, FiToggleLeft, FiToggleRight,
+  FiSearch, FiFilter
+} from 'react-icons/fi';
+import { FaTshirt } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 
-// Simple emoji Icon set (kept to avoid new deps)
-const Icon = ({ type, className = "" }) => {
-  const icons = {
-    plus: "➕",
-    edit: "✏️",
-    trash: "🗑️",
-    save: "💾",
-    times: "✕",
-    tshirt: "👕",
-    package: "📦",
-    list: "📋",
-    toggle: "🔘",
-    available: "✅",
-    unavailable: "❌"
-  };
-  return <span className={className}>{icons[type] || "❓"}</span>;
-};
+// Brand Constants
+const BRAND_COLOR = '#66CFFF';
+const BRAND_GRADIENT = 'from-[#66CFFF] to-[#3B82F6]'; // Gradient from brand to a deeper blue for depth
 
-// Reusable UI helpers (Tailwind)
-const badgeClass = (tone = 'gray') =>
-  ({
-    gray:   'bg-gray-100 text-gray-800',
-    green:  'bg-green-100 text-green-800',
-    red:    'bg-red-100 text-red-800',
-    blue:   'bg-blue-100 text-blue-800',
-    amber:  'bg-amber-100 text-amber-800',
-  }[tone] || 'bg-gray-100 text-gray-800') +
-  ' inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium';
+// Reusable UI helpers
+const badgeClass = (isActive) =>
+  `inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
+    isActive
+      ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+      : 'bg-red-50 text-red-600 border-red-100'
+  }`;
 
 const btn = {
   primary:
     'inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-white ' +
-    'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#2A4A6B] hover:to-[#5BA8CC] ' +
-    'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] transition-all duration-300 ' +
-    'shadow-lg hover:shadow-xl transform hover:-translate-y-0.5',
+    'bg-[#66CFFF] hover:bg-[#5bb8e4] text-white ' +
+    'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#66CFFF] transition-all duration-300 ' +
+    'shadow-lg shadow-blue-200 hover:shadow-xl transform hover:-translate-y-0.5',
   secondary:
-    'inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-[#3B5787] ' +
-    'bg-white border-2 border-[#3B5787] hover:bg-[#3B5787] hover:text-white focus:outline-none ' +
-    'focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] transition-all duration-300 shadow-md hover:shadow-lg',
-  neutral:
-    'inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 ' +
-    'bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 focus:outline-none ' +
-    'focus:ring-2 focus:ring-offset-2 focus:ring-[#67BAE0] transition-all duration-200 shadow-sm',
+    'inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-gray-700 ' +
+    'bg-white border border-gray-200 hover:bg-gray-50 focus:outline-none ' +
+    'focus:ring-2 focus:ring-offset-2 focus:ring-[#66CFFF] transition-all duration-300 shadow-sm hover:shadow-md',
   danger:
-    'inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium text-white ' +
-    'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:outline-none ' +
-    'focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300 shadow-md hover:shadow-lg',
-  warn:
-    'inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium text-white ' +
-    'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 focus:outline-none ' +
-    'focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-300 shadow-md hover:shadow-lg',
-  success:
-    'inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium text-white ' +
-    'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 focus:outline-none ' +
-    'focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-300 shadow-md hover:shadow-lg',
+    'inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium text-red-600 ' +
+    'bg-red-50 hover:bg-red-100 focus:outline-none ' +
+    'focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300',
+  icon:
+    'p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors duration-200'
 };
 
 const inputBase =
   'w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition-all duration-200 ' +
-  'focus:outline-none focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] focus:bg-white ' +
+  'focus:outline-none focus:ring-2 focus:ring-[#66CFFF] focus:border-[#66CFFF] focus:bg-white ' +
   'hover:border-gray-300 placeholder-gray-400';
 
 const sectionCard =
-  'p-6 sm:p-8 rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md transition-all duration-200 ' +
-  'backdrop-blur-sm bg-white/90';
+  'p-6 sm:p-8 rounded-2xl bg-white shadow-sm border border-gray-100 transition-all duration-200';
 
 const LaundryServiceCreator = () => {
   const { t } = useTranslation();
@@ -99,12 +78,12 @@ const LaundryServiceCreator = () => {
   });
   const [laundryItems, setLaundryItems] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
-  const [currency, setCurrency] = useState('USD'); // Default currency
-  const [currencySymbol, setCurrencySymbol] = useState('$'); // Default symbol
+  const [currency, setCurrency] = useState('USD');
+  const [currencySymbol, setCurrencySymbol] = useState('$');
 
   useEffect(() => {
     fetchCategoryTemplate();
-    fetchCurrencyFromServices(); // Detect currency on mount
+    fetchCurrencyFromServices();
     if (activeTab === 'manage') fetchExistingServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
@@ -119,7 +98,6 @@ const LaundryServiceCreator = () => {
       else if (Array.isArray(res.data?.data)) services = res.data.data;
       else if (Array.isArray(res.data)) services = res.data;
 
-      // Detect currency from first service
       if (services.length > 0 && services[0].pricing?.currency) {
         const detectedCurrency = services[0].pricing.currency;
         setCurrency(detectedCurrency);
@@ -127,7 +105,6 @@ const LaundryServiceCreator = () => {
         setCurrencySymbol(symbols[detectedCurrency] || '$');
       }
     } catch (err) {
-      // Silently fail - will use default USD
       console.log('No existing services found, using default currency');
     }
   };
@@ -143,7 +120,6 @@ const LaundryServiceCreator = () => {
       else if (Array.isArray(res.data)) services = res.data;
       setExistingServices(services);
 
-      // Detect currency from first service
       if (services.length > 0 && services[0].pricing?.currency) {
         const detectedCurrency = services[0].pricing.currency;
         setCurrency(detectedCurrency);
@@ -246,6 +222,8 @@ const LaundryServiceCreator = () => {
       toast.success(t('serviceProvider.laundryManagement.messages.serviceCreatedSuccess'));
       setServiceDetails({ name: '', description: '', shortDescription: '', isActive: true });
       setLaundryItems([]);
+      setActiveTab('manage'); // Switch to manage tab after creation
+      fetchExistingServices();
     } catch (err) {
       console.error(err);
       toast.error(err?.response?.data?.message || t('serviceProvider.laundryManagement.messages.failedToCreateService'));
@@ -313,7 +291,7 @@ const LaundryServiceCreator = () => {
     const newItem = {
       name: tmplItem.name,
       category: tmplItem.category,
-      icon: tmplItem.icon,
+      icon: tmplItem.icon, // Keeping original icon if it's not an emoji string we can't use, otherwise relies on getIconForCategory
       isAvailable: true,
       serviceTypes: (categoryTemplate?.serviceTypes || []).map((st) => ({
         serviceTypeId: st.id,
@@ -356,8 +334,6 @@ const LaundryServiceCreator = () => {
           : i
       )
     );
-  const updateItemNotes = (itemName, notes) =>
-    setLaundryItems((p) => p.map((i) => (i.name === itemName ? { ...i, notes } : i)));
 
   // ===== Validation & i18n helpers =====
   const validateForm = () => {
@@ -387,98 +363,110 @@ const LaundryServiceCreator = () => {
     const translated = t(key);
     return translated !== key ? translated : name;
   };
+
   const getTranslatedCategoryName = (name) => {
     const key = `categorySelection.laundryCategories.${name}`;
     const translated = t(key);
     return translated !== key ? translated : name;
   };
 
+  // Helper to get React Icon based on category or name if needed, or fallback
+  // Since original template might rely on emojis, we'll try to map them or just use generic
+  const getItemIcon = (name) => {
+      // You could add a mapping logic here if the API provides specific item types
+      return <FiPackage className="text-[#66CFFF]" />;
+  };
+
   // ===== UI =====
   if (loading && !categoryTemplate) {
     return (
-      <div className="flex items-center justify-center p-10 text-[#3B5787]">
-        <div className="animate-spin h-5 w-5 border-2 border-[#67BAE0] border-t-transparent rounded-full mr-3" />
-        <span>{t('serviceProvider.laundryManagement.messages.loadingTemplate')}</span>
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#66CFFF] mb-4"></div>
+        <p className="text-gray-500 font-medium">{t('serviceProvider.laundryManagement.messages.loadingTemplate')}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-      <div className="w-full p-4 sm:p-6 lg:p-8">
-        {/* Modern Header */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#3B5787] via-[#4A6B95] to-[#67BAE0] p-8 sm:p-12 text-white shadow-2xl mb-8">
-          {/* Decorative Elements */}
-          <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-white/10 blur-xl"></div>
-          <div className="absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/15"></div>
-          <div className="absolute top-8 right-1/4 h-6 w-6 rounded-full bg-white/20"></div>
-          <div className="absolute bottom-12 right-12 h-4 w-4 rounded-full bg-white/25"></div>
+    <div className="min-h-screen bg-gray-50 pb-12">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
 
-          <div className="relative z-10">
-            <div className="flex items-center mb-4">
-              <div className="p-3 rounded-2xl bg-white/20 backdrop-blur-sm mr-4">
-                <Icon type="tshirt" className="text-3xl" />
-              </div>
-              <div>
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
-                  {t('serviceProvider.laundryManagement.title')}
-                </h1>
-                <div className="h-1 w-20 bg-gradient-to-r from-white/60 to-transparent rounded-full mt-2"></div>
-              </div>
-            </div>
-            <p className="text-lg sm:text-xl text-white/90 max-w-2xl leading-relaxed">
-              {t('serviceProvider.laundryManagement.description')}
-            </p>
+        {/* New Header Design */}
+        <div className="relative overflow-hidden rounded-2xl bg-[#5BB8E4] p-8 sm:p-10 mb-8 shadow-xl">
+           {/* Abstract shapes overlay */}
+           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl"></div>
+           <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#66CFFF]/20 rounded-full translate-y-1/3 -translate-x-1/4 blur-2xl"></div>
 
-            {/* Stats Quick View */}
-            <div className="flex flex-wrap gap-6 mt-8">
-              <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-2">
-                <Icon type="package" className="text-xl mr-2" />
-                <span className="text-sm font-medium">
-                  {existingServices.length} Services
-                </span>
-              </div>
-              <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-2">
-                <Icon type="list" className="text-xl mr-2" />
-                <span className="text-sm font-medium">
-                  {laundryItems.length} Items Added
-                </span>
-              </div>
-            </div>
-          </div>
+           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+             <div className="flex items-start gap-5">
+               <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-sm shadow-inner border border-white/10">
+                 <FaTshirt className="text-4xl text-white" />
+               </div>
+               <div>
+                 <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+                   {t('serviceProvider.laundryManagement.title')}
+                 </h1>
+                 <p className="text-blue-100/90 text-lg max-w-xl font-light">
+                   {t('serviceProvider.laundryManagement.description')}
+                 </p>
+               </div>
+             </div>
+
+             {/* Stats Pills */}
+             <div className="flex md:flex-col gap-3">
+                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
+                  <div className="bg-[#66CFFF]/20 p-1.5 rounded-lg">
+                    <FiPackage className="text-white" />
+                  </div>
+                  <div>
+                    <span className="block text-white font-bold text-lg leading-none">{existingServices.length}</span>
+                    <span className="text-blue-200 text-xs font-medium uppercase tracking-wider">Services</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10">
+                  <div className="bg-[#66CFFF]/20 p-1.5 rounded-lg">
+                    <FiList className="text-white" />
+                  </div>
+                  <div>
+                    <span className="block text-white font-bold text-lg leading-none">{laundryItems.length}</span>
+                    <span className="text-blue-200 text-xs font-medium uppercase tracking-wider">Items in Draft</span>
+                  </div>
+                </div>
+             </div>
+           </div>
         </div>
 
-        {/* Modern Tab Navigation */}
-        <div className="relative mb-8">
-          <div className="flex bg-gray-100 rounded-2xl p-1 max-w-md mx-auto">
-            <button
-              onClick={() => setActiveTab('manage')}
-              className={
-                'flex-1 py-3 px-6 text-sm font-semibold rounded-xl transition-all duration-300 ' +
-                (activeTab === 'manage'
-                  ? 'bg-white text-[#3B5787] shadow-lg transform scale-105'
-                  : 'text-gray-600 hover:text-[#3B5787] hover:bg-white/50')
-              }
-            >
-              <Icon type="list" className="mr-2" />
-              {t('serviceProvider.laundryManagement.tabs.manageItems')}
-            </button>
-            <button
-              onClick={() => setActiveTab('add')}
-              className={
-                'flex-1 py-3 px-6 text-sm font-semibold rounded-xl transition-all duration-300 ' +
-                (activeTab === 'add'
-                  ? 'bg-white text-[#3B5787] shadow-lg transform scale-105'
-                  : 'text-gray-600 hover:text-[#3B5787] hover:bg-white/50')
-              }
-            >
-              <Icon type="plus" className="mr-2" />
-              {t('serviceProvider.laundryManagement.tabs.addItems')}
-            </button>
-          </div>
+        {/* Tab Navigation */}
+        <div className="flex mb-8 border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('manage')}
+            className={`
+              pb-4 px-6 text-sm font-semibold transition-all duration-300 flex items-center gap-2 relative
+              ${activeTab === 'manage' ? 'text-[#66CFFF]' : 'text-gray-500 hover:text-gray-700'}
+            `}
+          >
+            <FiList className="text-lg" />
+            {t('serviceProvider.laundryManagement.tabs.manageItems')}
+            {activeTab === 'manage' && (
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#66CFFF] rounded-t-full"></span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('add')}
+            className={`
+              pb-4 px-6 text-sm font-semibold transition-all duration-300 flex items-center gap-2 relative
+              ${activeTab === 'add' ? 'text-[#66CFFF]' : 'text-gray-500 hover:text-gray-700'}
+            `}
+          >
+            <FiPlus className="text-lg" />
+            {t('serviceProvider.laundryManagement.tabs.addItems')}
+            {activeTab === 'add' && (
+              <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#66CFFF] rounded-t-full"></span>
+            )}
+          </button>
         </div>
 
-        {/* Content */}
+        {/* Content Area */}
         {activeTab === 'manage' ? renderManageItemsTab() : renderAddItemsTab()}
 
       </div>
@@ -489,38 +477,26 @@ const LaundryServiceCreator = () => {
   function renderManageItemsTab() {
     if (loading) {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-          <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden mx-3 sm:mx-4 lg:mx-6">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
-            <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
-            <div className="relative flex flex-col items-center">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">{t('serviceProvider.laundryManagement.title')}</h1>
-              <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">{t('serviceProvider.laundryManagement.messages.loadingServices')}</p>
-            </div>
-          </div>
-          <div className="w-full px-2 sm:px-3 lg:px-4">
-            <div className="flex justify-center items-center h-96">
-              <div className="relative">
-                <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
-                <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-[#3B5787] border-t-transparent animate-ping opacity-20"></div>
-              </div>
-            </div>
-          </div>
+        <div className="flex justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#66CFFF]"></div>
         </div>
       );
     }
 
     if (existingServices.length === 0) {
       return (
-        <div className={sectionCard + ' text-center'}>
-          <Icon type="tshirt" className="text-5xl sm:text-6xl text-gray-300 mb-4" />
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-2">
+        <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-gray-200">
+          <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+            <FaTshirt className="text-3xl text-[#66CFFF]" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
             {t('serviceProvider.laundryManagement.messages.noServicesFound')}
           </h3>
-          <p className="text-gray-500 mb-6">You haven’t created any laundry services yet.</p>
+          <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+            You haven’t setup any laundry services yet. Get started by adding your first service package.
+          </p>
           <button onClick={() => setActiveTab('add')} className={btn.primary}>
-            <Icon type="plus" className="mr-2" />
+            <FiPlus className="mr-2 h-5 w-5" />
             Create Your First Service
           </button>
         </div>
@@ -528,239 +504,187 @@ const LaundryServiceCreator = () => {
     }
 
     return (
-      <div className="space-y-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              {t('serviceProvider.laundryManagement.yourServices')}
-            </h3>
-            <p className="text-gray-600">
-              {t('serviceProvider.laundryManagement.servicesCount', { count: existingServices.length })}
-            </p>
-          </div>
-          <button onClick={() => setActiveTab('add')} className={btn.primary}>
-            <Icon type="plus" className="mr-2" />
-            {t('serviceProvider.laundryManagement.addNewService')}
-          </button>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+           <h2 className="text-xl font-bold text-gray-800">Your Services</h2>
+           <button onClick={() => setActiveTab('add')} className={btn.primary}>
+              <FiPlus className="mr-2" />
+              Add New
+           </button>
         </div>
 
-        {/* Responsive Cards Layout */}
         <div className={editingService ? "space-y-6" : "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"}>
           {existingServices.map((service) => (
             <div key={service._id} className={
               editingService === service._id
-                ? sectionCard + ' w-full max-w-none transition-all duration-300'
-                : sectionCard + ' group hover:scale-105 transition-all duration-300 relative overflow-hidden'
+                ? 'col-span-full ' + sectionCard
+                : sectionCard + ' group hover:border-[#66CFFF]/50 hover:shadow-md'
             }>
-              {/* Background Pattern - only show when not editing */}
-              {editingService !== service._id && (
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#67BAE0]/10 to-transparent rounded-bl-full"></div>
-              )}
-
               {editingService === service._id ? (
-                // ----- Enhanced Edit Mode -----
-                <div className="relative z-10 space-y-6">
-                  <div className="text-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-900">{t('serviceProvider.laundryManagement.form.editService')}</h3>
-                    <p className="text-gray-600">{t('serviceProvider.laundryManagement.form.editServiceDesc')}</p>
+                // ----- Edit Mode -----
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <div className="p-2 bg-[#66CFFF]/10 rounded-lg">
+                        <FiEdit2 className="text-[#66CFFF]" />
+                      </div>
+                      Edit Service
+                    </h3>
+                    <button onClick={cancelEditing} className="text-gray-400 hover:text-gray-600">
+                      <FiX size={24} />
+                    </button>
                   </div>
 
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-2">
-                          {t('serviceProvider.laundryManagement.form.serviceName')}
-                        </label>
-                        <input
-                          type="text"
-                          value={editFormData.name}
-                          onChange={(e) => setEditFormData((p) => ({ ...p, name: e.target.value }))}
-                          className={inputBase}
-                          placeholder={t('serviceProvider.laundryManagement.form.enterServiceName')}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-800 mb-2">
-                          {t('serviceProvider.laundryManagement.form.description')}
-                        </label>
-                        <textarea
-                          rows={4}
-                          value={editFormData.description}
-                          onChange={(e) => setEditFormData((p) => ({ ...p, description: e.target.value }))}
-                          className={inputBase}
-                          placeholder={t('serviceProvider.laundryManagement.form.descriptionPlaceholder')}
-                        />
-                      </div>
+                  <div className="grid grid-cols-1 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        {t('serviceProvider.laundryManagement.form.serviceName')}
+                      </label>
+                      <input
+                        type="text"
+                        value={editFormData.name}
+                        onChange={(e) => setEditFormData((p) => ({ ...p, name: e.target.value }))}
+                        className={inputBase}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        {t('serviceProvider.laundryManagement.form.description')}
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={editFormData.description}
+                        onChange={(e) => setEditFormData((p) => ({ ...p, description: e.target.value }))}
+                        className={inputBase}
+                      />
                     </div>
 
-                    {/* Enhanced Items Pricing */}
-                    {editFormData.laundryItems?.length > 0 && (
-                      <div>
-                        <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                          <Icon type="package" className="mr-2" />
-                          {t('serviceProvider.laundryManagement.form.itemsPricing')}
-                        </h4>
-                        <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
-                          {editFormData.laundryItems.map((item, itemIndex) => (
-                            <div key={itemIndex} className="bg-gray-50 rounded-xl border border-gray-200 p-4">
+                    {/* Items List for Editing */}
+                    <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                      <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <FiList className="text-[#66CFFF]" />
+                        Service Items & Pricing
+                      </h4>
+                      <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                        {editFormData.laundryItems.map((item, itemIndex) => (
+                           <div key={itemIndex} className="bg-white p-4 rounded-xl border border-gray-200">
                               <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2 rounded-lg bg-white border border-gray-200">
-                                  <span className="text-2xl">{item.icon}</span>
+                                <div className="p-2 bg-blue-50 rounded-lg text-2xl">
+                                  {/* Just show icon here if available or generic */}
+                                  {item.icon ? item.icon : <FiPackage className="text-[#66CFFF]" />}
                                 </div>
-                                <div>
-                                  <h5 className="font-bold text-gray-900">{getTranslatedItemName(item.name)}</h5>
-                                  <p className="text-sm text-gray-600">{t('serviceProvider.laundryManagement.form.configurePricing')}</p>
-                                </div>
+                                <span className="font-bold text-gray-800">{getTranslatedItemName(item.name)}</span>
                               </div>
+
                               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {item.serviceTypes?.map((st, stIndex) => (
-                                  <div key={stIndex} className="bg-white rounded-lg border border-gray-200 p-3">
-                                    <div className="flex items-center justify-between mb-3">
-                                      <span className="text-sm font-semibold text-gray-800">
+                                  <div key={stIndex} className={`
+                                    p-3 rounded-xl border transition-all duration-200
+                                    ${st.isAvailable ? 'border-[#66CFFF]/30 bg-[#66CFFF]/5' : 'border-gray-100 bg-gray-50'}
+                                  `}>
+                                    <div className="flex items-center justify-between mb-2">
+                                      <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">
                                         {getServiceTypeName(st.serviceTypeId)}
                                       </span>
-                                      <label className="flex items-center cursor-pointer">
+                                      <label className="relative inline-flex items-center cursor-pointer">
                                         <input
                                           type="checkbox"
                                           checked={!!st.isAvailable}
-                                          onChange={(e) =>
-                                            updateEditingItemAvailability(itemIndex, st.serviceTypeId, e.target.checked)
-                                          }
-                                          className="sr-only"
+                                          onChange={(e) => updateEditingItemAvailability(itemIndex, st.serviceTypeId, e.target.checked)}
+                                          className="sr-only peer"
                                         />
-                                        <div className={
-                                          'w-10 h-5 rounded-full transition-colors duration-200 ' +
-                                          (st.isAvailable ? 'bg-[#3B5787]' : 'bg-gray-300')
-                                        }>
-                                          <div className={
-                                            'w-4 h-4 bg-white rounded-full transition-transform duration-200 mt-0.5 ' +
-                                            (st.isAvailable ? 'translate-x-5 ml-0.5' : 'translate-x-0.5')
-                                          }></div>
-                                        </div>
+                                        <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#66CFFF]"></div>
                                       </label>
                                     </div>
+
                                     {st.isAvailable && (
-                                      <>
-                                        <div className="relative">
-                                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                                          <input
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            value={st.price}
-                                            onChange={(e) =>
-                                              updateEditingItemPrice(itemIndex, st.serviceTypeId, e.target.value)
-                                            }
-                                            className={inputBase + ' pl-8'}
-                                            placeholder="0.00"
-                                          />
-                                        </div>
-                                        {st.price > 0 && (
-                                          <p className="text-xs text-gray-500 mt-1">
-                                            ({(st.price * 3.75).toFixed(2)} SAR)
-                                          </p>
-                                        )}
-                                      </>
+                                      <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</span>
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          step="0.01"
+                                          value={st.price}
+                                          onChange={(e) => updateEditingItemPrice(itemIndex, st.serviceTypeId, e.target.value)}
+                                          className="w-full pl-7 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#66CFFF]"
+                                        />
+                                      </div>
                                     )}
                                   </div>
                                 ))}
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                           </div>
+                        ))}
                       </div>
-                    )}
-
-                    <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
-                      <button
-                        onClick={() => updateExistingService(service._id)}
-                        disabled={loading}
-                        className={btn.primary + ' flex-1 sm:flex-none'}
-                      >
-                        <Icon type="save" className="mr-2" />
-                        {t('serviceProvider.laundryManagement.form.saveChanges')}
-                      </button>
-                      <button
-                        onClick={cancelEditing}
-                        className={btn.neutral + ' flex-1 sm:flex-none'}
-                      >
-                        <Icon type="times" className="mr-2" />
-                        {t('serviceProvider.laundryManagement.actions.cancel')}
-                      </button>
                     </div>
+                  </div>
+
+                  <div className="flex gap-4 pt-4 border-t border-gray-100">
+                    <button onClick={() => updateExistingService(service._id)} className={btn.primary}>
+                      <FiSave className="mr-2" />
+                      Save Changes
+                    </button>
+                    <button onClick={cancelEditing} className={btn.secondary}>
+                      Cancel
+                    </button>
                   </div>
                 </div>
               ) : (
-                // ----- Modern View Mode -----
-                <div className="relative z-10 space-y-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Icon type="tshirt" className="text-2xl" />
-                        <h4 className="text-xl font-bold text-gray-900">{service.name}</h4>
+                // ----- View Mode -----
+                <div className="flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-[#66CFFF]/10 rounded-xl text-[#66CFFF]">
+                        <FaTshirt size={20} />
                       </div>
-                      <p className="text-gray-600 leading-relaxed">{service.description}</p>
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-lg leading-tight">{service.name}</h4>
+                        <span className={badgeClass(service.isActive) + ' mt-1'}>
+                           {service.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <span className={
-                        service.isActive
-                          ? 'px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200'
-                          : 'px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200'
-                      }>
-                        {service.isActive ? `● ${t('serviceProvider.laundryManagement.status.active')}` : `● ${t('serviceProvider.laundryManagement.status.inactive')}`}
-                      </span>
+
+                    <div className="flex gap-1">
+                      <button onClick={() => startEditingService(service)} className={btn.icon} title="Edit">
+                        <FiEdit2 size={18} />
+                      </button>
+                      <button onClick={() => deleteExistingService(service._id)} className={btn.icon + ' text-red-400 hover:text-red-500 hover:bg-red-50'} title="Delete">
+                        <FiTrash2 size={18} />
+                      </button>
                     </div>
                   </div>
 
-                  {/* Enhanced Stats */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 rounded-2xl p-4 text-center border border-[#67BAE0]/20">
-                      <div className="text-2xl font-bold text-[#3B5787] mb-1">
+                  <p className="text-gray-600 text-sm mb-6 flex-grow">
+                    {service.description || 'No description provided.'}
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+                      <span className="block text-2xl font-bold text-[#66CFFF]">
                         {service.laundryItems?.length || 0}
-                      </div>
-                      <div className="text-xs text-gray-600 font-medium">
-                        {t('serviceProvider.laundryManagement.stats.items')}
-                      </div>
+                      </span>
+                      <span className="text-xs text-gray-500 font-medium">Items Configured</span>
                     </div>
-                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 text-center border border-blue-200">
-                      <div className="text-2xl font-bold text-blue-600 mb-1">
-                        {service.performance?.totalBookings || service.stats?.bookings || service.totalBookings || 0}
-                      </div>
-                      <div className="text-xs text-gray-600 font-medium">
-                        {t('serviceProvider.laundryManagement.stats.bookings')}
-                      </div>
-                    </div>
-                    <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-4 text-center border border-emerald-200">
-                      <div className="text-2xl font-bold text-emerald-600 mb-1">
-                        ${service.performance?.totalRevenue || service.stats?.revenue || service.totalRevenue || 0}
-                      </div>
-                      <div className="text-xs text-gray-600 font-medium">
-                        {t('serviceProvider.laundryManagement.stats.revenue')}
-                      </div>
+                    <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+                      <span className="block text-2xl font-bold text-gray-800">
+                        {service.performance?.totalBookings || 0}
+                      </span>
+                      <span className="text-xs text-gray-500 font-medium">Total Bookings</span>
                     </div>
                   </div>
 
-                  {/* Modern Actions */}
-                  <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100">
-                    <button onClick={() => startEditingService(service)} className={btn.secondary + ' flex-1 sm:flex-none'}>
-                      <Icon type="edit" className="mr-2" />
-                      {t('serviceProvider.laundryManagement.actions.edit')}
-                    </button>
-                    <button
-                      onClick={() => toggleServiceAvailability(service._id, service.isActive)}
-                      className={(service.isActive ? btn.warn : btn.success) + ' flex-1 sm:flex-none'}
-                    >
-                      <Icon type="toggle" className="mr-2" />
-                      {service.isActive ? t('serviceProvider.laundryManagement.actions.deactivate') : t('serviceProvider.laundryManagement.actions.activate')}
-                    </button>
-                    <button
-                      onClick={() => deleteExistingService(service._id)}
-                      className={btn.danger + ' flex-1 sm:flex-none'}
-                    >
-                      <Icon type="trash" className="mr-2" />
-                      {t('serviceProvider.laundryManagement.actions.delete')}
-                    </button>
-                  </div>
+                  <button
+                     onClick={() => toggleServiceAvailability(service._id, service.isActive)}
+                     className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-colors
+                       ${service.isActive
+                         ? 'text-red-600 bg-red-50 hover:bg-red-100'
+                         : 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100'
+                       }
+                     `}
+                  >
+                     {service.isActive ? 'Deactivate Service' : 'Activate Service'}
+                  </button>
                 </div>
               )}
             </div>
@@ -773,279 +697,246 @@ const LaundryServiceCreator = () => {
   // -------- Render Add Tab --------
   function renderAddItemsTab() {
     return (
-      <div className="space-y-8">
-        {/* Modern Service Info Card */}
-        <div className={sectionCard + ' relative overflow-hidden'}>
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#67BAE0]/20 to-transparent rounded-bl-full"></div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-[#3B5787] to-[#67BAE0] text-white shadow-lg">
-                <Icon type="package" className="text-xl" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {t('serviceProvider.laundryManagement.form.serviceInformation')}
-                </h3>
-                <p className="text-gray-600">
-                  {t('serviceProvider.laundryManagement.form.serviceInformationDesc')}
-                </p>
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  {t('serviceProvider.laundryManagement.form.serviceName')} *
+        {/* Left Col: Service Details */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className={sectionCard}>
+            <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <div className="p-2 bg-[#66CFFF]/10 rounded-lg">
+                <FiPackage className="text-[#66CFFF]" />
+              </div>
+              Basic Information
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Service Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={serviceDetails.name}
-                  onChange={(e) => setServiceDetails((p) => ({ ...p, name: e.target.value }))}
+                  onChange={(e) => setServiceDetails(p => ({ ...p, name: e.target.value }))}
+                  placeholder="e.g. Express Laundry"
                   className={inputBase}
-                  placeholder={t('serviceProvider.laundryManagement.form.serviceNamePlaceholder')}
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  {t('serviceProvider.laundryManagement.form.shortDescription')}
-                </label>
-                <input
-                  type="text"
-                  value={serviceDetails.shortDescription}
-                  onChange={(e) => setServiceDetails((p) => ({ ...p, shortDescription: e.target.value }))}
-                  className={inputBase}
-                  placeholder={t('serviceProvider.laundryManagement.form.shortDescriptionPlaceholder')}
-                />
-              </div>
-            </div>
-            <div className="mt-6">
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                {t('serviceProvider.laundryManagement.form.fullDescription')}
-              </label>
-              <textarea
-                rows={4}
-                value={serviceDetails.description}
-                onChange={(e) => setServiceDetails((p) => ({ ...p, description: e.target.value }))}
-                className={inputBase}
-                placeholder={t('serviceProvider.laundryManagement.form.fullDescriptionPlaceholder')}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Modern Add Items Section */}
-        <div className={sectionCard + ' relative overflow-hidden bg-gradient-to-br from-[#3B5787]/5 via-white to-[#67BAE0]/5 border-2 border-[#67BAE0]/20'}>
-          <div className="absolute -top-8 -right-8 w-32 h-32 bg-gradient-to-bl from-[#67BAE0]/20 to-transparent rounded-full blur-xl"></div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 rounded-2xl bg-white shadow-lg border border-[#67BAE0]/30">
-                <Icon type="plus" className="text-xl text-[#3B5787]" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {t('serviceProvider.laundryManagement.form.addLaundryItems')}
-                </h3>
-                <p className="text-gray-600">
-                  {t('serviceProvider.laundryManagement.form.addLaundryItemsDesc')}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-              <div className="flex-1">
-                <select
-                  onChange={(e) => addItemFromDropdown(e.target.value)}
-                  className={inputBase + ' text-base font-medium'}
-                  value=""
-                >
-                  <option value="">{t('serviceProvider.laundryManagement.form.selectItemToAdd')}</option>
-                  {availableItems.map((it, idx) => (
-                    <option key={idx} value={it.name}>
-                      {it.icon} {getTranslatedItemName(it.name)} ({getTranslatedCategoryName(it.category)})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-3 bg-white rounded-xl border border-[#67BAE0]/30 shadow-sm">
-                <Icon type="list" className="text-[#3B5787]" />
-                <span className="font-semibold text-[#3B5787]">
-                  {t('serviceProvider.laundryManagement.form.itemsAdded', { count: laundryItems.length })}
-                </span>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  rows={3}
+                  value={serviceDetails.description}
+                  onChange={(e) => setServiceDetails(p => ({ ...p, description: e.target.value }))}
+                  placeholder="Describe your service package..."
+                  className={inputBase}
+                />
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Modern Items List */}
-        {laundryItems.length > 0 && (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                Configure Your Items
-              </h3>
-              <p className="text-gray-600">
-                Set pricing and availability for each item
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {laundryItems.map((item, itemIndex) => (
-                <div key={itemIndex} className={sectionCard + ' group hover:shadow-xl transition-all duration-300 relative overflow-hidden'}>
-                  {/* Item Header */}
-                  <div className="flex items-start justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-2xl bg-gradient-to-br from-[#3B5787]/10 to-[#67BAE0]/10 border border-[#67BAE0]/20">
-                        <span className="text-3xl">{item.icon}</span>
-                      </div>
-                      <div>
-                        <h4 className="text-xl font-bold text-gray-900">
-                          {getTranslatedItemName(item.name)}
-                        </h4>
-                        <p className="text-sm text-gray-500">
-                          Category: {getTranslatedCategoryName(item.category)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={item.isAvailable}
-                          onChange={(e) => updateItemAvailability(item.name, e.target.checked)}
-                          className="sr-only"
-                        />
-                        <div className={
-                          'relative w-12 h-6 rounded-full transition-colors duration-200 ' +
-                          (item.isAvailable ? 'bg-green-500' : 'bg-gray-300')
-                        }>
-                          <div className={
-                            'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform duration-200 ' +
-                            (item.isAvailable ? 'translate-x-6' : 'translate-x-0')
-                          }></div>
-                        </div>
-                        <span className={
-                          'ml-3 text-sm font-medium ' +
-                          (item.isAvailable ? 'text-green-700' : 'text-gray-500')
-                        }>
-                          {item.isAvailable ? 'Available' : 'Unavailable'}
-                        </span>
-                      </label>
-                      <button
-                        onClick={() => removeItem(item.name)}
-                        className="p-2 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors"
-                      >
-                        <Icon type="trash" />
-                      </button>
-                    </div>
+          <div className={sectionCard}>
+             <div className="flex items-center justify-between mb-6">
+               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <div className="p-2 bg-[#66CFFF]/10 rounded-lg">
+                    <FiList className="text-[#66CFFF]" />
                   </div>
+                  Items in Package
+               </h3>
+             </div>
 
-                  {/* Service Types */}
-                  {item.isAvailable && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {item.serviceTypes.map((st, idx) => {
-                        const tmpl = categoryTemplate?.serviceTypes?.find((x) => x.id === st.serviceTypeId);
+             {/* Add Item Dropdown Area */}
+             <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Add Item to Package
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    className={inputBase}
+                    onChange={(e) => {
+                      if(e.target.value) {
+                        addItemFromDropdown(e.target.value);
+                        e.target.value = ""; // Reset select
+                      }
+                    }}
+                    defaultValue=""
+                  >
+                    <option value="" disabled>Select an item to add...</option>
+                    {categoryTemplate?.categories && categoryTemplate.categories.length > 0 ? (
+                      // Render by categories if available
+                      categoryTemplate.categories.map(cat => {
+                        const catItems = availableItems.filter(i => i.category === cat.id);
+                        if (catItems.length === 0) return null;
+
                         return (
-                          <div key={idx} className="rounded-xl border border-gray-100 p-4 bg-gray-50/50 hover:bg-white transition-colors">
-                            <div className="flex items-center justify-between mb-3">
-                              <h5 className="font-semibold text-gray-800 flex items-center">
-                                <span className="mr-2">{tmpl?.icon}</span>
-                                {getServiceTypeName(st.serviceTypeId)}
-                              </h5>
-                              <label className="flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={!!st.isAvailable}
-                                  onChange={(e) => updateServiceTypeAvailability(item.name, st.serviceTypeId, e.target.checked)}
-                                  className="sr-only"
-                                />
-                                <div className={
-                                  'w-10 h-5 rounded-full transition-colors duration-200 ' +
-                                  (st.isAvailable ? 'bg-[#3B5787]' : 'bg-gray-300')
-                                }>
-                                  <div className={
-                                    'w-4 h-4 bg-white rounded-full transition-transform duration-200 mt-0.5 ' +
-                                    (st.isAvailable ? 'translate-x-5 ml-0.5' : 'translate-x-0.5')
-                                  }></div>
-                                </div>
-                              </label>
+                          <optgroup key={cat.id} label={getTranslatedCategoryName(cat.name)}>
+                            {catItems.map(item => (
+                              <option
+                                key={item.name}
+                                value={item.name}
+                                disabled={laundryItems.some(i => i.name === item.name)}
+                              >
+                                {getTranslatedItemName(item.name)} {laundryItems.some(i => i.name === item.name) ? '(Added)' : ''}
+                              </option>
+                            ))}
+                          </optgroup>
+                        );
+                      })
+                    ) : (
+                      // Fallback: show all available items without categories
+                      availableItems.map(item => (
+                        <option
+                          key={item.name}
+                          value={item.name}
+                          disabled={laundryItems.some(i => i.name === item.name)}
+                        >
+                          {getTranslatedItemName(item.name)} {laundryItems.some(i => i.name === item.name) ? '(Added)' : ''}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+             </div>
+
+             {laundryItems.length === 0 && (
+               <div className="text-center py-6 border-2 border-dashed border-gray-100 rounded-2xl">
+                 <p className="text-gray-500 text-sm">No items added yet. Select items above or from the panel.</p>
+               </div>
+             )}
+
+             {laundryItems.length > 0 && (
+               <div className="space-y-4">
+                 {laundryItems.map((item, index) => (
+                   <div key={index} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                     <div className="flex justify-between items-start mb-4 pb-4 border-b border-gray-50">
+                        <div className="flex items-center gap-3">
+                           <div className="text-2xl p-2 bg-gray-50 rounded-lg">
+                             {item.icon ? item.icon : <FiPackage className="text-gray-400" />}
+                           </div>
+                           <div>
+                             <h4 className="font-bold text-gray-800">{getTranslatedItemName(item.name)}</h4>
+                             <p className="text-xs text-gray-500">{item.category}</p>
+                           </div>
+                        </div>
+                        <button onClick={() => removeItem(item.name)} className="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded-lg transition-colors">
+                           <FiTrash2 />
+                        </button>
+                     </div>
+
+                     {/* Services for this item */}
+                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {item.serviceTypes.map((st) => (
+                          <div key={st.serviceTypeId} className={`p-3 rounded-lg border transition-all ${
+                            st.isAvailable
+                              ? 'border-[#66CFFF]/30 bg-[#66CFFF]/5'
+                              : 'border-gray-100 bg-gray-50 opacity-60'
+                          }`}>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-[10px] font-bold uppercase text-gray-500">{getServiceTypeName(st.serviceTypeId)}</span>
+                              <input
+                                type="checkbox"
+                                checked={st.isAvailable}
+                                onChange={(e) => updateServiceTypeAvailability(item.name, st.serviceTypeId, e.target.checked)}
+                                className="w-4 h-4 rounded text-[#66CFFF] focus:ring-[#66CFFF] border-gray-300"
+                              />
                             </div>
                             {st.isAvailable && (
-                              <>
-                                <div>
-                                  <label className="block text-xs font-medium text-gray-600 mb-2">
-                                    Price ({currency})
-                                  </label>
-                                  <div className="relative">
-                                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">{currencySymbol}</span>
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      value={st.price}
-                                      onChange={(e) => updateServiceTypePrice(item.name, st.serviceTypeId, e.target.value)}
-                                      className={inputBase + ' pl-8'}
-                                      placeholder="0.00"
-                                    />
-                                  </div>
-                                </div>
-                              </>
+                              <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+                                <input
+                                  type="number"
+                                   min="0"
+                                   step="0.01"
+                                   value={st.price}
+                                   onChange={(e) => updateServiceTypePrice(item.name, st.serviceTypeId, e.target.value)}
+                                   className="w-full pl-5 py-1 text-sm bg-white border border-gray-200 rounded focus:border-[#66CFFF] focus:outline-none"
+                                />
+                              </div>
                             )}
                           </div>
-                        );
-                      })}
-                    </div>
+                        ))}
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             )}
+
+             <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+               <button onClick={createService} disabled={loading} className={btn.primary + ' w-full sm:w-auto'}>
+                  {loading ? (
+                    <span className="flex items-center">
+                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                       Saving...
+                    </span>
+                  ) : (
+                    <>
+                      <FiSave className="mr-2" />
+                      Save Complete Service
+                    </>
                   )}
-
-                  {/* Notes */}
-                  <div className="mt-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Special Notes
-                    </label>
-                    <input
-                      type="text"
-                      value={item.notes}
-                      onChange={(e) => updateItemNotes(item.name, e.target.value)}
-                      className={inputBase}
-                      placeholder="Any special instructions or notes..."
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Modern CTA Section */}
-        <div className="text-center">
-          <div className="inline-flex flex-col items-center">
-            <button
-              onClick={createService}
-              disabled={loading || laundryItems.length === 0}
-              className={
-                loading || laundryItems.length === 0
-                  ? 'inline-flex items-center justify-center px-8 py-4 rounded-2xl text-lg font-bold text-gray-400 bg-gray-100 cursor-not-allowed'
-                  : btn.primary + ' px-8 py-4 text-lg font-bold rounded-2xl shadow-2xl hover:shadow-3xl transform hover:-translate-y-1'
-              }
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full mr-3" />
-                  Creating Service...
-                </>
-              ) : (
-                <>
-                  <Icon type="save" className="mr-3 text-xl" />
-                  Create Laundry Service
-                </>
-              )}
-            </button>
-            {laundryItems.length === 0 && (
-              <p className="text-sm text-gray-500 mt-3">
-                Add at least one item to create your service
-              </p>
-            )}
+               </button>
+             </div>
           </div>
         </div>
+
+        {/* Right Col: Item Palette */}
+        <div className="lg:col-span-1">
+           <div className={sectionCard + ' sticky top-6'}>
+             <h3 className="font-bold text-gray-900 mb-4">Add Items</h3>
+             <div className="relative mb-4">
+               <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+               <input
+                 type="text"
+                 placeholder="Search items..."
+                 className="w-full pl-9 pr-4 py-2 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#66CFFF]"
+               />
+             </div>
+
+             <div className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto pr-2 custom-scrollbar">
+               {categoryTemplate?.categories?.map(cat => {
+                 // Filter items for this category
+                 const catItems = availableItems.filter(i => i.category === cat.id);
+                 if (catItems.length === 0) return null;
+
+                 return (
+                   <div key={cat.id}>
+                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                       {getTranslatedCategoryName(cat.name)}
+                     </h4>
+                     <div className="grid grid-cols-2 gap-2">
+                        {catItems.map(item => {
+                          const isAdded = laundryItems.some(i => i.name === item.name);
+                          return (
+                             <button
+                               key={item.name}
+                               onClick={() => addItemFromDropdown(item.name)}
+                               disabled={isAdded}
+                               className={`
+                                 flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200
+                                 ${isAdded
+                                   ? 'bg-[#66CFFF]/10 border-[#66CFFF]/20 opacity-50 cursor-default'
+                                   : 'bg-white border-gray-100 hover:border-[#66CFFF] hover:shadow-md'
+                                 }
+                               `}
+                             >
+                               <div className="text-2xl mb-1">{item.icon}</div>
+                               <span className="text-xs font-medium text-gray-700 text-center leading-tight">
+                                 {getTranslatedItemName(item.name)}
+                               </span>
+                               {isAdded && <FiCheck className="text-[#66CFFF] text-xs mt-1" />}
+                             </button>
+                          );
+                        })}
+                     </div>
+                   </div>
+                 );
+               })}
+             </div>
+           </div>
+        </div>
+
       </div>
     );
   }

@@ -53,22 +53,29 @@ router.get('/dashboard', catchAsync(async (req, res) => {
     activeServices,
     totalBookings,
     activeBookings,
+    pendingRequests,
     recentBookings,
-    revenueStats,
+    bookingStats,
     topServices,
     hotelMarkupSettings
   ] = await Promise.all([
     ServiceProvider.findById(providerId),
-    Hotel.findById(hotelId).select('name markupSettings branding images paymentSettings'),    Service.countDocuments({ providerId: providerId }),
+    Hotel.findById(hotelId).select('name markupSettings branding images paymentSettings'),
+    Service.countDocuments({ providerId: providerId }),
     Service.countDocuments({ providerId: providerId, isActive: true, isApproved: true }),
     Booking.countDocuments({ serviceProviderId: providerId }),
     Booking.countDocuments({
       serviceProviderId: providerId,
       status: { $nin: ['completed', 'cancelled', 'refunded'] }
     }),
+    Booking.countDocuments({
+      serviceProviderId: providerId,
+      status: { $in: ['pending', 'confirmed'] }
+    }),
     Booking.find({ serviceProviderId: providerId })
       .sort({ createdAt: -1 })
-      .limit(10)      .populate('serviceId', 'name category'),
+      .limit(10)
+      .populate('serviceId', 'name category'),
     Booking.aggregate([
       { $match: { serviceProviderId: new mongoose.Types.ObjectId(providerId) } },
       {
@@ -76,21 +83,6 @@ router.get('/dashboard', catchAsync(async (req, res) => {
           _id: null,
           totalBookings: { $sum: 1 },
           completedBookings: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
-          totalEarnings: { $sum: '$pricing.providerEarnings' },
-          thisMonthEarnings: {
-            $sum: {
-              $cond: [
-                {
-                  $and: [
-                    { $eq: [{ $month: '$createdAt' }, { $month: new Date() }] },
-                    { $eq: [{ $year: '$createdAt' }, { $year: new Date() }] }
-                  ]
-                },
-                '$pricing.providerEarnings',
-                0
-              ]
-            }
-          },
           averageRating: { $avg: '$rating' }
         }
       }
@@ -99,10 +91,11 @@ router.get('/dashboard', catchAsync(async (req, res) => {
       .sort({ 'performance.totalBookings': -1 })
       .limit(5)
       .select('name category pricing.basePrice performance'),
-    Hotel.findById(hotelId).select('markupSettings')  ]);
+    Hotel.findById(hotelId).select('markupSettings')
+  ]);
 
-  // Get monthly earnings trend
-  const monthlyEarnings = await Booking.aggregate([
+  // Get monthly bookings trend
+  const monthlyBookings = await Booking.aggregate([
     { $match: { serviceProviderId: new mongoose.Types.ObjectId(providerId) } },
     {
       $group: {
@@ -110,8 +103,7 @@ router.get('/dashboard', catchAsync(async (req, res) => {
           year: { $year: '$createdAt' },
           month: { $month: '$createdAt' }
         },
-        bookings: { $sum: 1 },
-        earnings: { $sum: '$pricing.providerEarnings' }
+        bookings: { $sum: 1 }
       }
     },
     { $sort: { '_id.year': 1, '_id.month': 1 } }
@@ -142,21 +134,20 @@ router.get('/dashboard', catchAsync(async (req, res) => {
         totalServices,
         activeServices,
         totalBookings,
-        activeBookings
+        activeBookings,
+        pendingRequests
       },
       recentBookings,
       metrics: {
-        ...(revenueStats.length > 0 ? revenueStats[0] : {
+        ...(bookingStats.length > 0 ? bookingStats[0] : {
           totalBookings: 0,
-          completedBookings: 0,
-          totalEarnings: 0,
-          thisMonthEarnings: 0
+          completedBookings: 0
         }),
         averageRating: feedbackRating.averageRating || 0,
         totalFeedbacks: feedbackRating.totalFeedbacks || 0
       },
       topServices,
-      monthlyEarnings
+      monthlyBookings
     }
   });
 }));
@@ -170,7 +161,10 @@ router.get('/services', catchAsync(async (req, res) => {
   const providerId = req.user.serviceProviderId;
 
   // Query filters
-  const filter = { providerId: providerId };
+  const filter = {
+    providerId: providerId,
+    isDeleted: { $ne: true }
+  };
 
   if (req.query.status === 'active') {
     filter.isActive = true;
@@ -427,9 +421,22 @@ router.delete('/services/:id', catchAsync(async (req, res, next) => {
   });
 
   if (activeBookings) {
-    return next(new AppError('Cannot delete service with active bookings', 400));
+    // Soft delete: Mark as deleted instead of removing
+    service.isDeleted = true;
+    await service.save();
+
+    logger.info(`Service soft deleted (has active bookings): ${service.name}`, {
+      serviceProviderId: providerId,
+      serviceId: serviceId
+    });
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Service removed successfully'
+    });
   }
 
+  // Hard delete if no active bookings
   await Service.findByIdAndDelete(serviceId);
 
   logger.info(`Service deleted: ${service.name}`, {

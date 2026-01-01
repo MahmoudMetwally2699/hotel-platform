@@ -22,7 +22,8 @@ import {
   FaCamera,
   FaListUl,
   FaCog,
-  FaArrowLeft
+  FaArrowLeft,
+  FaClock
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 
@@ -102,6 +103,23 @@ const modalStyles = `
   }
 `;
 
+// Helper to convert hex to rgba
+const hexToRgba = (hex, alpha = 1) => {
+  let r = 0, g = 0, b = 0;
+  if (hex) {
+    if (hex.length === 4) {
+      r = parseInt(hex[1] + hex[1], 16);
+      g = parseInt(hex[2] + hex[2], 16);
+      b = parseInt(hex[3] + hex[3], 16);
+    } else if (hex.length === 7) {
+      r = parseInt(hex.slice(1, 3), 16);
+      g = parseInt(hex.slice(3, 5), 16);
+      b = parseInt(hex.slice(5, 7), 16);
+    }
+  }
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
 const RestaurantServiceCreator = ({ onBack }) => {
   const { t } = useTranslation();
 
@@ -121,6 +139,9 @@ const RestaurantServiceCreator = ({ onBack }) => {
   // Active tab management
   const [activeTab, setActiveTab] = useState('add');
   const [loading, setLoading] = useState(false);
+
+  // Search state for filtering menu items
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Service creation state
   const [serviceDetails, setServiceDetails] = useState({
@@ -148,6 +169,12 @@ const RestaurantServiceCreator = ({ onBack }) => {
   const [currency, setCurrency] = useState('USD'); // Default currency
   const [currencySymbol, setCurrencySymbol] = useState('$'); // Default symbol
 
+  // Hotel branding colors state
+  const [hotelBranding, setHotelBranding] = useState({
+    primaryColor: '#3B5787',
+    secondaryColor: '#67BAE0'
+  });
+
   // Service menu item editing state
   const [editingServiceMenuItem, setEditingServiceMenuItem] = useState(null);
 
@@ -156,6 +183,22 @@ const RestaurantServiceCreator = ({ onBack }) => {
   const [restaurantDescription, setRestaurantDescription] = useState('');
   const [infoChanged, setInfoChanged] = useState(false);
   const WORD_LIMIT = 100;
+
+  // Working hours state
+  const [workingHours, setWorkingHours] = useState({
+    saturday: { isAvailable: true, startTime: '09:00', endTime: '23:00' },
+    sunday: { isAvailable: true, startTime: '09:00', endTime: '23:00' },
+    monday: { isAvailable: true, startTime: '09:00', endTime: '23:00' },
+    tuesday: { isAvailable: true, startTime: '09:00', endTime: '23:00' },
+    wednesday: { isAvailable: true, startTime: '09:00', endTime: '23:00' },
+    thursday: { isAvailable: true, startTime: '09:00', endTime: '23:00' },
+    friday: { isAvailable: false, startTime: '09:00', endTime: '23:00' }
+  });
+  const [workingHoursChanged, setWorkingHoursChanged] = useState(false);
+
+  // Delivery toggle state
+  const [offersDelivery, setOffersDelivery] = useState(true);
+  const [deliveryChanged, setDeliveryChanged] = useState(false);
 
   /**
    * Handle restaurant image upload to Cloudinary
@@ -267,6 +310,31 @@ const RestaurantServiceCreator = ({ onBack }) => {
       setRestaurantName(firstService.providerId?.businessName || firstService.name || '');
       setRestaurantDescription(firstService.description || '');
       setInfoChanged(false);
+
+      // Load working hours from service availability schedule
+      const schedule = firstService.availability?.schedule;
+      if (schedule) {
+        const loadedHours = {};
+        const days = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+        days.forEach(day => {
+          if (schedule[day]) {
+            loadedHours[day] = {
+              isAvailable: schedule[day].isAvailable ?? true,
+              startTime: schedule[day].timeSlots?.[0]?.startTime || '09:00',
+              endTime: schedule[day].timeSlots?.[0]?.endTime || '23:00'
+            };
+          } else {
+            loadedHours[day] = { isAvailable: true, startTime: '09:00', endTime: '23:00' };
+          }
+        });
+        setWorkingHours(loadedHours);
+        setWorkingHoursChanged(false);
+      }
+
+      // Load delivery setting
+      const isDeliveryAvailable = firstService.delivery?.isDeliveryAvailable ?? true;
+      setOffersDelivery(isDeliveryAvailable);
+      setDeliveryChanged(false);
     }
   }, [existingServices]);
 
@@ -334,6 +402,31 @@ const RestaurantServiceCreator = ({ onBack }) => {
       setLoading(false);
     }
   };
+
+  /**
+   * Fetch hotel branding for dynamic colors
+   */
+  const fetchHotelBranding = async () => {
+    try {
+      // Get service provider dashboard data which includes hotel branding
+      const dashboardRes = await apiClient.get('/service/dashboard');
+      const hotelData = dashboardRes.data.data.hotel;
+
+      if (hotelData && hotelData.branding) {
+        setHotelBranding({
+          primaryColor: hotelData.branding.primaryColor || '#3B5787',
+          secondaryColor: hotelData.branding.secondaryColor || '#67BAE0'
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching hotel branding:', error);
+      // Fallback already handled by initial state
+    }
+  };
+
+  useEffect(() => {
+    fetchHotelBranding();
+  }, []);
 
   /**
    * Add custom menu item created by service provider
@@ -665,7 +758,8 @@ const RestaurantServiceCreator = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Error deleting service:', error);
-      toast.error(t('serviceProvider.restaurant.messages.serviceDeleteFailed'));
+      const errorMessage = error.response?.data?.message || t('serviceProvider.restaurant.messages.serviceDeleteFailed') || 'Failed to delete service';
+      toast.error(errorMessage);
     }
   };
 
@@ -684,9 +778,18 @@ const RestaurantServiceCreator = ({ onBack }) => {
     return (
       <div className="space-y-8">
         {/* Service Details Section */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+        <div
+          className="rounded-2xl p-6 border"
+          style={{
+            background: `linear-gradient(to right, ${hexToRgba(hotelBranding.primaryColor, 0.05)}, ${hexToRgba(hotelBranding.secondaryColor, 0.05)})`,
+            borderColor: hexToRgba(hotelBranding.primaryColor, 0.1)
+          }}
+        >
           <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-            <div className="p-2 rounded-lg bg-blue-500 mr-3">
+            <div
+              className="p-2 rounded-lg mr-3"
+              style={{ backgroundColor: hotelBranding.primaryColor }}
+            >
               <FaUtensils className="text-white text-sm" />
             </div>
             {t('serviceProvider.restaurant.form.serviceDetails')}
@@ -721,22 +824,46 @@ const RestaurantServiceCreator = ({ onBack }) => {
         </div>
 
         {/* Add Custom Menu Items Section */}
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+        <div
+          className="rounded-2xl p-6 border"
+          style={{
+            background: `linear-gradient(to right, ${hexToRgba(hotelBranding.secondaryColor, 0.05)}, ${hexToRgba(hotelBranding.primaryColor, 0.05)})`,
+            borderColor: hexToRgba(hotelBranding.secondaryColor, 0.1)
+          }}
+        >
           <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-            <div className="p-2 rounded-lg bg-green-500 mr-3">
+            <div
+              className="p-2 rounded-lg mr-3"
+              style={{ backgroundColor: hotelBranding.secondaryColor }}
+            >
               <FaPlus className="text-white text-sm" />
             </div>
             {t('serviceProvider.restaurant.form.addCustomItem')}
           </h3>
 
-          <CustomMenuItemForm onAddItem={addCustomMenuItem} t={t} currency={currency} currencySymbol={currencySymbol} />
+          <CustomMenuItemForm
+            onAddItem={addCustomMenuItem}
+            t={t}
+            currency={currency}
+            currencySymbol={currencySymbol}
+            hotelBranding={hotelBranding}
+          />
         </div>
 
         {/* Menu Items List */}
         {menuItems.length > 0 && (
-          <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-2xl p-6 border border-purple-100">
+          <div
+            className="rounded-2xl p-6 border"
+            style={{
+              background: `linear-gradient(to right, ${hexToRgba(hotelBranding.primaryColor, 0.02)}, ${hexToRgba(hotelBranding.secondaryColor, 0.02)})`,
+              borderColor: hexToRgba(hotelBranding.primaryColor, 0.1)
+            }}
+          >
             <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-              <div className="p-2 rounded-lg bg-purple-500 mr-3">
+              <div
+                className="p-2 rounded-lg mr-3"
+                style={{ backgroundColor: hotelBranding.primaryColor }}
+              >
                 <FaListUl className="text-white text-sm" />
               </div>
               {t('serviceProvider.restaurant.form.yourMenuItems')} ({menuItems.length})
@@ -746,7 +873,10 @@ const RestaurantServiceCreator = ({ onBack }) => {
               {menuItems.map((item, itemIndex) => (
                 <div key={itemIndex} className={CARD + " group hover:scale-[1.02] transition-all duration-300 relative"}>
                   {/* Background Pattern */}
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#67BAE0]/10 to-transparent rounded-bl-full"></div>
+                  <div
+                    className="absolute top-0 right-0 w-24 h-24 rounded-bl-full"
+                    style={{ background: `linear-gradient(to bottom right, ${hexToRgba(hotelBranding.secondaryColor, 0.1)}, transparent)` }}
+                  ></div>
 
                   {editingItemIndex === itemIndex ? (
                     // Edit Mode
@@ -757,12 +887,16 @@ const RestaurantServiceCreator = ({ onBack }) => {
                       t={t}
                       currency={currency}
                       currencySymbol={currencySymbol}
+                      hotelBranding={hotelBranding}
                     />
                   ) : (
                     // View Mode
                     <>
                       {/* Item Header */}
-                      <div className="relative z-10 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white p-6">
+                      <div
+                        className="relative z-10 text-white p-6"
+                        style={{ background: `linear-gradient(to right, ${hotelBranding.primaryColor}, ${hotelBranding.secondaryColor})` }}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             {item.imageUrl ? (
@@ -779,7 +913,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                             <div>
                               <h4 className="text-xl font-bold">{item.name}</h4>
                               <p className="text-blue-100 text-sm">
-                                {getCategoryName(item.category)} • {currencySymbol}{item.price} • {item.preparationTime || 15} min
+                                {getCategoryName(item.category)} • {currencySymbol}{item.price} • {item.preparationTime || 15} {t('common.min')}
                               </p>
                             </div>
                           </div>
@@ -804,12 +938,12 @@ const RestaurantServiceCreator = ({ onBack }) => {
                                 {item.isAvailable ? (
                                   <>
                                     <FaEye className="inline mr-1" />
-                                    Available
+                                    {t('serviceProvider.restaurant.details.available')}
                                   </>
                                 ) : (
                                   <>
                                     <FaEyeSlash className="inline mr-1" />
-                                    Unavailable
+                                    {t('serviceProvider.restaurant.details.unavailable')}
                                   </>
                                 )}
                               </span>
@@ -837,28 +971,42 @@ const RestaurantServiceCreator = ({ onBack }) => {
                         {/* Description */}
                         {item.description && (
                           <div className="mb-4">
-                            <h5 className="text-sm font-bold text-gray-700 mb-2">Description</h5>
+                            <h5 className="text-sm font-bold text-gray-700 mb-2">{t('serviceProvider.restaurant.form.description')}</h5>
                             <p className="text-gray-600 leading-relaxed">{item.description}</p>
                           </div>
                         )}
 
                         {/* Details Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                          <div className="bg-blue-50 rounded-lg p-3">
-                            <div className="text-sm font-bold text-gray-700 mb-1">Price</div>
-                            <div className="text-lg font-bold text-blue-600">{currencySymbol}{item.price}</div>
+                          <div
+                            className="rounded-lg p-3"
+                            style={{ backgroundColor: hexToRgba(hotelBranding.primaryColor, 0.1) }}
+                          >
+                            <div className="text-sm font-bold text-gray-700 mb-1">{t('serviceProvider.restaurant.form.price')}</div>
+                            <div className="text-lg font-bold" style={{ color: hotelBranding.primaryColor }}>{currencySymbol}{item.price}</div>
                           </div>
-                          <div className="bg-green-50 rounded-lg p-3">
-                            <div className="text-sm font-bold text-gray-700 mb-1">Prep Time</div>
-                            <div className="text-lg font-bold text-green-600">{item.preparationTime || 15} min</div>
+                          <div
+                            className="bg-green-50 rounded-lg p-3"
+                            style={{ backgroundColor: hexToRgba('#10B981', 0.1) }}
+                          >
+                            <div className="text-sm font-bold text-gray-700 mb-1">{t('serviceProvider.restaurant.details.prepTime')}</div>
+                            <div className="text-lg font-bold text-green-600">{item.preparationTime || 15} {t('common.min')}</div>
                           </div>
-                          <div className="bg-orange-50 rounded-lg p-3">
-                            <div className="text-sm font-bold text-gray-700 mb-1">Spicy Level</div>
-                            <div className="text-lg font-bold text-orange-600 capitalize">{item.spicyLevel || 'normal'}</div>
+                          <div
+                            className="bg-orange-50 rounded-lg p-3"
+                            style={{ backgroundColor: hexToRgba('#F97316', 0.1) }}
+                          >
+                            <div className="text-sm font-bold text-gray-700 mb-1">{t('serviceProvider.restaurant.details.spicyLevel')}</div>
+                            <div className="text-lg font-bold text-orange-600 capitalize">
+                              {t(`serviceProvider.restaurant.spicyLevels.${item.spicyLevel || 'normal'}`)}
+                            </div>
                           </div>
-                          <div className="bg-purple-50 rounded-lg p-3">
-                            <div className="text-sm font-bold text-gray-700 mb-1">Category</div>
-                            <div className="text-lg font-bold text-purple-600">{getCategoryName(item.category)}</div>
+                          <div
+                            className="rounded-lg p-3"
+                            style={{ backgroundColor: hexToRgba(hotelBranding.secondaryColor, 0.1) }}
+                          >
+                            <div className="text-sm font-bold text-gray-700 mb-1">{t('serviceProvider.restaurant.details.category')}</div>
+                            <div className="text-lg font-bold" style={{ color: hotelBranding.secondaryColor }}>{getCategoryName(item.category)}</div>
                           </div>
                         </div>
 
@@ -866,17 +1014,17 @@ const RestaurantServiceCreator = ({ onBack }) => {
                         <div className="flex flex-wrap gap-3 mb-4">
                           {item.isVegetarian && (
                             <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-                              🌱 Vegetarian
+                              🌱 {t('serviceProvider.restaurant.details.vegetarian')}
                             </span>
                           )}
                           {item.isVegan && (
                             <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-                              🥬 Vegan
+                              🥬 {t('serviceProvider.restaurant.details.vegan')}
                             </span>
                           )}
                           {item.spicyLevel && item.spicyLevel !== 'normal' && (
                             <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
-                              🌶️ {item.spicyLevel.charAt(0).toUpperCase() + item.spicyLevel.slice(1)}
+                              🌶️ {t(`serviceProvider.restaurant.spicyLevels.${item.spicyLevel}`)}
                             </span>
                           )}
                         </div>
@@ -884,7 +1032,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                         {/* Allergens */}
                         {item.allergens && item.allergens.length > 0 && (
                           <div className="mb-4">
-                            <h5 className="text-sm font-bold text-gray-700 mb-2">Allergens</h5>
+                            <h5 className="text-sm font-bold text-gray-700 mb-2">{t('serviceProvider.restaurant.details.allergens')}</h5>
                             <div className="flex flex-wrap gap-2">
                               {item.allergens.map((allergen, idx) => (
                                 <span key={idx} className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">
@@ -898,7 +1046,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                         {/* Additional Notes */}
                         {item.notes && (
                           <div>
-                            <h5 className="text-sm font-bold text-gray-700 mb-2">Additional Notes</h5>
+                            <h5 className="text-sm font-bold text-gray-700 mb-2">{t('serviceProvider.restaurant.details.notes')}</h5>
                             <p className="text-gray-600 text-sm italic">{item.notes}</p>
                           </div>
                         )}
@@ -917,6 +1065,9 @@ const RestaurantServiceCreator = ({ onBack }) => {
             onClick={submitService}
             disabled={loading || menuItems.length === 0}
             className={BTN.primary + " px-8 py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"}
+            style={{
+               background: `linear-gradient(to right, ${hotelBranding.primaryColor}, ${hotelBranding.secondaryColor})`
+            }}
           >
             {loading ? (
               <>
@@ -934,6 +1085,8 @@ const RestaurantServiceCreator = ({ onBack }) => {
       </div>
     );
   };
+
+
 
   /**
    * Render Manage Items Tab
@@ -986,18 +1139,31 @@ const RestaurantServiceCreator = ({ onBack }) => {
 
     return (
       <div className="space-y-8">
-        <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-100">
-          <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-            <div className="p-2 rounded-lg bg-orange-500 mr-3">
-              <FaCog className="text-white text-sm" />
+        {/* Search Bar */}
+        <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('serviceProvider.restaurant.search.placeholder') || 'ابحث في القائمة'}
+              className="w-full px-4 py-3 pr-12 rounded-xl border-2 border-[#67BAE0]/30 focus:border-[#67BAE0] focus:ring-2 focus:ring-[#67BAE0]/20 transition-all outline-none text-right"
+              dir="rtl"
+            />
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#67BAE0]">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
-            {t('serviceProvider.restaurant.messages.manageRestaurant')}
-          </h3>
+          </div>
+        </div>
 
-          <div className="space-y-6">
-            {existingServices.map((service) => (
-              <div key={service._id} className={CARD + " group hover:scale-[1.01] transition-all duration-300"}>
-                {editingService === service._id ? (
+
+        {/* Menu Items - Direct Display */}
+        <div className="space-y-8">
+          {existingServices.map((service) => (
+            <div key={service._id} className="w-full">
+              {editingService === service._id ? (
                   // Enhanced Edit Mode - All Fields
                   <div className="relative">
                     {/* Edit Mode Header */}
@@ -1077,82 +1243,72 @@ const RestaurantServiceCreator = ({ onBack }) => {
                                       t={t}
                                     />
                                 ) : (
-                                  // View Mode
-                                  <>
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center">
-                                        <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mr-3 overflow-hidden">
-                                          {item.imageUrl ? (
-                                            <img
-                                              src={item.imageUrl}
-                                              alt={item.name}
-                                              className="w-full h-full object-cover rounded-lg"
-                                              onError={(e) => {
-                                                e.target.style.display = 'none';
-                                                e.target.nextSibling.style.display = 'block';
-                                              }}
-                                            />
-                                          ) : null}
-                                          <span
-                                            className={item.imageUrl ? 'hidden' : 'text-lg'}
-                                            style={{ display: item.imageUrl ? 'none' : 'block' }}
-                                          >
-                                            🍽️
-                                          </span>
-                                        </div>
-                                        <div>
-                                          <h5 className="font-semibold text-gray-800">{item.name}</h5>
-                                          <p className="text-sm text-gray-600">
-                                            {currencySymbol}{item.price} • {item.preparationTime || 15} min
-                                            {item.category && ` • ${item.category}`}
-                                          </p>
-                                        </div>
+                                  // View Mode - Redesigned Clean Horizontal Card
+                                  <div className="flex items-center justify-between gap-4 py-3 px-4 bg-white rounded-xl border border-gray-100 hover:border-[#67BAE0]/30 hover:shadow-sm transition-all">
+                                    {/* Left Side - Action Buttons */}
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                      <button
+                                        onClick={() => startEditingServiceMenuItem(service._id, index)}
+                                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#3B5787] hover:bg-[#3B5787]/10 rounded-lg transition-colors"
+                                      >
+                                        <FaEdit className="text-sm" />
+                                        {t('common.edit') || 'Edit'}
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          if (window.confirm(t('serviceProvider.restaurant.messages.confirmDeleteItem') || 'Are you sure you want to delete this item?')) {
+                                            // Handle delete
+                                            const updatedMenuItems = service.menuItems.filter((_, i) => i !== index);
+                                            apiClient.put(`/service/services/${service._id}`, { menuItems: updatedMenuItems })
+                                              .then(() => {
+                                                toast.success(t('serviceProvider.restaurant.messages.itemDeleted') || 'Item deleted successfully');
+                                                fetchExistingServices();
+                                              })
+                                              .catch(() => toast.error(t('common.error') || 'Error deleting item'));
+                                          }
+                                        }}
+                                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                      >
+                                        <FaTimes className="text-sm" />
+                                        {t('common.delete') || 'Delete'}
+                                      </button>
+                                    </div>
+
+                                    {/* Middle - Price Info */}
+                                    <div className="flex flex-col items-center flex-shrink-0 min-w-[80px]">
+                                      <span className="text-xs text-gray-500">{t('serviceProvider.restaurant.form.price') || 'Price'}</span>
+                                      <span className="text-lg font-bold text-[#3B5787]">{currencySymbol}{item.price}</span>
+                                      {item.preparationTime && (
+                                        <span className="text-xs text-gray-400">{item.preparationTime} {t('common.min') || 'min'}</span>
+                                      )}
+                                    </div>
+
+                                    {/* Right Side - Name, Description, Image */}
+                                    <div className="flex items-center gap-4 flex-1 justify-end">
+                                      <div className="text-right flex-1">
+                                        <h5 className="font-bold text-gray-800 text-base">{item.name}</h5>
+                                        {item.description && (
+                                          <p className="text-sm text-gray-500 line-clamp-2 mt-1">{item.description}</p>
+                                        )}
                                       </div>
-                                      <div className="flex items-center gap-2">
-                                        <button
-                                          onClick={() => startEditingServiceMenuItem(service._id, index)}
-                                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                          title="Edit menu item"
-                                        >
-                                          <FaEdit />
-                                        </button>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                          item.isAvailable !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                        }`}>
-                                          {item.isAvailable !== false ? 'Available' : 'Unavailable'}
-                                        </span>
-                                        {item.isVegetarian && (
-                                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                                            🌱 Veg
-                                          </span>
-                                        )}
-                                        {item.spicyLevel && item.spicyLevel !== 'normal' && (
-                                          <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
-                                            🌶️ {item.spicyLevel}
-                                          </span>
-                                        )}
+                                      <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-[#67BAE0]/20 to-[#3B5787]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+                                        {item.imageUrl ? (
+                                          <img
+                                            src={item.imageUrl}
+                                            alt={item.name}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                              e.target.style.display = 'none';
+                                              e.target.nextSibling.style.display = 'flex';
+                                            }}
+                                          />
+                                        ) : null}
+                                        <div className={`w-full h-full items-center justify-center ${item.imageUrl ? 'hidden' : 'flex'}`}>
+                                          <FaUtensils className="text-2xl text-[#3B5787]/40" />
+                                        </div>
                                       </div>
                                     </div>
-                                    {item.description && (
-                                      <p className="text-sm text-gray-600 mt-2 ml-15">{item.description}</p>
-                                    )}
-                                    {item.allergens && item.allergens.length > 0 && (
-                                      <div className="mt-2 ml-15">
-                                        <span className="text-xs text-gray-500">Allergens: </span>
-                                        {item.allergens.map((allergen, idx) => (
-                                          <span key={idx} className="inline-block px-1 py-0.5 bg-red-50 text-red-700 rounded text-xs mr-1">
-                                            {allergen}
-                                          </span>
-                                        ))}
-                                      </div>
-                                    )}
-                                    {item.notes && (
-                                      <div className="mt-2 ml-15">
-                                        <span className="text-xs text-gray-500">Notes: </span>
-                                        <span className="text-xs text-gray-600 italic">{item.notes}</span>
-                                      </div>
-                                    )}
-                                  </>
+                                  </div>
                                 )}
                               </div>
                             ))}
@@ -1186,158 +1342,144 @@ const RestaurantServiceCreator = ({ onBack }) => {
                     </div>
                   </div>
                 ) : (
-                  // Enhanced View Mode
-                  <div className="relative">
-                    {/* Service Header */}
-                    <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm mr-4">
-                            <FaUtensils className="text-2xl" />
-                          </div>
-                          <div>
-                            <h4 className="text-2xl font-bold">{service.name}</h4>
-                            <p className="text-blue-100 text-sm mt-1">
-                              {service.cuisineType ? `${service.cuisineType.charAt(0).toUpperCase() + service.cuisineType.slice(1)} Cuisine` : 'Restaurant Service'}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                          <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                            service.isActive
-                              ? 'bg-green-500 text-white'
-                              : 'bg-red-500 text-white'
-                          }`}>
-                            {service.isActive ? t('serviceProvider.restaurant.status.active') : t('serviceProvider.restaurant.status.inactive')}
-                          </div>
-                        </div>
-                      </div>
+                  // View Mode - Restaurant Menu Style - 2 Columns
+                  // View Mode - Restaurant Menu Style - Categorized Grid
+                  <div className="w-full">
+                    {/* Category Title */}
+                    <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+                       <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                         <div className="w-2 h-8 bg-[#67BAE0] rounded-full"></div>
+                         {service.name}
+                       </h3>
+                       <div className="flex gap-2">
+                         <button
+                           onClick={() => setEditingService(service._id)}
+                           className="text-sm text-[#3B5787] hover:underline px-2"
+                         >
+                           {t('common.edit') || 'Edit Category'}
+                         </button>
+                         <button
+                           onClick={() => handleDeleteService(service._id)}
+                           className="text-sm text-red-500 hover:underline px-2"
+                         >
+                           {t('common.delete') || 'Remove Category'}
+                         </button>
+                       </div>
                     </div>
 
-                    {/* Service Content */}
-                    <div className="p-6">
-                      {/* Description */}
-                      <div className="mb-6">
-                        <h5 className="text-sm font-bold text-gray-700 mb-2">Description</h5>
-                        <p className="text-gray-600 leading-relaxed">{service.description || 'No description provided'}</p>
-                      </div>
+                    {/* Items Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                    {service.menuItems && service.menuItems.length > 0 ? (
+                      service.menuItems.map((item, index) => (
+                        <div key={index} className="w-full">
+                            {editingServiceMenuItem &&
+                             editingServiceMenuItem.serviceId === service._id &&
+                             editingServiceMenuItem.itemIndex === index ? (
+                              <ServiceMenuItemEditForm
+                                item={item}
+                                onSave={async (updatedItem) => await updateServiceMenuItem(service._id, index, updatedItem)}
+                                onCancel={cancelEditingServiceMenuItem}
+                                t={t}
+                              />
+                          ) : (
+                            // Restaurant Menu Card
+                            <div className={`flex items-center gap-3 p-3 bg-white rounded-xl border-2 border-[#67BAE0] hover:shadow-md transition-all ${item.isAvailable === false ? 'opacity-50 grayscale' : ''}`}>
 
-                      {/* Service Details Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div className="bg-blue-50 rounded-xl p-4">
-                          <div className="flex items-center mb-2">
-                            <div className="p-2 rounded-lg bg-blue-500 mr-3">
-                              <FaListUl className="text-white text-sm" />
-                            </div>
-                            <h6 className="font-bold text-gray-800">Menu Items</h6>
-                          </div>
-                          <p className="text-2xl font-bold text-blue-600">
-                            {service.menuItems ? service.menuItems.length : 0}
-                          </p>
-                          <p className="text-sm text-gray-600">Available items</p>
-                        </div>
+                                {/* Left - Toggle & Actions */}
+                                <div className="flex flex-col items-center gap-2 pr-3 border-r border-gray-200">
+                                  <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={item.isAvailable !== false}
+                                      onChange={(e) => {
+                                        const updatedMenuItems = [...service.menuItems];
+                                        updatedMenuItems[index] = { ...item, isAvailable: e.target.checked };
+                                        apiClient.put(`/service/services/${service._id}`, { menuItems: updatedMenuItems })
+                                          .then(() => {
+                                            toast.success(e.target.checked ? 'تم تفعيل الصنف' : 'تم إلغاء تفعيل الصنف');
+                                            fetchExistingServices();
+                                          })
+                                          .catch(() => toast.error('حدث خطأ'));
+                                      }}
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-8 h-4 bg-gray-300 rounded-full peer peer-checked:bg-[#67BAE0] peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-[1px] after:start-[2px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all"></div>
+                                  </label>
+                                  <div className="flex gap-1">
+                                    <button
+                                      onClick={() => startEditingServiceMenuItem(service._id, index)}
+                                      className="p-1 text-[#67BAE0] hover:bg-[#67BAE0]/10 rounded"
+                                    >
+                                      <FaEdit className="text-xs" />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        if (window.confirm('هل أنت متأكد من حذف هذا العنصر؟')) {
+                                          const updatedMenuItems = service.menuItems.filter((_, i) => i !== index);
+                                          apiClient.put(`/service/services/${service._id}`, { menuItems: updatedMenuItems })
+                                            .then(() => {
+                                              toast.success('تم حذف العنصر بنجاح');
+                                              fetchExistingServices();
+                                            })
+                                            .catch(() => toast.error('حدث خطأ'));
+                                        }
+                                      }}
+                                      className="p-1 text-red-500 hover:bg-red-50 rounded"
+                                    >
+                                      <FaTrash className="text-xs" />
+                                    </button>
+                                  </div>
+                                </div>
 
-                        <div className="bg-green-50 rounded-xl p-4">
-                          <div className="flex items-center mb-2">
-                            <div className="p-2 rounded-lg bg-green-500 mr-3">
-                              <FaUtensils className="text-white text-sm" />
-                            </div>
-                            <h6 className="font-bold text-gray-800">Orders</h6>
-                          </div>
-                          <p className="text-2xl font-bold text-green-600">0</p>
-                          <p className="text-sm text-gray-600">Total orders</p>
-                        </div>
+                                {/* Price Section */}
+                                <div className="flex flex-col items-center px-3 border-l border-gray-200">
+                                  <span className="text-[10px] text-gray-400">السعر</span>
+                                  <span className="text-lg font-bold text-[#3B5787]">{item.price}</span>
+                                  <span className="text-[10px] text-gray-400">ريال</span>
+                                  {item.preparationTime && (
+                                    <div className="flex items-center gap-0.5 text-[#67BAE0] mt-1">
+                                      <FaClock className="text-[8px]" />
+                                      <span className="text-[10px]">{item.preparationTime}</span>
+                                    </div>
+                                  )}
+                                </div>
 
-                        <div className="bg-purple-50 rounded-xl p-4">
-                          <div className="flex items-center mb-2">
-                            <div className="p-2 rounded-lg bg-purple-500 mr-3">
-                              <span className="text-white text-sm">{currencySymbol}</span>
-                            </div>
-                            <h6 className="font-bold text-gray-800">Revenue</h6>
-                          </div>
-                          <p className="text-2xl font-bold text-purple-600">{currencySymbol}0</p>
-                          <p className="text-sm text-gray-600">Total earned</p>
-                        </div>
-                      </div>
+                                {/* Name & Description */}
+                                <div className="flex-1 text-right min-w-0">
+                                  <h4 className="font-bold text-gray-800">{item.name}</h4>
+                                  {item.description && (
+                                    <p className="text-xs text-gray-500 line-clamp-1">{item.description}</p>
+                                  )}
+                                </div>
 
-                      {/* Service Info */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                          <h6 className="text-sm font-bold text-gray-700 mb-2">Menu Categories</h6>
-                          <div className="flex flex-wrap gap-2">
-                            {service.menuItems && service.menuItems.length > 0 ? (
-                              (() => {
-                                // Get unique categories from menu items
-                                const uniqueCategories = [...new Set(service.menuItems.map(item => item.category).filter(Boolean))];
-                                return uniqueCategories.length > 0 ? (
-                                  uniqueCategories.map((cat, idx) => (
-                                    <span key={idx} className="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                                      {getCategoryName(cat)}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span className="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700">
-                                    No categories
-                                  </span>
-                                );
-                              })()
-                            ) : (
-                              <span className="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700">
-                                No menu items
-                              </span>
+                                {/* Image */}
+                                <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-[#67BAE0]/10 to-[#3B5787]/10">
+                                  {item.imageUrl ? (
+                                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <FaUtensils className="text-lg text-[#3B5787]/30" />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             )}
                           </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-12 bg-gray-50 rounded-xl col-span-2">
+                          <FaUtensils className="mx-auto text-4xl mb-2 text-gray-300" />
+                          <p className="text-gray-500">لا توجد عناصر</p>
                         </div>
-                        <div>
-                          <h6 className="text-sm font-bold text-gray-700 mb-2">Created</h6>
-                          <p className="text-sm text-gray-600">
-                            {service.createdAt ? new Date(service.createdAt).toLocaleDateString() : 'N/A'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-3 pt-4 border-t border-gray-200">
-                        <button
-                          onClick={() => startEditingService(service)}
-                          className={BTN.secondary + " flex-1"}
-                        >
-                          <FaEdit className="mr-2" />
-                          {t('serviceProvider.restaurant.actions.editService')}
-                        </button>
-                        <button
-                          onClick={() => toggleServiceAvailability(service._id, service.isActive)}
-                          className={`flex-1 ${service.isActive ? BTN.danger : BTN.primary}`}
-                        >
-                          {service.isActive ? (
-                            <>
-                              <FaEyeSlash className="mr-2" />
-                              {t('serviceProvider.restaurant.actions.deactivate')}
-                            </>
-                          ) : (
-                            <>
-                              <FaEye className="mr-2" />
-                              {t('serviceProvider.restaurant.actions.activate')}
-                            </>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteService(service._id)}
-                          className="px-4 py-3 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl text-sm font-semibold transition-all duration-300 hover:shadow-md"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              ))}
           </div>
         </div>
-      </div>
-    );
+      );
   };
 
   /**
@@ -1442,58 +1584,310 @@ const RestaurantServiceCreator = ({ onBack }) => {
     }
 
     return (
-      <div className="space-y-8">
-        {/* Restaurant Info Section */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
-          <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-            <div className="p-2 rounded-lg bg-blue-500 mr-3">
-              <FaUtensils className="text-white text-sm" />
+      <div className="space-y-6">
+        {/* Restaurant Info Section - Premium Card */}
+        <div className="relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-xl p-8 border border-white/50 shadow-[0_8px_30px_rgba(59,87,135,0.12)] hover:shadow-[0_8px_40px_rgba(59,87,135,0.18)] transition-all duration-500 group">
+          {/* Decorative Background Elements */}
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-[#67BAE0]/20 to-[#3B5787]/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-gradient-to-tr from-[#3B5787]/15 to-[#67BAE0]/10 rounded-full blur-2xl"></div>
+
+          <div className="relative">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-[#3B5787] to-[#67BAE0] bg-clip-text text-transparent mb-8 flex items-center">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-[#3B5787] to-[#67BAE0] mr-4 shadow-lg shadow-[#3B5787]/25 group-hover:scale-110 transition-transform duration-300">
+                <FaUtensils className="text-white text-lg" />
+              </div>
+              {t('serviceProvider.restaurant.form.restaurantInfo') || 'Restaurant Information'}
+            </h3>
+
+            <div className="space-y-6">
+              {/* Restaurant Name */}
+              <div className="group/input">
+                <label className="block text-sm font-semibold text-[#3B5787] mb-3 flex items-center">
+                  <span className="w-1.5 h-1.5 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-full mr-2"></span>
+                  {t('serviceProvider.restaurant.form.restaurantNameLabel') || 'Restaurant Name'}
+                </label>
+                <input
+                  type="text"
+                  value={restaurantName}
+                  onChange={(e) => { setRestaurantName(e.target.value); setInfoChanged(true); }}
+                  className="w-full px-5 py-4 rounded-2xl border-2 border-[#67BAE0]/20 bg-white/70 backdrop-blur-sm focus:border-[#3B5787] focus:ring-4 focus:ring-[#3B5787]/10 outline-none transition-all duration-300 text-gray-700 placeholder-gray-400 text-base font-medium hover:border-[#67BAE0]/40"
+                  placeholder={t('serviceProvider.restaurant.form.restaurantNamePlaceholder') || 'Enter your restaurant name'}
+                />
+              </div>
+
+              {/* Restaurant Description */}
+              <div>
+                <label className="block text-sm font-semibold text-[#3B5787] mb-3 flex items-center justify-between">
+                  <span className="flex items-center">
+                    <span className="w-1.5 h-1.5 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-full mr-2"></span>
+                    {t('serviceProvider.restaurant.form.restaurantDescriptionLabel') || 'Restaurant Description'}
+                  </span>
+                  <span className="text-xs font-normal text-[#67BAE0] bg-[#67BAE0]/10 px-3 py-1 rounded-full">
+                    {wordCount}/{WORD_LIMIT} {t('common.words') || 'words'}
+                  </span>
+                </label>
+                <textarea
+                  value={restaurantDescription}
+                  onChange={handleDescriptionChange}
+                  className="w-full px-5 py-4 rounded-2xl border-2 border-[#67BAE0]/20 bg-white/70 backdrop-blur-sm focus:border-[#3B5787] focus:ring-4 focus:ring-[#3B5787]/10 outline-none transition-all duration-300 text-gray-700 placeholder-gray-400 resize-none hover:border-[#67BAE0]/40"
+                  rows="4"
+                  placeholder={t('serviceProvider.restaurant.form.restaurantDescriptionPlaceholder') || 'Describe your restaurant, cuisine style, specialties...'}
+                />
+                {wordCount >= WORD_LIMIT && (
+                  <p className="text-xs text-amber-600 mt-2 flex items-center">
+                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full mr-2 animate-pulse"></span>
+                    {t('serviceProvider.restaurant.form.wordLimitReached') || 'Word limit reached'}
+                  </p>
+                )}
+              </div>
+
+              {/* Save Info Button */}
+              <div className="pt-2">
+                <button
+                  onClick={saveRestaurantInfo}
+                  disabled={loading || !infoChanged}
+                  className="px-8 py-4 rounded-2xl bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white font-semibold shadow-lg shadow-[#3B5787]/25 hover:shadow-xl hover:shadow-[#3B5787]/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg flex items-center"
+                >
+                  {loading ? (
+                    <>
+                      <FaSpinner className="animate-spin mr-3 text-lg" />
+                      {t('common.saving') || 'Saving...'}
+                    </>
+                  ) : (
+                    <>
+                      <FaSave className="mr-3 text-lg" />
+                      {t('serviceProvider.restaurant.actions.saveInfo') || 'Save Info'}
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-            {t('serviceProvider.restaurant.form.restaurantInfo') || 'Restaurant Information'}
+          </div>
+        </div>
+
+        {/* Working Hours Section - Premium Card */}
+        <div className="relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-xl p-8 border border-white/50 shadow-[0_8px_30px_rgba(103,186,224,0.12)] hover:shadow-[0_8px_40px_rgba(103,186,224,0.18)] transition-all duration-500 group">
+          {/* Decorative Background Elements */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-gradient-to-br from-[#3B5787]/15 to-[#67BAE0]/20 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-gradient-to-tl from-[#67BAE0]/20 to-[#3B5787]/10 rounded-full blur-2xl"></div>
+
+          <div className="relative">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-[#67BAE0] to-[#3B5787] bg-clip-text text-transparent mb-4 flex items-center">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-[#67BAE0] to-[#3B5787] mr-4 shadow-lg shadow-[#67BAE0]/25 group-hover:scale-110 transition-transform duration-300">
+                <FaClock className="text-white text-lg" />
+              </div>
+              {t('serviceProvider.restaurant.form.workingHours') || 'Working Hours'}
+            </h3>
+
+            <p className="text-gray-500 mb-8 text-sm leading-relaxed">
+              {t('serviceProvider.restaurant.form.workingHoursDescription') || 'Set your restaurant working hours. Your menu will only be visible to guests during these hours.'}
+            </p>
+
+          <div className="space-y-3">
+            {[
+              { key: 'saturday', label: t('serviceProvider.restaurant.days.saturday') || 'Saturday' },
+              { key: 'sunday', label: t('serviceProvider.restaurant.days.sunday') || 'Sunday' },
+              { key: 'monday', label: t('serviceProvider.restaurant.days.monday') || 'Monday' },
+              { key: 'tuesday', label: t('serviceProvider.restaurant.days.tuesday') || 'Tuesday' },
+              { key: 'wednesday', label: t('serviceProvider.restaurant.days.wednesday') || 'Wednesday' },
+              { key: 'thursday', label: t('serviceProvider.restaurant.days.thursday') || 'Thursday' },
+              { key: 'friday', label: t('serviceProvider.restaurant.days.friday') || 'Friday' }
+            ].map(({ key, label }) => (
+              <div key={key} className="flex items-center gap-4 p-4 bg-white rounded-xl border border-[#67BAE0]/20 hover:border-[#3B5787]/30 hover:shadow-sm transition-all">
+                {/* Day Toggle */}
+                <label className="flex items-center cursor-pointer min-w-[120px]">
+                  <input
+                    type="checkbox"
+                    checked={workingHours[key]?.isAvailable ?? true}
+                    onChange={(e) => {
+                      setWorkingHours(prev => ({
+                        ...prev,
+                        [key]: { ...prev[key], isAvailable: e.target.checked }
+                      }));
+                      setWorkingHoursChanged(true);
+                    }}
+                    className="sr-only"
+                  />
+                  <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    workingHours[key]?.isAvailable ? 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0]' : 'bg-gray-300'
+                  }`}>
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      workingHours[key]?.isAvailable ? 'translate-x-6' : 'translate-x-1'
+                    }`} />
+                  </div>
+                  <span className={`ml-3 font-medium ${workingHours[key]?.isAvailable ? 'text-gray-800' : 'text-gray-400'}`}>
+                    {label}
+                  </span>
+                </label>
+
+                {/* Time Inputs */}
+                <div className={`flex items-center gap-2 flex-1 ${!workingHours[key]?.isAvailable ? 'opacity-40 pointer-events-none' : ''}`}>
+                  <span className="text-sm text-gray-500">{t('serviceProvider.restaurant.form.from') || 'From'}</span>
+                  <input
+                    type="time"
+                    value={workingHours[key]?.startTime || '09:00'}
+                    onChange={(e) => {
+                      setWorkingHours(prev => ({
+                        ...prev,
+                        [key]: { ...prev[key], startTime: e.target.value }
+                      }));
+                      setWorkingHoursChanged(true);
+                    }}
+                    className="px-3 py-2 rounded-xl border border-[#67BAE0]/30 focus:ring-2 focus:ring-[#3B5787]/20 focus:border-[#3B5787] text-sm bg-white"
+                  />
+                  <span className="text-sm text-gray-500">{t('serviceProvider.restaurant.form.to') || 'To'}</span>
+                  <input
+                    type="time"
+                    value={workingHours[key]?.endTime || '23:00'}
+                    onChange={(e) => {
+                      setWorkingHours(prev => ({
+                        ...prev,
+                        [key]: { ...prev[key], endTime: e.target.value }
+                      }));
+                      setWorkingHoursChanged(true);
+                    }}
+                    className="px-3 py-2 rounded-xl border border-[#67BAE0]/30 focus:ring-2 focus:ring-[#3B5787]/20 focus:border-[#3B5787] text-sm bg-white"
+                  />
+                </div>
+
+                {/* Status Badge */}
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  workingHours[key]?.isAvailable
+                    ? 'bg-[#67BAE0]/20 text-[#3B5787]'
+                    : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {workingHours[key]?.isAvailable
+                    ? (t('serviceProvider.restaurant.form.open') || 'Open')
+                    : (t('serviceProvider.restaurant.form.closed') || 'Closed')}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Save Working Hours Button */}
+          <div className="mt-6 flex justify-start">
+            <button
+              onClick={async () => {
+                if (existingServices.length === 0) {
+                  toast.error('No services found. Create a service first.');
+                  return;
+                }
+                try {
+                  setLoading(true);
+                  const schedule = {};
+                  Object.keys(workingHours).forEach(day => {
+                    schedule[day] = {
+                      isAvailable: workingHours[day].isAvailable,
+                      timeSlots: [{
+                        startTime: workingHours[day].startTime,
+                        endTime: workingHours[day].endTime,
+                        maxBookings: 50
+                      }]
+                    };
+                  });
+                  for (const service of existingServices) {
+                    await apiClient.put(`/service/services/${service._id}`, {
+                      availability: { schedule }
+                    });
+                  }
+                  toast.success(t('serviceProvider.restaurant.messages.workingHoursSaved') || 'Working hours saved successfully!');
+                  setWorkingHoursChanged(false);
+                  await fetchExistingServices();
+                } catch (error) {
+                  console.error('Error saving working hours:', error);
+                  toast.error(t('serviceProvider.restaurant.messages.workingHoursSaveFailed') || 'Failed to save working hours');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading || !workingHoursChanged}
+              className={BTN.primary + " px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"}
+            >
+              {loading ? (
+                <>
+                  <FaSpinner className="animate-spin mr-2" />
+                  {t('common.saving') || 'Saving...'}
+                </>
+              ) : (
+                <>
+                  <FaSave className="mr-2" />
+                  {t('serviceProvider.restaurant.actions.saveWorkingHours') || 'Save Working Hours'}
+                </>
+              )}
+            </button>
+          </div>
+          </div>
+        </div>
+
+        {/* Delivery Service Toggle */}
+        <div className="bg-gradient-to-br from-[#3B5787]/5 via-white to-[#67BAE0]/5 rounded-2xl p-6 border border-[#3B5787]/10 shadow-sm hover:shadow-md transition-shadow">
+          <h3 className="text-lg font-bold text-[#3B5787] mb-4 flex items-center">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#3B5787] to-[#67BAE0] mr-3 shadow-lg">
+              <span className="text-white text-sm">🚗</span>
+            </div>
+            {t('serviceProvider.restaurant.form.deliveryService') || 'Delivery Service'}
           </h3>
 
-          <div className="space-y-6">
-            {/* Restaurant Name */}
+          <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-[#67BAE0]/20">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                {t('serviceProvider.restaurant.form.restaurantNameLabel') || 'Restaurant Name'}
-              </label>
-              <input
-                type="text"
-                value={restaurantName}
-                onChange={(e) => { setRestaurantName(e.target.value); setInfoChanged(true); }}
-                className={INPUT + " transition-all duration-300 focus:scale-[1.01]"}
-                placeholder={t('serviceProvider.restaurant.form.restaurantNamePlaceholder') || 'Enter your restaurant name'}
-              />
+              <p className="font-medium text-gray-800">
+                {t('serviceProvider.restaurant.form.offerDelivery') || 'Do you offer delivery service?'}
+              </p>
+              <p className="text-sm text-gray-500">
+                {t('serviceProvider.restaurant.form.deliveryDescription') || 'Enable this if you can deliver orders to guest rooms'}
+              </p>
             </div>
-
-            {/* Restaurant Description */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                {t('serviceProvider.restaurant.form.restaurantDescriptionLabel') || 'Restaurant Description'}
-                <span className="text-sm font-normal text-gray-500 ml-2">
-                  ({wordCount}/{WORD_LIMIT} {t('common.words') || 'words'})
-                </span>
-              </label>
-              <textarea
-                value={restaurantDescription}
-                onChange={handleDescriptionChange}
-                className={INPUT + " resize-none transition-all duration-300 focus:scale-[1.01]"}
-                rows="4"
-                placeholder={t('serviceProvider.restaurant.form.restaurantDescriptionPlaceholder') || 'Describe your restaurant, cuisine style, specialties...'}
-              />
-              {wordCount >= WORD_LIMIT && (
-                <p className="text-xs text-orange-600 mt-1">
-                  {t('serviceProvider.restaurant.form.wordLimitReached') || 'Word limit reached'}
-                </p>
-              )}
-            </div>
-
-            {/* Save Info Button */}
-            <div className="flex justify-start">
+            <div className="flex items-center gap-4">
               <button
-                onClick={saveRestaurantInfo}
-                disabled={loading || !infoChanged}
+                onClick={() => { setOffersDelivery(true); setDeliveryChanged(true); }}
+                className={`px-5 py-2.5 rounded-xl font-medium transition-all ${
+                  offersDelivery
+                    ? 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {t('common.yes') || 'Yes'}
+              </button>
+              <button
+                onClick={() => { setOffersDelivery(false); setDeliveryChanged(true); }}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  !offersDelivery
+                    ? 'bg-red-500 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {t('common.no') || 'No'}
+              </button>
+            </div>
+          </div>
+
+          {/* Save Delivery Button */}
+          {deliveryChanged && (
+            <div className="mt-4 flex justify-start">
+              <button
+                onClick={async () => {
+                  if (existingServices.length === 0) {
+                    toast.error('No services found. Create a service first.');
+                    return;
+                  }
+                  try {
+                    setLoading(true);
+                    for (const service of existingServices) {
+                      await apiClient.put(`/service/services/${service._id}`, {
+                        delivery: { isDeliveryAvailable: offersDelivery }
+                      });
+                    }
+                    toast.success(t('serviceProvider.restaurant.messages.deliverySaved') || 'Delivery settings saved!');
+                    setDeliveryChanged(false);
+                    await fetchExistingServices();
+                  } catch (error) {
+                    console.error('Error saving delivery settings:', error);
+                    toast.error('Failed to save delivery settings');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
                 className={BTN.primary + " px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"}
               >
                 {loading ? (
@@ -1504,18 +1898,18 @@ const RestaurantServiceCreator = ({ onBack }) => {
                 ) : (
                   <>
                     <FaSave className="mr-2" />
-                    {t('serviceProvider.restaurant.actions.saveInfo') || 'Save Info'}
+                    {t('common.save') || 'Save'}
                   </>
                 )}
               </button>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Restaurant Image Section */}
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
-          <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-            <div className="p-2 rounded-lg bg-purple-500 mr-3">
+        <div className="bg-gradient-to-br from-[#67BAE0]/5 via-white to-[#3B5787]/5 rounded-2xl p-6 border border-[#67BAE0]/10 shadow-sm hover:shadow-md transition-shadow">
+          <h3 className="text-lg font-bold text-[#3B5787] mb-6 flex items-center">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#67BAE0] to-[#3B5787] mr-3 shadow-lg">
               <FaCamera className="text-white text-sm" />
             </div>
             {t('serviceProvider.restaurant.form.restaurantImage') || 'Restaurant Image'}
@@ -1741,7 +2135,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
  * Custom Menu Item Form Component
  * Allows service providers to create completely custom menu items
  */
-const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '$' }) => {
+const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '$', hotelBranding }) => {
   const [formData, setFormData] = useState({
     name: '',
     category: 'mains',
@@ -1760,6 +2154,9 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Fallback if hotelBranding not provided
+  const branding = hotelBranding || { primaryColor: '#3B5787', secondaryColor: '#67BAE0' };
 
   const categoryOptions = [
     { value: 'appetizers', label: 'Appetizers' },
@@ -1787,21 +2184,15 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         toast.error('Please select a valid image file');
         return;
       }
-
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('Image size should be less than 5MB');
         return;
       }
-
       setImageFile(file);
-
-      // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target.result);
@@ -1811,75 +2202,35 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
   };
 
   const uploadImageToCloudinary = async () => {
+    // ... (upload logic stays same)
     if (!imageFile) return null;
-
     try {
       setUploadingImage(true);
-
-      // Check if Cloudinary is properly configured
       const cloudName = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
-      const apiKey = process.env.REACT_APP_CLOUDINARY_API_KEY;
-
       if (!cloudName || cloudName === 'hotel-platform-demo' || cloudName === 'your_cloud_name_here') {
-        console.warn('🔴 Cloudinary not configured properly. Using local preview for testing.');
-        toast.warning('Cloudinary not configured, using local preview');
-
-        // Create a local blob URL for testing
         const localUrl = URL.createObjectURL(imageFile);
         return localUrl;
       }
-
-      // Try upload with preset first
       const formData = new FormData();
       formData.append('file', imageFile);
-
-      if (uploadPreset) {
-        formData.append('upload_preset', uploadPreset);
-      }
-
+      if (uploadPreset) formData.append('upload_preset', uploadPreset);
       formData.append('folder', 'hotel-platform/menu-items');
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        {
-          method: 'POST',
-          body: formData
-        }
-      );
-
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: formData
+      });
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('🔴 Cloudinary response error:', errorData);
-
-        // If upload preset failed, provide helpful error and use local preview
-        if (errorData.error?.message?.includes('Upload preset')) {
-          console.warn('🔴 Upload preset not found. Need to create it in Cloudinary dashboard.');
-          toast.error(`Upload preset "${uploadPreset}" not found. Please create it in your Cloudinary dashboard or contact admin.`);
-
-          // Create a local blob URL for testing
-          const localUrl = URL.createObjectURL(imageFile);
-          toast.info('Using local preview for now. Image will be saved when upload preset is configured.');
-          return localUrl;
-        }
-
-        throw new Error(`Upload failed: ${errorData.error?.message || 'Unknown error'}`);
-      }
-
-      const data = await response.json();
-      toast.success('Image uploaded successfully to Cloudinary!');
-      return data.secure_url;
-    } catch (error) {
-      console.error('🔴 Error uploading image:', error);
-
-      // As fallback, always provide local preview
-      if (imageFile) {
-        toast.warning('Upload failed, using local preview');
         const localUrl = URL.createObjectURL(imageFile);
         return localUrl;
       }
-
-      toast.error(`Failed to upload image: ${error.message}`);
+      const data = await response.json();
+      return data.secure_url;
+    } catch (error) {
+      if (imageFile) {
+        const localUrl = URL.createObjectURL(imageFile);
+        return localUrl;
+      }
       return null;
     } finally {
       setUploadingImage(false);
@@ -1911,21 +2262,16 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validation
     if (!formData.name.trim()) {
       toast.error(t('serviceProvider.restaurant.messages.itemRequired'));
       return;
     }
-
     if (!formData.price || parseFloat(formData.price) <= 0) {
       toast.error(t('serviceProvider.restaurant.messages.priceRequired'));
       return;
     }
 
     let imageUrl = formData.imageUrl;
-
-    // Upload image if selected
     if (imageFile) {
       toast.info(t('serviceProvider.restaurant.messages.uploadingImage'));
       imageUrl = await uploadImageToCloudinary();
@@ -1945,25 +2291,18 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
 
     const success = onAddItem(newItem);
     if (success) {
-      // Reset form
       setFormData({
-        name: '',
-        category: 'mains',
-        description: '',
-        price: '',
-        imageUrl: '',
-        preparationTime: '15',
-        isVegetarian: false,
-        isVegan: false,
-        spicyLevel: 'normal',
-        allergens: [],
-        notes: ''
+        name: '', category: 'mains', description: '', price: '', imageUrl: '',
+        preparationTime: '15', isVegetarian: false, isVegan: false, spicyLevel: 'normal',
+        allergens: [], notes: ''
       });
       setAllergenInput('');
       setImageFile(null);
       setImagePreview('');
     }
-  };  return (
+  };
+
+  return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Item Name */}
@@ -1976,7 +2315,10 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
             placeholder={t('serviceProvider.restaurant.form.itemNamePlaceholder')}
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': branding.secondaryColor }}
+            onFocus={(e) => e.target.style.borderColor = branding.secondaryColor}
+            onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
             required
           />
         </div>
@@ -1989,7 +2331,8 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
           <select
             value={formData.category}
             onChange={(e) => handleInputChange('category', e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': branding.secondaryColor }}
             required
           >
             {categoryOptions.map(option => (
@@ -2003,7 +2346,7 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
         {/* Price */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Price ({currency}) *
+             {t('serviceProvider.restaurant.form.price')} ({currency}) *
           </label>
           <input
             type="number"
@@ -2012,7 +2355,8 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
             value={formData.price}
             onChange={(e) => handleInputChange('price', e.target.value)}
             placeholder="0.00"
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': branding.secondaryColor }}
             required
           />
         </div>
@@ -2020,7 +2364,7 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
         {/* Preparation Time */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t('serviceProvider.restaurant.form.prepTime')}
+            {t('serviceProvider.restaurant.details.prepTime')} ({t('common.min')})
           </label>
           <input
             type="number"
@@ -2028,19 +2372,21 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
             value={formData.preparationTime}
             onChange={(e) => handleInputChange('preparationTime', e.target.value)}
             placeholder={t('serviceProvider.restaurant.form.prepTimeDefault')}
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': branding.secondaryColor }}
           />
         </div>
 
         {/* Spicy Level */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t('serviceProvider.restaurant.form.spicyLevel')}
+            {t('serviceProvider.restaurant.details.spicyLevel')}
           </label>
           <select
             value={formData.spicyLevel}
             onChange={(e) => handleInputChange('spicyLevel', e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': branding.secondaryColor }}
           >
             {spicyLevelOptions.map(option => (
               <option key={option.value} value={option.value}>
@@ -2068,12 +2414,12 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
             />
             <label htmlFor="image-upload" className="cursor-pointer">
               <div className="text-gray-400 mb-2">
-                <svg className="mx-auto h-12 w-12" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <FaCamera className="mx-auto text-4xl" />
               </div>
               <p className="text-sm text-gray-600 mb-1">
-                <span className="font-medium text-blue-600 hover:text-blue-500">{t('serviceProvider.restaurant.form.clickToUpload')}</span> {t('serviceProvider.restaurant.form.dragDrop')}
+                <span className="font-medium hover:underline" style={{ color: branding.primaryColor }}>
+                   {t('serviceProvider.restaurant.form.clickToUpload')}
+                </span> {t('serviceProvider.restaurant.form.dragDrop')}
               </p>
               <p className="text-xs text-gray-500">{t('serviceProvider.restaurant.form.imageFormat')}</p>
             </label>
@@ -2091,9 +2437,7 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
                 onClick={removeImage}
                 className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <FaTimes />
               </button>
             </div>
             <p className="text-sm text-gray-500 mt-2">
@@ -2119,7 +2463,8 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
           }}
           placeholder={t('serviceProvider.restaurant.form.descriptionPlaceholder')}
           rows="3"
-          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+          style={{ '--tw-ring-color': branding.secondaryColor }}
         />
         <div className="text-sm text-gray-500 mt-1">
           {t('serviceProvider.restaurant.form.wordsCountSuffix', { count: formData.description.split(/\s+/).filter(word => word.length > 0).length })}
@@ -2139,7 +2484,7 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
               onChange={(e) => handleInputChange('isVegetarian', e.target.checked)}
               className="mr-2"
             />
-            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.form.vegetarian')}</span>
+            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.details.vegetarian')}</span>
           </label>
           <label className="flex items-center">
             <input
@@ -2148,7 +2493,7 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
               onChange={(e) => handleInputChange('isVegan', e.target.checked)}
               className="mr-2"
             />
-            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.form.vegan')}</span>
+            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.details.vegan')}</span>
           </label>
         </div>
       </div>
@@ -2156,7 +2501,7 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
       {/* Allergens */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          {t('serviceProvider.restaurant.form.allergens')}
+          {t('serviceProvider.restaurant.details.allergens')}
         </label>
         <div className="flex gap-2 mb-2">
           <input
@@ -2164,12 +2509,14 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
             value={allergenInput}
             onChange={(e) => setAllergenInput(e.target.value)}
             placeholder={t('serviceProvider.restaurant.form.allergensPlaceholder')}
-            className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': branding.secondaryColor }}
           />
           <button
             type="button"
             onClick={addAllergen}
-            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+            className="px-4 py-2 text-white rounded-md hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: 'gray' }}
           >
             {t('serviceProvider.restaurant.form.addButton')}
           </button>
@@ -2198,14 +2545,15 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
       {/* Notes */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          {t('serviceProvider.restaurant.form.additionalNotes')}
+          {t('serviceProvider.restaurant.details.notes')}
         </label>
         <textarea
           value={formData.notes}
           onChange={(e) => handleInputChange('notes', e.target.value)}
           placeholder={t('serviceProvider.restaurant.form.notesPlaceholder')}
           rows="2"
-          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+           className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+            style={{ '--tw-ring-color': branding.secondaryColor }}
         />
       </div>
 
@@ -2214,16 +2562,17 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
         <button
           type="submit"
           disabled={uploadingImage}
-          className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-6 py-3 text-white rounded-md shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          style={{ backgroundColor: branding.primaryColor }}
         >
           {uploadingImage ? (
             <>
-              <FaSpinner className="animate-spin mr-2" />
+              <FaSpinner className="animate-spin mr-2 inline" />
               {t('serviceProvider.restaurant.messages.uploadingImage')}
             </>
           ) : (
             <>
-              <FaPlus className="mr-2" />
+              <FaPlus className="mr-2 inline" />
               {t('serviceProvider.restaurant.form.addMenuItem')}
             </>
           )}
@@ -2237,7 +2586,7 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
  * Edit Menu Item Form Component
  * Allows editing all menu item fields in a comprehensive form
  */
-const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol }) => {
+const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol, hotelBranding }) => {
   const [formData, setFormData] = useState({
     name: item.name || '',
     category: item.category || 'mains',
@@ -2254,6 +2603,9 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
   });
 
   const [allergenInput, setAllergenInput] = useState('');
+
+  // Fallback if hotelBranding not provided
+  const branding = hotelBranding || { primaryColor: '#3B5787', secondaryColor: '#67BAE0' };
 
   const categoryOptions = [
     { value: 'appetizers', label: 'Appetizers' },
@@ -2321,10 +2673,13 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
   return (
     <div className="relative z-10">
       {/* Edit Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-6">
+      <div
+        className="text-white p-6"
+        style={{ background: `linear-gradient(to right, ${branding.primaryColor}, ${branding.secondaryColor})` }}
+      >
         <h4 className="text-xl font-bold flex items-center">
           <FaEdit className="mr-3" />
-          Edit Menu Item
+          {t('serviceProvider.restaurant.form.editMenuItem')}
         </h4>
       </div>
 
@@ -2332,7 +2687,10 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
       <div className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
-          <div className="bg-blue-50 rounded-xl p-6">
+          <div
+            className="rounded-xl p-6"
+            style={{ backgroundColor: hexToRgba(branding.primaryColor, 0.05) }}
+          >
             <h5 className="font-bold text-gray-800 mb-4">{t('serviceProvider.restaurant.form.basicInfo')}</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Item Name */}
@@ -2345,7 +2703,10 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder={t('serviceProvider.restaurant.form.itemNamePlaceholder')}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+                  style={{ '--tw-ring-color': branding.secondaryColor }}
+                  onFocus={(e) => e.target.style.borderColor = branding.secondaryColor}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
                   required
                 />
               </div>
@@ -2358,7 +2719,8 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
                 <select
                   value={formData.category}
                   onChange={(e) => handleInputChange('category', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+                  style={{ '--tw-ring-color': branding.secondaryColor }}
                   required
                 >
                   {categoryOptions.map(option => (
@@ -2372,7 +2734,7 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
               {/* Price */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Price ({currency}) *
+                  {t('serviceProvider.restaurant.form.price')} ({currency}) *
                 </label>
                 <input
                   type="number"
@@ -2381,7 +2743,8 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
                   value={formData.price}
                   onChange={(e) => handleInputChange('price', e.target.value)}
                   placeholder="0.00"
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+                  style={{ '--tw-ring-color': branding.secondaryColor }}
                   required
                 />
               </div>
@@ -2389,7 +2752,7 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
               {/* Preparation Time */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preparation Time (minutes)
+                  {t('serviceProvider.restaurant.details.prepTime')} ({t('common.min')})
                 </label>
                 <input
                   type="number"
@@ -2397,23 +2760,25 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
                   value={formData.preparationTime}
                   onChange={(e) => handleInputChange('preparationTime', e.target.value)}
                   placeholder="15"
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+                  style={{ '--tw-ring-color': branding.secondaryColor }}
                 />
               </div>
 
               {/* Spicy Level */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Spicy Level
+                  {t('serviceProvider.restaurant.details.spicyLevel')}
                 </label>
                 <select
                   value={formData.spicyLevel}
                   onChange={(e) => handleInputChange('spicyLevel', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+                  style={{ '--tw-ring-color': branding.secondaryColor }}
                 >
                   {spicyLevelOptions.map(option => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {t(`serviceProvider.restaurant.spicyLevels.${option.value}`, option.label)}
                     </option>
                   ))}
                 </select>
@@ -2424,20 +2789,24 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
+              {t('serviceProvider.restaurant.form.description')}
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Describe the dish, ingredients, cooking method..."
+              placeholder={t('serviceProvider.restaurant.form.descriptionPlaceholder')}
               rows="3"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+               className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+               style={{ '--tw-ring-color': branding.secondaryColor }}
             />
           </div>
 
           {/* Dietary Options */}
-          <div className="bg-green-50 rounded-xl p-6">
-            <h5 className="font-bold text-gray-800 mb-4">Dietary Options</h5>
+          <div
+            className="rounded-xl p-6"
+            style={{ backgroundColor: hexToRgba('#10B981', 0.1) }} // Light green
+          >
+            <h5 className="font-bold text-gray-800 mb-4">{t('serviceProvider.restaurant.form.dietaryOptions')}</h5>
             <div className="flex gap-4">
               <label className="flex items-center">
                 <input
@@ -2446,7 +2815,7 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
                   onChange={(e) => handleInputChange('isVegetarian', e.target.checked)}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Vegetarian</span>
+                <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.details.vegetarian')}</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -2455,7 +2824,7 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
                   onChange={(e) => handleInputChange('isVegan', e.target.checked)}
                   className="mr-2"
                 />
-                <span className="text-sm text-gray-700">Vegan</span>
+                <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.details.vegan')}</span>
               </label>
             </div>
           </div>
@@ -2463,22 +2832,24 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
           {/* Allergens */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Allergens
+              {t('serviceProvider.restaurant.details.allergens')}
             </label>
             <div className="flex gap-2 mb-2">
               <input
                 type="text"
                 value={allergenInput}
                 onChange={(e) => setAllergenInput(e.target.value)}
-                placeholder="e.g., nuts, dairy, gluten"
-                className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                placeholder={t('serviceProvider.restaurant.form.allergensPlaceholder')}
+                className="flex-1 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+                style={{ '--tw-ring-color': branding.secondaryColor }}
               />
               <button
                 type="button"
                 onClick={addAllergen}
-                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                className="px-4 py-2 text-white rounded-md hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: branding.primaryColor }}
               >
-                Add
+                {t('serviceProvider.restaurant.form.addButton')}
               </button>
             </div>
             {formData.allergens.length > 0 && (
@@ -2505,15 +2876,36 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol 
           {/* Notes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Additional Notes
+              {t('serviceProvider.restaurant.details.notes')}
             </label>
             <textarea
               value={formData.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="Special preparation instructions, serving suggestions..."
+              placeholder={t('serviceProvider.restaurant.form.notesPlaceholder')}
               rows="2"
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+              style={{ '--tw-ring-color': branding.secondaryColor }}
             />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 pt-4 border-t border-gray-100">
+            <button
+              type="submit"
+              className="flex-1 px-6 py-3 text-white rounded-md shadow-md hover:shadow-lg transition-all font-medium"
+              style={{ backgroundColor: branding.primaryColor }}
+            >
+              <FaSave className="inline mr-2" />
+              {t('serviceProvider.restaurant.form.saveChanges')}
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-6 py-3 bg-gray-500 text-white rounded-md hover:bg-gray-600 font-medium transition-colors"
+            >
+              <FaTimes className="inline mr-2" />
+              {t('serviceProvider.restaurant.form.cancel')}
+            </button>
           </div>
         </form>
       </div>

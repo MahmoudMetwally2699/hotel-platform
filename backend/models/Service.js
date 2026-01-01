@@ -810,6 +810,12 @@ const serviceSchema = new mongoose.Schema({
     default: false
   },
 
+  isDeleted: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+
   moderationStatus: {
     type: String,
     enum: ['pending', 'approved', 'rejected', 'suspended'],

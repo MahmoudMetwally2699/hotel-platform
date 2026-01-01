@@ -1,8 +1,8 @@
 /**
  * Housekeeping Service Management — Modern Restyle
  * Allows service providers to manage their housekeeping services
- * - Brand: #3B5787 / #67BAE0
- * - Mobile-first, glass gradient header, modern cards
+ * - Brand: #5BB8E4
+ * - Mobile-first, modern header, clean cards
  * - Enhanced animations and modern UI components
  */
 
@@ -26,18 +26,17 @@ import { toast } from 'react-toastify';
 const BTN = {
   primary:
     "inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-white " +
-    "bg-gradient-to-r from-[#3B5787] to-[#67BAE0] hover:from-[#2A4A6B] hover:to-[#5BA8CC] " +
-    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] transition-all duration-300 " +
-    "shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+    "bg-[#5BB8E4] hover:bg-[#4A9FCC] " +
+    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5BB8E4] transition-all duration-300 " +
+    "shadow-lg shadow-blue-200 hover:shadow-xl transform hover:-translate-y-0.5",
   secondary:
-    "inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-[#3B5787] " +
-    "bg-white border-2 border-[#3B5787] hover:bg-[#3B5787] hover:text-white focus:outline-none " +
-    "focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] transition-all duration-300 shadow-md hover:shadow-lg",
+    "inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-gray-700 " +
+    "bg-white border border-gray-200 hover:bg-gray-50 focus:outline-none " +
+    "focus:ring-2 focus:ring-offset-2 focus:ring-[#5BB8E4] transition-all duration-300 shadow-sm hover:shadow-md",
   danger:
-    "inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold text-white " +
-    "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 " +
-    "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300 " +
-    "shadow-lg hover:shadow-xl transform hover:-translate-y-0.5",
+    "inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-medium text-red-600 " +
+    "bg-red-50 hover:bg-red-100 focus:outline-none " +
+    "focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-300",
   ghost:
     "inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 " +
     "bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 " +
@@ -45,7 +44,7 @@ const BTN = {
 };
 
 const CARD = "bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300";
-const INPUT = "w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#3B5787]/20 focus:border-[#3B5787] transition-colors";
+const INPUT = "w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#5BB8E4] focus:border-[#5BB8E4] transition-colors";
 
 // Add custom styles for animations and scrollbar
 const modalStyles = `
@@ -83,12 +82,12 @@ const modalStyles = `
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #3B5787 0%, #67BAE0 100%);
+    background: #5BB8E4;
     border-radius: 10px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #2A4A6B 0%, #5BA8CC 100%);
+    background: #4A9FCC;
   }
 `;
 
@@ -233,24 +232,9 @@ const HousekeepingServiceManagement = ({ onBack }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-        <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden mx-3 sm:mx-4 lg:mx-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
-          <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
-          <div className="relative flex flex-col items-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">{t('housekeeping.title')}</h1>
-            <p className="text-sm sm:text-base lg:text-xl text-white/90 leading-relaxed">{t('housekeeping.messages.loadingServices')}</p>
-          </div>
-        </div>
-        <div className="w-full px-2 sm:px-3 lg:px-4">
-          <div className="flex justify-center items-center h-96">
-            <div className="relative">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#67BAE0] border-t-transparent"></div>
-              <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-[#3B5787] border-t-transparent animate-ping opacity-20"></div>
-            </div>
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-[#5BB8E4] mb-4"></div>
+        <p className="text-gray-500 font-medium">{t('housekeeping.messages.loadingServices')}</p>
       </div>
     );
   }
@@ -259,46 +243,41 @@ const HousekeepingServiceManagement = ({ onBack }) => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 w-full overflow-x-hidden">
       <div className="w-full max-w-full p-3 sm:p-4 lg:p-6 xl:p-8 min-w-0">
         {/* Modern Header */}
-        <div className="relative overflow-hidden rounded-2xl lg:rounded-3xl bg-gradient-to-br from-[#3B5787] via-[#4A6B95] to-[#67BAE0] p-4 sm:p-6 lg:p-8 xl:p-12 text-white shadow-2xl mb-6 lg:mb-8">
-          {/* Decorative Elements */}
-          <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-white/10 blur-xl"></div>
-          <div className="absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/15"></div>
-          <div className="absolute top-8 right-1/4 h-6 w-6 rounded-full bg-white/20"></div>
-          <div className="absolute bottom-12 right-12 h-4 w-4 rounded-full bg-white/25"></div>
+        <div className="relative overflow-hidden rounded-2xl bg-[#5BB8E4] p-8 sm:p-10 mb-8 shadow-xl">
+          {/* Abstract shapes overlay */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#66CFFF]/20 rounded-full translate-y-1/3 -translate-x-1/4 blur-2xl"></div>
 
-          <div className="relative z-10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 lg:mb-6 gap-4">
-              <div className="flex items-center min-w-0">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-start gap-5">
+              {onBack && (
                 <button
                   onClick={onBack}
-                  className="mr-3 sm:mr-4 lg:mr-6 p-2 sm:p-3 rounded-xl lg:rounded-2xl bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all duration-300 flex-shrink-0"
+                  className="p-3 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-300"
                 >
-                  <FaArrowLeft className="text-lg sm:text-xl" />
+                  <FaArrowLeft className="text-xl text-white" />
                 </button>
-                <div className="flex items-center min-w-0">
-                  <div className="p-2 sm:p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-white/20 backdrop-blur-sm mr-3 sm:mr-4 lg:mr-6 flex-shrink-0">
-                    <FaBroom className="text-2xl sm:text-3xl lg:text-4xl" />
-                  </div>
-                  <div className="min-w-0">
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-1 lg:mb-2 truncate">
-                      {t('housekeeping.title')}
-                    </h1>
-                    <div className="h-0.5 lg:h-1 w-12 lg:w-20 bg-gradient-to-r from-white/60 to-transparent rounded-full"></div>
-                  </div>
-                </div>
+              )}
+              <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-sm shadow-inner border border-white/10">
+                <FaBroom className="text-4xl text-white" />
               </div>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className={BTN.secondary + " bg-white text-[#3B5787] hover:bg-blue-50 text-sm sm:text-base whitespace-nowrap flex-shrink-0"}
-              >
-                <FaPlus className="mr-2" />
-                <span className="hidden sm:inline">{t('housekeeping.management.addService')}</span>
-                <span className="sm:hidden">Add</span>
-              </button>
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+                  {t('housekeeping.title')}
+                </h1>
+                <p className="text-blue-100/90 text-lg max-w-xl font-light">
+                  {t('housekeeping.subtitle')}
+                </p>
+              </div>
             </div>
-            <p className="text-sm sm:text-base lg:text-lg text-blue-100 max-w-full lg:max-w-2xl leading-relaxed">
-              {t('housekeeping.subtitle')}
-            </p>
+
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className={BTN.primary}
+            >
+              <FaPlus className="mr-2" />
+              {t('housekeeping.management.addService')}
+            </button>
           </div>
         </div>
 
@@ -320,7 +299,7 @@ const HousekeepingServiceManagement = ({ onBack }) => {
                     <h3 className="font-bold text-gray-800">{category.label}</h3>
                   </div>
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-[#3B5787] mb-1">{categoryServices.length}</p>
+                    <p className="text-3xl font-bold text-[#5BB8E4] mb-1">{categoryServices.length}</p>
                     <p className="text-sm text-gray-600">{t('housekeeping.management.activeServices')}</p>
                   </div>
                 </div>
@@ -345,7 +324,7 @@ const HousekeepingServiceManagement = ({ onBack }) => {
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#67BAE0]/10 to-transparent rounded-bl-full"></div>
 
               {/* Service Header */}
-              <div className="relative z-10 bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white p-6">
+              <div className="relative z-10 bg-[#5BB8E4] text-white p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm mr-4">
@@ -399,7 +378,7 @@ const HousekeepingServiceManagement = ({ onBack }) => {
                     <ul className="text-sm text-gray-600 space-y-2">
                       {service.requirements.map((req, index) => (
                         <li key={index} className="flex items-start">
-                          <span className="text-[#3B5787] mr-2 font-bold">•</span>
+                          <span className="text-[#5BB8E4] mr-2 font-bold">•</span>
                           {req}
                         </li>
                       ))}
@@ -447,7 +426,7 @@ const HousekeepingServiceManagement = ({ onBack }) => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
           <div className={CARD + " w-full max-w-3xl max-h-[95vh] overflow-hidden shadow-2xl animate-slideUp"}>
             {/* Enhanced Modal Header with Decorative Elements */}
-            <div className="relative bg-gradient-to-br from-[#3B5787] via-[#4A6B95] to-[#67BAE0] text-white p-8">
+            <div className="relative bg-[#5BB8E4] text-white p-8">
               {/* Background Decorations */}
               <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-white/10 blur-xl"></div>
               <div className="absolute -bottom-4 -left-4 h-16 w-16 rounded-full bg-white/15"></div>
@@ -476,9 +455,9 @@ const HousekeepingServiceManagement = ({ onBack }) => {
             <div className="p-8 max-h-[calc(95vh-120px)] overflow-y-auto custom-scrollbar">
               <form onSubmit={handleCreateService} className="space-y-8">
                 {/* Service Basic Information Section */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+                <div className="bg-white rounded-2xl p-6 border border-gray-200">
                   <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                    <div className="p-2 rounded-lg bg-blue-500 mr-3">
+                    <div className="p-2 rounded-lg bg-[#5BB8E4] mr-3">
                       <FaBroom className="text-white text-sm" />
                     </div>
                     {t('housekeeping.management.basicInformation')}
@@ -531,9 +510,9 @@ const HousekeepingServiceManagement = ({ onBack }) => {
                 </div>
 
                 {/* Service Configuration Section */}
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+                <div className="bg-white rounded-2xl p-6 border border-gray-200">
                   <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                    <div className="p-2 rounded-lg bg-green-500 mr-3">
+                    <div className="p-2 rounded-lg bg-[#5BB8E4] mr-3">
                       <FaClock className="text-white text-sm" />
                     </div>
                     {t('housekeeping.management.serviceConfiguration')}
@@ -577,9 +556,9 @@ const HousekeepingServiceManagement = ({ onBack }) => {
                 </div>
 
                 {/* Special Instructions Section */}
-                <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-2xl p-6 border border-purple-100">
+                <div className="bg-white rounded-2xl p-6 border border-gray-200">
                   <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                    <div className="p-2 rounded-lg bg-purple-500 mr-3">
+                    <div className="p-2 rounded-lg bg-[#5BB8E4] mr-3">
                       <FaCheck className="text-white text-sm" />
                     </div>
                     {t('housekeeping.management.additionalDetails')}

@@ -521,18 +521,23 @@ const OrdersPage = () => {
                         <FiEye className="w-4 h-4 mr-1" />
                         {t('serviceProvider.orders.viewDetails')}
                       </button>
-                      <select
-                        value={order.status}
-                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                        className="text-sm border-[#67BAE0] focus:ring-[#3B5787] focus:border-[#3B5787] rounded-md bg-white shadow-sm"
-                        disabled={order.status === 'cancelled' || order.status === 'completed'}
-                      >
-                        <option value="pending">{t('common.pending')}</option>
-                        <option value="confirmed">{t('serviceProvider.orders.confirmOrder')}</option>
-                        <option value="in-progress">{t('serviceProvider.orders.markInProgress')}</option>
-                        <option value="completed">{t('serviceProvider.orders.markCompleted')}</option>
-                        <option value="cancelled">{t('serviceProvider.orders.markCancelled')}</option>
-                      </select>
+                      {order.status === 'completed' || order.status === 'cancelled' ? (
+                        <span className={`inline-flex px-3 py-2 text-xs font-semibold rounded-md border ${getStatusColor(order.status)}`}>
+                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        </span>
+                      ) : (
+                        <select
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                          className="text-sm border-[#67BAE0] focus:ring-[#3B5787] focus:border-[#3B5787] rounded-md bg-white shadow-sm"
+                        >
+                          <option value="pending">{t('common.pending')}</option>
+                          <option value="confirmed">{t('serviceProvider.orders.confirmOrder')}</option>
+                          <option value="in-progress">{t('serviceProvider.orders.markInProgress')}</option>
+                          <option value="completed">{t('serviceProvider.orders.markCompleted')}</option>
+                          <option value="cancelled">{t('serviceProvider.orders.markCancelled')}</option>
+                        </select>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -561,17 +566,6 @@ const OrdersPage = () => {
                         <div className="flex items-center">
                           <span>{t('serviceProvider.orders.service')}</span>
                           {sortConfig.key === 'serviceDetails.name' && (
-                            <span className="ml-1 text-[#67BAE0]">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                          )}
-                        </div>
-                      </th>
-                      <th
-                        className="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-[#3B5787] uppercase tracking-wider cursor-pointer hover:bg-[#67BAE0]/10"
-                        onClick={() => handleSort('hotel.name')}
-                      >
-                        <div className="flex items-center">
-                          <span>{t('serviceProvider.orders.hotel')}</span>
-                          {sortConfig.key === 'hotel.name' && (
                             <span className="ml-1 text-[#67BAE0]">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
                           )}
                         </div>
@@ -612,6 +606,17 @@ const OrdersPage = () => {
                           )}
                         </div>
                       </th>
+                      <th
+                        className="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-[#3B5787] uppercase tracking-wider cursor-pointer hover:bg-[#67BAE0]/10"
+                        onClick={() => handleSort('schedule.preferredDate')}
+                      >
+                        <div className="flex items-center">
+                          <span>{t('serviceProvider.orders.scheduledDate')}</span>
+                          {sortConfig.key === 'schedule.preferredDate' && (
+                            <span className="ml-1 text-[#67BAE0]">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                          )}
+                        </div>
+                      </th>
                       <th className="px-4 lg:px-6 py-4 text-right text-xs font-semibold text-[#3B5787] uppercase tracking-wider">
                         {t('serviceProvider.orders.actions')}
                       </th>
@@ -633,9 +638,6 @@ const OrdersPage = () => {
                             {getServiceDisplayName(order)}
                           </span>
                         </td>
-                        <td className="px-4 lg:px-6 py-4 text-sm text-gray-700">
-                          {order.hotel?.name || order.hotelId?.name || order.hotelName || 'N/A'}
-                        </td>
                         <td className="px-4 lg:px-6 py-4 text-sm font-semibold text-[#3B5787]">
                           {order.serviceType === 'housekeeping' ? '---' : `${getCurrencySymbol(order.pricing?.currency || order.payment?.currency || 'USD')}${(order.pricing?.totalAmount || order.totalAmount || 0).toFixed(2)}`}
                         </td>
@@ -655,6 +657,20 @@ const OrdersPage = () => {
                             </span>
                           </div>
                         </td>
+                        <td className="px-4 lg:px-6 py-4 text-sm text-gray-500">
+                          <div className="flex flex-col">
+                            <span>
+                              {order.schedule?.preferredDate
+                                ? new Date(order.schedule.preferredDate).toLocaleDateString()
+                                : 'Not scheduled'}
+                            </span>
+                            {order.schedule?.preferredTime && (
+                              <span className="text-xs text-gray-400">
+                                {order.schedule.preferredTime}
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-4 lg:px-6 py-4 text-right">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:justify-end">
                             <button
@@ -664,18 +680,23 @@ const OrdersPage = () => {
                               <FiEye className="w-4 h-4 mr-1" />
                               {t('serviceProvider.orders.viewDetails')}
                             </button>
-                            <select
-                              value={order.status}
-                              onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                              className="text-sm border-[#67BAE0] focus:ring-[#3B5787] focus:border-[#3B5787] rounded-md bg-white shadow-sm"
-                              disabled={order.status === 'cancelled' || order.status === 'completed'}
-                            >
-                              <option value="pending">{t('common.pending')}</option>
-                              <option value="confirmed">{t('serviceProvider.orders.confirmOrder')}</option>
-                              <option value="in-progress">{t('serviceProvider.orders.markInProgress')}</option>
-                              <option value="completed">{t('serviceProvider.orders.markCompleted')}</option>
-                              <option value="cancelled">{t('serviceProvider.orders.markCancelled')}</option>
-                            </select>
+                            {order.status === 'completed' || order.status === 'cancelled' ? (
+                              <span className={`inline-flex px-3 py-2 text-xs font-semibold rounded-md border ${getStatusColor(order.status)}`}>
+                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                              </span>
+                            ) : (
+                              <select
+                                value={order.status}
+                                onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                                className="text-sm border-[#67BAE0] focus:ring-[#3B5787] focus:border-[#3B5787] rounded-md bg-white shadow-sm"
+                              >
+                                <option value="pending">{t('common.pending')}</option>
+                                <option value="confirmed">{t('serviceProvider.orders.confirmOrder')}</option>
+                                <option value="in-progress">{t('serviceProvider.orders.markInProgress')}</option>
+                                <option value="completed">{t('serviceProvider.orders.markCompleted')}</option>
+                                <option value="cancelled">{t('serviceProvider.orders.markCancelled')}</option>
+                              </select>
+                            )}
                           </div>
                         </td>
                       </tr>

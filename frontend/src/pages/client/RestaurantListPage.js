@@ -61,7 +61,9 @@ const RestaurantListPage = () => {
               providerContactPhone: service.providerId?.contactPhone,
               services: [],
               allMenuItems: [],
-              images: []
+              images: [],
+              // Working hours schedule
+              availabilitySchedule: service.availability?.schedule || null
             });
           }
 
@@ -141,6 +143,44 @@ const RestaurantListPage = () => {
     return Array.from(categories).slice(0, 3);
   };
 
+  // Get hotel branding colors with fallback defaults
+  const getHotelColors = () => {
+    const primaryColor = hotel?.branding?.primaryColor || '#3B5787';
+    const secondaryColor = hotel?.branding?.secondaryColor || '#67BAE0';
+    return { primaryColor, secondaryColor };
+  };
+
+  const { primaryColor, secondaryColor } = getHotelColors();
+
+  // Check if restaurant is currently open based on working hours
+  const isRestaurantOpen = (restaurant) => {
+    const schedule = restaurant.availabilitySchedule;
+    if (!schedule) return true; // No schedule means always open
+
+    const now = new Date();
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const currentDay = days[now.getDay()];
+    const daySchedule = schedule[currentDay];
+
+    if (!daySchedule || !daySchedule.isAvailable) {
+      return false; // Day is off
+    }
+
+    // Check time slots
+    const timeSlots = daySchedule.timeSlots || [];
+    if (timeSlots.length === 0) return true; // No time slots means all day
+
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    return timeSlots.some(slot => {
+      const [startHour, startMin] = (slot.startTime || '00:00').split(':').map(Number);
+      const [endHour, endMin] = (slot.endTime || '23:59').split(':').map(Number);
+      const startMinutes = startHour * 60 + startMin;
+      const endMinutes = endHour * 60 + endMin;
+      return currentTime >= startMinutes && currentTime <= endMinutes;
+    });
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -169,14 +209,20 @@ const RestaurantListPage = () => {
           {/* Back Button */}
           <button
             onClick={() => navigate(`/hotels/${hotelId}/categories`)}
-            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-[#3B5787] bg-white/80 backdrop-blur-sm hover:bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 mb-4"
+            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white/80 backdrop-blur-sm hover:bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 mb-4"
+            style={{ '--hover-color': primaryColor }}
+            onMouseEnter={(e) => e.target.style.color = primaryColor}
+            onMouseLeave={(e) => e.target.style.color = '#4B5563'}
           >
             <FaArrowLeft className={`${isRTL ? 'ml-2 rotate-180' : 'mr-2'} text-xs`} />
             <span>{t('common.back')}</span>
           </button>
 
           {/* Hero Card */}
-          <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-2xl sm:rounded-3xl shadow-xl p-6 sm:p-8 text-white relative overflow-hidden">
+          <div
+            className="rounded-2xl sm:rounded-3xl shadow-xl p-6 sm:p-8 text-white relative overflow-hidden"
+            style={{ background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})` }}
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full"></div>
             <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full"></div>
@@ -237,12 +283,19 @@ const RestaurantListPage = () => {
               const categories = getRestaurantCategories(restaurant);
               const menuItemCount = restaurant.allMenuItems?.length || 0;
               const serviceCount = restaurant.services?.length || 0;
+              const isOpen = isRestaurantOpen(restaurant);
 
               return (
                 <div
                   key={restaurant.providerId}
-                  onClick={() => navigate(`/hotels/${hotelId}/services/dining/provider/${restaurant.providerId}/menu`)}
-                  className="group bg-white rounded-2xl shadow-md hover:shadow-xl border border-gray-100 overflow-hidden cursor-pointer transition-all duration-300 hover:-translate-y-1"
+                  onClick={() => {
+                    if (!isOpen) {
+                      toast.info(t('guest.restaurant.restaurantClosed') || 'This restaurant is currently closed');
+                      return;
+                    }
+                    navigate(`/hotels/${hotelId}/services/dining/provider/${restaurant.providerId}/menu`);
+                  }}
+                  className={`group bg-white rounded-2xl shadow-md hover:shadow-xl border border-gray-100 overflow-hidden cursor-pointer transition-all duration-300 ${isOpen ? 'hover:-translate-y-1' : 'opacity-60 grayscale'}`}
                 >
                   {/* Restaurant Image */}
                   <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
@@ -258,22 +311,36 @@ const RestaurantListPage = () => {
                       />
                     ) : null}
                     <div
-                      className={`absolute inset-0 bg-gradient-to-br from-[#3B5787]/20 to-[#67BAE0]/20 ${image ? 'hidden' : 'flex'} items-center justify-center`}
+                      className={`absolute inset-0 ${image ? 'hidden' : 'flex'} items-center justify-center`}
+                      style={{ background: `linear-gradient(to bottom right, ${primaryColor}33, ${secondaryColor}33)` }}
                     >
-                      <FaUtensils className="text-4xl sm:text-5xl text-[#3B5787]/40" />
+                      <FaUtensils className="text-4xl sm:text-5xl" style={{ color: `${primaryColor}66` }} />
                     </div>
 
                     {/* Menu item count badge */}
-                    {menuItemCount > 0 && (
-                      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-semibold text-[#3B5787]">
+                    {menuItemCount > 0 && isOpen && (
+                      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-xs font-semibold" style={{ color: primaryColor }}>
                         {menuItemCount} {t('guest.restaurant.items') || 'items'}
+                      </div>
+                    )}
+
+                    {/* Closed overlay */}
+                    {!isOpen && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="bg-red-500 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg flex items-center gap-2">
+                          <FaClock className="text-xs" />
+                          {t('guest.restaurant.closed') || 'Closed'}
+                        </div>
                       </div>
                     )}
                   </div>
 
                   {/* Restaurant Info */}
                   <div className="p-3 sm:p-4">
-                    <h3 className="font-bold text-gray-900 text-sm sm:text-base mb-1 line-clamp-1 group-hover:text-[#3B5787] transition-colors">
+                    <h3
+                      className="font-bold text-gray-900 text-sm sm:text-base mb-1 line-clamp-1 transition-colors"
+                      style={{ '--hover-color': primaryColor }}
+                    >
                       {restaurant.providerName}
                     </h3>
 
