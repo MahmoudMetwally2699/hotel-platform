@@ -581,6 +581,72 @@ const serviceProviderSchema = new mongoose.Schema({
     notes: String
   },
 
+  // Restaurant Specific Info (for dining category)
+  restaurant: {
+    name: String,
+    description: String,
+    image: String,
+    schedule: {
+      monday: {
+        isAvailable: { type: Boolean, default: true },
+        timeSlots: [{
+          startTime: String,
+          endTime: String,
+          maxBookings: Number
+        }]
+      },
+      tuesday: {
+        isAvailable: { type: Boolean, default: true },
+        timeSlots: [{
+          startTime: String,
+          endTime: String,
+          maxBookings: Number
+        }]
+      },
+      wednesday: {
+        isAvailable: { type: Boolean, default: true },
+        timeSlots: [{
+          startTime: String,
+          endTime: String,
+          maxBookings: Number
+        }]
+      },
+      thursday: {
+        isAvailable: { type: Boolean, default: true },
+        timeSlots: [{
+          startTime: String,
+          endTime: String,
+          maxBookings: Number
+        }]
+      },
+      friday: {
+        isAvailable: { type: Boolean, default: true },
+        timeSlots: [{
+          startTime: String,
+          endTime: String,
+          maxBookings: Number
+        }]
+      },
+      saturday: {
+        isAvailable: { type: Boolean, default: true },
+        timeSlots: [{
+          startTime: String,
+          endTime: String,
+          maxBookings: Number
+        }]
+      },
+      sunday: {
+        isAvailable: { type: Boolean, default: true },
+        timeSlots: [{
+          startTime: String,
+          endTime: String,
+          maxBookings: Number
+        }]
+      }
+    },
+    offersDelivery: { type: Boolean, default: false }
+  },
+
   // Inside Hotel Services - Services provided within hotel premises
   insideServices: [{
     id: {

@@ -483,6 +483,14 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       });
     }
 
+    console.log('📋 SERVICE BEING USED FOR BOOKING:', {
+      serviceId: service._id,
+      serviceName: service.name,
+      category: service.category,
+      totalMenuItems: service.menuItems?.length || 0,
+      menuItemNames: service.menuItems?.map(mi => mi.name) || []
+    });
+
     // Get hotel markup settings
     const hotel = await Hotel.findById(service.hotelId).select('markupSettings name');    // Calculate final price with markup
     let markup = hotel.markupSettings?.default || 15; // Default 15% markup
@@ -564,7 +572,24 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
         selectedOptions: options || [],
         selectedTime: finalSelectedTime,
         serviceCombination: serviceCombination || null, // Store selected service combination
-        menuItems: menuItems || [] // Store menu items for restaurant bookings
+        menuItems: menuItems ? menuItems.map(item => {
+          // Find the corresponding menu item in the service to get the imageUrl
+          const serviceMenuItem = service.menuItems?.find(mi =>
+            mi._id?.toString() === item.id?.toString() ||
+            mi.name === item.itemName
+          );
+          console.log('🍽️ Enriching menu item:', {
+            itemName: item.itemName,
+            itemId: item.id,
+            foundServiceItem: !!serviceMenuItem,
+            serviceItemImageUrl: serviceMenuItem?.imageUrl,
+            totalServiceMenuItems: service.menuItems?.length
+          });
+          return {
+            ...item,
+            imageUrl: serviceMenuItem?.imageUrl || item.imageUrl || null
+          };
+        }) : []
       },// Scheduling
       schedule: {
         preferredDate: parsedDate,
@@ -1706,7 +1731,7 @@ router.get('/hotels/:hotelId/services/dining/items', async (req, res) => {
       category: 'dining',
       isActive: true
     })
-    .populate('providerId', 'businessName rating contactEmail contactPhone markup')
+    .populate('providerId', 'businessName rating contactEmail contactPhone markup restaurant')
     .sort({ 'performance.totalBookings': -1 });
 
     // Restaurant services query for hotel (output removed)
@@ -1754,11 +1779,24 @@ router.get('/hotels/:hotelId/services/dining/items', async (req, res) => {
     // Filter out services without actual menuItems
     const servicesWithActualItems = servicesWithMarkup.filter(service => {
       const hasItems = service.menuItems && service.menuItems.length > 0;
-      // Service hasItems debug output removed
+      const serviceImage = service.media?.images?.[0] || service.image || service.imageUrl || 'no image';
+      console.log(`🍽️ Service "${service.name}":`, {
+        hasMenuItems: hasItems,
+        menuItemCount: service.menuItems?.length || 0,
+        menuItemNames: service.menuItems?.map(mi => mi.name) || [],
+        serviceImage: serviceImage,
+        hasMediaImages: !!(service.media?.images?.length),
+        mediaImagesCount: service.media?.images?.length || 0
+      });
       return hasItems;
     });
 
-    // Final restaurant services with items debug output removed
+    console.log('\n📋 FINAL RESTAURANT SERVICES TO CLIENT:', {
+      totalServices: servicesWithActualItems.length,
+      serviceNames: servicesWithActualItems.map(s => s.name),
+      totalMenuItems: servicesWithActualItems.reduce((sum, s) => sum + (s.menuItems?.length || 0), 0),
+      servicesWithImages: servicesWithActualItems.filter(s => s.media?.images?.length > 0).length
+    });
 
     res.json({
       success: true,

@@ -59,7 +59,12 @@ router.get('/dashboard', catchAsync(async (req, res) => {
     topServices,
     hotelMarkupSettings
   ] = await Promise.all([
-    ServiceProvider.findById(providerId),
+
+    ServiceProvider.findById(providerId).then(p => {
+      console.log('🔍 GET /dashboard provider found:', p ? p._id : 'null');
+      console.log('🍽️ Provider restaurant data:', JSON.stringify(p?.restaurant, null, 2));
+      return p;
+    }),
     Hotel.findById(hotelId).select('name markupSettings branding images paymentSettings'),
     Service.countDocuments({ providerId: providerId }),
     Service.countDocuments({ providerId: providerId, isActive: true, isApproved: true }),
@@ -148,6 +153,83 @@ router.get('/dashboard', catchAsync(async (req, res) => {
       },
       topServices,
       monthlyBookings
+    }
+  });
+}));
+
+
+/**
+ * @route   PUT /api/service/restaurant-info
+ * @desc    Update restaurant info (name, desc, image, schedule)
+ * @access  Private/ServiceProvider
+ */
+router.put('/restaurant-info', catchAsync(async (req, res, next) => {
+  const provider = await ServiceProvider.findById(req.user.serviceProviderId);
+  if (!provider) {
+    return next(new AppError('Service provider not found', 404));
+  }
+
+  // Initialize restaurant object if it doesn't exist
+  if (!provider.restaurant) {
+    provider.restaurant = {};
+  }
+
+  console.log('💾 Saving restaurant info. Body:', req.body);
+
+  // Update restaurant info
+  if (req.body.name) provider.restaurant.name = req.body.name;
+  if (req.body.description) provider.restaurant.description = req.body.description;
+  if (req.body.image) provider.restaurant.image = req.body.image;
+  if (req.body.schedule) provider.restaurant.schedule = req.body.schedule;
+  if (req.body.offersDelivery !== undefined) provider.restaurant.offersDelivery = req.body.offersDelivery;
+
+  // Mark modified strictly for nested objects if needed
+  provider.markModified('restaurant');
+
+  await provider.save();
+
+  console.log('✅ Provider restaurant info saved.');
+
+  // SYNC TO SERVICES
+  // Find all dining services for this provider to keep them in sync
+  const services = await Service.find({ providerId: provider._id, category: 'dining' });
+
+  if (services.length > 0) {
+    console.log(`🔄 Syncing changes to ${services.length} services...`);
+    const promises = services.map(async (service) => {
+       if (req.body.name) service.name = req.body.name;
+       if (req.body.description) service.description = req.body.description;
+
+       // Sync image only if provided
+       if (req.body.image) {
+         // Replace service images with the new restaurant image to ensure consistency
+         service.images = [req.body.image];
+         if (service.media && service.media.images) {
+            service.media.images = [req.body.image];
+         }
+       }
+
+       if (req.body.schedule) {
+         if (!service.availability) service.availability = {};
+         service.availability.schedule = req.body.schedule;
+       }
+
+       if (req.body.offersDelivery !== undefined) {
+         if (!service.delivery) service.delivery = {};
+         service.delivery.isDeliveryAvailable = req.body.offersDelivery;
+       }
+
+       return service.save();
+    });
+
+    await Promise.all(promises);
+    console.log('✅ Services synced.');
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      provider
     }
   });
 }));
@@ -364,6 +446,14 @@ router.put('/services/:id', catchAsync(async (req, res, next) => {
   // Update other fields
   ['name', 'description', 'category', 'cuisineType', 'duration', 'availability', 'options', 'isActive', 'menuItems'].forEach(field => {
     if (req.body[field] !== undefined) {
+      if (field === 'availability') {
+        console.log('📅 Updating availability field:', {
+          oldAvailability: service.availability,
+          newAvailability: req.body[field],
+          fridayOld: service.availability?.schedule?.friday,
+          fridayNew: req.body[field]?.schedule?.friday
+        });
+      }
       if (field === 'availability' || field === 'options' || field === 'menuItems') {
         service[field] = req.body[field];
       } else {
@@ -384,9 +474,21 @@ router.put('/services/:id', catchAsync(async (req, res, next) => {
 
   await service.save();
 
+  console.log('✅ Service saved. Availability after save:', {
+    fridaySchedule: service.availability?.schedule?.friday,
+    fridayTimeSlots: JSON.stringify(service.availability?.schedule?.friday?.timeSlots)
+  });
+
   logger.info(`Service updated: ${service.name}`, {
     serviceProviderId: providerId,
-    serviceId: service._id
+    serviceId: service._id,
+    updatedFields: {
+      name: service.name,
+      description: service.description,
+      hasMediaImages: !!(service.media?.images?.length),
+      mediaImagesCount: service.media?.images?.length || 0,
+      firstImage: service.media?.images?.[0] || 'none'
+    }
   });
 
   res.status(200).json({
@@ -2740,6 +2842,23 @@ router.post('/inside-services', catchAsync(async (req, res) => {
     throw new AppError('Service provider not found', 404);
   }
 
+  // Initialize restaurant object if it doesn't exist
+  if (!provider.restaurant) {
+    provider.restaurant = {};
+  }
+
+  console.log('💾 Saving restaurant info. Body:', req.body);
+
+  // Update restaurant info
+  if (req.body.name) provider.restaurant.name = req.body.name;
+  if (req.body.description) provider.restaurant.description = req.body.description;
+  if (req.body.image) provider.restaurant.image = req.body.image;
+  if (req.body.schedule) provider.restaurant.schedule = req.body.schedule;
+  if (req.body.offersDelivery !== undefined) provider.restaurant.offersDelivery = req.body.offersDelivery;
+
+  // Mark modified strictly for nested objects if needed (mongoose usually handles this but being safe)
+  provider.markModified('restaurant');
+
   // Initialize insideServices if it doesn't exist
   if (!provider.insideServices) {
     provider.insideServices = [];
@@ -2758,6 +2877,8 @@ router.post('/inside-services', catchAsync(async (req, res) => {
 
   provider.insideServices.push(newService);
   await provider.save();
+
+  console.log('✅ Provider saved. New restaurant info:', JSON.stringify(provider.restaurant, null, 2));
 
   res.status(201).json({
     status: 'success',

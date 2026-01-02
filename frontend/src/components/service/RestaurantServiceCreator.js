@@ -129,6 +129,9 @@ const RestaurantServiceCreator = ({ onBack }) => {
     styleElement.textContent = modalStyles;
     document.head.appendChild(styleElement);
 
+    // Fetch provider info on mount
+    fetchProviderInfo();
+
     return () => {
       if (document.head.contains(styleElement)) {
         document.head.removeChild(styleElement);
@@ -199,6 +202,9 @@ const RestaurantServiceCreator = ({ onBack }) => {
   // Delivery toggle state
   const [offersDelivery, setOffersDelivery] = useState(true);
   const [deliveryChanged, setDeliveryChanged] = useState(false);
+
+  // Provider info state
+  const [providerInfo, setProviderInfo] = useState(null);
 
   /**
    * Handle restaurant image upload to Cloudinary
@@ -300,12 +306,52 @@ const RestaurantServiceCreator = ({ onBack }) => {
   useEffect(() => {
     if (activeTab === 'manage' || activeTab === 'settings') {
       fetchExistingServices();
+      fetchProviderInfo();
     }
   }, [activeTab]);
 
-  // Initialize restaurant settings from existing services
+  const fetchProviderInfo = async () => {
+    try {
+      const response = await apiClient.get('/service/dashboard');
+      if (response.data.status === 'success') {
+        setProviderInfo(response.data.data.provider);
+      }
+    } catch (error) {
+      console.error('Error fetching provider info:', error);
+    }
+  };
+
+  // Initialize restaurant settings from provider info or existing services
   useEffect(() => {
-    if (existingServices.length > 0) {
+    if (providerInfo?.restaurant) {
+      const rest = providerInfo.restaurant;
+      setRestaurantName(rest.name || providerInfo.businessName || '');
+      setRestaurantDescription(rest.description || '');
+      if (rest.image) setRestaurantImage(rest.image);
+      setInfoChanged(false);
+
+      if (rest.schedule) {
+        const loadedHours = {};
+        const days = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+        days.forEach(day => {
+          if (rest.schedule[day]) {
+            loadedHours[day] = {
+              isAvailable: rest.schedule[day].isAvailable ?? true,
+              startTime: rest.schedule[day].timeSlots?.[0]?.startTime || '09:00',
+              endTime: rest.schedule[day].timeSlots?.[0]?.endTime || '23:00'
+            };
+          } else {
+            loadedHours[day] = { isAvailable: true, startTime: '09:00', endTime: '23:00' };
+          }
+        });
+        setWorkingHours(loadedHours);
+        setWorkingHoursChanged(false);
+      }
+
+      setOffersDelivery(rest.offersDelivery ?? true);
+      setDeliveryChanged(false);
+    } else if (existingServices.length > 0) {
+      // Fallback to existing services if provider info not set
       const firstService = existingServices[0];
       setRestaurantName(firstService.providerId?.businessName || firstService.name || '');
       setRestaurantDescription(firstService.description || '');
@@ -336,7 +382,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
       setOffersDelivery(isDeliveryAvailable);
       setDeliveryChanged(false);
     }
-  }, [existingServices]);
+  }, [existingServices, providerInfo]);
 
   // Fetch services on mount to detect currency
   useEffect(() => {
@@ -1482,40 +1528,29 @@ const RestaurantServiceCreator = ({ onBack }) => {
       );
   };
 
-  /**
-   * Save restaurant image to all existing services
-   */
   const saveRestaurantImage = async () => {
-    console.log('saveRestaurantImage called. restaurantImage:', restaurantImage);
-    console.log('existingServices:', existingServices);
-
     if (!restaurantImage) {
       toast.error(t('serviceProvider.restaurant.messages.noImageToSave') || 'Please upload an image first');
-      return;
-    }
-
-    if (existingServices.length === 0) {
-      toast.error(t('serviceProvider.restaurant.messages.noServicesToUpdate') || 'No services found. Create a service first.');
       return;
     }
 
     try {
       setLoading(true);
 
-      // Update all dining services with the new image
-      for (const service of existingServices) {
-        console.log(`Updating service ${service._id} with image:`, restaurantImage);
-        const response = await apiClient.put(`/service/services/${service._id}`, {
-          images: [restaurantImage]
-        });
-        console.log(`Service ${service._id} update response:`, response.data);
-      }
+      // Verify the image URL is valid (ensure it's not a blob URL if possible, though component handles upload)
+      // Usually restaurantImage is set to Cloudinary URL or Blob URL.
+      // If it's a blob URL we rely on previous upload step to have succeeded or fallbacks.
+      // Ideally we should use the state variable that holds the URL.
+
+      await apiClient.put('/service/restaurant-info', {
+        image: restaurantImage
+      });
 
       toast.success(t('serviceProvider.restaurant.messages.imageSaved') || 'Restaurant image saved successfully!');
       await fetchExistingServices();
+      await fetchProviderInfo();
     } catch (error) {
       console.error('Error saving restaurant image:', error);
-      console.error('Error response:', error.response?.data);
       toast.error(t('serviceProvider.restaurant.messages.imageSaveFailed') || 'Failed to save image');
     } finally {
       setLoading(false);
@@ -1545,25 +1580,18 @@ const RestaurantServiceCreator = ({ onBack }) => {
 
     // Save restaurant info (name and description)
     const saveRestaurantInfo = async () => {
-      if (existingServices.length === 0) {
-        toast.error('No services found. Create a service first.');
-        return;
-      }
-
       try {
         setLoading(true);
 
-        // Update all dining services with the new info
-        for (const service of existingServices) {
-          await apiClient.put(`/service/services/${service._id}`, {
-            name: restaurantName,
-            description: restaurantDescription
-          });
-        }
+        await apiClient.put('/service/restaurant-info', {
+          name: restaurantName,
+          description: restaurantDescription
+        });
 
         toast.success('Restaurant info saved successfully!');
         setInfoChanged(false);
         await fetchExistingServices();
+        await fetchProviderInfo();
       } catch (error) {
         console.error('Error saving restaurant info:', error);
         toast.error('Failed to save restaurant info');
@@ -1767,11 +1795,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
           {/* Save Working Hours Button */}
           <div className="mt-6 flex justify-start">
             <button
-              onClick={async () => {
-                if (existingServices.length === 0) {
-                  toast.error('No services found. Create a service first.');
-                  return;
-                }
+                onClick={async () => {
                 try {
                   setLoading(true);
                   const schedule = {};
@@ -1785,14 +1809,15 @@ const RestaurantServiceCreator = ({ onBack }) => {
                       }]
                     };
                   });
-                  for (const service of existingServices) {
-                    await apiClient.put(`/service/services/${service._id}`, {
-                      availability: { schedule }
-                    });
-                  }
+
+                  await apiClient.put('/service/restaurant-info', {
+                    schedule
+                  });
+
                   toast.success(t('serviceProvider.restaurant.messages.workingHoursSaved') || 'Working hours saved successfully!');
                   setWorkingHoursChanged(false);
                   await fetchExistingServices();
+                  await fetchProviderInfo();
                 } catch (error) {
                   console.error('Error saving working hours:', error);
                   toast.error(t('serviceProvider.restaurant.messages.workingHoursSaveFailed') || 'Failed to save working hours');
@@ -1866,20 +1891,15 @@ const RestaurantServiceCreator = ({ onBack }) => {
             <div className="mt-4 flex justify-start">
               <button
                 onClick={async () => {
-                  if (existingServices.length === 0) {
-                    toast.error('No services found. Create a service first.');
-                    return;
-                  }
                   try {
                     setLoading(true);
-                    for (const service of existingServices) {
-                      await apiClient.put(`/service/services/${service._id}`, {
-                        delivery: { isDeliveryAvailable: offersDelivery }
-                      });
-                    }
+                    await apiClient.put('/service/restaurant-info', {
+                      offersDelivery
+                    });
                     toast.success(t('serviceProvider.restaurant.messages.deliverySaved') || 'Delivery settings saved!');
                     setDeliveryChanged(false);
                     await fetchExistingServices();
+                    await fetchProviderInfo();
                   } catch (error) {
                     console.error('Error saving delivery settings:', error);
                     toast.error('Failed to save delivery settings');

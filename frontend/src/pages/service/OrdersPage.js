@@ -108,6 +108,25 @@ const OrdersPage = () => {
       });
   };
 
+  // Helper function to convert 24-hour time to 12-hour format
+  const convertTo12Hour = (time24) => {
+    if (!time24) return 'No time specified';
+
+    // Keep ASAP as is
+    if (time24.toUpperCase() === 'ASAP') return time24;
+
+    // Handle if time is already in 12-hour format
+    if (time24.toLowerCase().includes('am') || time24.toLowerCase().includes('pm')) {
+      return time24;
+    }
+
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
   const handleViewDetails = (order) => {
     setCurrentOrder(order);
     setIsDetailsOpen(true);
@@ -349,13 +368,12 @@ const OrdersPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-white">
       <div className="w-full px-2 sm:px-3 lg:px-4">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50" />
-          <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50" />
+        <div className="bg-[#5BB8E4] rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/3 -translate-x-1/4 blur-2xl"></div>
           <div className="relative">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">
               {t('serviceProvider.orders.title')}
@@ -373,11 +391,11 @@ const OrdersPage = () => {
         )}
 
         {/* Filters + paging header */}
-        <div className="bg-white shadow-xl rounded-xl sm:rounded-2xl overflow-hidden border border-gray-100 mb-6">
-          <div className="bg-gradient-to-r from-[#3B5787]/5 to-[#67BAE0]/5 px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100">
+        <div className="bg-white shadow-lg rounded-xl sm:rounded-2xl overflow-hidden border border-gray-200 mb-6">
+          <div className="bg-gray-50 px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <div className="flex items-center">
-                <div className="w-1 h-6 bg-gradient-to-b from-[#3B5787] to-[#67BAE0] rounded-full mr-3" />
+                <div className="w-1 h-6 bg-[#5BB8E4] rounded-full mr-3" />
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900">{t('serviceProvider.orders.filterOrders')}</h3>
               </div>
               {/* Page size selector (top-right) */}
@@ -386,7 +404,7 @@ const OrdersPage = () => {
                 <select
                   value={pageSize}
                   onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
-                  className="block pl-3 pr-8 py-2 text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] rounded-lg bg-white shadow-sm"
+                  className="block pl-3 pr-8 py-2 text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#5BB8E4] focus:border-[#5BB8E4] rounded-lg bg-white shadow-sm"
                 >
                   {[5, 10, 20, 50].map(n => <option key={n} value={n}>{n}</option>)}
                 </select>
@@ -399,7 +417,7 @@ const OrdersPage = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="block w-full pl-3 pr-8 py-2.5 text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] rounded-lg bg-white shadow-sm"
+                  className="block w-full pl-3 pr-8 py-2.5 text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#5BB8E4] focus:border-[#5BB8E4] rounded-lg bg-white shadow-sm"
                 >
                   <option value="all">{t('serviceProvider.orders.allOrders')}</option>
                   <option value="pending">{t('common.pending')}</option>
@@ -415,7 +433,7 @@ const OrdersPage = () => {
                 <select
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
-                  className="block w-full pl-3 pr-8 py-2.5 text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] rounded-lg bg-white shadow-sm"
+                  className="block w-full pl-3 pr-8 py-2.5 text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#5BB8E4] focus:border-[#5BB8E4] rounded-lg bg-white shadow-sm"
                 >
                   <option value="all">{t('serviceProvider.orders.allTime')}</option>
                   <option value="today">{t('serviceProvider.orders.today')}</option>
@@ -430,7 +448,7 @@ const OrdersPage = () => {
                 <select
                   value={serviceTypeFilter}
                   onChange={(e) => setServiceTypeFilter(e.target.value)}
-                  className="block w-full pl-3 pr-8 py-2.5 text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] rounded-lg bg-white shadow-sm"
+                  className="block w-full pl-3 pr-8 py-2.5 text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#5BB8E4] focus:border-[#5BB8E4] rounded-lg bg-white shadow-sm"
                 >
                   <option value="all">{t('serviceProvider.orders.allServices')}</option>
                   <option value="laundry">{t('serviceProvider.orders.laundryService')}</option>
@@ -440,9 +458,9 @@ const OrdersPage = () => {
               </div>
 
               <div className="flex items-end">
-                <div className="bg-gradient-to-r from-[#3B5787]/10 to-[#67BAE0]/10 rounded-lg px-4 py-2.5 border border-[#67BAE0]/20 w-full">
-                  <div className="text-xs font-medium text-[#3B5787] mb-1">{t('serviceProvider.orders.totalResults')}</div>
-                  <div className="text-lg font-bold text-[#3B5787]">{totalResults}</div>
+                <div className="bg-[#5BB8E4]/10 rounded-lg px-4 py-2.5 border border-[#5BB8E4]/20 w-full">
+                  <div className="text-xs font-medium text-[#5BB8E4] mb-1">{t('serviceProvider.orders.totalResults')}</div>
+                  <div className="text-lg font-bold text-[#5BB8E4]">{totalResults}</div>
                 </div>
               </div>
             </div>
@@ -666,38 +684,19 @@ const OrdersPage = () => {
                             </span>
                             {order.schedule?.preferredTime && (
                               <span className="text-xs text-gray-400">
-                                {order.schedule.preferredTime}
+                                {convertTo12Hour(order.schedule.preferredTime)}
                               </span>
                             )}
                           </div>
                         </td>
                         <td className="px-4 lg:px-6 py-4 text-right">
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:justify-end">
-                            <button
-                              onClick={() => handleViewDetails(order)}
-                              className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-md hover:from-[#2A4A6B] hover:to-[#5BA8CC] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] transition-all duration-200 shadow-sm"
-                            >
-                              <FiEye className="w-4 h-4 mr-1" />
-                              {t('serviceProvider.orders.viewDetails')}
-                            </button>
-                            {order.status === 'completed' || order.status === 'cancelled' ? (
-                              <span className={`inline-flex px-3 py-2 text-xs font-semibold rounded-md border ${getStatusColor(order.status)}`}>
-                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                              </span>
-                            ) : (
-                              <select
-                                value={order.status}
-                                onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                                className="text-sm border-[#67BAE0] focus:ring-[#3B5787] focus:border-[#3B5787] rounded-md bg-white shadow-sm"
-                              >
-                                <option value="pending">{t('common.pending')}</option>
-                                <option value="confirmed">{t('serviceProvider.orders.confirmOrder')}</option>
-                                <option value="in-progress">{t('serviceProvider.orders.markInProgress')}</option>
-                                <option value="completed">{t('serviceProvider.orders.markCompleted')}</option>
-                                <option value="cancelled">{t('serviceProvider.orders.markCancelled')}</option>
-                              </select>
-                            )}
-                          </div>
+                          <button
+                            onClick={() => handleViewDetails(order)}
+                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[#5BB8E4] rounded-lg hover:bg-[#4A9FCC] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5BB8E4] transition-all duration-200 shadow-sm"
+                          >
+                            <FiEye className="w-4 h-4 mr-2" />
+                            {t('serviceProvider.orders.viewDetails')}
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -769,7 +768,7 @@ const OrdersPage = () => {
               </div>
               <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
               <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-100">
-                <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] px-6 py-4">
+                <div className="bg-[#5BB8E4] px-6 py-4">
                   <h3 className="text-xl font-semibold text-white flex items-center">
                     <div className="bg-white/20 rounded-lg p-2 mr-3">
                       <FiEye className="w-5 h-5 text-white" />
@@ -786,7 +785,7 @@ const OrdersPage = () => {
                     {/* Status and Date */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide">Status</p>
+                        <p className="text-sm font-semibold text-[#5BB8E4] uppercase tracking-wide">Status</p>
                         <div className="mt-2">
                           <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full border ${getStatusColor(currentOrder.status)}`}>
                             {currentOrder.status.charAt(0).toUpperCase() + currentOrder.status.slice(1)}
@@ -794,7 +793,7 @@ const OrdersPage = () => {
                         </div>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide">Order Date</p>
+                        <p className="text-sm font-semibold text-[#5BB8E4] uppercase tracking-wide">Order Date</p>
                         <p className="mt-2 text-sm font-medium text-gray-900">
                           {new Date(currentOrder.createdAt).toLocaleDateString()}
                         </p>
@@ -805,8 +804,8 @@ const OrdersPage = () => {
                     </div>
 
                     {/* Service */}
-                    <div className="bg-gradient-to-r from-[#3B5787]/5 to-[#67BAE0]/5 rounded-lg p-4 border border-[#67BAE0]/20">
-                      <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide">Service</p>
+                    <div className="bg-[#5BB8E4]/5 rounded-lg p-4 border border-[#5BB8E4]/20">
+                      <p className="text-sm font-semibold text-[#5BB8E4] uppercase tracking-wide">Service</p>
                       <p className="mt-2 text-lg font-medium text-gray-900">
                         {getServiceDisplayName(currentOrder)}
                       </p>
@@ -815,18 +814,18 @@ const OrdersPage = () => {
                     {/* Schedule & Hotel */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide">Scheduled Date</p>
+                        <p className="text-sm font-semibold text-[#5BB8E4] uppercase tracking-wide">Scheduled Date</p>
                         <p className="mt-2 text-sm font-medium text-gray-900">
                           {currentOrder.schedule?.preferredDate
                             ? new Date(currentOrder.schedule.preferredDate).toLocaleDateString()
                             : 'Not scheduled'}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {currentOrder.schedule?.preferredTime || 'No time specified'}
+                          {convertTo12Hour(currentOrder.schedule?.preferredTime)}
                         </p>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide">Hotel</p>
+                        <p className="text-sm font-semibold text-[#5BB8E4] uppercase tracking-wide">Hotel</p>
                         <p className="mt-2 text-sm font-medium text-gray-900">
                           {currentOrder.hotel?.name || currentOrder.hotelId?.name || currentOrder.hotelName || 'Unknown Hotel'}
                         </p>
@@ -835,7 +834,7 @@ const OrdersPage = () => {
 
                     {/* Guest */}
                     <div className="bg-gray-50 rounded-lg p-4">
-                      <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide">Guest Information</p>
+                      <p className="text-sm font-semibold text-[#5BB8E4] uppercase tracking-wide">Guest Information</p>
                       <div className="mt-2 space-y-1">
                         <p className="text-sm font-medium text-gray-900">
                           {currentOrder.guestId?.firstName || currentOrder.guestDetails?.firstName || 'Unknown'}{' '}
@@ -855,19 +854,19 @@ const OrdersPage = () => {
                       (currentOrder.category === 'laundry')) &&
                      currentOrder.bookingConfig?.laundryItems &&
                      currentOrder.bookingConfig.laundryItems.length > 0 && (
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Laundry Items</p>
+                      <div className="bg-white rounded-lg p-4 border border-gray-200">
+                        <p className="text-sm font-semibold text-[#5BB8E4] uppercase tracking-wide mb-3">Laundry Items</p>
                         <div className="space-y-3">
                           {currentOrder.bookingConfig.laundryItems.map((item, index) => {
                             const enhancedServiceType = getServiceTypeInfo(item.serviceType);
                             return (
-                            <div key={index} className="bg-white rounded-lg p-3 border border-blue-100">
+                            <div key={index} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 mb-2">
                                     <span className="text-lg">{item.itemIcon || '👕'}</span>
                                     <span className="font-medium text-gray-900">{item.itemName}</span>
-                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                    <span className="text-xs bg-[#5BB8E4]/10 text-[#5BB8E4] px-2 py-1 rounded-full">
                                       {item.itemCategory}
                                     </span>
                                   </div>
@@ -921,9 +920,9 @@ const OrdersPage = () => {
                       (currentOrder.category === 'laundry')) &&
                      (currentOrder.location?.pickup?.address || currentOrder.location?.delivery?.address ||
                       currentOrder.location?.pickupLocation || currentOrder.location?.deliveryLocation) && (
-                      <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Pickup & Delivery</p>
-                        <div className="bg-white rounded-lg p-3 border border-green-100">
+                      <div className="bg-white rounded-lg p-4 border border-gray-200">
+                        <p className="text-sm font-semibold text-[#5BB8E4] uppercase tracking-wide mb-3">Pickup & Delivery</p>
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                           {(currentOrder.location?.pickup?.address || currentOrder.location?.pickupLocation) && (
                             <div className="mb-2">
                               <span className="text-sm font-medium text-gray-700">📍 Location: </span>
@@ -959,9 +958,9 @@ const OrdersPage = () => {
                       (currentOrder.serviceDetails?.category === 'laundry') ||
                       (currentOrder.category === 'laundry')) &&
                      (!currentOrder.bookingConfig?.laundryItems || currentOrder.bookingConfig.laundryItems.length === 0) && (
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Laundry Service</p>
-                        <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <div className="bg-white rounded-lg p-4 border border-gray-200">
+                        <p className="text-sm font-semibold text-[#5BB8E4] uppercase tracking-wide mb-3">Laundry Service</p>
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                           <div className="space-y-2">
                             <div>
                               <span className="text-sm font-medium text-gray-700">Service: </span>
@@ -996,53 +995,74 @@ const OrdersPage = () => {
 
                     {/* Restaurant Menu Items */}
                     {(currentOrder.serviceType === 'restaurant' || currentOrder.serviceType === 'dining') && currentOrder.bookingConfig?.menuItems && currentOrder.bookingConfig.menuItems.length > 0 && (
-                      <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Menu Items</p>
+                      <div className="bg-white rounded-lg p-4 border border-gray-200">
+                        <p className="text-sm font-semibold text-[#5BB8E4] uppercase tracking-wide mb-3">Menu Items</p>
                         <div className="space-y-3">
                           {currentOrder.bookingConfig.menuItems.map((item, index) => (
-                            <div key={index} className="bg-white rounded-lg p-3 border border-green-100">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-medium text-gray-900">{item.itemName}</span>
-                                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                                      {item.itemCategory}
-                                    </span>
-                                    {item.isVegetarian && (
-                                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">🌱 Veg</span>
-                                    )}
-                                    {item.isVegan && (
-                                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">🌿 Vegan</span>
-                                    )}
-                                    {item.spicyLevel && item.spicyLevel !== 'normal' && (
-                                      <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
-                                        🌶️ {item.spicyLevel}
-                                      </span>
+                            <div key={index} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                              <div className="flex items-start gap-3">
+                                {/* Menu Item Image - Always show with placeholder if no image */}
+                                <div className="flex-shrink-0">
+                                  <div className="w-20 h-20 rounded-lg border border-gray-200 overflow-hidden bg-gray-100 flex items-center justify-center">
+                                    {(item.image || item.imageUrl || item.itemImage) ? (
+                                      <img
+                                        src={item.image || item.imageUrl || item.itemImage}
+                                        alt={item.itemName}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          e.target.style.display = 'none';
+                                          e.target.parentElement.innerHTML = '<span class="text-3xl">🍽️</span>';
+                                        }}
+                                      />
+                                    ) : (
+                                      <span className="text-3xl">🍽️</span>
                                     )}
                                   </div>
-                                  <div className="mt-1 text-xs text-gray-600">
-                                    Quantity: {item.quantity} | Prep Time: {item.preparationTime || 15} min
-                                  </div>
-                                  {item.description && (
-                                    <div className="mt-1 text-xs text-gray-500">{item.description}</div>
-                                  )}
-                                  {item.allergens && item.allergens.length > 0 && (
-                                    <div className="mt-1 text-xs text-orange-600">
-                                      ⚠️ Allergens: {item.allergens.join(', ')}
-                                    </div>
-                                  )}
-                                  {item.specialInstructions && (
-                                    <div className="mt-1 text-xs text-blue-600">
-                                      Special: {item.specialInstructions}
-                                    </div>
-                                  )}
                                 </div>
-                                <div className="text-right">
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}{item.totalPrice?.toFixed(2) || '0.00'}
+
+                                <div className="flex-1 flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-medium text-gray-900">{item.itemName}</span>
+                                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                                        {item.itemCategory}
+                                      </span>
+                                      {item.isVegetarian && (
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">🌱 Veg</span>
+                                      )}
+                                      {item.isVegan && (
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">🌿 Vegan</span>
+                                      )}
+                                      {item.spicyLevel && item.spicyLevel !== 'normal' && (
+                                        <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
+                                          🌶️ {item.spicyLevel}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="mt-1 text-xs text-gray-600">
+                                      Quantity: {item.quantity} | Prep Time: {item.preparationTime || 15} min
+                                    </div>
+                                    {item.description && (
+                                      <div className="mt-1 text-xs text-gray-500">{item.description}</div>
+                                    )}
+                                    {item.allergens && item.allergens.length > 0 && (
+                                      <div className="mt-1 text-xs text-orange-600">
+                                        ⚠️ Allergens: {item.allergens.join(', ')}
+                                      </div>
+                                    )}
+                                    {item.specialInstructions && (
+                                      <div className="mt-1 text-xs text-blue-600">
+                                        Special: {item.specialInstructions}
+                                      </div>
+                                    )}
                                   </div>
-                                  <div className="text-xs text-gray-500">
-                                    {getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}{item.price?.toFixed(2) || '0.00'} each
+                                  <div className="text-right ml-3">
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}{item.totalPrice?.toFixed(2) || '0.00'}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {getCurrencySymbol(currentOrder.pricing?.currency || currentOrder.payment?.currency || 'USD')}{item.price?.toFixed(2) || '0.00'} each
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -1056,9 +1076,9 @@ const OrdersPage = () => {
                     {(currentOrder.serviceType === 'restaurant' || currentOrder.serviceType === 'dining') &&
                      (currentOrder.location?.pickup?.address || currentOrder.location?.delivery?.address ||
                       currentOrder.location?.pickupLocation || currentOrder.location?.deliveryLocation) && (
-                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Delivery Information</p>
-                        <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <div className="bg-white rounded-lg p-4 border border-gray-200">
+                        <p className="text-sm font-semibold text-[#5BB8E4] uppercase tracking-wide mb-3">Delivery Information</p>
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                           {(currentOrder.location?.delivery?.address || currentOrder.location?.deliveryLocation) && (
                             <div className="mb-2">
                               <span className="text-sm font-medium text-gray-700">📍 Delivery Location: </span>
@@ -1099,9 +1119,9 @@ const OrdersPage = () => {
 
                     {/* Transportation Details */}
                     {currentOrder.serviceType === 'transportation' && (
-                      <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                        <p className="text-sm font-semibold text-[#3B5787] uppercase tracking-wide mb-3">Transportation Details</p>
-                        <div className="bg-white rounded-lg p-3 border border-yellow-100">
+                      <div className="bg-white rounded-lg p-4 border border-gray-200">
+                        <p className="text-sm font-semibold text-[#5BB8E4] uppercase tracking-wide mb-3">Transportation Details</p>
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                           {currentOrder.resources?.vehicle && (
                             <div className="mb-2">
                               <span className="text-sm font-medium text-gray-700">Vehicle: </span>

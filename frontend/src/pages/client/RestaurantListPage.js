@@ -47,24 +47,56 @@ const RestaurantListPage = () => {
         // Group services by providerId to show one card per restaurant
         const providerMap = new Map();
 
-        restaurantServices.forEach(service => {
-          const providerId = service.providerId?._id || service.providerId || 'unknown';
+          restaurantServices.forEach(service => {
+          const providerData = typeof service.providerId === 'object' ? service.providerId : null;
+          const providerId = providerData?._id || service.providerId || 'unknown';
+          const restaurantInfo = providerData?.restaurant;
+
+          console.log('📦 Processing service:', {
+            serviceName: service.name,
+            providerId: providerId,
+            hasRestaurantInfo: !!restaurantInfo,
+            restaurantName: restaurantInfo?.name
+          });
 
           if (!providerMap.has(providerId)) {
             providerMap.set(providerId, {
               providerId: providerId,
-              // Prioritize service name (editable by provider) over businessName
-              providerName: service.name || service.providerId?.businessName,
-              providerDescription: service.description || '',
-              providerRating: service.providerId?.rating || 0,
-              providerContactEmail: service.providerId?.contactEmail,
-              providerContactPhone: service.providerId?.contactPhone,
+              // Prioritize provider restaurant name, then service name, then business name
+              providerName: restaurantInfo?.name || service.name || providerData?.businessName,
+              providerDescription: restaurantInfo?.description || service.description || '',
+              providerRating: providerData?.rating || 0,
+              providerContactEmail: providerData?.contactEmail,
+              providerContactPhone: providerData?.contactPhone,
               services: [],
               allMenuItems: [],
-              images: [],
-              // Working hours schedule
-              availabilitySchedule: service.availability?.schedule || null
+              // Use restaurant image if available
+              images: restaurantInfo?.image ? [restaurantInfo.image] : [],
+              // Prioritize restaurant schedule
+              availabilitySchedule: restaurantInfo?.schedule || service.availability?.schedule || null
             });
+          } else {
+            // Update provider info from subsequent services ONLY if we don't have provider-level info
+            const provider = providerMap.get(providerId);
+
+            // Only fall back to service-level updates if we don't have explicit restaurant info
+            if (!restaurantInfo?.name) {
+              if (service.name && service.name !== provider.providerName) {
+                provider.providerName = service.name;
+                // Reset images when the restaurant name changes (if relying on service data)
+                if (!restaurantInfo?.image) {
+                  provider.images = [];
+                }
+                // Update availability schedule when name changes (if relying on service data)
+                if (!restaurantInfo?.schedule && service.availability?.schedule) {
+                  provider.availabilitySchedule = service.availability.schedule;
+                }
+              }
+            }
+
+            if (!restaurantInfo?.description && service.description && service.description !== provider.providerDescription) {
+              provider.providerDescription = service.description;
+            }
           }
 
           const provider = providerMap.get(providerId);
@@ -75,20 +107,26 @@ const RestaurantListPage = () => {
             provider.allMenuItems.push(...service.menuItems);
           }
 
-          // Collect images from service (check both images and media.images)
-          if (service.images?.length > 0) {
-            console.log('Found service.images for', service.name, ':', service.images);
-            provider.images.push(...service.images);
-          } else if (service.media?.images?.length > 0) {
-            console.log('Found media.images for', service.name, ':', service.media.images);
-            provider.images.push(...service.media.images);
-          } else {
-            console.log('No images found for service:', service.name, 'Full service:', service);
+          // Collect images from service only if we don't have a specific restaurant image
+          // OR if we want to show a gallery (but currently card shows first image)
+          if (!restaurantInfo?.image) {
+            if (service.images?.length > 0) {
+              provider.images.push(...service.images);
+            } else if (service.media?.images?.length > 0) {
+              provider.images.push(...service.media.images);
+            }
           }
         });
 
         // Convert map to array
         const restaurantProviders = Array.from(providerMap.values());
+        console.log('🔍 ALL Restaurant providers (including mahmoud):', restaurantProviders.map(p => ({
+          name: p.providerName,
+          providerId: p.providerId,
+          images: p.images,
+          servicesCount: p.services?.length,
+          menuItemsWithImages: p.allMenuItems?.filter(i => i.imageUrl)?.length || 0
+        })));
         console.log('Restaurant providers with images:', restaurantProviders.map(p => ({
           name: p.providerName,
           images: p.images,
@@ -166,9 +204,42 @@ const RestaurantListPage = () => {
       return false; // Day is off
     }
 
+    console.log('🕐 Checking restaurant hours:', {
+      restaurant: restaurant.providerName,
+      currentDay,
+      daySchedule,
+      currentTime: `${now.getHours()}:${now.getMinutes()}`
+    });
+
     // Check time slots
     const timeSlots = daySchedule.timeSlots || [];
-    if (timeSlots.length === 0) return true; // No time slots means all day
+
+    // If no timeSlots array, check if startTime/endTime are directly on daySchedule
+    if (timeSlots.length === 0 && daySchedule.startTime && daySchedule.endTime) {
+      const currentTime = now.getHours() * 60 + now.getMinutes();
+      const [startHour, startMin] = daySchedule.startTime.split(':').map(Number);
+      const [endHour, endMin] = daySchedule.endTime.split(':').map(Number);
+      const startMinutes = startHour * 60 + startMin;
+      const endMinutes = endHour * 60 + endMin;
+
+      console.log('⏰ Direct time check:', {
+        currentTime,
+        startMinutes,
+        endMinutes,
+        isOpen: currentTime >= startMinutes && currentTime <= endMinutes
+      });
+
+      return currentTime >= startMinutes && currentTime <= endMinutes;
+    }
+
+    // If no time slots but day is available, treat as open all day
+    // This handles the case where working hours aren't properly saved
+    if (timeSlots.length === 0 && daySchedule.isAvailable) {
+      console.log('✅ No time slots but day is available - treating as open all day');
+      return true;
+    }
+
+    if (timeSlots.length === 0) return false; // No time slots and not available = closed
 
     const currentTime = now.getHours() * 60 + now.getMinutes();
 

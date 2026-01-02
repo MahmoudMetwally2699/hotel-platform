@@ -243,6 +243,7 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
         type: String,
         required: true
       },
+      imageUrl: String,
       itemCategory: {
         type: String,
         required: true
