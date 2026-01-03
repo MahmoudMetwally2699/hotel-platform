@@ -22,6 +22,35 @@ const {
   sendNewDiningOrderToProvider
 } = require('../utils/whatsapp');
 
+// Helper function to check if service is currently open based on operating hours
+const isServiceOpen = (service) => {
+  if (!service.availability?.schedule) {
+    console.log(`Service ${service.name} has no schedule, showing as always available`);
+    return true; // No schedule = always available
+  }
+
+  const now = new Date();
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const currentDay = dayNames[now.getDay()];
+  const currentTime = now.getHours() * 60 + now.getMinutes(); // minutes since midnight
+
+  const daySchedule = service.availability.schedule[currentDay];
+  if (!daySchedule || !daySchedule.isAvailable) {
+    console.log(`Service ${service.name} is closed on ${currentDay}`);
+    return false;
+  }
+
+  const [startHour, startMin] = (daySchedule.startTime || '00:00').split(':').map(Number);
+  const [endHour, endMin] = (daySchedule.endTime || '23:59').split(':').map(Number);
+  const startTime = startHour * 60 + startMin;
+  const endTime = endHour * 60 + endMin;
+
+  const isOpen = currentTime >= startTime && currentTime <= endTime;
+  console.log(`Service ${service.name} on ${currentDay}: ${isOpen ? 'OPEN' : 'CLOSED'} (current: ${currentTime}, range: ${startTime}-${endTime})`);
+
+  return isOpen;
+};
+
 /**
  * @desc    Get all active hotels
  * @route   GET /api/client/hotels
@@ -199,13 +228,16 @@ router.get('/hotels/:id/services', async (req, res) => {
       return serviceObj;
     });
 
+    // Filter services by operating hours (only show services that are currently open)
+    const openServices = servicesWithMarkup.filter(service => isServiceOpen(service));
+
     res.json({
       success: true,
-      data: servicesWithMarkup,
+      data: openServices,
       pagination: {
         page: parseInt(page),
-        pages: Math.ceil(total / limit),
-        total
+        pages: Math.ceil(openServices.length / limit),
+        total: openServices.length
       }
     });
   } catch (error) {
@@ -240,6 +272,14 @@ router.get('/services/:id', async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Service not found or not available'
+      });
+    }
+
+    // Check if service is currently open based on operating hours
+    if (!isServiceOpen(service)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service is currently closed'
       });
     }
 

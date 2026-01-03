@@ -1141,7 +1141,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
     if (loading) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-          <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden mx-3 sm:mx-4 lg:mx-6">
+          <div className="bg-[#5BB8E4] rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white relative overflow-hidden mx-3 sm:mx-4 lg:mx-6">
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full opacity-50"></div>
             <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full opacity-50"></div>
@@ -1213,7 +1213,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
                   // Enhanced Edit Mode - All Fields
                   <div className="relative">
                     {/* Edit Mode Header */}
-                    <div className="bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white p-6 rounded-t-2xl">
+                    <div className="bg-[#5BB8E4] text-white p-6 rounded-t-2xl">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="p-2 rounded-xl bg-white/20 backdrop-blur-sm mr-4">
@@ -2069,7 +2069,7 @@ const RestaurantServiceCreator = ({ onBack }) => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
       <div className="w-full p-4 sm:p-6 lg:p-8">
         {/* Modern Header */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#3B5787] via-[#4A6B95] to-[#67BAE0] p-8 sm:p-12 text-white shadow-2xl mb-8">
+        <div className="relative overflow-hidden rounded-3xl bg-[#5BB8E4] p-8 sm:p-12 text-white shadow-2xl mb-8">
           {/* Decorative Elements */}
           <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-white/10 blur-xl"></div>
           <div className="absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-white/15"></div>
@@ -2313,8 +2313,7 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
     if (success) {
       setFormData({
         name: '', category: 'mains', description: '', price: '', imageUrl: '',
-        preparationTime: '15', isVegetarian: false, isVegan: false, spicyLevel: 'normal',
-        allergens: [], notes: ''
+        preparationTime: '15', spicyLevel: 'normal', calories: ''
       });
       setAllergenInput('');
       setImageFile(null);
@@ -2491,89 +2490,19 @@ const CustomMenuItemForm = ({ onAddItem, t, currency = 'USD', currencySymbol = '
         </div>
       </div>
 
-      {/* Dietary Options */}
+      {/* Calories */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          {t('serviceProvider.restaurant.form.dietaryOptions')}
+          Calories
         </label>
-        <div className="flex gap-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={formData.isVegetarian}
-              onChange={(e) => handleInputChange('isVegetarian', e.target.checked)}
-              className="mr-2"
-            />
-            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.details.vegetarian')}</span>
-          </label>
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={formData.isVegan}
-              onChange={(e) => handleInputChange('isVegan', e.target.checked)}
-              className="mr-2"
-            />
-            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.details.vegan')}</span>
-          </label>
-        </div>
-      </div>
-
-      {/* Allergens */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {t('serviceProvider.restaurant.details.allergens')}
-        </label>
-        <div className="flex gap-2 mb-2">
-          <input
-            type="text"
-            value={allergenInput}
-            onChange={(e) => setAllergenInput(e.target.value)}
-            placeholder={t('serviceProvider.restaurant.form.allergensPlaceholder')}
-            className="flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
-            style={{ '--tw-ring-color': branding.secondaryColor }}
-          />
-          <button
-            type="button"
-            onClick={addAllergen}
-            className="px-4 py-2 text-white rounded-md hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: 'gray' }}
-          >
-            {t('serviceProvider.restaurant.form.addButton')}
-          </button>
-        </div>
-        {formData.allergens.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {formData.allergens.map((allergen, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm flex items-center"
-              >
-                {allergen}
-                <button
-                  type="button"
-                  onClick={() => removeAllergen(allergen)}
-                  className="ml-2 text-red-600 hover:text-red-800"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Notes */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {t('serviceProvider.restaurant.details.notes')}
-        </label>
-        <textarea
-          value={formData.notes}
-          onChange={(e) => handleInputChange('notes', e.target.value)}
-          placeholder={t('serviceProvider.restaurant.form.notesPlaceholder')}
-          rows="2"
-           className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
-            style={{ '--tw-ring-color': branding.secondaryColor }}
+        <input
+          type="number"
+          value={formData.calories || ''}
+          onChange={(e) => handleInputChange('calories', e.target.value)}
+          placeholder="e.g., 350"
+          min="0"
+          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
+          style={{ '--tw-ring-color': branding.secondaryColor }}
         />
       </div>
 
@@ -2821,99 +2750,30 @@ const EditMenuItemForm = ({ item, onSave, onCancel, t, currency, currencySymbol,
             />
           </div>
 
-          {/* Dietary Options */}
-          <div
-            className="rounded-xl p-6"
-            style={{ backgroundColor: hexToRgba('#10B981', 0.1) }} // Light green
-          >
-            <h5 className="font-bold text-gray-800 mb-4">{t('serviceProvider.restaurant.form.dietaryOptions')}</h5>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.isVegetarian}
-                  onChange={(e) => handleInputChange('isVegetarian', e.target.checked)}
-                  className="mr-2"
-                />
-                <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.details.vegetarian')}</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.isVegan}
-                  onChange={(e) => handleInputChange('isVegan', e.target.checked)}
-                  className="mr-2"
-                />
-                <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.details.vegan')}</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Allergens */}
+          {/* Calories */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('serviceProvider.restaurant.details.allergens')}
+              Calories
             </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={allergenInput}
-                onChange={(e) => setAllergenInput(e.target.value)}
-                placeholder={t('serviceProvider.restaurant.form.allergensPlaceholder')}
-                className="flex-1 p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
-                style={{ '--tw-ring-color': branding.secondaryColor }}
-              />
-              <button
-                type="button"
-                onClick={addAllergen}
-                className="px-4 py-2 text-white rounded-md hover:opacity-90 transition-opacity"
-                style={{ backgroundColor: branding.primaryColor }}
-              >
-                {t('serviceProvider.restaurant.form.addButton')}
-              </button>
-            </div>
-            {formData.allergens.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {formData.allergens.map((allergen, index) => (
-                  <span
-                    key={index}
-                    className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm flex items-center"
-                  >
-                    {allergen}
-                    <button
-                      type="button"
-                      onClick={() => removeAllergen(allergen)}
-                      className="ml-2 text-red-600 hover:text-red-800"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('serviceProvider.restaurant.details.notes')}
-            </label>
-            <textarea
-              value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder={t('serviceProvider.restaurant.form.notesPlaceholder')}
-              rows="2"
+            <input
+              type="number"
+              value={formData.calories || ''}
+              onChange={(e) => handleInputChange('calories', e.target.value)}
+              placeholder="e.g., 350"
+              min="0"
               className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2"
               style={{ '--tw-ring-color': branding.secondaryColor }}
             />
           </div>
+
+
 
           {/* Action Buttons */}
           <div className="flex gap-4 pt-4 border-t border-gray-100">
             <button
               type="submit"
               className="flex-1 px-6 py-3 text-white rounded-md shadow-md hover:shadow-lg transition-all font-medium"
-              style={{ backgroundColor: branding.primaryColor }}
+              style={{ backgroundColor: '#5BB8E4' }}
             >
               <FaSave className="inline mr-2" />
               {t('serviceProvider.restaurant.form.saveChanges')}
@@ -3186,7 +3046,7 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel, t }) => {
       setIsSaving(false);
     }
   };  return (
-    <div className="bg-blue-50 rounded-lg p-4">
+    <div className="bg-white rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <h6 className="font-bold text-blue-800 flex items-center">
           <FaEdit className="mr-2" />
@@ -3350,92 +3210,25 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel, t }) => {
           </p>
         </div>
 
-        {/* Dietary Options */}
-        <div className="flex gap-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={formData.isVegetarian}
-              onChange={(e) => handleInputChange('isVegetarian', e.target.checked)}
-              className="mr-2"
-            />
-            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.form.vegetarian')}</span>
-          </label>
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={formData.isVegan}
-              onChange={(e) => handleInputChange('isVegan', e.target.checked)}
-              className="mr-2"
-            />
-            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.form.vegan')}</span>
-          </label>
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={formData.isAvailable}
-              onChange={(e) => handleInputChange('isAvailable', e.target.checked)}
-              className="mr-2"
-            />
-            <span className="text-sm text-gray-700">{t('serviceProvider.restaurant.form.available')}</span>
-          </label>
-        </div>
-
-        {/* Allergens */}
+        {/* Calories */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('serviceProvider.restaurant.form.allergens')}
+            Calories
           </label>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              value={allergenInput}
-              onChange={(e) => setAllergenInput(e.target.value)}
-              placeholder={t('serviceProvider.restaurant.form.allergensPlaceholder')}
-              className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
-            />
-            <button
-              type="button"
-              onClick={addAllergen}
-              className="px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm"
-            >
-              {t('serviceProvider.restaurant.form.addButton')}
-            </button>
-          </div>
-          {formData.allergens.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {formData.allergens.map((allergen, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs flex items-center"
-                >
-                  {allergen}
-                  <button
-                    type="button"
-                    onClick={() => removeAllergen(allergen)}
-                    className="ml-1 text-red-600 hover:text-red-800"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Notes */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('serviceProvider.restaurant.form.additionalNotes')}
-          </label>
-          <textarea
-            value={formData.notes}
-            onChange={(e) => handleInputChange('notes', e.target.value)}
-            rows="2"
-            placeholder={t('serviceProvider.restaurant.form.notesPlaceholder')}
+          <input
+            type="number"
+            value={formData.calories || ''}
+            onChange={(e) => handleInputChange('calories', e.target.value)}
+            placeholder="e.g., 350"
+            min="0"
             className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
+
+
+
+
+
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2">
@@ -3444,8 +3237,8 @@ const ServiceMenuItemEditForm = ({ item, onSave, onCancel, t }) => {
             disabled={isSaving}
             className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               isSaving
-                ? 'bg-blue-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
+                ? 'bg-[#5BB8E4] cursor-not-allowed opacity-70'
+                : 'bg-[#5BB8E4] hover:bg-[#4AA7D3]'
             } text-white`}
           >
             {isSaving ? (

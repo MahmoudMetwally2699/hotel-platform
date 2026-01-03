@@ -233,6 +233,24 @@ const OrdersPage = () => {
     }
   };
 
+  const isPastDue = (order) => {
+    if (!order.schedule?.preferredDate) return false;
+    if (['completed', 'cancelled', 'rejected'].includes(order.status)) return false;
+
+    const now = new Date();
+    const scheduleDate = new Date(order.schedule.preferredDate);
+
+    if (order.schedule.preferredTime && /^\d{1,2}:\d{2}$/.test(order.schedule.preferredTime)) {
+      const [hours, minutes] = order.schedule.preferredTime.split(':');
+      scheduleDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    } else {
+      // If no time specified, assume end of day to avoid premature alerts
+      scheduleDate.setHours(23, 59, 59, 999);
+    }
+
+    return now > scheduleDate;
+  };
+
   // Normalize all orders (now including housekeeping bookings from the main orders endpoint)
   const allBookings = useMemo(() => {
     return (Array.isArray(orders) ? orders : []).map(order => {
@@ -517,6 +535,14 @@ const OrdersPage = () => {
                         <div className="text-xs text-gray-500">
                           {order.hotel?.name || order.hotelId?.name || order.hotelName || 'N/A'}
                         </div>
+                        {order.schedule?.preferredDate && (
+                           <div className="text-xs mt-1 text-gray-500 flex items-center gap-1">
+                             <span>📅 {new Date(order.schedule.preferredDate).toLocaleDateString()}</span>
+                             {isPastDue(order) && (
+                               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" title={t('serviceProvider.orders.pastDue') || 'Past Due'}></span>
+                             )}
+                           </div>
+                        )}
                       </div>
                       <div className="text-[#3B5787] font-semibold">
                         {getCurrencySymbol(order.pricing?.currency || order.payment?.currency || 'USD')}
@@ -678,9 +704,21 @@ const OrdersPage = () => {
                         <td className="px-4 lg:px-6 py-4 text-sm text-gray-500">
                           <div className="flex flex-col">
                             <span>
-                              {order.schedule?.preferredDate
-                                ? new Date(order.schedule.preferredDate).toLocaleDateString()
-                                : 'Not scheduled'}
+                                {order.schedule?.preferredDate
+                                  ? (
+                                    <span className="flex items-center gap-2">
+                                      {new Date(order.schedule.preferredDate).toLocaleDateString()}
+                                      {isPastDue(order) && (
+                                        <div className="group relative">
+                                          <span className="w-2 h-2 rounded-full bg-red-500 inline-block animate-pulse"></span>
+                                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 hidden group-hover:block px-2 py-1 bg-red-600 text-white text-xs rounded whitespace-nowrap z-10">
+                                            {t('serviceProvider.orders.pastDue') || 'Past Due'}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </span>
+                                  )
+                                  : 'Not scheduled'}
                             </span>
                             {order.schedule?.preferredTime && (
                               <span className="text-xs text-gray-400">

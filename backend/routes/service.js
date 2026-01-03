@@ -2960,7 +2960,7 @@ router.post('/housekeeping-services', catchAsync(async (req, res) => {
       requirements: requirements || [],
       instructions: instructions || ''
     },
-    availability: {
+    availability: availability || {
       isAvailable: true,
       schedule: {
         monday: { isAvailable: true, timeSlots: [{ startTime: '08:00', endTime: '18:00', maxBookings: 10 }] },
@@ -3059,6 +3059,66 @@ router.post('/housekeeping-services/:serviceId/deactivate', catchAsync(async (re
   res.status(200).json({
     status: 'success',
     message: 'Service deactivated successfully'
+  });
+}));
+
+/**
+ * @route   PUT /api/service/housekeeping-services/:serviceId
+ * @desc    Update a housekeeping service
+ * @access  Private/ServiceProvider
+ */
+router.put('/housekeeping-services/:serviceId', catchAsync(async (req, res) => {
+  const providerId = req.user.serviceProviderId;
+  const { serviceId } = req.params;
+  const { name, description, category, estimatedDuration, availability, requirements, instructions } = req.body;
+
+  const service = await Service.findOne({
+    _id: serviceId,
+    providerId: providerId,
+    category: 'housekeeping'
+  });
+
+  if (!service) {
+    return res.status(404).json({
+      status: 'error',
+      message: 'Service not found'
+    });
+  }
+
+  // Update service fields
+  if (name) service.name = name;
+  if (description) service.description = description;
+  if (category) service.subcategory = category;
+  if (estimatedDuration) {
+    service.specifications = service.specifications || {};
+    service.specifications.duration = {
+      estimated: estimatedDuration,
+      unit: 'minutes'
+    };
+  }
+  if (availability) {
+    service.availability = availability;
+  }
+  if (requirements) {
+    service.specifications = service.specifications || {};
+    service.specifications.requirements = requirements;
+  }
+  if (instructions) {
+    service.specifications = service.specifications || {};
+    service.specifications.instructions = instructions;
+  }
+
+  await service.save();
+
+  logger.info(`Housekeeping service updated: ${service.name}`, {
+    serviceProviderId: providerId,
+    serviceId: service._id
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: { service },
+    message: 'Service updated successfully'
   });
 }));
 

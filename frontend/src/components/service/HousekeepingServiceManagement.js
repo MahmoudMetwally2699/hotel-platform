@@ -17,7 +17,9 @@ import {
   FaSpinner,
   FaClock,
   FaUsers,
-  FaArrowLeft
+  FaArrowLeft,
+  FaFilter,
+  FaEdit
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
@@ -96,6 +98,8 @@ const HousekeepingServiceManagement = ({ onBack }) => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingService, setEditingService] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Inject custom styles for modal animations
@@ -116,10 +120,22 @@ const HousekeepingServiceManagement = ({ onBack }) => {
     description: '',
     category: 'cleaning',
     estimatedDuration: 30,
-    availability: 'always',
     requirements: [],
     instructions: ''
   });
+
+  // Operating Hours
+  const defaultSchedule = {
+    monday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
+    tuesday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
+    wednesday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
+    thursday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
+    friday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
+    saturday: { isAvailable: false, startTime: '09:00', endTime: '17:00' },
+    sunday: { isAvailable: false, startTime: '09:00', endTime: '17:00' }
+  };
+  const [operatingHours, setOperatingHours] = useState(defaultSchedule);
+  const [editOperatingHours, setEditOperatingHours] = useState(defaultSchedule);
 
   const serviceCategories = [
     { value: 'cleaning', label: t('housekeeping.categories.cleaning'), icon: FaBroom },
@@ -144,12 +160,83 @@ const HousekeepingServiceManagement = ({ onBack }) => {
     }
   };
 
+  // Operating Hours Helpers
+  const updateDaySchedule = (day, field, value) => {
+    setOperatingHours(prev => ({
+      ...prev,
+      [day]: { ...prev[day], [field]: value }
+    }));
+  };
+
+  const applyToAllDays = () => {
+    const mondaySchedule = operatingHours.monday;
+    const newSchedule = {};
+    Object.keys(operatingHours).forEach(day => {
+      newSchedule[day] = { ...mondaySchedule };
+    });
+    setOperatingHours(newSchedule);
+  };
+
+  const formatOperatingHours = (schedule) => {
+    if (!schedule) return 'Not set';
+
+    const days = Object.keys(schedule);
+    const activeDays = days.filter(day => schedule[day]?.isAvailable);
+
+    if (activeDays.length === 0) return 'Closed';
+
+    // Only show "Daily" if ALL 7 days are available with same hours
+    if (activeDays.length === 7) {
+      const firstDay = schedule[activeDays[0]];
+      const allSameHours = activeDays.every(day =>
+        schedule[day].startTime === firstDay.startTime &&
+        schedule[day].endTime === firstDay.endTime
+      );
+      if (allSameHours) {
+        return `Daily: ${firstDay.startTime || '09:00'} - ${firstDay.endTime || '17:00'}`;
+      }
+    }
+
+    // Group consecutive days with same hours
+    const groups = [];
+    let currentGroup = [activeDays[0]];
+
+    for (let i = 1; i < activeDays.length; i++) {
+      const prevDay = activeDays[i - 1];
+      const currDay = activeDays[i];
+      const prevHours = schedule[prevDay];
+      const currHours = schedule[currDay];
+
+      if (prevHours.startTime === currHours.startTime && prevHours.endTime === currHours.endTime) {
+        currentGroup.push(currDay);
+      } else {
+        groups.push({ days: currentGroup, hours: prevHours });
+        currentGroup = [currDay];
+      }
+    }
+    groups.push({ days: currentGroup, hours: schedule[currentGroup[0]] });
+
+    return groups.map(g => {
+      const dayRange = g.days.length > 1
+        ? `${g.days[0].slice(0, 3)}-${g.days[g.days.length - 1].slice(0, 3)}`
+        : g.days[0].slice(0, 3);
+      return `${dayRange}: ${g.hours.startTime || '09:00'} - ${g.hours.endTime || '17:00'}`;
+    }).join(', ');
+  };
+
   const handleCreateService = async (e) => {
     e.preventDefault();
     setSubmitting(true);
 
     try {
-      const response = await apiClient.post('/service/housekeeping-services', newService);
+      const payload = {
+        ...newService,
+        availability: {
+          isAvailable: true,
+          schedule: operatingHours
+        }
+      };
+      const response = await apiClient.post('/service/housekeeping-services', payload);
 
       // Use the actual service returned from the backend
       const createdService = response.data.data.service;
@@ -160,10 +247,10 @@ const HousekeepingServiceManagement = ({ onBack }) => {
         description: '',
         category: 'cleaning',
         estimatedDuration: 30,
-        availability: 'always',
         requirements: [],
         instructions: ''
       });
+      setOperatingHours(defaultSchedule);
       setShowCreateForm(false);
       toast.success(t('housekeeping.messages.serviceCreated'));
     } catch (error) {
@@ -228,6 +315,72 @@ const HousekeepingServiceManagement = ({ onBack }) => {
   const getCategoryInfo = (category) => {
     const categoryInfo = serviceCategories.find(cat => cat.value === category);
     return categoryInfo || { label: category, icon: FaBroom };
+  };
+
+  // Edit handlers
+  const startEdit = (service) => {
+    setEditingService({
+      ...service,
+      category: service.subcategory || 'cleaning'
+    });
+    setEditOperatingHours(service.availability?.schedule || defaultSchedule);
+    setShowEditForm(true);
+  };
+
+  const cancelEdit = () => {
+    setEditingService(null);
+    setEditOperatingHours(defaultSchedule);
+    setShowEditForm(false);
+  };
+
+  const updateEditOperatingHours = (day, field, value) => {
+    setEditOperatingHours(prev => ({
+      ...prev,
+      [day]: { ...prev[day], [field]: value }
+    }));
+  };
+
+  const applyToAllDaysEdit = () => {
+    const mondaySchedule = editOperatingHours.monday;
+    const newSchedule = {};
+    Object.keys(editOperatingHours).forEach(day => {
+      newSchedule[day] = { ...mondaySchedule };
+    });
+    setEditOperatingHours(newSchedule);
+  };
+
+  const handleUpdateService = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      const payload = {
+        name: editingService.name,
+        description: editingService.description,
+        category: editingService.category,
+        estimatedDuration: editingService.estimatedDuration || editingService.specifications?.duration?.estimated,
+        availability: {
+          isAvailable: true,
+          schedule: editOperatingHours
+        },
+        requirements: editingService.specifications?.requirements || [],
+        instructions: editingService.specifications?.instructions || ''
+      };
+
+      const response = await apiClient.put(`/service/housekeeping-services/${editingService._id}`, payload);
+
+      setServices(prev => prev.map(service =>
+        service._id === editingService._id ? response.data.data.service : service
+      ));
+
+      cancelEdit();
+      toast.success('Service updated successfully');
+    } catch (error) {
+      console.error('Error updating service:', error);
+      toast.error('Failed to update service');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -366,6 +519,19 @@ const HousekeepingServiceManagement = ({ onBack }) => {
                   </div>
                 </div>
 
+                {/* Operating Hours Display */}
+                {service.availability?.schedule && (
+                  <div className="bg-gradient-to-r from-[#5BB8E4]/5 to-blue-50 rounded-xl p-4 mb-6 border border-[#5BB8E4]/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FaFilter className="text-[#5BB8E4]" size={14} />
+                      <span className="text-xs font-semibold text-[#5BB8E4] uppercase tracking-wide">Operating Hours</span>
+                    </div>
+                    <p className="text-sm text-gray-700 font-medium">
+                      {formatOperatingHours(service.availability.schedule)}
+                    </p>
+                  </div>
+                )}
+
                 {/* Requirements */}
                 {service.requirements && service.requirements.length > 0 && (
                   <div className="bg-gray-50 rounded-xl p-4 mb-6">
@@ -405,6 +571,14 @@ const HousekeepingServiceManagement = ({ onBack }) => {
                         {t('housekeeping.management.activate')}
                       </>
                     )}
+                  </button>
+
+                  {/* Edit button */}
+                  <button
+                    onClick={() => startEdit(service)}
+                    className="px-4 py-3 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-xl text-sm font-semibold transition-all duration-300 hover:shadow-md"
+                  >
+                    <FaEdit />
                   </button>
 
                   {/* Always show delete button for services */}
@@ -538,20 +712,68 @@ const HousekeepingServiceManagement = ({ onBack }) => {
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
 
-                    <div className="space-y-2">
-                      <label className="block text-sm font-bold text-gray-700">
-                        {t('housekeeping.management.availability')}
-                      </label>
-                      <select
-                        value={newService.availability}
-                        onChange={(e) => setNewService(prev => ({ ...prev, availability: e.target.value }))}
-                        className={INPUT + " transition-all duration-300 focus:scale-[1.02]"}
-                      >
-                        <option value="always">{t('housekeeping.management.always')}</option>
-                        <option value="business-hours">{t('housekeeping.management.businessHours')}</option>
-                      </select>
-                    </div>
+                {/* Operating Hours Section */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                      <div className="p-2 rounded-lg bg-[#5BB8E4] mr-3">
+                        <FaFilter className="text-white text-sm" />
+                      </div>
+                      Operating Hours
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={applyToAllDays}
+                      className="text-xs px-3 py-1.5 bg-[#5BB8E4]/10 text-[#5BB8E4] rounded-lg hover:bg-[#5BB8E4]/20 transition-colors font-medium"
+                    >
+                      Apply Monday to All Days
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {Object.keys(operatingHours).map((day) => (
+                      <div key={day} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <label className="flex items-center gap-2 min-w-[120px]">
+                          <input
+                            type="checkbox"
+                            checked={operatingHours[day].isAvailable}
+                            onChange={(e) => updateDaySchedule(day, 'isAvailable', e.target.checked)}
+                            className="w-4 h-4 text-[#5BB8E4] border-gray-300 rounded focus:ring-[#5BB8E4]"
+                          />
+                          <span className="text-sm font-semibold text-gray-700 capitalize">{day}</span>
+                        </label>
+
+                        {operatingHours[day].isAvailable && (
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="flex items-center gap-2">
+                              <label className="text-xs text-gray-500 font-medium">From:</label>
+                              <input
+                                type="time"
+                                value={operatingHours[day].startTime}
+                                onChange={(e) => updateDaySchedule(day, 'startTime', e.target.value)}
+                                className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5BB8E4] focus:border-[#5BB8E4]"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <label className="text-xs text-gray-500 font-medium">To:</label>
+                              <input
+                                type="time"
+                                value={operatingHours[day].endTime}
+                                onChange={(e) => updateDaySchedule(day, 'endTime', e.target.value)}
+                                className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5BB8E4] focus:border-[#5BB8E4]"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {!operatingHours[day].isAvailable && (
+                          <span className="text-sm text-gray-400 italic">Closed</span>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -606,6 +828,200 @@ const HousekeepingServiceManagement = ({ onBack }) => {
                         <>
                           <FaPlus className="mr-2" />
                           {t('housekeeping.management.createService')}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Service Modal */}
+      {showEditForm && editingService && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className={CARD + " w-full max-w-3xl max-h-[95vh] overflow-hidden shadow-2xl animate-slideUp"}>
+            <div className="relative bg-[#5BB8E4] text-white p-8">
+              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-white/10 blur-xl"></div>
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm mr-6 shadow-lg">
+                    <FaEdit className="text-2xl" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold mb-1">Edit Service</h2>
+                    <p className="text-blue-100 text-sm">Update service details and operating hours</p>
+                  </div>
+                </div>
+                <button
+                  onClick={cancelEdit}
+                  className="p-3 hover:bg-white/20 rounded-xl transition-all duration-300 hover:rotate-90"
+                >
+                  <FaTimes className="text-xl" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-8 max-h-[calc(95vh-120px)] overflow-y-auto custom-scrollbar">
+              <form onSubmit={handleUpdateService} className="space-y-8">
+                {/* Basic Information */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 rounded-lg bg-[#5BB8E4] mr-3">
+                      <FaBroom className="text-white text-sm" />
+                    </div>
+                    Basic Information
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-gray-700">Service Name *</label>
+                      <input
+                        type="text"
+                        value={editingService.name}
+                        onChange={(e) => setEditingService(prev => ({ ...prev, name: e.target.value }))}
+                        className={INPUT}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-gray-700">Category *</label>
+                      <select
+                        value={editingService.category}
+                        onChange={(e) => setEditingService(prev => ({ ...prev, category: e.target.value }))}
+                        className={INPUT}
+                      >
+                        {serviceCategories.map(cat => (
+                          <option key={cat.value} value={cat.value}>{cat.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mt-6">
+                    <label className="block text-sm font-bold text-gray-700">Description *</label>
+                    <textarea
+                      rows={3}
+                      value={editingService.description}
+                      onChange={(e) => setEditingService(prev => ({ ...prev, description: e.target.value }))}
+                      className={INPUT + " resize-none"}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Service Configuration */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                    <div className="p-2 rounded-lg bg-[#5BB8E4] mr-3">
+                      <FaClock className="text-white text-sm" />
+                    </div>
+                    Service Configuration
+                  </h3>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-gray-700">Estimated Duration (minutes)</label>
+                    <input
+                      type="number"
+                      value={editingService.estimatedDuration || editingService.specifications?.duration?.estimated || 30}
+                      onChange={(e) => setEditingService(prev => ({ ...prev, estimatedDuration: parseInt(e.target.value) }))}
+                      className={INPUT}
+                      min="5"
+                      max="240"
+                    />
+                  </div>
+                </div>
+
+                {/* Operating Hours */}
+                <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                      <div className="p-2 rounded-lg bg-[#5BB8E4] mr-3">
+                        <FaFilter className="text-white text-sm" />
+                      </div>
+                      Operating Hours
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={applyToAllDaysEdit}
+                      className="text-xs px-3 py-1.5 bg-[#5BB8E4]/10 text-[#5BB8E4] rounded-lg hover:bg-[#5BB8E4]/20 transition-colors font-medium"
+                    >
+                      Apply Monday to All Days
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {Object.keys(editOperatingHours).map((day) => (
+                      <div key={day} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <label className="flex items-center gap-2 min-w-[120px]">
+                          <input
+                            type="checkbox"
+                            checked={editOperatingHours[day].isAvailable}
+                            onChange={(e) => updateEditOperatingHours(day, 'isAvailable', e.target.checked)}
+                            className="w-4 h-4 text-[#5BB8E4] border-gray-300 rounded focus:ring-[#5BB8E4]"
+                          />
+                          <span className="text-sm font-semibold text-gray-700 capitalize">{day}</span>
+                        </label>
+
+                        {editOperatingHours[day].isAvailable && (
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="flex items-center gap-2">
+                              <label className="text-xs text-gray-500 font-medium">From:</label>
+                              <input
+                                type="time"
+                                value={editOperatingHours[day].startTime}
+                                onChange={(e) => updateEditOperatingHours(day, 'startTime', e.target.value)}
+                                className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5BB8E4] focus:border-[#5BB8E4]"
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <label className="text-xs text-gray-500 font-medium">To:</label>
+                              <input
+                                type="time"
+                                value={editOperatingHours[day].endTime}
+                                onChange={(e) => updateEditOperatingHours(day, 'endTime', e.target.value)}
+                                className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5BB8E4] focus:border-[#5BB8E4]"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {!editOperatingHours[day].isAvailable && (
+                          <span className="text-sm text-gray-400 italic">Closed</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="sticky bottom-0 bg-white border-t border-gray-100 p-6 -mx-8 -mb-8">
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className={BTN.ghost + " flex-1 hover:bg-gray-200"}
+                    >
+                      <FaTimes className="mr-2" />
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className={BTN.primary + " flex-2 shadow-xl hover:shadow-2xl"}
+                    >
+                      {submitting ? (
+                        <>
+                          <FaSpinner className="animate-spin mr-2" />
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <FaCheck className="mr-2" />
+                          Update Service
                         </>
                       )}
                     </button>

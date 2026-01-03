@@ -81,6 +81,18 @@ const LaundryServiceCreator = () => {
   const [currency, setCurrency] = useState('USD');
   const [currencySymbol, setCurrencySymbol] = useState('$');
 
+  // Operating Hours
+  const defaultSchedule = {
+    monday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
+    tuesday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
+    wednesday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
+    thursday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
+    friday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
+    saturday: { isAvailable: false, startTime: '09:00', endTime: '17:00' },
+    sunday: { isAvailable: false, startTime: '09:00', endTime: '17:00' }
+  };
+  const [operatingHours, setOperatingHours] = useState(defaultSchedule);
+
   useEffect(() => {
     fetchCategoryTemplate();
     fetchCurrencyFromServices();
@@ -216,12 +228,17 @@ const LaundryServiceCreator = () => {
         serviceType: 'laundry_items',
         laundryItems,
         pricing: { basePrice: 0, pricingType: 'per-item', currency: currency },
+        availability: {
+          isAvailable: true,
+          schedule: operatingHours
+        },
         isActive: true
       };
       await apiClient.post('/service/categories/laundry/items', payload);
       toast.success(t('serviceProvider.laundryManagement.messages.serviceCreatedSuccess'));
       setServiceDetails({ name: '', description: '', shortDescription: '', isActive: true });
       setLaundryItems([]);
+      setOperatingHours(defaultSchedule);
       setActiveTab('manage'); // Switch to manage tab after creation
       fetchExistingServices();
     } catch (err) {
@@ -232,7 +249,6 @@ const LaundryServiceCreator = () => {
     }
   };
 
-  // ===== Manage: edit helpers =====
   const startEditingService = (svc) => {
     setEditingService(svc._id);
     setEditFormData({
@@ -240,7 +256,8 @@ const LaundryServiceCreator = () => {
       description: svc.description,
       shortDescription: svc.shortDescription,
       isActive: svc.isActive,
-      laundryItems: svc.laundryItems || []
+      laundryItems: svc.laundryItems || [],
+      availability: svc.availability || { isAvailable: true, schedule: defaultSchedule }
     });
   };
   const cancelEditing = () => {
@@ -335,6 +352,23 @@ const LaundryServiceCreator = () => {
       )
     );
 
+  // Operating Hours Helpers
+  const updateDaySchedule = (day, field, value) => {
+    setOperatingHours(prev => ({
+      ...prev,
+      [day]: { ...prev[day], [field]: value }
+    }));
+  };
+
+  const applyToAllDays = () => {
+    const mondaySchedule = operatingHours.monday;
+    const newSchedule = {};
+    Object.keys(operatingHours).forEach(day => {
+      newSchedule[day] = { ...mondaySchedule };
+    });
+    setOperatingHours(newSchedule);
+  };
+
   // ===== Validation & i18n helpers =====
   const validateForm = () => {
     if (!serviceDetails.name.trim()) {
@@ -368,6 +402,46 @@ const LaundryServiceCreator = () => {
     const key = `categorySelection.laundryCategories.${name}`;
     const translated = t(key);
     return translated !== key ? translated : name;
+  };
+
+  // Helper to format operating hours for display
+  const formatOperatingHours = (schedule) => {
+    if (!schedule) return 'Not set';
+
+    const days = Object.keys(schedule);
+    const activeDays = days.filter(day => schedule[day]?.isAvailable);
+
+    if (activeDays.length === 0) return 'Closed';
+    if (activeDays.length === 7) {
+      const firstDay = schedule[activeDays[0]];
+      return `Daily: ${firstDay.startTime || '09:00'} - ${firstDay.endTime || '17:00'}`;
+    }
+
+    // Group consecutive days with same hours
+    const groups = [];
+    let currentGroup = [activeDays[0]];
+
+    for (let i = 1; i < activeDays.length; i++) {
+      const prevDay = activeDays[i - 1];
+      const currDay = activeDays[i];
+      const prevHours = schedule[prevDay];
+      const currHours = schedule[currDay];
+
+      if (prevHours.startTime === currHours.startTime && prevHours.endTime === currHours.endTime) {
+        currentGroup.push(currDay);
+      } else {
+        groups.push({ days: currentGroup, hours: prevHours });
+        currentGroup = [currDay];
+      }
+    }
+    groups.push({ days: currentGroup, hours: schedule[currentGroup[0]] });
+
+    return groups.map(g => {
+      const dayRange = g.days.length > 1
+        ? `${g.days[0].slice(0, 3)}-${g.days[g.days.length - 1].slice(0, 3)}`
+        : g.days[0].slice(0, 3);
+      return `${dayRange}: ${g.hours.startTime || '09:00'} - ${g.hours.endTime || '17:00'}`;
+    }).join(', ');
   };
 
   // Helper to get React Icon based on category or name if needed, or fallback
@@ -559,6 +633,103 @@ const LaundryServiceCreator = () => {
                       />
                     </div>
 
+                    {/* Operating Hours for Editing */}
+                    <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+                          <FiFilter className="text-[#66CFFF]" />
+                          Operating Hours
+                        </h4>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const mondaySchedule = editFormData.availability.schedule.monday;
+                            const newSchedule = {};
+                            Object.keys(editFormData.availability.schedule).forEach(day => {
+                              newSchedule[day] = { ...mondaySchedule };
+                            });
+                            setEditFormData(p => ({
+                              ...p,
+                              availability: { ...p.availability, schedule: newSchedule }
+                            }));
+                          }}
+                          className="text-xs px-3 py-1.5 bg-[#66CFFF]/10 text-[#66CFFF] rounded-lg hover:bg-[#66CFFF]/20 transition-colors font-medium"
+                        >
+                          Apply Monday to All
+                        </button>
+                      </div>
+
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                        {Object.keys(editFormData.availability.schedule).map((day) => (
+                          <div key={day} className="flex items-center gap-4 p-3 bg-white rounded-xl border border-gray-200">
+                            <label className="flex items-center gap-2 min-w-[120px]">
+                              <input
+                                type="checkbox"
+                                checked={editFormData.availability.schedule[day].isAvailable}
+                                onChange={(e) => setEditFormData(p => ({
+                                  ...p,
+                                  availability: {
+                                    ...p.availability,
+                                    schedule: {
+                                      ...p.availability.schedule,
+                                      [day]: { ...p.availability.schedule[day], isAvailable: e.target.checked }
+                                    }
+                                  }
+                                }))}
+                                className="w-4 h-4 text-[#66CFFF] border-gray-300 rounded focus:ring-[#66CFFF]"
+                              />
+                              <span className="text-sm font-semibold text-gray-700 capitalize">{day}</span>
+                            </label>
+
+                            {editFormData.availability.schedule[day].isAvailable && (
+                              <div className="flex items-center gap-3 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <label className="text-xs text-gray-500 font-medium">From:</label>
+                                  <input
+                                    type="time"
+                                    value={editFormData.availability.schedule[day].startTime || '09:00'}
+                                    onChange={(e) => setEditFormData(p => ({
+                                      ...p,
+                                      availability: {
+                                        ...p.availability,
+                                        schedule: {
+                                          ...p.availability.schedule,
+                                          [day]: { ...p.availability.schedule[day], startTime: e.target.value }
+                                        }
+                                      }
+                                    }))}
+                                    className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#66CFFF] focus:border-[#66CFFF]"
+                                  />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <label className="text-xs text-gray-500 font-medium">To:</label>
+                                  <input
+                                    type="time"
+                                    value={editFormData.availability.schedule[day].endTime || '17:00'}
+                                    onChange={(e) => setEditFormData(p => ({
+                                      ...p,
+                                      availability: {
+                                        ...p.availability,
+                                        schedule: {
+                                          ...p.availability.schedule,
+                                          [day]: { ...p.availability.schedule[day], endTime: e.target.value }
+                                        }
+                                      }
+                                    }))}
+                                    className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#66CFFF] focus:border-[#66CFFF]"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {!editFormData.availability.schedule[day].isAvailable && (
+                              <span className="text-sm text-gray-400 italic">Closed</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* Items List for Editing */}
                     <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
                       <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -659,6 +830,19 @@ const LaundryServiceCreator = () => {
                     {service.description || 'No description provided.'}
                   </p>
 
+                  {/* Operating Hours Display */}
+                  {service.availability?.schedule && (
+                    <div className="mb-6 p-4 bg-gradient-to-r from-[#66CFFF]/5 to-blue-50 rounded-xl border border-[#66CFFF]/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FiFilter className="text-[#66CFFF]" size={16} />
+                        <span className="text-xs font-semibold text-[#66CFFF] uppercase tracking-wide">Operating Hours</span>
+                      </div>
+                      <p className="text-sm text-gray-700 font-medium">
+                        {formatOperatingHours(service.availability.schedule)}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-3 mb-6">
                     <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
                       <span className="block text-2xl font-bold text-[#66CFFF]">
@@ -734,6 +918,68 @@ const LaundryServiceCreator = () => {
                   className={inputBase}
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Operating Hours Section */}
+          <div className={sectionCard}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <div className="p-2 bg-[#66CFFF]/10 rounded-lg">
+                  <FiFilter className="text-[#66CFFF]" />
+                </div>
+                Operating Hours
+              </h3>
+              <button
+                type="button"
+                onClick={applyToAllDays}
+                className="text-xs px-3 py-1.5 bg-[#66CFFF]/10 text-[#66CFFF] rounded-lg hover:bg-[#66CFFF]/20 transition-colors font-medium"
+              >
+                Apply Monday to All Days
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {Object.keys(operatingHours).map((day) => (
+                <div key={day} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <label className="flex items-center gap-2 min-w-[120px]">
+                    <input
+                      type="checkbox"
+                      checked={operatingHours[day].isAvailable}
+                      onChange={(e) => updateDaySchedule(day, 'isAvailable', e.target.checked)}
+                      className="w-4 h-4 text-[#66CFFF] border-gray-300 rounded focus:ring-[#66CFFF]"
+                    />
+                    <span className="text-sm font-semibold text-gray-700 capitalize">{day}</span>
+                  </label>
+
+                  {operatingHours[day].isAvailable && (
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-gray-500 font-medium">From:</label>
+                        <input
+                          type="time"
+                          value={operatingHours[day].startTime}
+                          onChange={(e) => updateDaySchedule(day, 'startTime', e.target.value)}
+                          className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#66CFFF] focus:border-[#66CFFF]"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-gray-500 font-medium">To:</label>
+                        <input
+                          type="time"
+                          value={operatingHours[day].endTime}
+                          onChange={(e) => updateDaySchedule(day, 'endTime', e.target.value)}
+                          className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#66CFFF] focus:border-[#66CFFF]"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {!operatingHours[day].isAvailable && (
+                    <span className="text-sm text-gray-400 italic">Closed</span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
