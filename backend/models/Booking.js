@@ -686,6 +686,19 @@ const bookingSchema = new mongoose.Schema({  // Booking Identification
     }
   },
 
+  // Provider Payment Tracking (has the hotel paid the service provider?)
+  providerPaid: {
+    isPaid: {
+      type: Boolean,
+      default: false
+    },
+    paidAt: Date,
+    paidBy: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User'
+    }
+  },
+
   // Service Assignment
   assignment: {
     assignedTo: {

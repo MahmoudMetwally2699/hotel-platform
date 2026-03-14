@@ -84,6 +84,7 @@ export const SERVICE_API = {
   SERVICES: `/service/services`,
   ORDERS: `/service/orders`,
   EARNINGS: `/service/earnings`,
+  SALES: `/service/sales`,
   ANALYTICS: `/service/analytics`,
   SUPERADMIN_ANALYTICS: `/service/superadmin/analytics`,
   STATS: `/service/stats`,

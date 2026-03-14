@@ -176,7 +176,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
         serviceNavItems.push({ name: t('navigation.feedback'), path: '/service/feedback', icon: 'feedback' });
 
         // Add earnings
-        serviceNavItems.push({ name: t('navigation.earnings'), path: '/service/earnings', icon: 'cash' });
+        serviceNavItems.push({ name: t('navigation.sales'), path: '/service/earnings', icon: 'cash' });
 
         return serviceNavItems;
       case 'guest':

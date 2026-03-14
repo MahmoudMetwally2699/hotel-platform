@@ -155,6 +155,28 @@ const OrdersPage = () => {
     { value: 'cancelled', label: t('hotelAdmin.orders.statusUpdate.statuses.cancelled'), color: 'bg-red-100 text-red-800' }
   ];
 
+  // Toggle provider paid status
+  const toggleProviderPaid = async (bookingId) => {
+    try {
+      const response = await apiClient.patch(`${HOTEL_API.BOOKINGS}/${bookingId}/provider-paid`);
+      if (response.data?.status === 'success') {
+        // Update local state
+        setBookings(prev => prev.map(b => 
+          b._id === bookingId 
+            ? { ...b, providerPaid: response.data.data.booking.providerPaid }
+            : b
+        ));
+        // Update selected order if open
+        if (selectedOrder?._id === bookingId) {
+          setSelectedOrder(prev => ({ ...prev, providerPaid: response.data.data.booking.providerPaid }));
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling provider paid status:', error);
+      alert(`Error: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
   // Fetch hotel stats on mount to get currency settings
   useEffect(() => {
     if (isAuthenticated) {
@@ -599,16 +621,34 @@ const OrdersPage = () => {
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => {
-                          setSelectedOrder(order);
-                          setIsModalOpen(true);
-                        }}
-                        className="w-full mt-3 font-medium transition-colors duration-200 text-sm"
-                        style={{ color: theme.primaryColor }}
-                      >
-                        {t('hotelAdmin.orders.details.title')}
-                      </button>
+                      {/* Provider Paid Toggle */}
+                      <div className="mt-3 flex items-center gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleProviderPaid(order._id); }}
+                          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border ${
+                            order.providerPaid?.isPaid
+                              ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                              : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                          }`}
+                        >
+                          {order.providerPaid?.isPaid ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                          )}
+                          {order.providerPaid?.isPaid ? (i18n.language === 'ar' ? 'تم الدفع' : 'Paid') : (i18n.language === 'ar' ? 'لم يتم الدفع' : 'Mark Paid')}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setIsModalOpen(true);
+                          }}
+                          className="flex-1 font-medium transition-colors duration-200 text-sm px-3 py-2 rounded-lg hover:bg-gray-50"
+                          style={{ color: theme.primaryColor }}
+                        >
+                          {t('hotelAdmin.orders.details.title')}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1253,6 +1293,23 @@ const OrdersPage = () => {
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
                 >
                   {t('hotelAdmin.orders.details.close')}
+                </button>
+                <button
+                  onClick={() => toggleProviderPaid(selectedOrder._id)}
+                  className={`px-4 py-2 text-sm font-medium rounded-md border transition-all duration-200 flex items-center gap-1.5 ${
+                    selectedOrder?.providerPaid?.isPaid
+                      ? 'bg-green-50 text-green-700 border-green-300 hover:bg-green-100'
+                      : 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100'
+                  }`}
+                >
+                  {selectedOrder?.providerPaid?.isPaid ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  )}
+                  {selectedOrder?.providerPaid?.isPaid
+                    ? (i18n.language === 'ar' ? 'تم الدفع لمقدم الخدمة' : 'Provider Paid')
+                    : (i18n.language === 'ar' ? 'تم الدفع لمقدم الخدمة؟' : 'Mark Provider Paid')}
                 </button>
                 <button
                   onClick={() => {

@@ -4398,6 +4398,51 @@ router.patch('/bookings/:id/status', protect, restrictTo('hotel'), restrictToOwn
 }));
 
 /**
+ * @desc    Mark booking as paid to service provider
+ * @route   PATCH /api/hotel/bookings/:id/provider-paid
+ * @access  Private (Hotel Admin only)
+ */
+router.patch('/bookings/:id/provider-paid', protect, restrictTo('hotel'), restrictToOwnHotel, catchAsync(async (req, res, next) => {
+  const bookingId = req.params.id;
+
+  const booking = await Booking.findOne({
+    _id: bookingId,
+    hotelId: req.user.hotelId
+  });
+
+  if (!booking) {
+    return next(new AppError('Booking not found or access denied', 404));
+  }
+
+  // Toggle the paid status
+  const newPaidStatus = !booking.providerPaid?.isPaid;
+
+  booking.providerPaid = {
+    isPaid: newPaidStatus,
+    paidAt: newPaidStatus ? new Date() : undefined,
+    paidBy: newPaidStatus ? req.user._id : undefined
+  };
+
+  await booking.save();
+
+  logger.info(`Booking ${bookingId} provider payment marked as ${newPaidStatus ? 'paid' : 'unpaid'}`, {
+    hotelId: req.user.hotelId,
+    userId: req.user._id,
+    bookingId
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      booking: {
+        _id: booking._id,
+        providerPaid: booking.providerPaid
+      }
+    }
+  });
+}));
+
+/**
  * @route   GET /api/hotel/analytics/ratings/summary
  * @desc    Get rating summary metrics for hotel (average rating, total reviews, highest rated service)
  * @access  Private/HotelAdmin

@@ -271,6 +271,19 @@ class ServiceProviderService {  /**
   }
 
   /**
+   * Get sales data (paid/unpaid orders, totals)
+   * @returns {Promise} - Response from API
+   */
+  async getSalesData() {
+    try {
+      const response = await apiClient.get(SERVICE_PROVIDER_API.SALES);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Get detailed category analytics
    * @param {string} timeRange - Time range for analytics data
    * @returns {Promise} - Response from API

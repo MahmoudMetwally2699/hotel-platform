@@ -1,856 +1,346 @@
 /**
- * Service Provider Earnings Page
- * Displays comprehensive earnings and analytics for service providers
+ * Sales Page (المبيعات)
+ * Shows service provider's sales data: totals, paid/unpaid order lists
  */
 
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  fetchProviderEarnings,
-  fetchProviderPayouts,
-  fetchCategoryAnalytics,
-  selectProviderEarnings,
-  selectCategoryAnalytics,
-  selectServiceLoading,
-  selectServiceError,
-  selectProviderCurrency
-} from '../../redux/slices/serviceSlice';
-import { formatPriceByLanguage } from '../../utils/currency';
-
-// Chart.js imports
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement, ArcElement } from 'chart.js';
-import { Line, Bar } from 'react-chartjs-2';
-
-// Icons
-import {
-  BanknotesIcon,
-  ChartBarIcon,
-  ClockIcon,
-  CurrencyDollarIcon,
-  ArrowTrendingUpIcon,
-  CalendarDaysIcon,
-  ShoppingBagIcon,
-  TruckIcon,
-  SparklesIcon,
-  HomeIcon,
-  BuildingStorefrontIcon
-} from '@heroicons/react/24/outline';
-
-// Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement, ArcElement);
+import { useTheme } from '../../context/ThemeContext';
+import serviceProviderService from '../../services/service-provider.service';
 
 const EarningsPage = () => {
-  const dispatch = useDispatch();
-  const { i18n } = useTranslation();
-  const earnings = useSelector(selectProviderEarnings);
-  const categoryAnalytics = useSelector(selectCategoryAnalytics);
-  const isLoading = useSelector(selectServiceLoading);
-  const error = useSelector(selectServiceError);
-  const currency = useSelector(selectProviderCurrency);
+  const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
+  const isRTL = i18n.language === 'ar';
 
-  const [timeRange, setTimeRange] = useState('month'); // 'week', 'month', 'year'
+  const [salesData, setSalesData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchPaid, setSearchPaid] = useState('');
+  const [searchUnpaid, setSearchUnpaid] = useState('');
+
+  const fetchSalesData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await serviceProviderService.getSalesData();
+      setSalesData(response.data || response);
+    } catch (err) {
+      console.error('Failed to fetch sales data:', err);
+      setError(err.message || 'Failed to load sales data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    dispatch(fetchProviderEarnings(timeRange));
-    dispatch(fetchCategoryAnalytics(timeRange));
-    dispatch(fetchProviderPayouts());
-  }, [dispatch, timeRange]);
+    fetchSalesData();
+  }, [fetchSalesData]);
 
-  // Debug logging
-  useEffect(() => {
-  }, [earnings, categoryAnalytics]);
-
-  const handleTimeRangeChange = (range) => {
-    setTimeRange(range);
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-US', {
+      style: 'currency',
+      currency: 'SAR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format(amount || 0);
   };
 
-  // Format chart data
-  const getChartData = () => {
-    if (!earnings?.data?.breakdown?.monthly || earnings.data.breakdown.monthly.length === 0) {
-      return null;
-    }
+  const formatDate = (date) => {
+    if (!date) return '';
+    return new Date(date).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const chartLabels = earnings.data.breakdown.monthly.map(item =>
-      `${monthNames[item.month - 1]} ${item.year}`
+  const filterOrders = (orders, search) => {
+    if (!search) return orders || [];
+    const s = search.toLowerCase();
+    return (orders || []).filter(order => {
+      const bookingNum = order.bookingNumber?.toLowerCase() || '';
+      const guestName = `${order.guestId?.firstName || ''} ${order.guestId?.lastName || ''}`.toLowerCase();
+      const serviceName = order.serviceId?.name?.toLowerCase() || '';
+      const category = order.serviceDetails?.category?.toLowerCase() || '';
+      return bookingNum.includes(s) || guestName.includes(s) || serviceName.includes(s) || category.includes(s);
+    });
+  };
+
+  // SVG Icon Components
+  const WalletIcon = ({ className = "w-6 h-6", color = "white" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke={color} strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 110-6h5.25A2.25 2.25 0 0121 6v6zm0 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18V6a2.25 2.25 0 012.25-2.25h13.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+    </svg>
+  );
+
+  const CalendarIcon = ({ className = "w-6 h-6", color = "white" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke={color} strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+    </svg>
+  );
+
+  const CurrencyIcon = ({ className = "w-6 h-6", color = "white" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke={color} strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+
+  const BoxIcon = ({ className = "w-6 h-6", color = "white" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke={color} strokeWidth={1.8}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+    </svg>
+  );
+
+  const CheckCircleIcon = ({ className = "w-4 h-4" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+
+  const ClockIcon = ({ className = "w-4 h-4" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+
+  const SearchIcon = ({ className = "w-4 h-4" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+  );
+
+  const InboxIcon = ({ className = "w-10 h-10" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-17.5 0V19.5a2.25 2.25 0 002.25 2.25h15a2.25 2.25 0 002.25-2.25V13.5m-17.5 0V6.75A2.25 2.25 0 014.5 4.5h15a2.25 2.25 0 012.25 2.25v6.75" />
+    </svg>
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 rounded-full animate-spin" style={{ borderColor: `${theme.primaryColor}30`, borderTopColor: theme.primaryColor }}></div>
+          <p className="text-gray-500 font-medium">{t('common.loading')}</p>
+        </div>
+      </div>
     );
-    const earningsData = earnings.data.breakdown.monthly.map(item => item.earnings);
+  }
 
-    return {
-      labels: chartLabels,
-      datasets: [
-        {
-          label: 'Monthly Earnings',
-          data: earningsData,
-          borderColor: '#3B5787',
-          backgroundColor: 'rgba(59, 87, 135, 0.5)',
-          tension: 0.3
-        }
-      ]
-    };
-  };
-
-  const getBarChartData = () => {
-    if (!earnings?.data?.categoryBreakdown) {
-      // Create sample data structure for demonstration
-      const categories = ['Transportation', 'Laundry', 'Housekeeping', 'Restaurant'];
-      const categoryColors = [
-        'rgba(59, 87, 135, 0.8)', // Primary blue for Transportation
-        'rgba(103, 186, 224, 0.8)', // Light blue for Laundry
-        'rgba(59, 87, 135, 0.6)', // Primary blue variant for Housekeeping
-        'rgba(103, 186, 224, 0.6)' // Light blue variant for Restaurant
-      ];
-      const categoryBorderColors = [
-        'rgba(59, 87, 135, 1)',
-        'rgba(103, 186, 224, 1)',
-        'rgba(59, 87, 135, 1)',
-        'rgba(103, 186, 224, 1)'
-      ];
-
-      return {
-        labels: categories,
-        datasets: [
-          {
-            label: `Earnings (${currency})`,
-            data: [0, 0, 0, 0], // Placeholder data
-            backgroundColor: categoryColors,
-            borderColor: categoryBorderColors,
-            borderWidth: 2,
-            borderRadius: 8,
-            borderSkipped: false,
-          }
-        ]
-      };
-    }
-
-    const categories = ['transportation', 'laundry', 'housekeeping', 'restaurant'];
-    const categoryLabels = ['Transportation', 'Laundry', 'Housekeeping', 'Restaurant'];
-    const categoryColors = [
-      'rgba(59, 87, 135, 0.8)', // Primary blue for Transportation
-      'rgba(103, 186, 224, 0.8)', // Light blue for Laundry
-      'rgba(59, 87, 135, 0.6)', // Primary blue variant for Housekeeping
-      'rgba(103, 186, 224, 0.6)' // Light blue variant for Restaurant
-    ];
-    const categoryBorderColors = [
-      'rgba(59, 87, 135, 1)',
-      'rgba(103, 186, 224, 1)',
-      'rgba(59, 87, 135, 1)',
-      'rgba(103, 186, 224, 1)'
-    ];
-
-    const earningsData = categories.map(category => {
-      const categoryData = getCategoryData(category);
-      return categoryData.allTime?.totalEarnings || 0;
-    });    return {
-      labels: categoryLabels,
-      datasets: [
-        {
-          label: `Earnings (${currency})`,
-          data: earningsData,
-          backgroundColor: categoryColors,
-          borderColor: categoryBorderColors,
-          borderWidth: 2,
-          borderRadius: 8,
-          borderSkipped: false,
-        }
-      ]
-    };
-  };
-
-  // Service category icons mapping
-  const getCategoryIcon = (category) => {
-    switch (category?.toLowerCase()) {
-      case 'laundry': return <SparklesIcon className="h-6 w-6" />;
-      case 'transportation': return <TruckIcon className="h-6 w-6" />;
-      case 'housekeeping': return <HomeIcon className="h-6 w-6" />;
-      case 'restaurant': return <BuildingStorefrontIcon className="h-6 w-6" />;
-      default: return <ShoppingBagIcon className="h-6 w-6" />;
-    }
-  };
-
-  // Helper function to get category data from new analytics endpoint
-  const getCategoryData = (category) => {
-    if (!categoryAnalytics?.data?.categories) {
-      return {
-        allTime: { totalEarnings: 0, totalOrders: 0, averagePerOrder: 0 },
-        currentPeriod: { totalEarnings: 0, totalOrders: 0, averagePerOrder: 0 }
-      };
-    }
-
-    // Map frontend categories to backend categories
-    const categoryMapping = {
-      'restaurant': 'dining',  // Frontend shows 'restaurant' but backend has 'dining'
-      'dining': 'dining',
-      'laundry': 'laundry',
-      'transportation': 'transportation',
-      'housekeeping': 'housekeeping'
-    };
-
-    const backendCategory = categoryMapping[category.toLowerCase()] || category.toLowerCase();
-
-    const categoryItem = categoryAnalytics.data.categories.find(
-      item => item.category && item.category.toLowerCase() === backendCategory
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="text-center bg-red-50 border border-red-200 rounded-2xl p-8 max-w-md">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mx-auto text-red-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+          <h3 className="text-lg font-bold text-red-700 mb-2">{t('common.error')}</h3>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={fetchSalesData}
+            className="px-6 py-2.5 text-white rounded-xl hover:opacity-90 transition-all font-medium"
+            style={{ backgroundColor: theme.primaryColor }}
+          >
+            {isRTL ? 'إعادة المحاولة' : 'Retry'}
+          </button>
+        </div>
+      </div>
     );
+  }
 
-    if (!categoryItem) {
-      return {
-        allTime: { totalEarnings: 0, totalOrders: 0, averagePerOrder: 0 },
-        currentPeriod: { totalEarnings: 0, totalOrders: 0, averagePerOrder: 0 }
-      };
+  const stats = [
+    {
+      label: isRTL ? 'المبالغ المتبقي تحصيلها' : 'Remaining to Collect',
+      value: formatCurrency(salesData?.remainingAmount),
+      icon: <WalletIcon />,
+    },
+    {
+      label: isRTL ? 'المبيعات الشهرية' : 'Monthly Sales',
+      value: formatCurrency(salesData?.monthlySales),
+      icon: <CalendarIcon />,
+    },
+    {
+      label: isRTL ? 'إجمالي المبيعات' : 'Total Sales',
+      value: formatCurrency(salesData?.totalSales),
+      icon: <CurrencyIcon />,
+    },
+    {
+      label: isRTL ? 'إجمالي الطلبات' : 'Total Orders',
+      value: salesData?.totalOrders || 0,
+      icon: <BoxIcon />,
     }
+  ];
 
-    return categoryItem;
-  };
+  const filteredPaid = filterOrders(salesData?.paidOrders, searchPaid);
+  const filteredUnpaid = filterOrders(salesData?.unpaidOrders, searchUnpaid);
 
-  // Enhanced chart data with better colors
-  const getEnhancedBarChartData = () => {
-    if (!earnings?.data?.breakdown?.byCategory || earnings.data.breakdown.byCategory.length === 0) {
-      return null;
-    }
-
-    const categoryColors = {
-      laundry: 'rgba(103, 186, 224, 0.8)',
-      transportation: 'rgba(59, 87, 135, 0.8)',
-      housekeeping: 'rgba(59, 87, 135, 0.6)',
-      restaurant: 'rgba(103, 186, 224, 0.6)',
-      other: 'rgba(0, 0, 0, 0.8)'
-    };
-
-    return {
-      labels: earnings.data.breakdown.byCategory.map(item =>
-        item.category.charAt(0).toUpperCase() + item.category.slice(1)
-      ),
-      datasets: [
-        {
-          label: 'Earnings by Service Category',
-          data: earnings.data.breakdown.byCategory.map(item => item.earnings),
-          backgroundColor: earnings.data.breakdown.byCategory.map(item =>
-            categoryColors[item.category.toLowerCase()] || categoryColors.other
-          ),
-          borderColor: earnings.data.breakdown.byCategory.map(item =>
-            categoryColors[item.category.toLowerCase()]?.replace('0.8', '1') || categoryColors.other.replace('0.8', '1')
-          ),
-          borderWidth: 2,
-          borderRadius: 8,
-        }
-      ]
-    };
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      {/* Header Section */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="w-full px-2 sm:px-3 lg:px-4">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  💰 Earnings & Analytics
-                </h1>
-                <p className="mt-2 text-sm text-gray-600">
-                  Comprehensive overview of your service earnings and performance metrics
-                </p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <CalendarDaysIcon className="h-5 w-5 text-gray-400" />
-                <span className="text-sm text-gray-500">
-                  {new Date().toLocaleDateString()}
-                </span>
-              </div>
+  const OrderCard = ({ order, isPaid }) => {
+    const amount = order.pricing?.providerEarnings || order.pricing?.totalBeforeMarkup || 0;
+    return (
+      <div className={`bg-white rounded-xl border p-4 hover:shadow-md transition-all duration-200`}
+        style={{ borderColor: isPaid ? '#bbf7d0' : '#fecaca' }}
+      >
+        <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-gray-800 text-sm">#{order.bookingNumber || order._id?.slice(-6)}</span>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold`}
+                style={{
+                  backgroundColor: isPaid ? '#dcfce7' : '#fee2e2',
+                  color: isPaid ? '#15803d' : '#b91c1c'
+                }}
+              >
+                {isPaid ? <CheckCircleIcon className="w-3 h-3" /> : <ClockIcon className="w-3 h-3" />}
+                {isPaid ? (isRTL ? 'تم التحصيل' : 'Collected') : (isRTL ? 'لم يتم التحصيل' : 'Pending')}
+              </span>
             </div>
+            <p className="text-gray-500 text-xs mt-1">
+              {order.guestId?.firstName} {order.guestId?.lastName} • {order.serviceId?.name || order.serviceDetails?.category}
+            </p>
+            <p className="text-gray-400 text-xs mt-0.5">
+              {formatDate(order.createdAt)}
+              {isPaid && order.providerPaid?.paidAt && (
+                <span style={{ color: theme.primaryColor }}> • {isRTL ? 'تم الدفع' : 'Paid'}: {formatDate(order.providerPaid.paidAt)}</span>
+              )}
+            </p>
+          </div>
+          <div className={`${isRTL ? 'text-left' : 'text-right'} flex-shrink-0`}>
+            <p className="text-lg font-bold" style={{ color: isPaid ? '#16a34a' : theme.primaryColor }}>
+              {formatCurrency(amount)}
+            </p>
           </div>
         </div>
       </div>
+    );
+  };
 
-      <div className="w-full px-2 sm:px-3 lg:px-4 py-8">
-        {error && (
-          <div className="mb-6 bg-gray-50 border-l-4 border-[#3B5787] p-4 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-[#3B5787]" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-gray-700">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
+  return (
+    <div className="min-h-screen p-4 md:p-6 lg:p-8" dir={isRTL ? 'rtl' : 'ltr'} style={{ backgroundColor: theme.backgroundColor || '#f9fafb' }}>
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold" style={{ color: theme.primaryColor }}>
+          {isRTL ? 'المبيعات' : 'Sales'}
+        </h1>
+        <p className="text-gray-500 mt-1">
+          {isRTL ? 'متابعة المبيعات والتحصيلات' : 'Track your sales and collections'}
+        </p>
+      </div>
 
-        {/* Enhanced Earnings Summary Cards */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          {/* Available Balance Card */}
-          <div className="bg-gradient-to-br from-[#3B5787] to-[#2A4065] overflow-hidden shadow-xl rounded-2xl transform hover:scale-105 transition-all duration-200">
-            <div className="px-6 py-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <BanknotesIcon className="h-8 w-8 text-white" />
-                </div>
-                <div className="ml-4 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-white/80 truncate">
-                      Available Balance
-                    </dt>
-                    <dd className="text-2xl font-bold text-white">
-                      {formatPriceByLanguage(earnings?.data?.availableBalance || 0, i18n.language, currency)}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Monthly Earnings Card */}
-          <div className="bg-gradient-to-br from-[#67BAE0] to-[#3B5787] overflow-hidden shadow-xl rounded-2xl transform hover:scale-105 transition-all duration-200">
-            <div className="px-6 py-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ArrowTrendingUpIcon className="h-8 w-8 text-white" />
-                </div>
-                <div className="ml-4 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-white/80 truncate">
-                      Monthly Earnings
-                    </dt>
-                    <dd className="text-2xl font-bold text-white">
-                      {formatPriceByLanguage(earnings?.data?.monthlyEarnings || 0, i18n.language, currency)}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Total Earnings YTD Card */}
-          <div className="bg-gradient-to-br from-[#3B5787] to-[#67BAE0] overflow-hidden shadow-xl rounded-2xl transform hover:scale-105 transition-all duration-200">
-            <div className="px-6 py-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ChartBarIcon className="h-8 w-8 text-white" />
-                </div>
-                <div className="ml-4 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-white/80 truncate">
-                      Total Earnings YTD
-                    </dt>
-                    <dd className="text-2xl font-bold text-white">
-                      {formatPriceByLanguage(earnings?.data?.yearlyEarnings || 0, i18n.language, currency)}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Total Orders Card */}
-          <div className="bg-gradient-to-br from-[#67BAE0] to-[#2A4065] overflow-hidden shadow-xl rounded-2xl transform hover:scale-105 transition-all duration-200">
-            <div className="px-6 py-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ShoppingBagIcon className="h-8 w-8 text-white" />
-                </div>
-                <div className="ml-4 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-white/80 truncate">
-                      Total Orders
-                    </dt>
-                    <dd className="text-2xl font-bold text-white">
-                      {earnings?.data?.totalOrders || 0}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Additional Analytics Cards */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-8">
-          {/* Pending Earnings */}
-          <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200">
-            <div className="px-6 py-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <ClockIcon className="h-6 w-6 text-[#3B5787]" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-sm font-medium text-gray-500">Pending Earnings</div>
-                  <div className="text-lg font-semibold text-gray-900">
-                    {formatPriceByLanguage(earnings?.data?.pending?.pendingEarnings || 0, i18n.language, currency)}
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {earnings?.data?.pending?.pendingBookings || 0} pending orders
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Average per Order */}
-          <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-200">
-            <div className="px-6 py-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CurrencyDollarIcon className="h-6 w-6 text-[#67BAE0]" />
-                </div>
-                <div className="ml-4">
-                  <div className="text-sm font-medium text-gray-500">Avg per Order</div>
-                  <div className="text-lg font-semibold text-gray-900">
-                    {formatPriceByLanguage(earnings?.data?.currentPeriod?.averagePerBooking || 0, i18n.language, currency)}
-                  </div>
-                  <div className="text-xs text-gray-400">Current period</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Time Range Selector */}
-        <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Analytics Period</h3>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => setTimeRange('7d')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  timeRange === '7d'
-                    ? 'bg-[#3B5787] text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {stats.map((stat, index) => (
+          <div
+            key={index}
+            className="bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+          >
+            <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
+                style={{ backgroundColor: theme.primaryColor }}
               >
-                Last 7 days
-              </button>
-              <button
-                onClick={() => setTimeRange('30d')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  timeRange === '30d'
-                    ? 'bg-[#3B5787] text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Last 30 days
-              </button>
-              <button
-                onClick={() => setTimeRange('90d')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  timeRange === '90d'
-                    ? 'bg-[#3B5787] text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Last 90 days
-              </button>
-              <button
-                onClick={() => setTimeRange('1y')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  timeRange === '1y'
-                    ? 'bg-[#3B5787] text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Last year
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Service Category Analytics */}
-        <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">🏨 Analytics by Service Category</h3>
-              <p className="text-sm text-gray-500">Comprehensive breakdown across all services</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Transportation Analytics */}
-              <div className="bg-gradient-to-br from-[#3B5787]/10 to-[#3B5787]/20 rounded-xl p-6 border border-[#3B5787]/30">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-[#3B5787] rounded-lg">
-                      <TruckIcon className="h-6 w-6 text-white" />
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Transportation</h4>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Earnings</span>
-                    <span className="font-semibold text-gray-900">
-                      {formatPriceByLanguage(getCategoryData('transportation').allTime?.totalEarnings || 0, i18n.language, currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Orders</span>
-                    <span className="font-semibold text-gray-900">
-                      {getCategoryData('transportation').allTime?.totalOrders || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Avg per Order</span>
-                    <span className="font-semibold text-gray-900">
-                      {formatPriceByLanguage(getCategoryData('transportation').allTime?.averagePerOrder || 0, i18n.language, currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">This Month</span>
-                    <span className="font-semibold text-[#3B5787]">
-                      {formatPriceByLanguage(getCategoryData('transportation').currentPeriod?.totalEarnings || 0, i18n.language, currency)}
-                    </span>
-                  </div>
-                </div>
+                {stat.icon}
               </div>
-
-              {/* Laundry Analytics */}
-              <div className="bg-gradient-to-br from-[#67BAE0]/10 to-[#67BAE0]/20 rounded-xl p-6 border border-[#67BAE0]/30">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-[#67BAE0] rounded-lg">
-                      <SparklesIcon className="h-6 w-6 text-white" />
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Laundry</h4>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Earnings</span>
-                    <span className="font-semibold text-gray-900">
-                      {formatPriceByLanguage(getCategoryData('laundry').allTime?.totalEarnings || 0, i18n.language, currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Orders</span>
-                    <span className="font-semibold text-gray-900">
-                      {getCategoryData('laundry').allTime?.totalOrders || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Avg per Order</span>
-                    <span className="font-semibold text-gray-900">
-                      {formatPriceByLanguage(getCategoryData('laundry').allTime?.averagePerOrder || 0, i18n.language, currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">This Month</span>
-                    <span className="font-semibold text-[#67BAE0]">
-                      {formatPriceByLanguage(getCategoryData('laundry').currentPeriod?.totalEarnings || 0, i18n.language, currency)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Housekeeping Analytics */}
-              <div className="bg-gradient-to-br from-[#3B5787]/10 to-[#3B5787]/20 rounded-xl p-6 border border-[#3B5787]/30">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-[#3B5787] rounded-lg">
-                      <HomeIcon className="h-6 w-6 text-white" />
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Housekeeping</h4>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Orders</span>
-                    <span className="font-semibold text-gray-900 text-2xl">
-                      {getCategoryData('housekeeping').allTime?.totalOrders || 0}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Restaurant Analytics */}
-              <div className="bg-gradient-to-br from-[#67BAE0]/10 to-[#67BAE0]/20 rounded-xl p-6 border border-[#67BAE0]/30">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-[#67BAE0] rounded-lg">
-                      <BuildingStorefrontIcon className="h-6 w-6 text-white" />
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900">Restaurant</h4>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Earnings</span>
-                    <span className="font-semibold text-gray-900">
-                      {formatPriceByLanguage(getCategoryData('restaurant').allTime?.totalEarnings || 0, i18n.language, currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Orders</span>
-                    <span className="font-semibold text-gray-900">
-                      {getCategoryData('restaurant').allTime?.totalOrders || 0}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Avg per Order</span>
-                    <span className="font-semibold text-gray-900">
-                      {formatPriceByLanguage(getCategoryData('restaurant').allTime?.averagePerOrder || 0, i18n.language, currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">This Month</span>
-                    <span className="font-semibold text-[#67BAE0]">
-                      {formatPriceByLanguage(getCategoryData('restaurant').currentPeriod?.totalEarnings || 0, i18n.language, currency)}
-                    </span>
-                  </div>
-                </div>
+              <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <p className="text-xs font-medium text-gray-500 mb-1">{stat.label}</p>
+                <p className="text-xl font-bold" style={{ color: theme.primaryColor }}>{stat.value}</p>
               </div>
             </div>
           </div>
-        </div>
+        ))}
+      </div>
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Earnings Trend Chart */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-              📈 Earnings Trend Over Time
-            </h3>
-            {getChartData() ? (
-              <div style={{ height: '300px' }}>
-                <Line
-                  data={getChartData()}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: 'top',
-                        labels: {
-                          usePointStyle: true,
-                          padding: 20
-                        }
-                      },
-                      tooltip: {
-                        callbacks: {
-                          label: function(context) {
-                            return `${context.dataset.label}: ${formatPriceByLanguage(context.raw, i18n.language, currency)}`;
-                          }
-                        }
-                      }
-                    },
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        ticks: {
-                          callback: function(value) {
-                            return formatPriceByLanguage(value, i18n.language, currency);
-                          }
-                        },
-                        grid: {
-                          color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                      },
-                      x: {
-                        grid: {
-                          color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                      }
-                    }
-                  }}
+      {/* Two Lists Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Unpaid Orders */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100" style={{ backgroundColor: `${theme.primaryColor}08` }}>
+            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#fef2f2' }}>
+                  <ClockIcon className="w-4 h-4 text-red-500" />
+                </div>
+                <h2 className="text-base font-bold text-gray-800">
+                  {isRTL ? 'العمليات التي لم يتم تحصيلها' : 'Uncollected Operations'}
+                </h2>
+              </div>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: '#fee2e2', color: '#b91c1c' }}>
+                {salesData?.unpaidOrders?.length || 0}
+              </span>
+            </div>
+            <div className="mt-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchUnpaid}
+                  onChange={(e) => setSearchUnpaid(e.target.value)}
+                  placeholder={isRTL ? 'بحث...' : 'Search...'}
+                  className={`w-full px-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:border-transparent ${isRTL ? 'text-right pr-10' : 'pl-10'}`}
+                  style={{ '--tw-ring-color': `${theme.primaryColor}40` }}
                 />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
-                <div className="text-center">
-                  <ChartBarIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg font-medium text-gray-900">No earnings data available</p>
-                  <p className="text-sm text-gray-500">Start accepting orders to see your earnings trend</p>
+                <div className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'}`}>
+                  <SearchIcon className="w-4 h-4 text-gray-400" />
                 </div>
               </div>
-            )}
+            </div>
           </div>
-
-          {/* Service Category Comparison Chart */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-              📊 Earnings by Service Category
-            </h3>
-            {getBarChartData() ? (
-              <div style={{ height: '300px' }}>
-                <Bar
-                  data={getBarChartData()}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: 'top',
-                        labels: {
-                          usePointStyle: true,
-                          padding: 20
-                        }
-                      },
-                      tooltip: {
-                        callbacks: {
-                          label: function(context) {
-                            return `${context.dataset.label}: ${formatPriceByLanguage(context.raw, i18n.language, currency)}`;
-                          }
-                        }
-                      }
-                    },
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        ticks: {
-                          callback: function(value) {
-                            return formatPriceByLanguage(value, i18n.language, currency);
-                          }
-                        },
-                        grid: {
-                          color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                      },
-                      x: {
-                        grid: {
-                          color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                      }
-                    }
-                  }}
-                />
-              </div>
+          <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto">
+            {filteredUnpaid.length > 0 ? (
+              filteredUnpaid.map((order) => (
+                <OrderCard key={order._id} order={order} isPaid={false} />
+              ))
             ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
-                <div className="text-center">
-                  <ChartBarIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg font-medium text-gray-900">No category data available</p>
-                  <p className="text-sm text-gray-500">Category breakdown will appear as you earn from different services</p>
-                </div>
+              <div className="text-center py-10 text-gray-400">
+                <CheckCircleIcon className="w-10 h-10 mx-auto mb-2 text-green-300" />
+                <p className="font-medium">{isRTL ? 'لا توجد عمليات معلقة' : 'No pending operations'}</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Time Range Selector */}
-        <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Analytics Time Range</h3>
-            <div className="flex flex-wrap gap-3">
-              {[
-                { key: 'week', label: 'Last Week', icon: '📅' },
-                { key: 'month', label: 'Last Month', icon: '📆' },
-                { key: 'year', label: 'Last Year', icon: '🗓️' }
-              ].map((option) => (
-                <button
-                  key={option.key}
-                  onClick={() => handleTimeRangeChange(option.key)}
-                  className={`px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    timeRange === option.key
-                      ? 'bg-gradient-to-r from-[#3B5787] to-[#67BAE0] text-white shadow-lg transform scale-105'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {option.icon} {option.label}
-                </button>
-              ))}
+        {/* Paid Orders */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100" style={{ backgroundColor: `${theme.primaryColor}08` }}>
+            <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#dcfce7' }}>
+                  <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                </div>
+                <h2 className="text-base font-bold text-gray-800">
+                  {isRTL ? 'العمليات التي تم تحصيلها' : 'Collected Operations'}
+                </h2>
+              </div>
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: '#dcfce7', color: '#15803d' }}>
+                {salesData?.paidOrders?.length || 0}
+              </span>
             </div>
+            <div className="mt-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchPaid}
+                  onChange={(e) => setSearchPaid(e.target.value)}
+                  placeholder={isRTL ? 'بحث...' : 'Search...'}
+                  className={`w-full px-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:border-transparent ${isRTL ? 'text-right pr-10' : 'pl-10'}`}
+                  style={{ '--tw-ring-color': `${theme.primaryColor}40` }}
+                />
+                <div className={`absolute top-2.5 ${isRTL ? 'right-3' : 'left-3'}`}>
+                  <SearchIcon className="w-4 h-4 text-gray-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto">
+            {filteredPaid.length > 0 ? (
+              filteredPaid.map((order) => (
+                <OrderCard key={order._id} order={order} isPaid={true} />
+              ))
+            ) : (
+              <div className="text-center py-10 text-gray-400">
+                <InboxIcon className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+                <p className="font-medium">{isRTL ? 'لا توجد عمليات محصلة' : 'No collected operations yet'}</p>
+              </div>
+            )}
           </div>
         </div>
-
-      {isLoading ? (
-        <div className="text-center py-20">
-          <div className="inline-flex items-center justify-center w-16 h-16 mb-4">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
-          </div>
-          <p className="text-lg text-gray-600">Loading comprehensive analytics...</p>
-        </div>
-      ) : (
-        <>
-          {/* Earnings Charts */}
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 mb-8">
-            {/* Earnings Over Time Chart */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">📈 Earnings Trend Over Time</h3>
-              {getChartData() ? (
-                <div className="h-80">
-                  <Line
-                    data={getChartData()}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          display: false
-                        },
-                        tooltip: {
-                          callbacks: {
-                            label: function(context) {
-                              return formatPriceByLanguage(context.raw, i18n.language, currency);
-                            }
-                          }
-                        }
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          ticks: {
-                            callback: function(value) {
-                              return formatPriceByLanguage(value, i18n.language, currency);
-                            }
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-64">
-                  <ChartBarIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">No earnings data available</p>
-                </div>
-              )}
-            </div>
-
-            {/* Earnings by Category Chart */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">🏷️ Earnings by Category</h3>
-              {getEnhancedBarChartData() ? (
-                <div className="h-80">
-                  <Bar
-                    data={getEnhancedBarChartData()}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          display: false
-                        },
-                        tooltip: {
-                          callbacks: {
-                            label: function(context) {
-                              return formatPriceByLanguage(context.raw, i18n.language, currency);
-                            }
-                          }
-                        }
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          ticks: {
-                            callback: function(value) {
-                              return formatPriceByLanguage(value, i18n.language, currency);
-                            }
-                          }
-                        }
-                      }
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-64">
-                  <ShoppingBagIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">No category earnings data available</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
       </div>
     </div>
   );
