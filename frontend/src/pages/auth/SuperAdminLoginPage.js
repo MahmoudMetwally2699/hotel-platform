@@ -1,9 +1,4 @@
-/**
- * Super Admin Login Page
- * Dedicated login page for super administrators
- */
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
@@ -25,24 +20,21 @@ const SuperAdminLoginPage = () => {
   const role = useSelector(selectAuthRole);
 
   const [showError, setShowError] = useState(false);
+  const loginJustCompleted = useRef(false);
 
-  // Handle redirection after successful login
+  // Handle redirection only after a new login submission
   useEffect(() => {
-    if (isAuthenticated && role === 'superadmin') {
+    if (!loginJustCompleted.current) return;
+    if (!isAuthenticated) return;
+
+    loginJustCompleted.current = false;
+
+    if (role === 'superadmin') {
       navigate('/superadmin/dashboard');
-    } else if (isAuthenticated && role !== 'superadmin') {
-      // If logged in but not as superadmin, redirect to appropriate dashboard
-      switch (role) {
-        case 'hotel':
-          navigate('/hotel/dashboard');
-          break;
-        case 'service':
-          navigate('/service/dashboard');
-          break;
-        default:
-          navigate('/');
-          break;
-      }
+    } else if (role === 'hotel') {
+      navigate('/hotel/dashboard');
+    } else if (role === 'service') {
+      navigate('/service/dashboard');
     }
   }, [isAuthenticated, role, navigate]);
 
@@ -66,6 +58,7 @@ const SuperAdminLoginPage = () => {
 
   // Handle form submission
   const handleSubmit = (values) => {
+    loginJustCompleted.current = true;
     dispatch(login(values));
   };
 

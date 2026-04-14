@@ -3,7 +3,7 @@
  * Dedicated login page for service providers
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
@@ -25,24 +25,21 @@ const ServiceProviderLoginPage = () => {
   const role = useSelector(selectAuthRole);
 
   const [showError, setShowError] = useState(false);
+  const loginJustCompleted = useRef(false);
 
-  // Handle redirection after successful login
+  // Handle redirection only after a new login submission
   useEffect(() => {
-    if (isAuthenticated && role === 'service') {
+    if (!loginJustCompleted.current) return;
+    if (!isAuthenticated) return;
+
+    loginJustCompleted.current = false;
+
+    if (role === 'service') {
       navigate('/service/dashboard');
-    } else if (isAuthenticated && role !== 'service') {
-      // If logged in but not as service provider, redirect to appropriate dashboard
-      switch (role) {
-        case 'superadmin':
-          navigate('/superadmin/dashboard');
-          break;
-        case 'hotel':
-          navigate('/hotel/dashboard');
-          break;
-        default:
-          navigate('/');
-          break;
-      }
+    } else if (role === 'superadmin') {
+      navigate('/superadmin/dashboard');
+    } else if (role === 'hotel') {
+      navigate('/hotel/dashboard');
     }
   }, [isAuthenticated, role, navigate]);
 
@@ -66,6 +63,7 @@ const ServiceProviderLoginPage = () => {
 
   // Handle form submission
   const handleSubmit = (values) => {
+    loginJustCompleted.current = true;
     dispatch(login(values));
   };
 

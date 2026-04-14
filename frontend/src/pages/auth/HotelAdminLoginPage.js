@@ -3,7 +3,7 @@
  * Dedicated login page for hotel administrators
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
@@ -25,24 +25,21 @@ const HotelAdminLoginPage = () => {
   const role = useSelector(selectAuthRole);
 
   const [showError, setShowError] = useState(false);
+  const loginJustCompleted = useRef(false);
 
-  // Handle redirection after successful login
+  // Handle redirection only after a new login submission
   useEffect(() => {
-    if (isAuthenticated && role === 'hotel') {
+    if (!loginJustCompleted.current) return;
+    if (!isAuthenticated) return;
+
+    loginJustCompleted.current = false;
+
+    if (role === 'hotel') {
       navigate('/hotel/dashboard');
-    } else if (isAuthenticated && role !== 'hotel') {
-      // If logged in but not as hotel admin, redirect to appropriate dashboard
-      switch (role) {
-        case 'superadmin':
-          navigate('/superadmin/dashboard');
-          break;
-        case 'service':
-          navigate('/service/dashboard');
-          break;
-        default:
-          navigate('/');
-          break;
-      }
+    } else if (role === 'superadmin') {
+      navigate('/superadmin/dashboard');
+    } else if (role === 'service') {
+      navigate('/service/dashboard');
     }
   }, [isAuthenticated, role, navigate]);
 
@@ -66,6 +63,7 @@ const HotelAdminLoginPage = () => {
 
   // Handle form submission
   const handleSubmit = (values) => {
+    loginJustCompleted.current = true;
     dispatch(login(values));
   };
 

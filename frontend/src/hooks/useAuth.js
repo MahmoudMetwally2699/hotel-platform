@@ -24,12 +24,35 @@ export const useAuth = () => {
 
   // Track if we've already checked authentication to prevent loops
   const [authChecked, setAuthChecked] = React.useState(false);
+  const logoutTriggered = React.useRef(false);
+
+  /**
+   * Clear JWT cookie from client-side (for non-httpOnly cookies in dev mode)
+   */
+  const clearJwtCookie = () => {
+    document.cookie = 'jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  };
+
   /**
    * Initialize authentication state on component mount
    */
   useEffect(() => {
     // Prevent multiple authentication checks
     if (authChecked) return;
+
+    // Don't run auth initialization on login pages to prevent redirect loops
+    const isOnLoginPage = location.pathname === '/login' ||
+      location.pathname === '/hotel/login' ||
+      location.pathname === '/superadmin/login' ||
+      location.pathname === '/serviceprovider/login' ||
+      location.pathname === '/super-hotel-admin/login';
+
+    // If we already triggered a logout, don't run again
+    if (logoutTriggered.current) {
+      setAuthChecked(true);
+      return;
+    }
 
     const token = cookieHelper.getAuthToken() || localStorage.getItem('token');
 
@@ -40,10 +63,16 @@ export const useAuth = () => {
         const currentTime = Date.now() / 1000;
 
         if (decoded.exp < currentTime) {
-          // Token is expired, log out
+          // Token is expired — clean up everything and stop
           setAuthChecked(true);
+          logoutTriggered.current = true;
+          clearJwtCookie();
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
           dispatch(logout());
-          navigate('/login');
+          if (!isOnLoginPage) {
+            navigate('/login');
+          }
         } else if (!isAuthenticated) {
           // Token is valid but user might not be authenticated in Redux
           // Check if we have user data in localStorage first
@@ -81,8 +110,12 @@ export const useAuth = () => {
                 // We could set some basic user data from the token here if needed
               } else {
                 // No way to recover, log out
+                logoutTriggered.current = true;
+                clearJwtCookie();
                 dispatch(logout());
-                navigate('/login');
+                if (!isOnLoginPage) {
+                  navigate('/login');
+                }
               }
             });
         } else {
@@ -93,8 +126,12 @@ export const useAuth = () => {
       } catch (error) {
         setAuthChecked(true);
         // Invalid token, log out
+        logoutTriggered.current = true;
+        clearJwtCookie();
         dispatch(logout());
-        navigate('/login');
+        if (!isOnLoginPage) {
+          navigate('/login');
+        }
       }
     } else {
       // No token found
@@ -103,7 +140,8 @@ export const useAuth = () => {
     return () => {
       // socketService.disconnect();
     };
-  }, [dispatch, isAuthenticated, navigate, role, currentUser, authChecked]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, authChecked]);
 
   /**
    * Handle user logout with secure cleanup

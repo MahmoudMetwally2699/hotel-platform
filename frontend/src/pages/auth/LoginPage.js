@@ -44,54 +44,52 @@ const LoginPage = () => {
     password: Yup.string().required(t('errors.requiredField')),
   });
 
-  // Handle redirection after successful login or if already authenticated
+  // Only redirect after a NEW login — not when already authenticated on mount
+  const loginJustCompleted = React.useRef(false);
+
+  // Mark auth check complete once Redux state is settled
   useEffect(() => {
-    // Give some time for the authentication state to be properly initialized
     const timer = setTimeout(() => {
       setAuthCheckComplete(true);
-
-      // Check if user is already authenticated when component mounts
-      if (isAuthenticated) {
-
-        // Redirect based on role
-        switch (role) {
-          case 'guest':
-            // Get user data to extract hotelId
-            const userData = user;
-            let hotelId = userData?.selectedHotelId;
-
-            // If hotelId is an object, extract the ID
-            if (hotelId && typeof hotelId === 'object') {
-              hotelId = hotelId._id || hotelId.id || hotelId.toString();
-            }
-
-            if (hotelId && typeof hotelId === 'string' && hotelId !== '[object Object]') {
-              navigate(`/hotels/${hotelId}/categories`, { replace: true });
-            } else {
-              // Fallback to homepage if no valid hotel ID
-              navigate('/', { replace: true });
-            }
-            break;
-          case 'superadmin':
-            navigate('/superadmin/dashboard', { replace: true });
-            break;
-          case 'superHotel':
-            navigate('/super-hotel-admin/dashboard', { replace: true });
-            break;
-          case 'hotel':
-            navigate('/hotel/dashboard', { replace: true });
-            break;
-          case 'service':
-            navigate('/service/dashboard', { replace: true });
-            break;
-          default:
-            navigate('/', { replace: true });
-            break;
-        }
-      }
-    }, 100); // Small delay to allow auth state to settle
-
+    }, 100);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Redirect only after a successful login (not on initial mount)
+  useEffect(() => {
+    if (!loginJustCompleted.current) return;
+    if (!isAuthenticated || !role) return;
+
+    loginJustCompleted.current = false;
+
+    switch (role) {
+      case 'guest': {
+        let hotelId = user?.selectedHotelId;
+        if (hotelId && typeof hotelId === 'object') {
+          hotelId = hotelId._id || hotelId.id || hotelId.toString();
+        }
+        if (hotelId && typeof hotelId === 'string' && hotelId !== '[object Object]') {
+          navigate(`/hotels/${hotelId}/categories`, { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
+        break;
+      }
+      case 'superadmin':
+        navigate('/superadmin/dashboard', { replace: true });
+        break;
+      case 'superHotel':
+        navigate('/super-hotel-admin/dashboard', { replace: true });
+        break;
+      case 'hotel':
+        navigate('/hotel/dashboard', { replace: true });
+        break;
+      case 'service':
+        navigate('/service/dashboard', { replace: true });
+        break;
+      default:
+        break;
+    }
   }, [isAuthenticated, role, user, navigate]);
 
   // Display error for 5 seconds
@@ -228,6 +226,9 @@ const LoginPage = () => {
     // Clear any previous errors
     dispatch(clearError());
 
+    // Mark that a login submission was made so redirect effect fires after success
+    loginJustCompleted.current = true;
+
     // Dispatch the login action with hotelId
     const loginPromise = dispatch(login(loginData));
 
@@ -248,7 +249,7 @@ const LoginPage = () => {
     return loginPromise;
   };
   // Show loading screen while checking authentication state
-  if (!authCheckComplete || (isAuthenticated && role)) {
+  if (!authCheckComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">

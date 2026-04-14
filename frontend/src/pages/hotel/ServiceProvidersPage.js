@@ -42,9 +42,11 @@ const ServiceProvidersPage = () => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpenDropdownId(null);
-      }
+      // Check if click is inside any dropdown menu (using data attribute)
+      const isInsideDropdown = event.target.closest('[data-sp-dropdown]');
+      const isDropdownTrigger = event.target.closest('[data-sp-dropdown-trigger]');
+      if (isInsideDropdown || isDropdownTrigger) return;
+      setOpenDropdownId(null);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -468,6 +470,7 @@ const ServiceProvidersPage = () => {
                               }}
                               className="inline-flex items-center justify-center w-10 h-10 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-modern-blue"
                               aria-label="Actions"
+                              data-sp-dropdown-trigger
                             >
                               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                 <circle cx="12" cy="5" r="2"/>
@@ -478,6 +481,7 @@ const ServiceProvidersPage = () => {
 
                             {openDropdownId === provider._id && (
                               <div
+                                data-sp-dropdown
                                 ref={dropdownRef}
                                 className="fixed w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] py-1 max-h-[400px] overflow-y-auto"
                                 style={{
@@ -642,6 +646,7 @@ const ServiceProvidersPage = () => {
                             }
                           }}
                           className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200 font-medium"
+                          data-sp-dropdown-trigger
                         >
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                             <circle cx="12" cy="5" r="2"/>
@@ -653,6 +658,7 @@ const ServiceProvidersPage = () => {
 
                         {openDropdownId === provider._id && (
                           <div
+                            data-sp-dropdown
                             ref={dropdownRef}
                             className="fixed w-[calc(100%-4rem)] max-w-sm bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] py-1 max-h-[400px] overflow-y-auto"
                             style={{

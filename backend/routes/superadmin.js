@@ -456,23 +456,20 @@ router.put('/hotels/:id', catchAsync(async (req, res, next) => {
 
   // Update hotel admin credentials if provided
   if (adminData && hotel.adminId) {
-    const updateFields = {};
+    const hotelAdmin = await User.findById(hotel.adminId).select('+password');
 
-    if (adminData.firstName) updateFields.firstName = adminData.firstName;
-    if (adminData.lastName) updateFields.lastName = adminData.lastName;
-    if (adminData.email) updateFields.email = adminData.email;
-    if (adminData.phone) updateFields.phone = adminData.phone;
+    if (hotelAdmin) {
+      if (adminData.firstName) hotelAdmin.firstName = adminData.firstName;
+      if (adminData.lastName) hotelAdmin.lastName = adminData.lastName;
+      if (adminData.email) hotelAdmin.email = adminData.email;
+      if (adminData.phone) hotelAdmin.phone = adminData.phone;
 
-    // Only update password if provided
-    if (adminData.password && adminData.password.trim() !== '') {
-      updateFields.password = adminData.password;
-    }
+      // Only update password if provided — must use save() so pre-save bcrypt hook runs
+      if (adminData.password && adminData.password.trim() !== '') {
+        hotelAdmin.password = adminData.password;
+      }
 
-    if (Object.keys(updateFields).length > 0) {
-      await User.findByIdAndUpdate(hotel.adminId, updateFields, {
-        new: true,
-        runValidators: true
-      });
+      await hotelAdmin.save();
     }
   }
 
