@@ -431,7 +431,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
     if (!finalSelectedTime) {
       // For restaurant bookings, provide default times for meal periods
       finalSelectedTime = '12:00'; // Default lunch time
-    } else if (finalSelectedTime && !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(finalSelectedTime)) {
+    } else if (finalSelectedTime && !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(finalSelectedTime) && !/^(ASAP|now)$/i.test(finalSelectedTime)) {
       // Convert meal period names to times
       switch (finalSelectedTime.toLowerCase()) {
         case 'breakfast':
@@ -466,13 +466,13 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
       });
     }
 
-    // Validate time format (HH:MM) - make this more flexible for restaurant bookings
+    // Validate time format (HH:MM) - make this more flexible for restaurant bookings and ASAP
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(finalSelectedTime)) {
+    if (!timeRegex.test(finalSelectedTime) && !/^(ASAP|now)$/i.test(finalSelectedTime)) {
       // Time validation failed (output removed)
       return res.status(400).json({
         success: false,
-        message: 'Invalid time format. Please use HH:MM format (e.g., 14:30)'
+        message: 'Invalid time format. Please use HH:MM format (e.g., 14:30) or ASAP'
       });
     }
 
@@ -514,7 +514,7 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
     const service = await Service.findOne({
       _id: serviceId,
       isActive: true
-    }).populate('providerId', 'businessName email markup phone');
+    }).populate('providerId', 'businessName email markup phone delayThresholds');
 
     if (!service) {
       return res.status(404).json({
@@ -638,6 +638,29 @@ router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
           value: service.duration || 60,
           unit: 'minutes'
         }
+      },
+
+      // SLA - calculate target completion time based on preferred time
+      sla: {
+        targetResponseTime: 15,
+        targetCompletionTime: (() => {
+          // Check if the preferred time is ASAP
+          const isAsap = /^(ASAP|now|asap)$/i.test(finalSelectedTime);
+          if (isAsap) {
+            // Use delay threshold from the service provider's config
+            const category = service.category || 'dining';
+            return service.providerId?.delayThresholds?.[category] || 120;
+          } else {
+            // Calculate minutes from now until the customer's preferred time
+            const now = new Date();
+            const scheduled = new Date(parsedDate);
+            const [hours, minutes] = finalSelectedTime.split(':').map(Number);
+            scheduled.setHours(hours, minutes, 0, 0);
+            const diffMs = scheduled.getTime() - now.getTime();
+            const diffMins = Math.round(diffMs / (1000 * 60));
+            return diffMins > 0 ? diffMins : (service.providerId?.delayThresholds?.[service.category] || 120);
+          }
+        })()
       },
 
       // Pricing breakdown
@@ -1927,7 +1950,7 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
       _id: serviceId,      hotelId: hotelId,
       category: 'laundry',
       isActive: true
-    }).populate('providerId', 'businessName email phone markup');
+    }).populate('providerId', 'businessName email phone markup delayThresholds');
 
     if (!service) {
       return res.status(404).json({
@@ -1966,9 +1989,14 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
     const hotelEarnings = markupAmount;    // Generate booking number
     const bookingNumber = `LN${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
-    // Normalize time format to HH:MM
+    // Normalize time format to HH:MM or ASAP
     const normalizeTime = (timeStr) => {
       if (!timeStr) return '09:00'; // Default time
+
+      // Handle ASAP
+      if (/^(ASAP|now)$/i.test(timeStr)) {
+        return 'ASAP';
+      }
 
       // If already in HH:MM format, return as is
       if (/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(timeStr)) {
@@ -2070,6 +2098,25 @@ router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) 
           value: 24,
           unit: 'hours'
         }
+      },
+
+      // SLA - calculate target completion time based on preferred time
+      sla: {
+        targetResponseTime: 15,
+        targetCompletionTime: (() => {
+          const isAsap = /^(ASAP|now|asap)$/i.test(normalizedTime);
+          if (isAsap) {
+            return service.providerId?.delayThresholds?.laundry || 120;
+          } else {
+            const now = new Date();
+            const scheduled = new Date(parsedDate);
+            const [hours, minutes] = normalizedTime.split(':').map(Number);
+            scheduled.setHours(hours, minutes, 0, 0);
+            const diffMs = scheduled.getTime() - now.getTime();
+            const diffMins = Math.round(diffMs / (1000 * 60));
+            return diffMins > 0 ? diffMins : (service.providerId?.delayThresholds?.laundry || 120);
+          }
+        })()
       },
 
       // Location
@@ -3061,6 +3108,26 @@ router.post('/bookings/housekeeping', async (req, res) => {
           }
           // Default fallback
           return 'ASAP';
+        })()
+      },
+
+      // SLA - calculate target completion time based on preferred time
+      sla: {
+        targetResponseTime: 15,
+        targetCompletionTime: (() => {
+          const isAsap = preferredTime === 'now' || preferredTime === 'ASAP' || preferredTime === 'asap' ||
+            !preferredTime || !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(preferredTime);
+          if (isAsap) {
+            return serviceProvider?.delayThresholds?.housekeeping || 30;
+          } else {
+            const now = new Date();
+            const scheduled = scheduledDateTime ? new Date(scheduledDateTime) : new Date();
+            const [hours, minutes] = preferredTime.split(':').map(Number);
+            scheduled.setHours(hours, minutes, 0, 0);
+            const diffMs = scheduled.getTime() - now.getTime();
+            const diffMins = Math.round(diffMs / (1000 * 60));
+            return diffMins > 0 ? diffMins : (serviceProvider?.delayThresholds?.housekeeping || 30);
+          }
         })()
       },
 

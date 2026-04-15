@@ -562,6 +562,21 @@ const serviceProviderSchema = new mongoose.Schema({
     }
   },
 
+  // Delay Thresholds per service category (in minutes)
+  // Set by hotel admin to define SLA target completion time for each service category
+  // Used when customer selects "ASAP" - if customer picks a specific time, that time is used instead
+  delayThresholds: {
+    laundry: { type: Number, default: 120, min: [1, 'Delay threshold must be at least 1 minute'] },
+    transportation: { type: Number, default: 60, min: [1, 'Delay threshold must be at least 1 minute'] },
+    dining: { type: Number, default: 45, min: [1, 'Delay threshold must be at least 1 minute'] },
+    housekeeping: { type: Number, default: 30, min: [1, 'Delay threshold must be at least 1 minute'] },
+    tours: { type: Number, default: 120, min: [1, 'Delay threshold must be at least 1 minute'] },
+    spa: { type: Number, default: 120, min: [1, 'Delay threshold must be at least 1 minute'] },
+    entertainment: { type: Number, default: 120, min: [1, 'Delay threshold must be at least 1 minute'] },
+    shopping: { type: Number, default: 120, min: [1, 'Delay threshold must be at least 1 minute'] },
+    fitness: { type: Number, default: 120, min: [1, 'Delay threshold must be at least 1 minute'] }
+  },
+
   // Metadata
   metadata: {
     createdBy: {

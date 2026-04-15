@@ -347,7 +347,10 @@ const TransportationBookingPage = () => {
         tripDetails: {
           pickupLocation: formatHotelAddress(passedHotel || hotel),
           destination: bookingDetails.dropoffLocation,
-          scheduledDateTime: `${bookingDetails.pickupDate}T${bookingDetails.pickupTime}:00.000Z`,
+          scheduledDateTime: bookingDetails.pickupTime === 'ASAP' 
+            ? new Date().toISOString()
+            : `${bookingDetails.pickupDate}T${bookingDetails.pickupTime}:00.000Z`,
+          isAsap: bookingDetails.pickupTime === 'ASAP',
           passengerCount: bookingDetails.passengerCount || 1,
           luggageCount: bookingDetails.luggageCount || 0
         },
@@ -958,11 +961,27 @@ const TransportationBookingPage = () => {
                         </label>
                         <input
                           type="time"
-                          value={bookingDetails.pickupTime}
+                          value={bookingDetails.pickupTime === 'ASAP' ? '' : bookingDetails.pickupTime}
                           onChange={(e) => setBookingDetails(prev => ({ ...prev, pickupTime: e.target.value }))}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3B5787] focus:border-[#3B5787] transition-all duration-200 bg-white/90 backdrop-blur-sm"
+                          disabled={bookingDetails.pickupTime === 'ASAP'}
+                          className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#3B5787] focus:border-[#3B5787] transition-all duration-200 bg-white/90 backdrop-blur-sm ${bookingDetails.pickupTime === 'ASAP' ? 'bg-gray-100 text-gray-400' : ''}`}
                           placeholder="Select your preferred pickup time"
                         />
+                        <div className="mt-3 flex items-center">
+                          <input
+                            type="checkbox"
+                            id="trans-asap"
+                            checked={bookingDetails.pickupTime === 'ASAP'}
+                            onChange={(e) => setBookingDetails(prev => ({ 
+                              ...prev, 
+                              pickupTime: e.target.checked ? 'ASAP' : '' 
+                            }))}
+                            className="h-4 w-4 text-[#3B5787] focus:ring-[#67BAE0] border-gray-300 rounded cursor-pointer"
+                          />
+                          <label htmlFor="trans-asap" className="ml-2 block text-sm text-gray-700 cursor-pointer">
+                            {t('transportationBooking.asap', 'As Soon As Possible (ASAP)')}
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>

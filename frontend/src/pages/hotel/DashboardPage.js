@@ -197,25 +197,25 @@ const DashboardPage = () => {
                 <table className="min-w-full border-separate border-spacing-y-2">
                   <thead className="bg-modern-gray/60">
                     <tr>
-                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                      <th className={`px-4 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
                         {t('hotelAdmin.dashboard.recentOrders.orderId')}
                       </th>
-                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                      <th className={`px-4 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
                         {t('hotelAdmin.dashboard.recentOrders.guest')}
                       </th>
-                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                      <th className={`px-4 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
                         {t('hotelAdmin.dashboard.recentOrders.service')}
                       </th>
-                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                      <th className={`px-4 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
                         {t('hotelAdmin.dashboard.recentOrders.provider')}
                       </th>
-                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                      <th className={`px-4 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
                         {t('hotelAdmin.dashboard.recentOrders.date')}
                       </th>
-                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                      <th className={`px-4 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
                         {t('hotelAdmin.dashboard.recentOrders.amount')}
                       </th>
-                      <th className={`px-6 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
+                      <th className={`px-4 py-3 text-xs font-bold uppercase tracking-wider ${isRtl ? 'text-right' : 'text-left'} text-gray-600`}>
                         {t('hotelAdmin.dashboard.recentOrders.status')}
                       </th>
                     </tr>
@@ -227,12 +227,12 @@ const DashboardPage = () => {
                           key={order._id}
                           className="bg-white rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                         >
-                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
+                          <td className={`px-4 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
                             <span className="text-sm font-bold px-3 py-1 rounded-full inline-flex items-center justify-center" style={{ color: theme.primaryColor, backgroundColor: `${theme.primaryColor}10` }}>
                               #{order.bookingId || order._id?.slice(-6)}
                             </span>
                           </td>
-                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
+                          <td className={`px-4 py-4 ${isRtl ? 'text-right' : 'text-left'}`}>
                             <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
                               <div className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: theme.primaryColor }}>
                                 {order.guestId?.firstName?.charAt(0) || order.guestDetails?.firstName?.charAt(0) || 'G'}
@@ -268,14 +268,14 @@ const DashboardPage = () => {
                               </div>
                             </div>
                           </td>
-                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
+                          <td className={`px-4 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
                             <div className="flex flex-col">
                               <span className="text-sm font-medium text-gray-900 capitalize">
                                 {order.serviceId?.category || order.serviceDetails?.category || order.serviceType || t('hotelAdmin.dashboard.recentOrders.unknownService')}
                               </span>
                             </div>
                           </td>
-                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
+                          <td className={`px-4 py-4 ${isRtl ? 'text-right' : 'text-left'}`}>
                             <div className={`flex flex-col ${isRtl ? 'items-end' : 'items-start'}`}>
                               <span className="text-sm text-modern-darkGray">
                                 {order.serviceProviderId?.businessName || t('hotelAdmin.dashboard.recentOrders.unknownProvider')}
@@ -292,12 +292,12 @@ const DashboardPage = () => {
                               )}
                             </div>
                           </td>
-                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
+                          <td className={`px-4 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
                             <span className="text-sm text-modern-darkGray">
                               {new Date(order.createdAt || order.date).toLocaleDateString()}
                             </span>
                           </td>
-                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
+                          <td className={`px-4 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
                             <span className="text-sm font-bold text-gray-900">
                               {formatPriceByLanguage(
                                 order.pricing?.totalAmount ||
@@ -310,7 +310,7 @@ const DashboardPage = () => {
                               )}
                             </span>
                           </td>
-                          <td className={`px-6 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
+                          <td className={`px-4 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
                             <span
                               className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full
                                 ${(order.status === 'completed' || order.bookingStatus === 'completed') ? 'bg-green-100 text-green-800' :

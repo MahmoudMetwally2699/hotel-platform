@@ -936,17 +936,34 @@ const LaundryBookingPage = () => {  const { t, i18n } = useTranslation();
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
-                    <div>                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         <FaClock className="inline mr-2" />
                         {t('laundryBooking.preferredTime')}
                       </label>
                       <input
                         type="time"
-                        value={bookingDetails.preferredTime}
+                        value={bookingDetails.preferredTime === 'ASAP' ? '' : bookingDetails.preferredTime}
                         onChange={(e) => setBookingDetails(prev => ({ ...prev, preferredTime: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        disabled={bookingDetails.preferredTime === 'ASAP'}
+                        className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] ${bookingDetails.preferredTime === 'ASAP' ? 'bg-gray-100 text-gray-400' : ''}`}
                         placeholder="Select your preferred time"
                       />
+                      <div className="mt-3 flex items-center">
+                        <input
+                          type="checkbox"
+                          id="laundry-asap"
+                          checked={bookingDetails.preferredTime === 'ASAP'}
+                          onChange={(e) => setBookingDetails(prev => ({ 
+                            ...prev, 
+                            preferredTime: e.target.checked ? 'ASAP' : '' 
+                          }))}
+                          className="h-4 w-4 text-[#3B5787] focus:ring-[#67BAE0] border-gray-300 rounded cursor-pointer"
+                        />
+                        <label htmlFor="laundry-asap" className="ml-2 block text-sm text-gray-700 cursor-pointer">
+                          {t('laundryBooking.asap', 'As Soon As Possible (ASAP)')}
+                        </label>
+                      </div>
                     </div>
                   </div>
 

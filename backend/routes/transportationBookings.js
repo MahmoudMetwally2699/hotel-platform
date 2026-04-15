@@ -43,7 +43,7 @@ router.post('/guest', protect, restrictTo('guest'), async (req, res) => {
 
     // Verify service exists and is active
     const service = await Service.findById(serviceId)
-      .populate('providerId', 'businessName email phone markup')
+      .populate('providerId', 'businessName email phone markup delayThresholds')
       .populate('hotelId', 'name email');
 
     if (!service || !service.isActive) {
@@ -115,6 +115,20 @@ router.post('/guest', protect, restrictTo('guest'), async (req, res) => {
       },
 
       bookingStatus: 'pending_quote',
+      
+      sla: {
+        targetResponseTime: 30,
+        targetCompletionTime: (() => {
+          if (tripDetails.isAsap) {
+             return service.providerId?.delayThresholds?.transportation || 240;
+          } else {
+             const now = new Date();
+             const scheduled = new Date(tripDetails.scheduledDateTime);
+             const diffMins = Math.round((scheduled.getTime() - now.getTime()) / (1000 * 60));
+             return diffMins > 0 ? diffMins : (service.providerId?.delayThresholds?.transportation || 240);
+          }
+        })()
+      },
 
       metadata: {
         source: 'web',

@@ -543,11 +543,27 @@ const RestaurantBookingPage = () => {
                     </label>
                     <input
                       type="time"
-                      value={bookingDetails.preferredTime}
+                      value={bookingDetails.preferredTime === 'ASAP' ? '' : bookingDetails.preferredTime}
                       onChange={(e) => setBookingDetails(prev => ({ ...prev, preferredTime: e.target.value }))}
-                      className="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#61B6DE] focus:border-[#61B6DE]"
+                      disabled={bookingDetails.preferredTime === 'ASAP'}
+                      className={`w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#61B6DE] focus:border-[#61B6DE] ${bookingDetails.preferredTime === 'ASAP' ? 'bg-gray-100 text-gray-400' : ''}`}
                       placeholder="Select your preferred time"
                     />
+                    <div className="mt-3 flex items-center">
+                      <input
+                        type="checkbox"
+                        id="dining-asap"
+                        checked={bookingDetails.preferredTime === 'ASAP'}
+                        onChange={(e) => setBookingDetails(prev => ({ 
+                          ...prev, 
+                          preferredTime: e.target.checked ? 'ASAP' : '' 
+                        }))}
+                        className="h-4 w-4 text-[#3B5787] focus:ring-[#61B6DE] border-gray-300 rounded cursor-pointer"
+                      />
+                      <label htmlFor="dining-asap" className="ml-2 block text-sm text-gray-700 cursor-pointer">
+                        {t('guest.restaurant.asap', 'As Soon As Possible (ASAP)')}
+                      </label>
+                    </div>
                   </div>
                 </div>
 

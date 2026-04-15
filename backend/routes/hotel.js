@@ -1632,7 +1632,7 @@ router.put('/service-providers/:id/license', restrictProviderToHotelAdmin, catch
 router.put('/service-providers/:id/categories', restrictProviderToHotelAdmin, catchAsync(async (req, res, next) => {
   const hotelId = req.user.hotelId;
   const providerId = req.params.id;
-  const { selectedCategories = [] } = req.body;
+  const { selectedCategories = [], delayThresholds = {} } = req.body;
 
   // Available categories with their default structure
   const availableCategories = [
@@ -1687,13 +1687,25 @@ router.put('/service-providers/:id/categories', restrictProviderToHotelAdmin, ca
     });
   }
 
+  // Build delay thresholds update - only set thresholds for selected categories
+  const updatedDelayThresholds = {};
+  validSelectedCategories.forEach(category => {
+    if (delayThresholds[category] !== undefined && delayThresholds[category] !== null) {
+      const threshold = parseInt(delayThresholds[category]);
+      if (!isNaN(threshold) && threshold >= 1) {
+        updatedDelayThresholds[`delayThresholds.${category}`] = threshold;
+      }
+    }
+  });
+
   // Update service provider using findOneAndUpdate to avoid validation on unchanged fields
   const updatedServiceProvider = await ServiceProvider.findOneAndUpdate(
     { _id: providerId, hotelId },
     {
       $set: {
         categories: validSelectedCategories,
-        serviceTemplates: updatedServiceTemplates
+        serviceTemplates: updatedServiceTemplates,
+        ...updatedDelayThresholds
       }
     },
     { new: true, runValidators: true }
@@ -1702,14 +1714,16 @@ router.put('/service-providers/:id/categories', restrictProviderToHotelAdmin, ca
   logger.info(`Service provider categories updated: ${updatedServiceProvider.businessName}`, {
     hotelId,
     serviceProviderId: updatedServiceProvider._id,
-    selectedCategories: validSelectedCategories
+    selectedCategories: validSelectedCategories,
+    delayThresholds: updatedServiceProvider.delayThresholds
   });
 
   res.status(200).json({
     status: 'success',
     data: {
       serviceProvider: updatedServiceProvider,
-      selectedCategories: validSelectedCategories
+      selectedCategories: validSelectedCategories,
+      delayThresholds: updatedServiceProvider.delayThresholds
     }
   });
 }));

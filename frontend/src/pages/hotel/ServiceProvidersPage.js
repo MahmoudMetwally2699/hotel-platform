@@ -26,6 +26,7 @@ const ServiceProvidersPage = () => {
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
   const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [delayThresholds, setDelayThresholds] = useState({});
   const [markupValue, setMarkupValue] = useState('');
   const [markupNotes, setMarkupNotes] = useState('');
   const [isSavingMarkup, setIsSavingMarkup] = useState(false);
@@ -89,7 +90,21 @@ const ServiceProvidersPage = () => {
   const handleManageCategories = (provider) => {
     setSelectedProvider(provider);
     setSelectedCategories(provider.categories || []);
+    // Initialize delay thresholds from provider's existing values or defaults
+    const defaults = { laundry: 120, transportation: 60, dining: 45, housekeeping: 30, tours: 120, spa: 120, entertainment: 120, shopping: 120, fitness: 120 };
+    const existing = provider.delayThresholds || {};
+    setDelayThresholds({ ...defaults, ...existing });
     setIsCategoriesModalOpen(true);
+  };
+
+  // Handle delay threshold change for a category
+  const handleDelayThresholdChange = (categoryId, value) => {
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue >= 1) {
+      setDelayThresholds(prev => ({ ...prev, [categoryId]: numValue }));
+    } else if (value === '') {
+      setDelayThresholds(prev => ({ ...prev, [categoryId]: '' }));
+    }
   };
 
   // Handle opening update license modal
@@ -217,7 +232,8 @@ const ServiceProvidersPage = () => {
     setIsSavingCategories(true);
     try {
       await apiClient.put(`${HOTEL_ADMIN_API.SERVICE_PROVIDERS}/${selectedProvider._id}/categories`, {
-        selectedCategories: selectedCategories
+        selectedCategories: selectedCategories,
+        delayThresholds: delayThresholds
       });
 
       // Close modal and refresh data
@@ -950,6 +966,30 @@ const ServiceProvidersPage = () => {
                             </label>
                           </div>
                           <p className="text-xs text-gray-600 mt-1">{category.description}</p>
+                          {/* Delay Threshold Input - only show when category is selected */}
+                          {(selectedCategories || []).includes(category.id) && (
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                ⏱️ {t('hotelAdmin.serviceProviders.categoriesModal.delayThreshold', 'Delayed Time (minutes)')}
+                              </label>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={delayThresholds[category.id] || ''}
+                                  onChange={(e) => handleDelayThresholdChange(category.id, e.target.value)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="w-20 px-2 py-1 text-sm border border-gray-300 rounded-md focus:ring-[#67BAE0] focus:border-[#67BAE0] text-center"
+                                  placeholder="120"
+                                  disabled={isSavingCategories}
+                                />
+                                <span className="text-xs text-gray-500">{t('hotelAdmin.serviceProviders.categoriesModal.minutes', 'min')}</span>
+                              </div>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {t('hotelAdmin.serviceProviders.categoriesModal.delayThresholdDesc', 'If service exceeds this time, it\'s marked as delayed')}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
