@@ -98,9 +98,11 @@ const GuestProfilePage = () => {
   const lifetimeValue = stays.reduce((sum, b) => sum + (b.pricing?.totalAmount || 0), 0);
   const formattedLTV = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(lifetimeValue);
 
-  // Determine preferred service type from bookings
-  const serviceTypes = stays.map(b => b.serviceDetails?.category || b.serviceType).filter(Boolean);
-  const preferredRoom = serviceTypes.sort((a,b) => serviceTypes.filter(v => v===a).length - serviceTypes.filter(v => v===b).length).pop() || 'N/A';
+  // Determine preferred room from guest onboarding preferences
+  const roomPrefs = guest.preferences?.roomPreferences;
+  const preferredRoom = roomPrefs 
+    ? [roomPrefs.floor && roomPrefs.floor !== 'Any' ? `${roomPrefs.floor} Floor` : '', roomPrefs.view && roomPrefs.view !== 'Any' ? `${roomPrefs.view} View` : ''].filter(Boolean).join(', ') || 'Any'
+    : 'Not Set';
 
   const formatReviewFormat = (number) => number ? parseFloat(number).toFixed(1) : '5.0';
 
