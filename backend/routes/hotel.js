@@ -2163,13 +2163,43 @@ router.patch('/guests/:guestId/mark-viewed', catchAsync(async (req, res, next) =
 }));
 
 /**
+ * @route   GET /api/hotel/guests/:guestId
+ * @desc    Get a single guest's full profile including stay history and bookings
+ * @access  Private/HotelAdmin
+ */
+router.get('/guests/:guestId', catchAsync(async (req, res, next) => {
+  const { guestId } = req.params;
+  const hotelId = req.user.hotelId;
+
+  const guest = await User.findById(guestId).select('-password');
+  
+  if (!guest || guest.role !== 'guest') {
+    return next(new AppError('Guest not found', 404));
+  }
+
+  // Validate association implicitly by fetching their explicit bookings or by generic access check
+  const bookings = await Booking.find({ guestId: guestId, hotelId }).sort({ createdAt: -1 });
+
+  // Attach bookings into response directly
+  const guestObj = guest.toObject();
+  guestObj.bookings = bookings;
+
+  res.status(200).json({
+    success: true,
+    data: {
+      guest: guestObj
+    }
+  });
+}));
+
+/**
  * @route   PATCH /api/hotel/guests/:guestId
  * @desc    Update guest information (room number, check-in/out dates) and reactivate if needed
  * @access  Private/HotelAdmin
  */
 router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
   const { guestId } = req.params;
-  const { roomNumber, checkInDate, checkOutDate, isActive, channel, reservationType } = req.body;
+  const { roomNumber, checkInDate, checkOutDate, isActive, channel, reservationType, idNumber, nationality, dateOfBirth, preferences } = req.body;
   const hotelId = req.user.hotelId;
 
   // Find the guest
@@ -2234,6 +2264,13 @@ router.patch('/guests/:guestId', catchAsync(async (req, res, next) => {
   if (isActive !== undefined) updateData.isActive = isActive;
   if (reservationType !== undefined) updateData.reservationType = reservationType;
   if (channel !== undefined) updateData.channel = channel;
+  if (idNumber !== undefined) updateData.idNumber = idNumber;
+  if (nationality !== undefined) updateData.nationality = nationality;
+  if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth;
+  if (preferences !== undefined) {
+    if (!updateData.preferences) updateData.preferences = {};
+    Object.assign(updateData.preferences, guest.preferences, preferences);
+  }
 
   // Update checkout time if checkout date is changed
   if (checkOutDate) {

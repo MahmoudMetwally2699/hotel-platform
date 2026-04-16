@@ -40,6 +40,7 @@ const GuestRestaurantBookings = lazy(() => import('../pages/guest/GuestRestauran
 const GuestHousekeepingBookings = lazy(() => import('../pages/guest/GuestHousekeepingBookings'));
 const PaymentSuccess = lazy(() => import('../pages/guest/PaymentSuccess'));
 const PaymentFailed = lazy(() => import('../pages/guest/PaymentFailed'));
+const GuestOnboardingWizard = lazy(() => import('../pages/guest/GuestOnboardingWizard'));
 const PaymentMethodSelectionPage = lazy(() => import('../pages/client/PaymentMethodSelectionPage'));
 const ProfilePage = lazy(() => import('../pages/common/ProfilePage'));
 const AdminAccessPage = lazy(() => import('../pages/common/AdminAccessPage'));
@@ -71,6 +72,7 @@ const HotelAdminManageProvidersPage = lazy(() => import('../pages/hotel/ManagePr
 const HotelAdminServicesPage = lazy(() => import('../pages/hotel/ServicesPage'));
 const HotelAdminBookingsPage = lazy(() => import('../pages/hotel/BookingsPage'));
 const HotelAdminGuestsPage = lazy(() => import('../pages/hotel/GuestsPage'));
+const GuestProfilePage = lazy(() => import('../pages/hotel/GuestProfilePage'));
 const HotelAdminUserManagementPage = lazy(() => import('../pages/hotel/UserManagementPage'));
 const HotelAdminRevenuePage = lazy(() => import('../pages/hotel/RevenuePage'));
 const HotelAdminMarkupSettingsPage = lazy(() => import('../pages/hotel/MarkupSettingsPage'));
@@ -129,6 +131,16 @@ const AppRouter = () => {
         {/* Client/Guest Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/hotels" element={<HotelListPage />} />
+
+        {/* Guest Onboarding Flow */}
+        <Route
+          path="/guest/onboarding"
+          element={
+            <ProtectedRoute allowedRoles="guest" requireOnboarding={false}>
+              <GuestOnboardingWizard />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Protected Hotel Service Routes - Require Authentication */}
         <Route
@@ -457,6 +469,16 @@ const AppRouter = () => {
             <ProtectedRoute allowedRoles="hotel">
               <TailwindLayout>
                 <HotelAdminGuestsPage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel/guests/:guestId/profile"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <GuestProfilePage />
               </TailwindLayout>
             </ProtectedRoute>
           }

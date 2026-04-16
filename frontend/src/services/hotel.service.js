@@ -626,6 +626,20 @@ class HotelService {
     }
   }
 
+  /**
+   * Get specific guest profile (for hotel admin)
+   * @param {string} guestId - Guest ID
+   * @returns {Promise} - Response from API
+   */
+  async getGuestProfile(guestId) {
+    try {
+      const response = await apiClient.get(`/hotel/guests/${guestId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 }
 
 const hotelService = new HotelService();

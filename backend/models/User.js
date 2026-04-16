@@ -91,6 +91,16 @@ const userSchema = new mongoose.Schema({
     default: 'prefer-not-to-say'
   },
 
+  idNumber: {
+    type: String,
+    trim: true
+  },
+
+  nationality: {
+    type: String,
+    trim: true
+  },
+
   // Address Information
   address: {
     street: { type: String, trim: true },
@@ -208,6 +218,11 @@ const userSchema = new mongoose.Schema({
     default: false
   },
 
+  onboardingCompleted: {
+    type: Boolean,
+    default: false
+  },
+
   // Checkout-related fields
   checkoutTime: {
     type: Date,
@@ -279,7 +294,25 @@ const userSchema = new mongoose.Schema({
       email: { type: Boolean, default: true },
       sms: { type: Boolean, default: true },
       push: { type: Boolean, default: true }
-    }
+    },
+    tripPurpose: {
+      type: String,
+      enum: ['Business', 'Leisure', 'Transit', 'Family Vacation', 'Honeymoon', 'Event/Conference', 'Other'],
+      default: 'Leisure'
+    },
+    roomPreferences: {
+      temperature: { type: String, default: 'Standard' },
+      floor: { type: String, default: 'Any' },
+      smoking: { type: Boolean, default: false },
+      view: { type: String, default: 'Any' },
+      pillow: { type: String, enum: ['Soft', 'Medium', 'Firm'], default: 'Medium' },
+      wakeup: { type: String }
+    },
+    foodAndBeverage: {
+      breakfastStyle: { type: String },
+      morningDrink: { type: String }
+    },
+    extraPersonalization: { type: String }
   },
 
   // Metadata

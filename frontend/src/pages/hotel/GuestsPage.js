@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUsers, selectAllUsers, selectUserLoading } from '../../redux/slices/userSlice';
-import { HiSearch, HiFilter, HiUserAdd, HiCheckCircle, HiXCircle, HiPencil, HiStar, HiBan, HiDotsVertical } from 'react-icons/hi';
+import { HiSearch, HiFilter, HiUserAdd, HiCheckCircle, HiXCircle, HiPencil, HiStar, HiBan, HiDotsVertical, HiUser } from 'react-icons/hi';
 import { useAuth } from '../../hooks/useAuth';
 import hotelService from '../../services/hotel.service';
 import { useTheme } from '../../context/ThemeContext';
@@ -13,6 +14,7 @@ import { useTheme } from '../../context/ThemeContext';
  */
 const GuestsPage = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const users = useSelector(selectAllUsers);
   const isLoading = useSelector(selectUserLoading);
@@ -48,6 +50,16 @@ const GuestsPage = () => {
     checkOutDate: '',
     channel: 'Direct',
     reservationType: 'BB'
+  });
+
+  // Profile modal state
+  const [profileModal, setProfileModal] = useState({
+    isOpen: false,
+    guest: null,
+    idNumber: '',
+    nationality: '',
+    dateOfBirth: '',
+    preferences: {}
   });
 
   // Fetch guests with pagination
@@ -181,6 +193,53 @@ const GuestsPage = () => {
         const newSet = new Set(prev);
         newSet.delete(guestId);
         return newSet;
+      });
+    }
+  };
+
+  const openProfileModal = (guest) => {
+    setProfileModal({
+      isOpen: true,
+      guest,
+      idNumber: guest.idNumber || '',
+      nationality: guest.nationality || '',
+      dateOfBirth: guest.dateOfBirth ? new Date(guest.dateOfBirth).toISOString().split('T')[0] : '',
+      preferences: guest.preferences || {}
+    });
+  };
+
+  const closeProfileModal = () => {
+    setProfileModal({
+      isOpen: false,
+      guest: null,
+      idNumber: '',
+      nationality: '',
+      dateOfBirth: '',
+      preferences: {}
+    });
+  };
+
+  const updateGuestProfile = async () => {
+    if (!profileModal.guest) return;
+    setUpdating(prev => new Set(prev).add(profileModal.guest._id));
+
+    try {
+      await hotelService.updateGuestInfo(profileModal.guest._id, {
+        idNumber: profileModal.idNumber,
+        nationality: profileModal.nationality,
+        dateOfBirth: profileModal.dateOfBirth || null,
+        preferences: profileModal.preferences
+      });
+
+      await fetchGuests();
+      closeProfileModal();
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    } finally {
+      setUpdating(prev => {
+        const next = new Set(prev);
+        next.delete(profileModal.guest._id);
+        return next;
       });
     }
   };
@@ -622,6 +681,18 @@ const GuestsPage = () => {
                                 Edit Room
                               </button>
                             )}
+                            
+                            {/* Profile Button */}
+                            <button
+                                onClick={() => {
+                                  navigate(`/hotel/guests/${guest._id}/profile`);
+                                  setOpenDropdown(null);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 flex items-center"
+                              >
+                                <HiUser className="w-4 h-4 mr-3 text-green-600" />
+                                Profile
+                            </button>
 
                             {/* View History Button - For guests with stay history */}
                             {guest.stayHistory && guest.stayHistory.length > 0 && (
@@ -1107,6 +1178,108 @@ const GuestsPage = () => {
               >
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
+      {profileModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Guest Profile - {getGuestName(profileModal.guest)}
+              </h3>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  National ID / Passport
+                </label>
+                <input
+                  type="text"
+                  value={profileModal.idNumber}
+                  onChange={(e) => setProfileModal(prev => ({ ...prev, idNumber: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nationality
+                </label>
+                <input
+                  type="text"
+                  value={profileModal.nationality}
+                  onChange={(e) => setProfileModal(prev => ({ ...prev, nationality: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  value={profileModal.dateOfBirth}
+                  onChange={(e) => setProfileModal(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <hr className="my-4" />
+              <h4 className="font-semibold text-gray-800">Preferences</h4>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Trip Purpose
+                </label>
+                <input
+                  type="text"
+                  value={profileModal.preferences?.tripPurpose || ''}
+                  onChange={(e) => setProfileModal(prev => ({ ...prev, preferences: { ...prev.preferences, tripPurpose: e.target.value } }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Extra Personalization Notes
+                </label>
+                <textarea
+                  value={profileModal.preferences?.extraPersonalization || ''}
+                  onChange={(e) => setProfileModal(prev => ({ ...prev, preferences: { ...prev.preferences, extraPersonalization: e.target.value } }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="3"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={closeProfileModal}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={updateGuestProfile}
+                  disabled={updating.has(profileModal.guest?._id)}
+                  className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                  style={{ backgroundColor: theme.primaryColor }}
+                >
+                  {updating.has(profileModal.guest?._id) ? (
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      Updating...
+                    </div>
+                  ) : (
+                    'Save Profile'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

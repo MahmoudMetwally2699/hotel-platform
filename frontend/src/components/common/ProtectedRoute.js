@@ -8,8 +8,8 @@ import { Navigate, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import useAuth from '../../hooks/useAuth';
 
-const ProtectedRoute = ({ children, allowedRoles, redirectPath = '/login' }) => {
-  const { isAuthenticated, role, checkToken } = useAuth();
+const ProtectedRoute = ({ children, allowedRoles, redirectPath = '/login', requireOnboarding = true }) => {
+  const { isAuthenticated, role, user, checkToken } = useAuth();
   const location = useLocation();
 
   // Additional token validation
@@ -37,6 +37,14 @@ const ProtectedRoute = ({ children, allowedRoles, redirectPath = '/login' }) => 
     }
   }
 
+  // Enforce onboarding for guests
+  if (role === 'guest' && requireOnboarding && user) {
+    // If user has not completed onboarding, and they aren't already on the onboarding page
+    if (user.onboardingCompleted === false && location.pathname !== '/guest/onboarding') {
+      return <Navigate to="/guest/onboarding" replace />;
+    }
+  }
+
   // User is authenticated and has required role, render the children
   return children;
 };
@@ -48,6 +56,7 @@ ProtectedRoute.propTypes = {
     PropTypes.arrayOf(PropTypes.string),
   ]),
   redirectPath: PropTypes.string,
+  requireOnboarding: PropTypes.bool,
 };
 
 export default ProtectedRoute;

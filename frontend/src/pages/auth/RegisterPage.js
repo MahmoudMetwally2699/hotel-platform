@@ -80,7 +80,12 @@ const RegisterPage = () => {
       }
 
       if (hotelId && typeof hotelId === 'string' && hotelId !== '[object Object]') {
-        navigate(`/hotels/${hotelId}/categories`, { replace: true });
+        // Redirect to onboarding if not completed
+        if (!user.onboardingCompleted) {
+          navigate(`/guest/onboarding`, { replace: true });
+        } else {
+          navigate(`/hotels/${hotelId}/categories`, { replace: true });
+        }
       } else {
         // Fallback to homepage if no valid hotel ID
         navigate('/', { replace: true });
@@ -190,6 +195,7 @@ const RegisterPage = () => {
     firstName: '',
     email: '',
     phone: '',
+    nationality: '',
     selectedHotelId: '',
     roomNumber: '',
     checkInDate: '',
@@ -204,6 +210,7 @@ const RegisterPage = () => {
       firstName: values.firstName,
       email: values.email,
       phone: values.phone,
+      nationality: values.nationality,
       password: values.password,
       selectedHotelId: values.selectedHotelId,
       roomNumber: values.roomNumber,
@@ -363,7 +370,12 @@ const RegisterPage = () => {
                         <PhoneInput
                           country={'eg'}
                           value={field.value}
-                          onChange={(phone) => form.setFieldValue('phone', phone)}
+                          onChange={(phone, country) => {
+                            form.setFieldValue('phone', phone);
+                            if (country && country.name) {
+                              form.setFieldValue('nationality', country.name);
+                            }
+                          }}
                           inputProps={{
                             name: 'phone',
                             required: true,

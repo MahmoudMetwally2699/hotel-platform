@@ -244,6 +244,20 @@ export const checkAuth = createAsyncThunk(
   }
 );
 
+export const updateProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (userData, { rejectWithValue }) => {
+    try {
+      // Direct API call since authService might not use PATCH correctly
+      const apiClient = require('../../services/api.service').default;
+      const response = await apiClient.patch('/auth/update-me', userData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update profile');
+    }
+  }
+);
+
 // Create the auth slice
 const authSlice = createSlice({
   name: 'auth',
@@ -480,6 +494,38 @@ const authSlice = createSlice({
         state.isLoading = false;
         // Don't set error for profile fetch failures to prevent toast notifications
         // state.error = action.payload;
+      })
+
+      // Update profile cases
+      .addCase(updateProfile.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const responseData = action.payload.data || action.payload;
+        let userData;
+        if (responseData.success && responseData.data) {
+          userData = responseData.data.user || responseData.data;
+        } else if (responseData.user) {
+          userData = responseData.user;
+        } else {
+          userData = responseData;
+        }
+        
+        // Merge with existing user data to ensure we don't lose information
+        if (userData && state.user) {
+          state.user = { ...state.user, ...userData };
+          localStorage.setItem('user', JSON.stringify(state.user));
+        } else if (userData) {
+          state.user = userData;
+          localStorage.setItem('user', JSON.stringify(state.user));
+        }
+        state.error = null;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       })
 
       // Check auth cases

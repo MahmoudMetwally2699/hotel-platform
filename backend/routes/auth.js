@@ -130,6 +130,7 @@ router.post('/register', catchAsync(async (req, res, next) => {
     roomNumber,
     checkInDate,
     checkOutDate,
+    nationality,
     qrBased // Optional flag to indicate QR-based registration
   } = req.body;
 
@@ -200,6 +201,7 @@ router.post('/register', catchAsync(async (req, res, next) => {
     roomNumber,
     checkInDate,
     checkOutDate,
+    nationality,
     hasActiveBooking: true, // Set to true since they're providing booking details
     isActive: true
   });
@@ -341,7 +343,8 @@ router.post('/login', catchAsync(async (req, res, next) => {
     hasActiveBooking: user.hasActiveBooking,
     selectedHotelId: user.selectedHotelId,
     hotelId: user.hotelId,
-    serviceProviderId: user.serviceProviderId
+    serviceProviderId: user.serviceProviderId,
+    onboardingCompleted: user.onboardingCompleted
   };
 
   // Login response user data (output removed)
@@ -699,7 +702,7 @@ router.patch('/update-me', protect, catchAsync(async (req, res, next) => {
   }
 
   // Filtered out unwanted fields that are not allowed to be updated
-  const allowedFields = ['firstName', 'lastName', 'phone', 'dateOfBirth', 'gender', 'address', 'preferences'];
+  const allowedFields = ['firstName', 'lastName', 'phone', 'dateOfBirth', 'gender', 'address', 'preferences', 'idNumber', 'nationality', 'onboardingCompleted'];
   const filteredBody = {};
 
   Object.keys(req.body).forEach(el => {
