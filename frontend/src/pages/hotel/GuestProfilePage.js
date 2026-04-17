@@ -20,6 +20,7 @@ const GuestProfilePage = () => {
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editForm, setEditForm] = useState({
+    idType: 'national_id',
     idNumber: '',
     nationality: '',
     dateOfBirth: '',
@@ -39,6 +40,7 @@ const GuestProfilePage = () => {
       setGuest(data);
       
       setEditForm({
+        idType: data.idType || 'national_id',
         idNumber: data.idNumber || '',
         nationality: data.nationality || '',
         dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : '',
@@ -149,7 +151,7 @@ const GuestProfilePage = () => {
                   </span>
                   {guest.idNumber && (
                     <span className="flex items-center gap-1.5">
-                      <HiIdentification /> ID: {guest.idNumber}
+                      <HiIdentification /> {guest.idType === 'passport' ? 'Passport' : 'National ID'}: {guest.idNumber}
                     </span>
                   )}
                   {guest.dateOfBirth && (
@@ -411,17 +413,30 @@ const GuestProfilePage = () => {
 
             <div className="p-6 overflow-y-auto flex-1">
               <form id="edit-profile-form" onSubmit={handleUpdateProfile} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    National ID / Passport
-                  </label>
-                  <input
-                    type="text"
-                    value={editForm.idNumber}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, idNumber: e.target.value }))}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow"
-                    placeholder="Enter ID number"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">ID Type</label>
+                    <select
+                      value={editForm.idType}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, idType: e.target.value }))}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow bg-white"
+                    >
+                      <option value="national_id">National ID</option>
+                      <option value="passport">Passport</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Number
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.idNumber}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, idNumber: e.target.value }))}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow"
+                      placeholder="Enter ID/Passport number"
+                    />
+                  </div>
                 </div>
 
                 <div>

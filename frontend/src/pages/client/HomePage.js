@@ -1,8 +1,3 @@
-/**
- * Home Page - Simple Guest Landing Page
- * Redesigned to match the exact mobile-like interface from the screenshot
- */
-
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -20,114 +15,138 @@ const HomePage = () => {
   // Redirect authenticated guests to categories page
   useEffect(() => {
     if (isAuthenticated && role === 'guest' && user) {
-
-      // Get user data to extract hotelId
       let hotelId = user?.selectedHotelId;
-
-      // If hotelId is an object, extract the ID
       if (hotelId && typeof hotelId === 'object') {
         hotelId = hotelId._id || hotelId.id || hotelId.toString();
       }
-
       if (hotelId && typeof hotelId === 'string' && hotelId !== '[object Object]') {
         navigate(`/hotels/${hotelId}/categories`, { replace: true });
         return;
-      } else {
-        // No valid hotel ID found for authenticated guest
       }
     }
   }, [isAuthenticated, role, user, navigate]);
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-qickroom-lightBlue to-qickroom-blue relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary-dark via-primary-main to-primary-light relative overflow-x-hidden font-sans">
+      
+      {/* Decorative Blur Orbs */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-white/10 blur-[100px]" />
+        <div className="absolute top-[40%] -right-[20%] w-[60%] h-[60%] rounded-full bg-primary-light/30 blur-[120px]" />
+      </div>
+
       {/* Header/Navigation */}
-      <nav className="flex justify-between items-center px-3 py-3 sm:px-6 sm:py-4 lg:px-8 lg:py-6 w-full">
-        {/* Left side - Login button */}
+      <nav className="relative z-50 flex-none flex justify-between items-center px-4 py-4 sm:px-8 sm:py-6 w-full">
         <div className="flex-shrink-0">
           <Link
             to="/login"
-            className="bg-white/90 backdrop-blur-sm text-qickroom-blue px-3 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 rounded-full font-medium hover:bg-white transition-colors duration-200 text-sm sm:text-base shadow-sm whitespace-nowrap"
+            className="group relative flex items-center justify-center bg-white/10 backdrop-blur-md border border-white/20 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-full font-medium hover:bg-white/20 transition-all duration-300 text-sm sm:text-base shadow-lg overflow-hidden"
           >
-            {t('homepage.login', 'دخول')}
+            <span className="relative z-10">{t('homepage.login', 'دخول')}</span>
           </Link>
         </div>
 
-        {/* Right side - Language Switcher and Logo */}
-        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 flex-shrink-0">
-          {/* Language Switcher */}
-          <div className="bg-white/20 backdrop-blur-sm rounded-full px-2 py-1 sm:px-3 sm:py-1.5 min-w-[50px] sm:min-w-[60px] flex justify-center">
-            <LanguageSwitcher />
+        <div className="flex items-center gap-3 sm:gap-5 flex-shrink-0">
+          <div className="z-50 relative">
+            <LanguageSwitcher variant="glass" />
           </div>
-          {/* Logo/Brand */}
-          <span className="text-white text-sm sm:text-base lg:text-lg font-semibold whitespace-nowrap">
-            Qickroom
+          <span className="text-white tracking-widest text-lg sm:text-xl font-bold uppercase drop-shadow-md">
+            {t('homepage.brand', 'Qickroom')}
           </span>
         </div>
       </nav>
 
       {/* Main Content */}
-      <div className="flex items-center justify-center min-h-[calc(100vh-160px)] sm:min-h-[calc(100vh-180px)] lg:min-h-[calc(100vh-200px)] px-3 sm:px-4 lg:px-4">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center">
-
-          {/* Left side - Text Content */}
-          <div className="text-center lg:text-right space-y-4 sm:space-y-5 lg:space-y-6 order-2 lg:order-1">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight px-2 sm:px-0">
-              {t('homepage.mainTitle', 'منصة خدمات الغرف لفندقك')}
-            </h1>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 leading-relaxed px-2 sm:px-0">
-              {t('homepage.subtitle', 'حلول رقمية متطورة لخدمات الضيوف')}
-            </p>
-
-            {/* Service Access Button */}
-            <div className="pt-2 sm:pt-3 lg:pt-4">
-              <Link
-                to={isAuthenticated ? "/hotels" : "/login"}
-                className="inline-flex items-center justify-center bg-white text-qickroom-blue px-6 py-3 sm:px-7 sm:py-3.5 lg:px-8 lg:py-4 rounded-full font-semibold text-base sm:text-lg hover:bg-white/90 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-              >
-                <span className="ml-2">{t('homepage.accessService', 'دخول إلى الخدمة')}</span>
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14" />
-                </svg>
-              </Link>
-            </div>
+      <main className="flex-grow relative z-10 flex flex-col lg:flex-row items-center justify-center px-4 sm:px-8 lg:px-16 w-full max-w-7xl mx-auto gap-12 lg:gap-24 py-8">
+        
+        {/* Text Content */}
+        <div className="flex-1 text-center lg:text-right space-y-6 sm:space-y-8 order-2 lg:order-1 flex flex-col items-center lg:items-end w-full">
+          <div className="inline-block px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-blue-100 text-sm font-semibold tracking-wider mb-2 uppercase">
+            {t('homepage.welcomeBadge', 'WELCOME TO QICKROOM')}
           </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.2] drop-shadow-lg">
+            {t('homepage.mainTitle', 'منصة خدمات الغرف لفندقك')}
+          </h1>
+          <p className="text-base sm:text-lg md:text-xl text-blue-100/90 leading-relaxed max-w-lg font-light">
+            {t('homepage.subtitle', 'حلول رقمية متطورة لخدمات الضيوف')}
+          </p>
 
-          {/* Right side - Mobile Phone Mockup */}
-          <div className="flex justify-center lg:justify-start order-1 lg:order-2 mb-4 sm:mb-6 lg:mb-0">
-            <div className="relative">
-              {/* Phone Frame - Responsive sizing */}
-              <div className="relative bg-black rounded-[2rem] sm:rounded-[2.5rem] lg:rounded-[3rem] p-1.5 sm:p-2 shadow-2xl">
-                <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] overflow-hidden w-[200px] h-[400px] sm:w-[240px] sm:h-[480px] lg:w-[280px] lg:h-[580px]">
-                  {/* Phone Screen Content */}
-                  <div className="h-full bg-white flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
+          <div className="pt-4 sm:pt-6 w-full flex justify-center lg:justify-end">
+            <Link
+              to={isAuthenticated ? "/hotels" : "/login"}
+              className="group relative inline-flex items-center justify-center bg-white text-primary-main px-8 py-4 sm:px-10 sm:py-5 rounded-full font-bold text-lg sm:text-xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_40px_rgba(103,186,224,0.4)] transition-all duration-300 transform hover:-translate-y-1"
+            >
+              {/* Button Shine Effect */}
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary-light/20 to-transparent group-hover:animate-shimmer" />
+              
+              <span className="relative z-10 ml-3">{t('homepage.accessService', 'دخول إلى الخدمة')}</span>
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 relative z-10 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 16l-4-4m0 0l4-4m-4 4h14" />
+              </svg>
+            </Link>
+          </div>
+        </div>
 
-                    {/* Centered Logo in Phone */}
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <img
-                          src="/logo-no-background.svg"
-                          alt="Qickroom"
-                          className="h-48 w-48 sm:h-56 sm:w-56 lg:h-64 lg:w-64 mx-auto"
-                        />
-                      </div>
-                    </div>
+        {/* Mobile Mockup */}
+        <div className="flex-1 flex justify-center order-1 lg:order-2 w-full lg:w-auto perspective-1000">
+          <div className="relative transform-gpu hover:-rotate-y-6 hover:rotate-x-6 hover:scale-105 transition-all duration-500 ease-out">
+            
+            {/* Glow behind phone */}
+            <div className="absolute inset-0 bg-primary-light/40 blur-3xl rounded-full scale-90 -z-10 animate-pulse" />
+            
+            {/* Phone Frame */}
+            <div className="relative bg-gradient-to-b from-gray-800 to-black rounded-[2.5rem] sm:rounded-[3rem] p-2 shadow-2xl border-4 border-gray-800/50">
+              
+              {/* Notch */}
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-3xl z-20" />
+              
+              {/* Phone Screen */}
+              <div className="relative bg-white rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden w-[220px] h-[460px] sm:w-[280px] sm:h-[580px] flex flex-col shadow-inner">
+                
+                {/* Content inside phone */}
+                <div className="flex-grow flex flex-col items-center justify-center p-6 bg-gradient-to-b from-blue-50 to-white">
+                  <div className="relative animate-bounce-slow">
+                    <img
+                      src="/logo-no-background.svg"
+                      alt="Qickroom"
+                      className="h-32 w-32 sm:h-48 sm:w-48 drop-shadow-xl"
+                    />
                   </div>
+                  <h2 className="mt-8 text-xl sm:text-2xl font-bold text-primary-main tracking-wide uppercase">{t('homepage.brand', 'QICKROOM')}</h2>
+                  <div className="w-12 h-1 bg-primary-light rounded-full mt-4" />
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 text-center p-2 sm:p-3 lg:p-4">
-        <p className="text-white/70 text-xs sm:text-sm px-4">
+      <footer className="relative z-10 flex-none pb-6 pt-4 text-center w-full">
+        <p className="text-white/60 text-xs sm:text-sm font-medium tracking-wide drop-shadow-sm">
           {t('homepage.footer', '© 2024 Qickroom. جميع الحقوق محفوظة')}
         </p>
-      </div>
-      </div>
-    </>
+      </footer>
+      
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer {
+          animation: shimmer 2s infinite;
+        }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 4s ease-in-out infinite;
+        }
+        .perspective-1000 {
+          perspective: 1000px;
+        }
+      `}} />
+    </div>
   );
 };
 

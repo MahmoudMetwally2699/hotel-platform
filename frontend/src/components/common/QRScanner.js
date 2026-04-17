@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import QrScanner from 'qr-scanner';
 import {
   QrCodeIcon,
@@ -16,6 +17,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
+  const { t } = useTranslation();
   const [scanner, setScanner] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState(null);
@@ -251,7 +253,7 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-2">
             <QrCodeIcon className="h-6 w-6 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Scan QR Code</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('qrScanner.title')}</h3>
           </div>
           <button
             onClick={onClose}
@@ -265,7 +267,7 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
           {/* Instructions */}
           <div className="mb-4 p-3 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Scan the QR code</strong> displayed at the hotel reception desk to automatically select your hotel for registration.
+              {t('qrScanner.instructions')}
             </p>
           </div>
 
@@ -280,7 +282,7 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
                     onClick={requestPermissions}
                     className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
                   >
-                    Try to enable camera again
+                    {t('qrScanner.tryEnableCamera')}
                   </button>
                 )}
               </div>
@@ -292,16 +294,16 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
             <div className="text-center py-8">
               <CameraIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-600 mb-4">
-                Camera access is needed to scan QR codes
+                {t('qrScanner.cameraNeeded')}
               </p>
               <button
                 onClick={requestPermissions}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Enable Camera
+                {t('qrScanner.enableCameraBtn')}
               </button>
               <p className="text-xs text-gray-500 mt-2">
-                Make sure to allow camera access when prompted
+                {t('qrScanner.allowPrompt')}
               </p>
             </div>
           )}
@@ -311,21 +313,21 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
             <div className="text-center py-8">
               <ExclamationTriangleIcon className="h-16 w-16 text-red-300 mx-auto mb-4" />
               <p className="text-gray-600 mb-4">
-                Camera access is required to scan QR codes
+                {t('qrScanner.cameraRequired')}
               </p>
               <div className="space-y-2 text-sm text-gray-500">
-                <p>To enable camera access:</p>
+                <p>{t('qrScanner.enableStepsTitle')}</p>
                 <ul className="text-left list-disc list-inside space-y-1">
-                  <li>Click the camera icon in your browser's address bar</li>
-                  <li>Select "Always allow" for camera access</li>
-                  <li>Refresh the page and try again</li>
+                  <li>{t('qrScanner.step1')}</li>
+                  <li>{t('qrScanner.step2')}</li>
+                  <li>{t('qrScanner.step3')}</li>
                 </ul>
               </div>
               <button
                 onClick={requestPermissions}
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Try Again
+                {t('qrScanner.tryAgain')}
               </button>
             </div>
           )}
@@ -345,10 +347,10 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
                 <div className="text-center">
                   <div className="flex items-center justify-center space-x-2 text-green-600">
                     <CheckCircleIcon className="h-5 w-5" />
-                    <span className="text-sm">Camera active - Point at QR code</span>
+                    <span className="text-sm">{t('qrScanner.cameraActive')}</span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    QR code will be highlighted when detected
+                    {t('qrScanner.highlightInfo')}
                   </p>
                 </div>
               )}
@@ -359,7 +361,7 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
                     onClick={initializeScanner}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Start Camera
+                    {t('qrScanner.startCamera')}
                   </button>
                 </div>
               )}
@@ -369,7 +371,7 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
           {/* File Upload Alternative */}
           <div className="mt-6 pt-4 border-t border-gray-200">
             <p className="text-sm text-gray-600 mb-3 text-center">
-              Or upload an image with QR code:
+              {t('qrScanner.orUploadImage')}
             </p>
             <div className="relative">
               <input
@@ -381,20 +383,10 @@ const QRScanner = ({ onScanSuccess, onScanError, onClose }) => {
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
                 <QrCodeIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                 <p className="text-sm text-gray-600">
-                  Click to upload QR code image
+                  {t('qrScanner.clickToUpload')}
                 </p>
               </div>
             </div>
-          </div>
-
-          {/* Manual Entry Option */}
-          <div className="mt-4 text-center">
-            <button
-              onClick={onClose}
-              className="text-sm text-gray-500 hover:text-gray-700 underline"
-            >
-              Skip QR scan and select hotel manually
-            </button>
           </div>
         </div>
       </div>

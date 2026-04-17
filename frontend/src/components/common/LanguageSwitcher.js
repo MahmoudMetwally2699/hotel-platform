@@ -6,7 +6,7 @@ import { ChevronDownIcon, LanguageIcon } from '@heroicons/react/24/outline';
  * Language Switcher Component
  * Allows users to switch between English and Arabic languages
  */
-const LanguageSwitcher = ({ className = '' }) => {
+const LanguageSwitcher = ({ className = '', variant = 'default' }) => {
   const { i18n, t } = useTranslation();
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -36,15 +36,19 @@ const LanguageSwitcher = ({ className = '' }) => {
     <div className={`relative inline-block text-left ${className}`}>
       <button
         type="button"
-        className="inline-flex items-center justify-center w-full px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        className={
+          variant === 'glass'
+            ? `inline-flex items-center justify-center w-full px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium text-white bg-white/10 backdrop-blur-md border border-white/20 rounded-full shadow-lg hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-light transition-all duration-300`
+            : `inline-flex items-center justify-center w-full px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`
+        }
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="true"
         aria-expanded={isOpen}
       >
-        <LanguageIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-        <span className="mr-1">{currentLanguage.flag}</span>
-        <span className="hidden sm:inline">{currentLanguage.name}</span>
-        <ChevronDownIcon className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 -mr-1" />
+        <LanguageIcon className={`w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 ${variant === 'glass' ? 'text-white' : 'text-gray-500'}`} />
+        <span className="mr-1 text-base">{currentLanguage.flag}</span>
+        <span className={`hidden sm:inline ${variant === 'glass' ? 'text-white font-semibold' : ''}`}>{currentLanguage.name}</span>
+        <ChevronDownIcon className={`w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 -mr-1 ${variant === 'glass' ? 'text-white/70' : 'text-gray-400'}`} />
       </button>
 
       {isOpen && (

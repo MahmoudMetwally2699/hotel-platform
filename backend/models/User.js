@@ -96,6 +96,12 @@ const userSchema = new mongoose.Schema({
     trim: true
   },
 
+  idType: {
+    type: String,
+    enum: ['national_id', 'passport'],
+    default: 'national_id'
+  },
+
   nationality: {
     type: String,
     trim: true

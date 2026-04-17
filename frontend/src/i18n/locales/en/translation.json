@@ -182,7 +182,6 @@
     "performanceAnalytics": "Performance Analytics",
     "branding": "Branding"
   },
-
   "loyaltyProgram": {
     "subtitle": "Guest rewards and loyalty management system",
     "description": "We're working on an exciting loyalty program feature that will help you reward your most valued guests and build long-lasting relationships.",
@@ -580,7 +579,10 @@
         "title": "Average Customer Spending Trend",
         "subtitle": "Spending patterns and customer count over time",
         "noData": "No trend data available",
-        "legend": { "avgSpending": "Avg Spending", "customers": "Customers" }
+        "legend": {
+          "avgSpending": "Avg Spending",
+          "customers": "Customers"
+        }
       },
       "serviceRequestVolume": {
         "title": "Service Request Volume",
@@ -697,8 +699,15 @@
         "noData": "No completion data available",
         "minutes": "Minutes",
         "minutesShort": "min",
-        "legend": { "averageTime": "Average Time" },
-        "tooltip": { "average": "Average", "min": "Min", "max": "Max", "bookings": "Bookings" }
+        "legend": {
+          "averageTime": "Average Time"
+        },
+        "tooltip": {
+          "average": "Average",
+          "min": "Min",
+          "max": "Max",
+          "bookings": "Bookings"
+        }
       },
       "summary": {
         "avgResponseTime": "Average Response Time",
@@ -831,7 +840,7 @@
           "avgRevenuePerBooking": "Avg Revenue per Booking"
         }
       },
-  "external": {
+      "external": {
         "title": "External Service Provider Performance",
         "subtitle": "Third-Party Services",
         "noData": "No external provider data available",
@@ -890,7 +899,6 @@
         "totalLabel": "TOTAL ({{count}} services)"
       }
     }
-
   },
   "auth": {
     "signIn": "Sign In",
@@ -910,42 +918,42 @@
     "loginError": "Login failed",
     "registerSuccess": "Registration successful",
     "registerError": "Registration failed"
-      },
-      "spicyLevels": {
-        "normal": "Normal",
-        "medium": "Medium",
-        "hot": "Hot",
-        "veryHot": "Very Hot"
-      },
-      "categories": {
-        "appetizers": "Appetizers",
-        "mains": "Main Courses",
-        "desserts": "Desserts",
-        "beverages": "Beverages",
-        "salads": "Salads",
-        "soups": "Soups",
-        "snacks": "Snacks"
-      },
-      "dietary": {
-        "vegetarian": "Vegetarian",
-        "vegan": "Vegan",
-        "available": "Available"
-      },
-      "imageUpload": {
-        "changeImage": "Change Image",
-        "addImage": "Add Image",
-        "uploading": "Uploading...",
-        "imageRecommendation": "Recommended: 400x400px, max 5MB (JPG, PNG, WebP)",
-        "removeImage": "Remove image"
-      },
-      "allergens": {
-        "title": "Allergens",
-        "placeholder": "Add allergen",
-        "add": "Add"
-      },
-      "notes": {
-        "title": "Additional Notes",
-        "placeholder": "Special instructions...",
+  },
+  "spicyLevels": {
+    "normal": "Normal",
+    "medium": "Medium",
+    "hot": "Hot",
+    "veryHot": "Very Hot"
+  },
+  "categories": {
+    "appetizers": "Appetizers",
+    "mains": "Main Courses",
+    "desserts": "Desserts",
+    "beverages": "Beverages",
+    "salads": "Salads",
+    "soups": "Soups",
+    "snacks": "Snacks"
+  },
+  "dietary": {
+    "vegetarian": "Vegetarian",
+    "vegan": "Vegan",
+    "available": "Available"
+  },
+  "imageUpload": {
+    "changeImage": "Change Image",
+    "addImage": "Add Image",
+    "uploading": "Uploading...",
+    "imageRecommendation": "Recommended: 400x400px, max 5MB (JPG, PNG, WebP)",
+    "removeImage": "Remove image"
+  },
+  "allergens": {
+    "title": "Allergens",
+    "placeholder": "Add allergen",
+    "add": "Add"
+  },
+  "notes": {
+    "title": "Additional Notes",
+    "placeholder": "Special instructions...",
     "invalidCredentials": "Invalid email or password",
     "passwordResetSent": "Password reset link sent to your email",
     "passwordResetSuccess": "Password reset successful"
@@ -959,9 +967,11 @@
     "enterYourPassword": "Enter your password",
     "rememberMe": "Remember me",
     "forgotYourPassword": "Forgot your password?",
-    "signIn": "Sign In",    "signingIn": "Signing In",
+    "signIn": "Sign In",
+    "signingIn": "Signing In",
     "dontHaveAnAccount": "Don't have an account?",
-    "signUp": "Sign up"
+    "signUp": "Sign up",
+    "forgotPassword": "Forgot your password?"
   },
   "register": {
     "createYourAccount": "Create Your Account",
@@ -1011,7 +1021,8 @@
       "confirmPasswordRequired": "Confirm password is required",
       "passwordsMatch": "Passwords must match",
       "acceptTermsRequired": "You must accept the terms and conditions"
-    }
+    },
+    "roomNumberPlaceholder": "e.g., 101, A205, Suite1"
   },
   "hotel": {
     "hotelManagement": "Hotel Management",
@@ -1799,7 +1810,17 @@
       "filterByFloor": "Filter by Floor",
       "allFloors": "All Floors",
       "floor": "Floor"
-    }
+    },
+    "guestInformation": "Stay Information",
+    "guestDetails": "Your current reservation details",
+    "reservationType": "Reservation Type",
+    "roomNumber": "Room Number",
+    "checkInDate": "Check-in Date",
+    "checkOutDate": "Check-out Date",
+    "ro": "Room Only (RO)",
+    "bb": "Bed & Breakfast (BB)",
+    "fb": "Full Board (FB)",
+    "allInclusive": "All Inclusive (All)"
   },
   "loyaltyCard": {
     "loyaltyTier": "Loyalty Tier",
@@ -1834,7 +1855,8 @@
     "serviceList": "Service List",
     "bookService": "Book Service",
     "serviceAvailable": "Available",
-    "serviceUnavailable": "Unavailable",    "laundry": "Laundry",
+    "serviceUnavailable": "Unavailable",
+    "laundry": "Laundry",
     "transportation": "Transportation",
     "tourism": "Travel & Tourism",
     "carRental": "Car Rental",
@@ -1847,7 +1869,8 @@
     "entertainment": "Entertainment",
     "shopping": "Shopping",
     "fitness": "Fitness",
-    "housekeeping": "Housekeeping Services",    "other": "Other Services",
+    "housekeeping": "Housekeeping Services",
+    "other": "Other Services",
     "allServices": "All Services",
     "servicesAvailable": "{{count}} services available",
     "singleService": "service",
@@ -1877,7 +1900,8 @@
     "paid": "Paid",
     "unpaid": "Unpaid",
     "refunded": "Refunded"
-  },  "dashboard": {
+  },
+  "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome back, {{providerName}}!",
     "overview": "Overview",
@@ -1908,12 +1932,14 @@
     "revenueTrend": "Revenue Trend",
     "serviceDistribution": "Service Distribution",
     "avgResponseTime": "Avg Response Time",
-    "fromLastPeriod": "from last period",    "timeRange": {
+    "fromLastPeriod": "from last period",
+    "timeRange": {
       "today": "Today",
       "thisWeek": "This Week",
       "thisMonth": "This Month",
       "thisYear": "This Year"
-    },    "minutes": "minutes",
+    },
+    "minutes": "minutes",
     "completionRate": "Completion Rate",
     "avgRating": "Average Rating",
     "recentOrders": "Recent Orders",
@@ -1941,7 +1967,8 @@
       "completed": "Completed",
       "cancelled": "Cancelled"
     }
-  },  "serviceProvider": {
+  },
+  "serviceProvider": {
     "navigation": {
       "serviceCategories": "Service Categories",
       "manageServices": "Manage Services",
@@ -2385,7 +2412,8 @@
       "editProfile": "Edit Profile",
       "updateSuccess": "Profile updated successfully",
       "updateFailed": "Failed to update profile"
-    },    "laundryManagement": {
+    },
+    "laundryManagement": {
       "title": "Laundry Service Management",
       "description": "Manage your laundry services and add new items with individual pricing",
       "tabs": {
@@ -2683,7 +2711,8 @@
       "thisWeek": "This Week",
       "noBookings": "No upcoming bookings",
       "noBookingsDescription": "You don't have any bookings scheduled.",
-      "viewAll": "View All Orders"    },
+      "viewAll": "View All Orders"
+    },
     "dashboard": {
       "title": "Service Categories",
       "subtitle": "Select the type of services you want to offer. You can activate multiple categories and manage them independently.",
@@ -2861,223 +2890,224 @@
       "manageServiceDetails": "Manage Service Details"
     },
     "categorySelection": {
-    "title": "Service Categories",
-    "description": "Select the service categories you want to offer. You can activate multiple categories and manage them independently.",
-    "activeCategories": "Active Categories",
-    "activate": "Activate",
-    "deactivate": "Deactivate",
-    "activating": "Activating...",
-    "deactivating": "Deactivating...",
-    "sampleServices": "Sample Services:",
-    "vehicleTypes": "Vehicle Types:",
-    "tourTypes": "Tour Types:",
-    "more": "more",
-    "successMessage": "Great! You've activated",
-    "categorySingle": "category",
-    "categoryPlural": "categories",
-    "successDescription": "Now you can create services for each active category.",
-    "manageServices": "Manage Services",
-    "sidebar": {
-      "laundryManagement": "Laundry Service Management",
-      "transportationManagement": "Transportation Service Management",
-      "transportationBookings": "Transportation Bookings",
-      "housekeepingServices": "Housekeeping Services",
-      "restaurantServices": "Restaurant Services"
-    },
-    "offlineMode": "Using offline mode - some features may be limited",
-    "activatedLocally": "activated locally (offline mode)",
-    "deactivatedLocally": "deactivated locally (offline mode)",
-    "failedToActivate": "Failed to activate category",
-    "failedToDeactivate": "Failed to deactivate category",
-    "sampleItems": {
-      "shirts": "Shirts",
-      "pants": "Pants",
-      "dresses": "Dresses",
-      "suits": "Suits",
-      "sedan": "Sedan",
-      "suv": "SUV",
-      "van": "Van",
-      "cityTour": "City Tour",
-      "historicalTour": "Historical Tour",
-      "natureTour": "Nature Tour",
-      "massage": "Massage",
-      "facial": "Facial"
-    },
-    "laundryItems": {
-      "T-Shirt": "T-Shirt",
-      "Dress Shirt": "Dress Shirt",
-      "Short Sleeve Shirt": "Short Sleeve Shirt",
-      "Long Sleeve Shirt": "Long Sleeve Shirt",
-      "Pants/Trousers": "Pants/Trousers",
-      "Long Trousers": "Long Trousers",
-      "Shorts": "Shorts",
-      "Jeans": "Jeans",
-      "Dress": "Dress",
-      "Skirt": "Skirt",
-      "Blouse": "Blouse",
-      "Sports T-Shirt": "Sports T-Shirt",
-      "Military T-Shirt": "Military T-Shirt",
-      "Undershirt": "Undershirt",
-      "Formal Suit": "Formal Suit",
-      "Regular Suit": "Regular Suit",
-      "Suit Jacket": "Suit Jacket",
-      "Pakistani Uniform": "Pakistani Uniform",
-      "Military Uniform": "Military Uniform",
-      "Work Uniform": "Work Uniform",
-      "Coat": "Coat",
-      "Overcoat": "Overcoat",
-      "Jacket": "Jacket",
-      "Leather Jacket": "Leather Jacket",
-      "Tracksuit": "Tracksuit",
-      "Sports Tracksuit": "Sports Tracksuit",
-      "Sweatshirt": "Sweatshirt",
-      "Hoodie": "Hoodie",
-      "Overalls": "Overalls",
-      "Jumpsuit": "Jumpsuit",
-      "Thobe": "Thobe",
-      "Embroidered Thobe": "Embroidered Thobe",
-      "Wool Thobe": "Wool Thobe",
-      "Kandura": "Kandura",
-      "Dishdasha": "Dishdasha",
-      "Jalabia": "Jalabia",
-      "Abaya": "Abaya",
-      "Embroidered Abaya": "Embroidered Abaya",
-      "Bisht": "Bisht",
-      "Cloak": "Cloak",
-      "Ihram": "Ihram",
-      "Shemagh": "Shemagh",
-      "Ghutra": "Ghutra",
-      "Igal": "Igal",
-      "Cap": "Cap",
-      "Kufi": "Kufi",
-      "Skullcap": "Skullcap",
-      "Headscarf": "Headscarf",
-      "Underwear (per piece)": "Underwear (per piece)",
-      "Socks (per pair)": "Socks (per pair)",
-      "Pajamas": "Pajamas",
-      "Bedsheet (single)": "Bedsheet (single)",
-      "Bedsheet (double)": "Bedsheet (double)",
-      "Bed Sheets": "Bed Sheets",
-      "Light Sheet": "Light Sheet",
-      "Pillowcase": "Pillowcase",
-      "Duvet": "Duvet",
-      "Blanket": "Blanket",
-      "Towel": "Towel",
-      "Curtains": "Curtains",
-      "Rug": "Rug",
-      "Sofa Cover": "Sofa Cover",
-      "Chair Cover": "Chair Cover",
-      "Furnishings": "Furnishings"
-    },
-    "laundryCategories": {
-      "clothing": "Clothing",
-      "sportswear": "Sportswear",
-      "uniforms": "Uniforms",
-      "undergarments": "Undergarments",
-      "formal": "Formal Wear",
-      "outerwear": "Outerwear",
-      "workwear": "Work Wear",
-      "traditional": "Traditional Wear",
-      "religious": "Religious Wear",
-      "accessories": "Accessories",
-      "sleepwear": "Sleepwear",
-      "linens": "Bed Linens",
-      "home": "Home Items"
-    },
-    "vehicleTypeNames": {
-      "Economy Sedan": "Economy Sedan",
-      "Comfort Sedan": "Comfort Sedan",
-      "Van": "Van",
-      "Economy/Compact Car": "Economy/Compact Car",
-      "Sedan/Midsize": "Sedan/Midsize",
-      "SUV/Crossover": "SUV/Crossover",
-      "Large Vehicle": "Large Vehicle",
-      "Van/MPV": "Van/MPV",
-      "Luxury/Premium": "Luxury/Premium",
-      "Premium SUV": "Premium SUV"
-    },
-    "categories": {
-      "laundry": {
-        "name": "Laundry Services",
-        "description": "Professional laundry and dry cleaning services"
-      },
-      "transportation": {
-        "name": "Transportation Services",
-        "description": "Vehicle rental and transportation services"
-      },
-      "tours": {
-        "name": "Tours & Activities",
-        "description": "Guided tours and recreational activities"
-      },
-      "spa": {
-        "name": "Spa & Wellness",
-        "description": "Relaxation and wellness services"
-      },
-      "dining": {
-        "name": "Dining Services",
-        "description": "Food delivery and catering services"
-      },
-      "entertainment": {
-        "name": "Entertainment",
-        "description": "Live music, DJ services, and events"
-      },
-      "shopping": {
-        "name": "Shopping Services",
-        "description": "Personal shopping and delivery services"
-      },
-      "fitness": {
-        "name": "Fitness Services",
-        "description": "Personal training and sports activities"
-      }
-    },
-    "serviceTypes": {
-      "outside": {
-        "title": "Outside Hotel Services",
-        "description": "Services provided by external service providers",
-        "subtitle": "Partner with external providers"
-      },
-      "inside": {
-        "title": "Inside Hotel Services",
-        "description": "Services provided directly by the hotel",
-        "subtitle": "Direct hotel services"
-      }
-    },
-    "insideServices": {
-      "title": "Inside Hotel Services",
-      "description": "Manage services provided directly by your hotel",
-      "roomService": "Room Service",
-      "hotelRestaurant": "Hotel Restaurant",
-      "conciergeServices": "Concierge Services",
-      "housekeepingRequests": "Housekeeping Requests",
+      "title": "Service Categories",
+      "description": "Select the service categories you want to offer. You can activate multiple categories and manage them independently.",
+      "activeCategories": "Active Categories",
       "activate": "Activate",
       "deactivate": "Deactivate",
-      "addService": "Add Service",
-      "manageServiceDetails": "Manage Service Details",
-      "viewHotelBookings": "View Bookings",
-      "operatingHours": "Operating Hours",
-      "features": "Features",
+      "activating": "Activating...",
+      "deactivating": "Deactivating...",
+      "sampleServices": "Sample Services:",
+      "vehicleTypes": "Vehicle Types:",
+      "tourTypes": "Tour Types:",
+      "more": "more",
+      "successMessage": "Great! You've activated",
+      "categorySingle": "category",
+      "categoryPlural": "categories",
+      "successDescription": "Now you can create services for each active category.",
+      "manageServices": "Manage Services",
+      "sidebar": {
+        "laundryManagement": "Laundry Service Management",
+        "transportationManagement": "Transportation Service Management",
+        "transportationBookings": "Transportation Bookings",
+        "housekeepingServices": "Housekeeping Services",
+        "restaurantServices": "Restaurant Services"
+      },
+      "offlineMode": "Using offline mode - some features may be limited",
+      "activatedLocally": "activated locally (offline mode)",
+      "deactivatedLocally": "deactivated locally (offline mode)",
+      "failedToActivate": "Failed to activate category",
+      "failedToDeactivate": "Failed to deactivate category",
+      "sampleItems": {
+        "shirts": "Shirts",
+        "pants": "Pants",
+        "dresses": "Dresses",
+        "suits": "Suits",
+        "sedan": "Sedan",
+        "suv": "SUV",
+        "van": "Van",
+        "cityTour": "City Tour",
+        "historicalTour": "Historical Tour",
+        "natureTour": "Nature Tour",
+        "massage": "Massage",
+        "facial": "Facial"
+      },
+      "laundryItems": {
+        "T-Shirt": "T-Shirt",
+        "Dress Shirt": "Dress Shirt",
+        "Short Sleeve Shirt": "Short Sleeve Shirt",
+        "Long Sleeve Shirt": "Long Sleeve Shirt",
+        "Pants/Trousers": "Pants/Trousers",
+        "Long Trousers": "Long Trousers",
+        "Shorts": "Shorts",
+        "Jeans": "Jeans",
+        "Dress": "Dress",
+        "Skirt": "Skirt",
+        "Blouse": "Blouse",
+        "Sports T-Shirt": "Sports T-Shirt",
+        "Military T-Shirt": "Military T-Shirt",
+        "Undershirt": "Undershirt",
+        "Formal Suit": "Formal Suit",
+        "Regular Suit": "Regular Suit",
+        "Suit Jacket": "Suit Jacket",
+        "Pakistani Uniform": "Pakistani Uniform",
+        "Military Uniform": "Military Uniform",
+        "Work Uniform": "Work Uniform",
+        "Coat": "Coat",
+        "Overcoat": "Overcoat",
+        "Jacket": "Jacket",
+        "Leather Jacket": "Leather Jacket",
+        "Tracksuit": "Tracksuit",
+        "Sports Tracksuit": "Sports Tracksuit",
+        "Sweatshirt": "Sweatshirt",
+        "Hoodie": "Hoodie",
+        "Overalls": "Overalls",
+        "Jumpsuit": "Jumpsuit",
+        "Thobe": "Thobe",
+        "Embroidered Thobe": "Embroidered Thobe",
+        "Wool Thobe": "Wool Thobe",
+        "Kandura": "Kandura",
+        "Dishdasha": "Dishdasha",
+        "Jalabia": "Jalabia",
+        "Abaya": "Abaya",
+        "Embroidered Abaya": "Embroidered Abaya",
+        "Bisht": "Bisht",
+        "Cloak": "Cloak",
+        "Ihram": "Ihram",
+        "Shemagh": "Shemagh",
+        "Ghutra": "Ghutra",
+        "Igal": "Igal",
+        "Cap": "Cap",
+        "Kufi": "Kufi",
+        "Skullcap": "Skullcap",
+        "Headscarf": "Headscarf",
+        "Underwear (per piece)": "Underwear (per piece)",
+        "Socks (per pair)": "Socks (per pair)",
+        "Pajamas": "Pajamas",
+        "Bedsheet (single)": "Bedsheet (single)",
+        "Bedsheet (double)": "Bedsheet (double)",
+        "Bed Sheets": "Bed Sheets",
+        "Light Sheet": "Light Sheet",
+        "Pillowcase": "Pillowcase",
+        "Duvet": "Duvet",
+        "Blanket": "Blanket",
+        "Towel": "Towel",
+        "Curtains": "Curtains",
+        "Rug": "Rug",
+        "Sofa Cover": "Sofa Cover",
+        "Chair Cover": "Chair Cover",
+        "Furnishings": "Furnishings"
+      },
+      "laundryCategories": {
+        "clothing": "Clothing",
+        "sportswear": "Sportswear",
+        "uniforms": "Uniforms",
+        "undergarments": "Undergarments",
+        "formal": "Formal Wear",
+        "outerwear": "Outerwear",
+        "workwear": "Work Wear",
+        "traditional": "Traditional Wear",
+        "religious": "Religious Wear",
+        "accessories": "Accessories",
+        "sleepwear": "Sleepwear",
+        "linens": "Bed Linens",
+        "home": "Home Items"
+      },
+      "vehicleTypeNames": {
+        "Economy Sedan": "Economy Sedan",
+        "Comfort Sedan": "Comfort Sedan",
+        "Van": "Van",
+        "Economy/Compact Car": "Economy/Compact Car",
+        "Sedan/Midsize": "Sedan/Midsize",
+        "SUV/Crossover": "SUV/Crossover",
+        "Large Vehicle": "Large Vehicle",
+        "Van/MPV": "Van/MPV",
+        "Luxury/Premium": "Luxury/Premium",
+        "Premium SUV": "Premium SUV"
+      },
       "categories": {
-        "dining": "Dining",
-        "assistance": "Guest Assistance",
-        "maintenance": "Maintenance",
-        "recreation": "Recreation",
-        "business": "Business"
+        "laundry": {
+          "name": "Laundry Services",
+          "description": "Professional laundry and dry cleaning services"
+        },
+        "transportation": {
+          "name": "Transportation Services",
+          "description": "Vehicle rental and transportation services"
+        },
+        "tours": {
+          "name": "Tours & Activities",
+          "description": "Guided tours and recreational activities"
+        },
+        "spa": {
+          "name": "Spa & Wellness",
+          "description": "Relaxation and wellness services"
+        },
+        "dining": {
+          "name": "Dining Services",
+          "description": "Food delivery and catering services"
+        },
+        "entertainment": {
+          "name": "Entertainment",
+          "description": "Live music, DJ services, and events"
+        },
+        "shopping": {
+          "name": "Shopping Services",
+          "description": "Personal shopping and delivery services"
+        },
+        "fitness": {
+          "name": "Fitness Services",
+          "description": "Personal training and sports activities"
+        }
+      },
+      "serviceTypes": {
+        "outside": {
+          "title": "Outside Hotel Services",
+          "description": "Services provided by external service providers",
+          "subtitle": "Partner with external providers"
+        },
+        "inside": {
+          "title": "Inside Hotel Services",
+          "description": "Services provided directly by the hotel",
+          "subtitle": "Direct hotel services"
+        }
+      },
+      "insideServices": {
+        "title": "Inside Hotel Services",
+        "description": "Manage services provided directly by your hotel",
+        "roomService": "Room Service",
+        "hotelRestaurant": "Hotel Restaurant",
+        "conciergeServices": "Concierge Services",
+        "housekeepingRequests": "Housekeeping Requests",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "addService": "Add Service",
+        "manageServiceDetails": "Manage Service Details",
+        "viewHotelBookings": "View Bookings",
+        "operatingHours": "Operating Hours",
+        "features": "Features",
+        "categories": {
+          "dining": "Dining",
+          "assistance": "Guest Assistance",
+          "maintenance": "Maintenance",
+          "recreation": "Recreation",
+          "business": "Business"
+        }
       }
+    },
+    "payment": {
+      "paymentMethod": "Payment Method",
+      "cardNumber": "Card Number",
+      "expiryDate": "Expiry Date",
+      "cvv": "CVV",
+      "cardholderName": "Cardholder Name",
+      "billingAddress": "Billing Address",
+      "processPayment": "Process Payment",
+      "paymentSuccessful": "Payment Successful",
+      "paymentFailed": "Payment Failed",
+      "paymentPending": "Payment Pending",
+      "refundPayment": "Refund Payment",
+      "paymentHistory": "Payment History"
     }
-  },
-  "payment": {
-    "paymentMethod": "Payment Method",
-    "cardNumber": "Card Number",
-    "expiryDate": "Expiry Date",
-    "cvv": "CVV",
-    "cardholderName": "Cardholder Name",
-    "billingAddress": "Billing Address",
-    "processPayment": "Process Payment",
-    "paymentSuccessful": "Payment Successful",
-    "paymentFailed": "Payment Failed",
-    "paymentPending": "Payment Pending",
-    "refundPayment": "Refund Payment",
-    "paymentHistory": "Payment History"}
   },
   "errors": {
     "404": "Page not found",
@@ -3101,27 +3131,17 @@
     "positive": "{{field}} must be a positive number"
   },
   "homepage": {
-    "title": "Hotel Services Platform",
-    "heroDescription": "Access all the services available at your hotel with ease.",
-    "viewHotelServices": "View My Hotel Services",
-    "browseServices": "Browse and book services available at your hotel",
-    "signInToView": "Sign in to view services available at your hotel",
-    "availableServices": "Available Service Categories",
-    "servicesDescription": "Your hotel offers various services to make your stay comfortable",
-    "laundryDescription": "Professional laundry and dry cleaning",
-    "transportationDescription": "Car rentals and taxi services",
-    "tourismDescription": "Tours and local experiences",
-    "platformName": "Hotel Service Platform",
-    "allRightsReserved": "All rights reserved",
     "login": "Login",
     "mainTitle": "Your Hotel Room Services Platform",
     "subtitle": "Advanced digital solutions for guest services",
     "accessService": "Access Service",
-    "phoneTitle": "Hotel Services Platform",
-    "phoneSubtitle": "Advanced digital solutions for guest experience",
-    "serviceLogin": "Service Login",
-    "createAccount": "Create New Account",
-    "footer": "© 2024 Qickroom. All rights reserved"
+    "footer": "© 2024 Qickroom. All rights reserved",
+    "brand": "Qickroom",
+    "welcomeBadge": "WELCOME TO QICKROOM",
+    "platformName": "Qickroom",
+    "laundryDescription": "Professional washing, dry cleaning, and pressing services directly to your room.",
+    "transportationDescription": "Reliable car bookings, airport transfers, and chauffeur services.",
+    "tourismDescription": "Discover local attractions with expert guided tours and curated experiences."
   },
   "landingPage": {
     "nav": {
@@ -3306,11 +3326,13 @@
       "restaurant": "Restaurant",
       "parking": "Parking"
     }
-  },  "myServices": {
+  },
+  "myServices": {
     "noHotelSelected": "No Hotel Selected",
     "completeProfile": "Please complete your profile by selecting a hotel to view available services.",
     "updateProfile": "Update Profile"
-  },  "guestCategories": {
+  },
+  "guestCategories": {
     "chooseFromCategories": "Choose from our available service categories",
     "hotelRating": "Hotel Rating",
     "noServicesAvailable": "No Services Available",
@@ -3412,13 +3434,15 @@
     "delivery": "Delivery",
     "notSpecified": "Not specified",
     "sameAsPickup": "Same as pickup",
-    "pricingSummary": "Pricing Summary",    "items": "Items",
+    "pricingSummary": "Pricing Summary",
+    "items": "Items",
     "total": "Total",
     "nextStep": "Choose Service Types",
     "scheduleStep": "Schedule Service",
     "reviewStep": "Review & Confirm",
     "confirmStep": "Confirm Booking",
-    "back": "Back",    "booking": "Booking...",
+    "back": "Back",
+    "booking": "Booking...",
     "selectItemsFirst": "Select items to see pricing details",
     "bookingSuccess": "Laundry booking created successfully!",
     "bookingError": "Failed to create booking",
@@ -3439,7 +3463,8 @@
       "wash_iron": "Complete wash and iron service",
       "dry_cleaning": "Professional dry cleaning service",
       "default": "Professional laundry service"
-    },    "serviceTypeDurations": {
+    },
+    "serviceTypeDurations": {
       "wash_only": "24 hours",
       "iron_only": "12 hours",
       "wash_iron": "24 hours",
@@ -3452,10 +3477,12 @@
       "noon": "Noon",
       "afternoon": "Afternoon",
       "evening": "Evening"
-    },    "placeholders": {
+    },
+    "placeholders": {
       "roomNumber": "Room number or location",
       "sameAsPickup": "Same as pickup or different"
-    },    "itemCategories": {
+    },
+    "itemCategories": {
       "clothing": "Clothing",
       "formal": "Formal Wear",
       "sportswear": "Sportswear",
@@ -3469,7 +3496,8 @@
       "sleepwear": "Sleepwear",
       "linens": "Linens",
       "home": "Home Items"
-    },    "itemNames": {
+    },
+    "itemNames": {
       "t-shirt": "T-Shirt",
       "t_shirt": "T-Shirt",
       "tshirt": "T-Shirt",
@@ -3588,7 +3616,6 @@
     "pricing": "Pricing",
     "totalAmount": "Total Amount"
   },
-
   "transportation": {
     "title": "Transportation Bookings",
     "subtitle": "Manage quotes, bookings, and payments for your transportation services",
@@ -3689,7 +3716,6 @@
       "payNow": "Pay Now"
     }
   },
-
   "transportationBooking": {
     "title": "Transportation Service Booking",
     "loadingService": "Loading transportation service...",
@@ -4258,5 +4284,148 @@
       "checkBackLater": "Please check back later",
       "loadingRestaurants": "Loading restaurants..."
     }
+  },
+  "guestOnboarding": {
+    "steps": {
+      "welcome": "Welcome",
+      "personalInfo": "Personal Info",
+      "tripPurpose": "Trip Purpose",
+      "roomComfort": "Room Comfort",
+      "foodAndBeverage": "Food & Beverage",
+      "extraDetails": "Extra Details"
+    },
+    "purposes": {
+      "business": "Business",
+      "leisure": "Leisure",
+      "familyVacation": "Family Vacation",
+      "honeymoon": "Honeymoon",
+      "event": "Event/Conference",
+      "transit": "Transit"
+    },
+    "pillows": {
+      "soft": "Soft",
+      "medium": "Medium",
+      "firm": "Firm"
+    },
+    "views": {
+      "any": "Any",
+      "city": "City",
+      "pool": "Pool",
+      "nature": "Nature"
+    },
+    "floors": {
+      "lower": "Lower",
+      "any": "Any",
+      "higher": "Higher"
+    },
+    "messages": {
+      "saveSuccess": "Preferences saved successfully!",
+      "saveError": "Failed to save preferences. Please try again.",
+      "validationError": "Please provide both your identification number and date of birth to continue."
+    },
+    "welcomeStep": {
+      "title": "Welcome, {{name}}!",
+      "subtitle": "We're thrilled to have you. Let's quickly personalize your stay with a few questions to ensure everything is perfect."
+    },
+    "personalStep": {
+      "title": "Personal Details",
+      "idType": "Identification Type",
+      "nationalId": "National ID",
+      "passport": "Passport",
+      "nationalIdNumber": "National ID Number",
+      "passportNumber": "Passport Number",
+      "enterNationalId": "Enter your National ID",
+      "enterPassport": "Enter your Passport number",
+      "dateOfBirth": "Date of Birth"
+    },
+    "purposeStep": {
+      "title": "What brings you here?"
+    },
+    "roomStep": {
+      "title": "Your Room Comfort",
+      "temperature": "Temperature",
+      "cool": "16°C (Cool)",
+      "ideal": "22°C (Ideal)",
+      "warm": "30°C (Warm)",
+      "pillowType": "Pillow Type",
+      "floorPreference": "Floor Preference",
+      "smokingRoom": "Smoking Room",
+      "smokingDisclaimer": "Subject to hotel availability and policies."
+    },
+    "foodStep": {
+      "title": "Food & Beverage",
+      "morningDrink": {
+        "title": "Favorite Morning Drink",
+        "placeholder": "Select a preference...",
+        "blackCoffee": "Black Coffee",
+        "coffeeMilk": "Coffee with Milk",
+        "espresso": "Espresso",
+        "latte": "Latte / Cappuccino",
+        "englishTea": "English Breakfast Tea",
+        "greenTea": "Green Tea",
+        "herbalTea": "Herbal Tea",
+        "orangeJuice": "Orange Juice",
+        "hotChocolate": "Hot Chocolate",
+        "water": "Water",
+        "noPreference": "No Preference"
+      },
+      "breakfastStyle": {
+        "title": "Dietary Preferences / Breakfast Style",
+        "placeholder": "Select a preference...",
+        "continental": "Continental",
+        "american": "Full English / American",
+        "vegetarian": "Vegetarian",
+        "vegan": "Vegan",
+        "glutenFree": "Gluten-Free",
+        "halal": "Halal",
+        "kosher": "Kosher",
+        "healthy": "Healthy / Low Calorie",
+        "noPreference": "No Preference"
+      }
+    },
+    "extraStep": {
+      "title": "Extra Personalization",
+      "subtitle": "Anything else we can do to make your stay perfect?",
+      "placeholder": "Anniversary celebration, extra towels, early check-in request..."
+    },
+    "actions": {
+      "back": "Back",
+      "nextStep": "Next Step",
+      "completeProfile": "Complete Profile",
+      "saving": "Saving..."
+    }
+  },
+  "qrAuth": {
+    "qrRequiredLogin": "QR Code Required for Login",
+    "scanToLogin": "Scan QR Code to Login",
+    "scanToEnableLogin": "Scan QR Code to Enable Login",
+    "validating": "Validating...",
+    "resetScanner": "Reset Scanner",
+    "resetScannerHelp": "If QR scanning doesn't work, try resetting the scanner first",
+    "qrLoginOnlyNotice": "QR scan is required for login only. Registration is always available.",
+    "selectedViaQR": "Selected via QR code",
+    "changeHotel": "Change Hotel",
+    "change": "Change",
+    "scanQR": "Scan QR Code",
+    "scanAtReception": "Scan the QR code at hotel reception to proceed with registration"
+  },
+  "qrScanner": {
+    "title": "Scan QR Code",
+    "instructions": "Scan the QR code displayed at the hotel reception desk to automatically select your hotel for registration.",
+    "tryEnableCamera": "Try to enable camera again",
+    "cameraNeeded": "Camera access is needed to scan QR codes",
+    "enableCameraBtn": "Enable Camera",
+    "allowPrompt": "Make sure to allow camera access when prompted",
+    "cameraRequired": "Camera access is required to scan QR codes",
+    "enableStepsTitle": "To enable camera access:",
+    "step1": "Click the camera icon in your browser's address bar",
+    "step2": "Select \"Always allow\" for camera access",
+    "step3": "Refresh the page and try again",
+    "tryAgain": "Try Again",
+    "cameraActive": "Camera active - Point at QR code",
+    "highlightInfo": "QR code will be highlighted when detected",
+    "startCamera": "Start Camera",
+    "orUploadImage": "Or upload an image with QR code:",
+    "clickToUpload": "Click to upload QR code image"
   }
 }

@@ -209,127 +209,128 @@ const GuestCategorySelection = () => {
       </div>
     );
   }
-
   return (
-    <div className="min-h-screen bg-white">
-      {/* Add custom CSS for animations */}
+    <div className="min-h-screen bg-[#F8FAFC] pb-24 font-sans selection:bg-primary-light selection:text-white">
+      {/* CSS Animations */}
       <style>{`
         @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(15px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in {
-          animation: fade-in 0.2s ease-out;
+        .animate-fade-in { animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-5px); }
+          100% { transform: translateY(0px); }
         }
+        .animate-float { animation: float 3s ease-in-out infinite; }
       `}</style>
 
-      {/* Header with Centered Hotel Info */}
-      <header className="bg-white border-b border-gray-100">
-        <div className="w-full px-2 sm:px-3 lg:px-4 py-4">
-          {/* Centered Hotel Information */}
-          <div className="text-center">
-            {/* Hotel Logo */}
-            <div className="flex justify-center mb-3">
-              {hotel?.images?.logo ? (
+      {/* Vibrant Brand Hero Section */}
+      <div className="relative overflow-hidden bg-white shadow-sm border-b border-gray-100">
+        {/* Soft Background Accent */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-gradient-to-bl from-primary-light/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+          <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-gradient-to-tr from-primary-main/5 to-transparent rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
+        </div>
+
+        <div className="relative z-0 w-full px-4 pt-24 pb-10 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center animate-fade-in">
+          
+          {/* Hotel Identity */}
+          <div className="flex flex-col items-center text-center">
+            {hotel?.images?.logo ? (
+              <div className="p-1 bg-white rounded-2xl shadow-sm border border-gray-100 mb-4 animate-float">
                 <img
                   src={hotel.images.logo}
                   alt={`${hotel?.name || 'Hotel'} Logo`}
-                  className="h-20 w-auto sm:h-16 object-contain rounded-md"
+                  className="h-16 w-auto sm:h-20 object-contain rounded-xl"
                 />
-              ) : (
-                <div className="h-20 w-20 sm:h-16 sm:w-16 rounded-md bg-gradient-to-br from-[#3B5787] to-[#61B6DE] grid place-items-center">
-                  <span className="text-white font-bold text-xl sm:text-lg">{hotel?.name?.charAt(0) || 'H'}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Hotel Name */}
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+              </div>
+            ) : (
+              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-gradient-to-tr from-primary-main to-primary-light shadow-md flex items-center justify-center mb-4 animate-float">
+                <span className="text-white font-bold text-3xl">{hotel?.name?.charAt(0) || 'H'}</span>
+              </div>
+            )}
+            
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">
               {hotel?.name || t('guest.common.hotelServices')}
             </h1>
 
-            {/* Rating - Only filled stars */}
-            <div className="flex justify-center items-center gap-1 mb-2">
-              {Array.from({ length: hotel?.starRating || 4 }, (_, index) => (
-                <FaStar key={index} className="text-[#61B6DE] text-sm" />
+            <div className="flex justify-center items-center gap-1 mb-3">
+              {Array.from({ length: hotel?.starRating || 5 }, (_, index) => (
+                <FaStar key={index} className="text-yellow-400 text-sm sm:text-base drop-shadow-sm" />
               ))}
-              <span className="ml-2 text-sm text-gray-600 font-medium">
-                {hotel?.starRating || 4} {hotel?.starRating === 1 ? t('guest.common.star') : t('guest.common.stars')}
-              </span>
             </div>
 
-            {/* Location */}
-            <div className="flex justify-center items-center gap-2 text-sm text-gray-600">
-              <FaMapMarkerAlt className="text-[#61B6DE]" />
-              <span>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-50 rounded-full text-gray-600 text-sm border border-gray-100 shadow-sm">
+              <FaMapMarkerAlt className="text-primary-light" />
+              <span className="font-medium">
                 {hotel?.address?.city && hotel?.address?.country
                   ? `${hotel.address.city}, ${hotel.address.country}`
                   : t('guestCategories.premiumLocation')}
               </span>
             </div>
           </div>
-        </div>
-      </header>
 
-      {/* Modern User Greeting Section */}
-      <section className="bg-gradient-to-r from-[#3B5787] to-[#61B6DE] text-white">
-        <div className="w-full px-2 sm:px-3 lg:px-4 py-4 sm:py-8">
-          <div className="text-center">
-            {/* User Greeting Card */}
-            <div className="inline-block">
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-4 sm:px-6 py-3 sm:py-4">
-                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                  <div className="h-8 w-8 sm:h-10 sm:w-10 bg-white/20 rounded-full flex items-center justify-center">
-                    <FaUser className="text-white text-sm sm:text-lg" />
-                  </div>
-                  <div className="text-left">
-                    <h2 className="text-lg sm:text-xl font-bold">
-                      {t('guest.common.hello')}, {currentUser?.firstName || currentUser?.name || t('guest.common.guest')}!
-                    </h2>
-                    <p className="text-white/80 text-xs sm:text-sm">
-                      {t('guest.common.welcomeToPremiumServices')}
-                    </p>
-                  </div>
+          {/* Clean Light Greeting Card */}
+          <div className="w-full max-w-2xl mx-auto mt-8">
+            <div className="bg-gradient-to-r from-primary-main to-primary-light rounded-3xl p-[1px] shadow-lg hover:shadow-xl transition-all duration-500 overflow-hidden group">
+              <div className="bg-white/95 backdrop-blur-3xl rounded-[23px] p-6 sm:p-8 relative overflow-hidden h-full flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-5">
+                <div className="h-16 w-16 bg-primary-light/10 rounded-2xl flex items-center justify-center border border-primary-light/20 shrink-0 group-hover:scale-105 transition-transform duration-500">
+                  <FaUser className="text-primary-main text-2xl" />
                 </div>
-                <p className="text-white/90 text-xs sm:text-sm max-w-md">
-                  {t('guest.common.discoverAndBook')}
-                </p>
+                <div>
+                  <h2 className="text-xl sm:text-2xl text-gray-800 font-normal">
+                    {t('guest.common.hello')},{" "}
+                    <span className="font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary-main to-primary-light">
+                      {currentUser?.firstName || currentUser?.name || t('guest.common.guest')}!
+                    </span>
+                  </h2>
+                  <p className="text-gray-500 mt-2 text-sm sm:text-base leading-relaxed">
+                    {t('guest.common.welcomeToPremiumServices')} {t('guest.common.discoverAndBook')}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Categories */}
-      <main className="w-full px-2 sm:px-3 lg:px-4 py-10 sm:py-14">
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-10 max-w-7xl mx-auto relative z-20">
+        
         {categories.length === 0 ? (
-          <div className="max-w-md mx-auto">
-            <div className="rounded-2xl border border-gray-100 bg-white shadow-sm p-8 text-center">
-              <div className="mx-auto mb-5 h-16 w-16 rounded-full bg-gray-50 grid place-items-center">
-                <FaShoppingBag className="text-2xl text-gray-400" />
+          <div className="max-w-md mx-auto mt-8 animate-fade-in">
+            <div className="rounded-3xl border border-gray-100 bg-white shadow-lg p-10 text-center hover:shadow-xl transition-shadow">
+              <div className="mx-auto mb-6 h-20 w-20 rounded-full bg-primary-light/10 flex place-items-center justify-center">
+                <FaShoppingBag className="text-3xl text-primary-light" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900">{t('guestCategories.noServicesAvailable')}</h3>
-              <p className="mt-2 text-gray-600">{t('guestCategories.noActiveServices')}</p>
+              <h3 className="text-xl font-bold text-gray-900">{t('guestCategories.noServicesAvailable')}</h3>
+              <p className="mt-3 text-gray-500">{t('guestCategories.noActiveServices')}</p>
             </div>
           </div>
         ) : (
           <>
-            <div className="text-center mb-8 sm:mb-12">
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                {t('guestCategories.availableServiceCategories')}
-              </h3>
-              <p className="mt-2 text-gray-600">{t('guestCategories.selectCategoryToBrowse')}</p>
+            <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between mb-8 sm:mb-10 text-center sm:text-left gap-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+                  {t('guestCategories.availableServiceCategories')}
+                </h3>
+                <p className="mt-2 text-gray-500 font-medium">
+                  {t('guestCategories.selectCategoryToBrowse')}
+                </p>
+              </div>
+              <span className="bg-primary-light/10 text-primary-main font-semibold px-4 py-1.5 rounded-full text-sm border border-primary-light/20 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-primary-light animate-pulse"></span>
+                {categories.length} {t('navigation.services')}
+              </span>
             </div>
 
-            {/* Full-width service cards with images */}
-            <div className="space-y-4">
-              {categories.map((category) => {
+            {/* Light, Airy Image Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              {categories.map((category, index) => {
                 const IconComponent = categoryIcons[category.key] || FaShoppingBag;
                 const categoryImage = categoryImages[category.key] || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop&crop=center';
 
@@ -338,70 +339,53 @@ const GuestCategorySelection = () => {
                     key={category.key}
                     type="button"
                     onClick={() => handleCategorySelect(category.key)}
-                    className="group relative w-full text-left rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-lg focus:shadow-lg transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#61B6DE] focus-visible:ring-offset-2 overflow-hidden"
+                    className="group relative w-full bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(103,186,224,0.3)] transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-primary-light/30 border border-gray-100 flex flex-col text-left h-full animate-fade-in"
+                    style={{ animationDelay: `${(index + 2) * 100}ms`, animationFillMode: 'both' }}
                     aria-label={`${category.title} (${category.serviceCount})`}
                   >
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#3B5787]/0 to-[#61B6DE]/0 group-hover:from-[#3B5787]/[0.05] group-hover:to-[#61B6DE]/[0.05] transition-colors z-10" />
+                    {/* Top Image Section */}
+                    <div className="relative w-full h-48 overflow-hidden bg-gray-100">
+                      <img
+                        src={categoryImage}
+                        alt={category.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      
+                      {/* Subtly darkened bottom edge for image text legibility if needed, but we keep it clean */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-transparent opacity-60"></div>
 
-                    <div className="relative flex flex-col sm:flex-row">
-                      {/* Service Image */}
-                      <div className="relative w-full sm:w-48 h-32 sm:h-28 overflow-hidden">
-                        <img
-                          src={categoryImage}
-                          alt={category.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        {/* Icon overlay */}
-                        <div className="absolute top-3 left-3 h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md">
-                          <IconComponent className="text-[#3B5787] text-sm" />
+                      {/* Floating Badges */}
+                      <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                        <div className="bg-white/90 backdrop-blur-md rounded-xl p-2.5 shadow-sm text-primary-main group-hover:text-white group-hover:bg-primary-light transition-colors duration-300">
+                          <IconComponent className="text-xl" />
                         </div>
-                        {/* Service count badge */}
-                        <div className="absolute top-3 right-3 bg-[#61B6DE] text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
-                          {category.serviceCount}
+
+                        <div className="bg-white/95 backdrop-blur-md text-primary-main px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                          {category.serviceCount} {category.serviceCount === 1 ? t('services.singleService') : t('services.multipleServices')}
                         </div>
                       </div>
+                    </div>
 
-                      {/* Service Details */}
-                      <div className="flex-1 p-4 sm:p-5">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-[#3B5787] transition-colors">
-                              {category.title}
-                            </h3>
-                            <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                              <FaClock className="shrink-0" />
-                              <span>{category.estimatedTime || 'Available now'}</span>
-                            </div>
-                          </div>
-                        </div>
+                    {/* Content Section */}
+                    <div className="p-6 flex-1 flex flex-col items-start w-full relative bg-white">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-main transition-colors">
+                        {category.title}
+                      </h3>
+                      
+                      <div className="flex items-center gap-2 mb-3 text-gray-500">
+                        <FaClock className="text-primary-light text-sm" />
+                        <span className="text-sm font-medium">{category.estimatedTime || 'Available now'}</span>
+                      </div>
 
-                        {/* Description */}
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                          {category.description || t('guestCategories.professionalServiceDescription')}
-                        </p>
-
-                        {/* Features */}
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4">
-                          {(category.features || [t('guestCategories.professionalService'), t('guestCategories.qualityGuaranteed')])
-                            .slice(0, 3)
-                            .map((feature, idx) => (
-                              <div key={idx} className="flex items-center gap-1 text-xs text-gray-600">
-                                <span className="h-1.5 w-1.5 rounded-full bg-[#61B6DE]"></span>
-                                <span>{feature}</span>
-                              </div>
-                            ))}
-                        </div>
-
-                        {/* Browse button */}
-                        <div className="flex items-center justify-between">
-                          <div className="inline-flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 group-hover:bg-[#3B5787] group-hover:text-white transition-all">
-                            <span>{t('guestCategories.browseServices')}</span>
-                            <FaArrowRight className="text-xs transition-transform group-hover:translate-x-1" />
-                          </div>
-                          <div className="text-sm font-medium text-[#61B6DE]">
-                            {category.serviceCount} {category.serviceCount === 1 ? t('services.singleService') : t('services.multipleServices')}
-                          </div>
+                      <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed mb-4 flex-1">
+                        {category.description || t('guestCategories.professionalServiceDescription')}
+                      </p>
+                      
+                      {/* Action Link */}
+                      <div className="mt-auto flex items-center text-primary-main text-sm font-bold uppercase tracking-wide group-hover:text-primary-light transition-colors w-full justify-between border-t border-gray-50 pt-4">
+                        <span>{t('guestCategories.browseServices')}</span>
+                        <div className="h-8 w-8 rounded-full bg-primary-light/10 flex items-center justify-center group-hover:bg-primary-light group-hover:text-white transition-colors">
+                          <FaArrowRight className="transition-transform group-hover:translate-x-1" />
                         </div>
                       </div>
                     </div>
@@ -413,14 +397,13 @@ const GuestCategorySelection = () => {
         )}
       </main>
 
-      {/* Floating Services Quick Access */}
-      <div className="fixed bottom-20 sm:bottom-6 right-6 z-50">
-        {/* Quick Access Menu */}
+      {/* Floating Services Quick Access Widget */}
+      <div className="fixed bottom-24 right-6 sm:bottom-8 sm:right-8 z-50">
         {showQuickAccess && (
-          <div className="absolute bottom-16 right-0 mb-2">
-            <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 min-w-[320px] animate-fade-in">
-              <h3 className="text-lg font-bold text-gray-900 mb-3 text-center">{t('guest.common.quickAccess')}</h3>
-              <div className="grid grid-cols-2 gap-4">
+          <div className="absolute bottom-20 right-0 mb-4 z-50">
+            <div className="bg-white/95 backdrop-blur-2xl rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.2)] border border-gray-100 p-5 min-w-[340px] animate-fade-in origin-bottom-right">
+              <h3 className="text-lg font-extrabold text-gray-900 mb-4 text-center">{t('guest.common.quickAccess')}</h3>
+              <div className="grid grid-cols-3 gap-3">
                 {categories.map((category) => {
                   const IconComponent = categoryIcons[category.key] || FaShoppingBag;
                   return (
@@ -430,55 +413,54 @@ const GuestCategorySelection = () => {
                         handleCategorySelect(category.key);
                         setShowQuickAccess(false);
                       }}
-                      className="flex flex-col items-center p-3 rounded-xl hover:bg-gray-50 transition-colors group"
+                      className="flex flex-col items-center p-3 rounded-2xl hover:bg-primary-light/10 hover:text-primary-main transition-all group border border-transparent hover:border-primary-light/20 focus:outline-none"
                       title={category.title}
                     >
-                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#3B5787] to-[#61B6DE] flex items-center justify-center mb-2 group-hover:scale-110 transition-transform relative">
-                        <IconComponent className="text-white text-lg" />
-                        {/* Service count badge */}
-                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                      <div className="h-12 w-12 rounded-full bg-gray-50 flex items-center justify-center mb-2 group-hover:bg-white group-hover:shadow-sm transition-all relative group-hover:-translate-y-1">
+                        <IconComponent className="text-gray-400 group-hover:text-primary-light text-lg transition-colors" />
+                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center font-bold border-2 border-white shadow-sm">
                           {category.serviceCount}
                         </div>
                       </div>
-                      <span className="text-sm font-medium text-gray-700 text-center leading-tight break-words w-full">
+                      <span className="text-xs font-semibold text-gray-500 group-hover:text-gray-900 text-center leading-tight truncate w-full">
                         {category.title}
                       </span>
                     </button>
                   );
                 })}
               </div>
-              <div className="mt-3 pt-3 border-t border-gray-100">
+              <div className="mt-5 pt-4 border-t border-gray-100">
                 <button
-                  onClick={() => {
-                    window.scrollTo({ top: document.querySelector('main').offsetTop, behavior: 'smooth' });
-                    setShowQuickAccess(false);
-                  }}
-                  className="w-full text-center text-sm text-[#3B5787] font-medium hover:text-[#61B6DE] transition-colors"
+                  onClick={() => setShowQuickAccess(false)}
+                  className="w-full text-center py-2 text-sm text-gray-500 font-bold hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-colors"
                 >
-                  View All Services
+                  Close Menu
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Floating Button */}
+        {/* Floating Bell Button */}
         <button
           onClick={() => setShowQuickAccess(!showQuickAccess)}
-          className={`group bg-gradient-to-r from-[#3B5787] to-[#61B6DE] text-white p-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300 ${showQuickAccess ? 'rotate-45' : ''}`}
+          className={`group bg-primary-main hover:bg-primary-light p-4 shadow-xl hover:shadow-[0_10px_25px_rgba(103,186,224,0.5)] transform hover:-translate-y-1 transition-all duration-300 ring-4 ring-white/50 z-50 focus:outline-none ${
+            showQuickAccess ? 'rotate-90 rounded-2xl bg-gray-800 hover:bg-gray-900' : 'rounded-[2rem]'
+          }`}
           title="Quick access to services"
         >
-          <FaConciergeBell className={`text-xl transition-transform duration-300 ${showQuickAccess ? 'rotate-180' : 'group-hover:animate-bounce'}`} />
-          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold animate-pulse">
-            {categories.length}
-          </div>
+          <FaConciergeBell className={`text-white text-2xl relative z-10 transition-transform duration-300 ${!showQuickAccess && 'group-hover:animate-bounce'}`} />
+          {!showQuickAccess && (
+            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold ring-2 ring-white shadow-sm">
+              {categories.length}
+            </div>
+          )}
         </button>
       </div>
 
-      {/* Click outside to close quick access */}
       {showQuickAccess && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-40 bg-gray-900/20 backdrop-blur-sm transition-all duration-300"
           onClick={() => setShowQuickAccess(false)}
         />
       )}

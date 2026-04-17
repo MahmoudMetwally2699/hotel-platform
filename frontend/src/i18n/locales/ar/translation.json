@@ -1,4 +1,5 @@
-{  "common": {
+{
+  "common": {
     "welcome": "مرحباً",
     "login": "تسجيل الدخول",
     "logout": "تسجيل الخروج",
@@ -52,7 +53,8 @@
     "clearFilters": "مسح التصفية",
     "viewResults": "عرض النتائج",
     "filters": "التصفية",
-    "moreOptions": "خيارات أكثر",    "pending": "معلق",
+    "moreOptions": "خيارات أكثر",
+    "pending": "معلق",
     "confirmed": "مؤكد",
     "completed": "مكتمل",
     "cancelled": "ملغي",
@@ -510,7 +512,10 @@
         "title": "اتجاه متوسط إنفاق العملاء",
         "subtitle": "أنماط الإنفاق وعدد العملاء بمرور الوقت",
         "noData": "لا توجد بيانات اتجاه",
-        "legend": { "avgSpending": "متوسط الإنفاق", "customers": "العملاء" }
+        "legend": {
+          "avgSpending": "متوسط الإنفاق",
+          "customers": "العملاء"
+        }
       },
       "serviceRequestVolume": {
         "title": "حجم طلبات الخدمات",
@@ -627,8 +632,15 @@
         "noData": "لا توجد بيانات وقت إكمال",
         "minutes": "دقائق",
         "minutesShort": "د",
-        "legend": { "averageTime": "متوسط الوقت" },
-        "tooltip": { "average": "متوسط", "min": "أدنى", "max": "أقصى", "bookings": "الحجوزات" }
+        "legend": {
+          "averageTime": "متوسط الوقت"
+        },
+        "tooltip": {
+          "average": "متوسط",
+          "min": "أدنى",
+          "max": "أقصى",
+          "bookings": "الحجوزات"
+        }
       },
       "summary": {
         "avgResponseTime": "متوسط وقت الاستجابة",
@@ -820,7 +832,6 @@
         "totalLabel": "الإجمالي ({{count}} خدمات)"
       }
     }
-
   },
   "auth": {
     "signIn": "تسجيل الدخول",
@@ -853,9 +864,11 @@
     "enterYourPassword": "أدخل كلمة المرور",
     "rememberMe": "تذكرني",
     "forgotYourPassword": "نسيت كلمة المرور؟",
-    "signIn": "تسجيل الدخول",    "signingIn": "جاري تسجيل الدخول",
+    "signIn": "تسجيل الدخول",
+    "signingIn": "جاري تسجيل الدخول",
     "dontHaveAnAccount": "ليس لديك حساب؟",
-    "signUp": "سجل الآن"
+    "signUp": "سجل الآن",
+    "forgotPassword": "هل نسيت كلمة المرور؟"
   },
   "register": {
     "createYourAccount": "إنشاء حسابك",
@@ -905,7 +918,8 @@
       "confirmPasswordRequired": "تأكيد كلمة المرور مطلوب",
       "passwordsMatch": "كلمات المرور يجب أن تتطابق",
       "acceptTermsRequired": "يجب أن توافق على الشروط والأحكام"
-    }
+    },
+    "roomNumberPlaceholder": "مثال: 101، A205، جناح 1"
   },
   "hotel": {
     "hotelManagement": "إدارة الفنادق",
@@ -1693,7 +1707,17 @@
       "filterByFloor": "تصفية حسب الطابق",
       "allFloors": "جميع الطوابق",
       "floor": "الطابق"
-    }
+    },
+    "guestInformation": "معلومات الإقامة",
+    "guestDetails": "تفاصيل حجزك الحالي",
+    "reservationType": "نوع الحجز",
+    "roomNumber": "رقم الغرفة",
+    "checkInDate": "تاريخ الوصول",
+    "checkOutDate": "تاريخ المغادرة",
+    "ro": "غرفة فقط (RO)",
+    "bb": "مبيت وإفطار (BB)",
+    "fb": "إقامة كاملة (FB)",
+    "allInclusive": "إقامة شاملة (All)"
   },
   "loyaltyCard": {
     "loyaltyTier": "مستوى الولاء",
@@ -1728,7 +1752,8 @@
     "serviceList": "قائمة الخدمات",
     "bookService": "حجز الخدمة",
     "serviceAvailable": "متاحة",
-    "serviceUnavailable": "غير متاحة",    "laundry": "الغسيل",
+    "serviceUnavailable": "غير متاحة",
+    "laundry": "الغسيل",
     "transportation": "النقل والمواصلات",
     "tourism": "السياحة والسفر",
     "carRental": "تأجير السيارات",
@@ -1741,7 +1766,8 @@
     "entertainment": "الترفيه",
     "shopping": "التسوق",
     "fitness": "اللياقة البدنية",
-    "housekeeping": "خدمات الغرف والصيانه",    "other": "خدمات أخرى",
+    "housekeeping": "خدمات الغرف والصيانه",
+    "other": "خدمات أخرى",
     "allServices": "جميع الخدمات",
     "servicesAvailable": "{{count}} خدمة متاحة",
     "singleService": "خدمة",
@@ -1772,7 +1798,8 @@
     "paid": "مدفوع",
     "unpaid": "غير مدفوع",
     "refunded": "مسترد"
-  },  "dashboard": {
+  },
+  "dashboard": {
     "title": "لوحة التحكم",
     "welcome": "مرحباً بعودتك، {{providerName}}!",
     "overview": "نظرة عامة",
@@ -1803,12 +1830,14 @@
     "revenueTrend": "اتجاه الإيرادات",
     "serviceDistribution": "توزيع الخدمات",
     "avgResponseTime": "متوسط وقت الاستجابة",
-    "fromLastPeriod": "من الفترة السابقة",    "timeRange": {
+    "fromLastPeriod": "من الفترة السابقة",
+    "timeRange": {
       "today": "اليوم",
       "thisWeek": "هذا الأسبوع",
       "thisMonth": "هذا الشهر",
       "thisYear": "هذا العام"
-    },    "minutes": "دقائق",
+    },
+    "minutes": "دقائق",
     "completionRate": "معدل الإنجاز",
     "avgRating": "متوسط التقييم",
     "recentOrders": "الطلبات الأخيرة",
@@ -2138,7 +2167,8 @@
       "editProfile": "تعديل الملف الشخصي",
       "updateSuccess": "تم تحديث الملف الشخصي بنجاح",
       "updateFailed": "فشل في تحديث الملف الشخصي"
-    },    "laundryManagement": {
+    },
+    "laundryManagement": {
       "title": "إدارة خدمات الغسيل",
       "description": "إدارة خدمات الغسيل الخاصة بك وإضافة عناصر جديدة بأسعار فردية",
       "tabs": {
@@ -2825,7 +2855,8 @@
       "successMessagePlural": "🏨 ممتاز! لقد قمت بتفعيل {{count}} خدمة فندقية داخلية! يمكن للضيوف الآن حجز هذه الخدمات مباشرة داخل مرافق الفندق.",
       "manageServiceDetails": "إدارة تفاصيل الخدمة"
     }
-  },  "categorySelection": {
+  },
+  "categorySelection": {
     "title": "فئات الخدمات",
     "description": "اختر فئات الخدمات التي تريد تقديمها. يمكنك تفعيل فئات متعددة وإدارتها بشكل مستقل.",
     "activeCategories": "الفئات النشطة",
@@ -2840,7 +2871,8 @@
     "successMessage": "رائع! لقد فعلت",
     "categorySingle": "فئة",
     "categoryPlural": "فئات",
-    "successDescription": "يمكنك الآن إنشاء خدمات لكل فئة نشطة.",    "manageServices": "إدارة الخدمات",
+    "successDescription": "يمكنك الآن إنشاء خدمات لكل فئة نشطة.",
+    "manageServices": "إدارة الخدمات",
     "sidebar": {
       "laundryManagement": "إدارة خدمات الغسيل",
       "transportationManagement": "إدارة خدمات المواصلات",
@@ -2852,7 +2884,8 @@
     "activatedLocally": "تم التفعيل محلياً (وضع غير متصل)",
     "deactivatedLocally": "تم إلغاء التفعيل محلياً (وضع غير متصل)",
     "failedToActivate": "فشل في تفعيل الفئة",
-    "failedToDeactivate": "فشل في إلغاء تفعيل الفئة",    "sampleItems": {
+    "failedToDeactivate": "فشل في إلغاء تفعيل الفئة",
+    "sampleItems": {
       "shirts": "القمصان",
       "pants": "السراويل",
       "dresses": "الفساتين",
@@ -3041,7 +3074,8 @@
     "paymentPending": "الدفع معلق",
     "refundPayment": "استرداد الدفع",
     "paymentHistory": "تاريخ المدفوعات"
-  },  "notifications": {
+  },
+  "notifications": {
     "newBooking": "حجز جديد",
     "bookingConfirmed": "تم تأكيد الحجز",
     "bookingCancelled": "تم إلغاء الحجز",
@@ -3074,27 +3108,17 @@
     "positive": "{{field}} يجب أن يكون رقماً موجباً"
   },
   "homepage": {
-    "title": "منصة خدمات الفنادق",
-    "heroDescription": "احصل على جميع الخدمات المتاحة في فندقك بسهولة.",
-    "viewHotelServices": "عرض خدمات فندقي",
-    "browseServices": "تصفح واحجز الخدمات المتاحة في فندقك",
-    "signInToView": "سجل دخولك لعرض الخدمات المتاحة في فندقك",
-    "availableServices": "فئات الخدمات المتاحة",
-    "servicesDescription": "يقدم فندقك خدمات متنوعة لجعل إقامتك مريحة",
-    "laundryDescription": "خدمات الغسيل والتنظيف الجاف المهنية",
-    "transportationDescription": "تأجير السيارات وخدمات التاكسي",
-    "tourismDescription": "الجولات والتجارب المحلية",
-    "platformName": "منصة خدمات الفنادق",
-    "allRightsReserved": "جميع الحقوق محفوظة",
     "login": "دخول",
     "mainTitle": "منصة خدمات الغرف لفندقك",
     "subtitle": "حلول رقمية متطورة لخدمات الضيوف",
     "accessService": "دخول إلى الخدمة",
-    "phoneTitle": "منصة خدمات الفنادق",
-    "phoneSubtitle": "حلول رقمية متطورة لتجربة الضيوف",
-    "serviceLogin": "دخول إلى الخدمة",
-    "createAccount": "إنشاء حساب جديد",
-    "footer": "© 2024 Qickroom. جميع الحقوق محفوظة"
+    "footer": "© 2024 كيك روم. جميع الحقوق محفوظة",
+    "brand": "كيك روم",
+    "welcomeBadge": "مرحباً بك في كيك روم",
+    "platformName": "كيك روم",
+    "laundryDescription": "خدمات غسيل وتنظيف جاف وكي احترافية تصل مباشرة إلى غرفتك.",
+    "transportationDescription": "حجوزات سيارات موثوقة، تنقلات المطار، وخدمات السائق الخاص.",
+    "tourismDescription": "اكتشف المعالم السياحية المحلية مع جولات مخصصة وتجارب مميزة."
   },
   "landingPage": {
     "nav": {
@@ -3229,7 +3253,8 @@
       "privacySecurity": "الخصوصية والأمان",
       "copyright": "© 2025 QuickRoom. جميع الحقوق محفوظة. مصمم لتجارب ضيوف استثنائية."
     }
-  },  "categories": {
+  },
+  "categories": {
     "availableAt": "متاحة في",
     "totalServices": "إجمالي الخدمات",
     "allPrices": "جميع الأسعار",
@@ -3279,7 +3304,8 @@
       "restaurant": "مطعم",
       "parking": "موقف سيارات"
     }
-  },  "myServices": {
+  },
+  "myServices": {
     "noHotelSelected": "لم يتم اختيار فندق",
     "completeProfile": "يرجى إكمال ملفك الشخصي باختيار فندق لعرض الخدمات المتاحة.",
     "updateProfile": "تحديث الملف الشخصي"
@@ -3332,7 +3358,8 @@
     "localShopping": "التسوق المحلي",
     "giftSelection": "اختيار الهدايا",
     "sameDayDelivery": "التوصيل في نفس اليوم",
-    "shoppingTime": "1-4 ساعات",    "fitnessDescription": "التدريب الشخصي والأنشطة الرياضية",
+    "shoppingTime": "1-4 ساعات",
+    "fitnessDescription": "التدريب الشخصي والأنشطة الرياضية",
     "certifiedTrainers": "مدربين معتمدين",
     "equipmentProvided": "المعدات متوفرة",
     "flexibleSchedules": "جداول مرنة",
@@ -3385,7 +3412,8 @@
     "delivery": "التسليم",
     "notSpecified": "غير محدد",
     "sameAsPickup": "نفس موقع الاستلام",
-    "pricingSummary": "ملخص الأسعار",    "items": "العناصر",
+    "pricingSummary": "ملخص الأسعار",
+    "items": "العناصر",
     "total": "الإجمالي",
     "nextStep": "التالي",
     "scheduleStep": "جدولة النقل",
@@ -3395,24 +3423,26 @@
     "booking": "جاري الحجز...",
     "selectItemsFirst": "اختر العناصر لرؤية تفاصيل الأسعار",
     "bookingSuccess": "تم إنشاء حجز الغسيل بنجاح!",
-    "bookingError": "فشل في إنشاء الحجز",    "unavailable": "غير متاح",
+    "bookingError": "فشل في إنشاء الحجز",
+    "unavailable": "غير متاح",
     "noServiceTypes": "لا توجد أنواع خدمة",
     "priceNotSet": "السعر غير محدد",
     "selectServiceTypeInstruction": "اختر نوع الخدمة لكل عنصر",
     "applyToAll": "تطبيق \"{{typeName}}\" على الكل",
     "serviceTypeNames": {
-  "wash_only": "غسيل فقط",
-  "iron_only": "كي فقط",
-  "wash_iron": "غسيل + كي",
-  "dry_cleaning": "التنظيف الجاف"
+      "wash_only": "غسيل فقط",
+      "iron_only": "كي فقط",
+      "wash_iron": "غسيل + كي",
+      "dry_cleaning": "التنظيف الجاف"
     },
     "serviceTypeDescriptions": {
-  "wash_only": "غسيل بالآلة بمنظف مناسب",
-  "iron_only": "كي وضغط احترافي",
-  "wash_iron": "خدمة غسيل وكي متكاملة",
-  "dry_cleaning": "خدمة تنظيف جاف احترافية",
-  "default": "خدمة غسيل احترافية"
-    },    "serviceTypeDurations": {
+      "wash_only": "غسيل بالآلة بمنظف مناسب",
+      "iron_only": "كي وضغط احترافي",
+      "wash_iron": "خدمة غسيل وكي متكاملة",
+      "dry_cleaning": "خدمة تنظيف جاف احترافية",
+      "default": "خدمة غسيل احترافية"
+    },
+    "serviceTypeDurations": {
       "wash_only": "24 ساعة",
       "iron_only": "12 ساعة",
       "wash_iron": "24 ساعة",
@@ -3425,10 +3455,12 @@
       "noon": "الظهر",
       "afternoon": "بعد الظهر",
       "evening": "المساء"
-    },    "placeholders": {
+    },
+    "placeholders": {
       "roomNumber": "رقم الغرفة أو الموقع",
       "sameAsPickup": "نفس الاستلام أو مختلف"
-    },    "itemCategories": {
+    },
+    "itemCategories": {
       "clothing": "الملابس",
       "formal": "الملابس الرسمية",
       "sportswear": "الملابس الرياضية",
@@ -3442,7 +3474,8 @@
       "sleepwear": "ملابس النوم",
       "linens": "الأغطية والمفروشات",
       "home": "أدوات منزلية"
-    },"itemNames": {
+    },
+    "itemNames": {
       "t-shirt": "تي شيرت",
       "t_shirt": "تي شيرت",
       "tshirt": "تي شيرت",
@@ -4334,6 +4367,148 @@
       "amenities": "طلب مستلزمات",
       "service": "خدمة"
     }
+  },
+  "guestOnboarding": {
+    "steps": {
+      "welcome": "مرحباً",
+      "personalInfo": "البيانات الشخصية",
+      "tripPurpose": "غرض الرحلة",
+      "roomComfort": "راحة الغرفة",
+      "foodAndBeverage": "الطعام والشراب",
+      "extraDetails": "تفاصيل إضافية"
+    },
+    "purposes": {
+      "business": "عمل",
+      "leisure": "ترفيه",
+      "familyVacation": "عطلة عائلية",
+      "honeymoon": "شهر عسل",
+      "event": "فعالية/مؤتمر",
+      "transit": "ترانزيت"
+    },
+    "pillows": {
+      "soft": "ناعم",
+      "medium": "متوسط",
+      "firm": "صلب"
+    },
+    "views": {
+      "any": "أي إطلالة",
+      "city": "المدينة",
+      "pool": "المسبح",
+      "nature": "الطبيعة"
+    },
+    "floors": {
+      "lower": "طابق سفلي",
+      "any": "أي طابق",
+      "higher": "طابق علوي"
+    },
+    "messages": {
+      "saveSuccess": "تم حفظ التفضيلات بنجاح!",
+      "saveError": "فشل حفظ التفضيلات. يرجى المحاولة مرة أخرى.",
+      "validationError": "يرجى تقديم كلا من رقم إثبات الشخصية وتاريخ الميلاد للمتابعة."
+    },
+    "welcomeStep": {
+      "title": "مرحباً بك، {{name}}!",
+      "subtitle": "يسعدنا جداً استضافتك. دعنا نخصص إقامتك ببضعة أسئلة تأكد أن كل شيء مثالي."
+    },
+    "personalStep": {
+      "title": "البيانات الشخصية",
+      "idType": "نوع الهوية",
+      "nationalId": "الهوية الوطنية",
+      "passport": "جواز السفر",
+      "nationalIdNumber": "رقم الهوية الوطنية",
+      "passportNumber": "رقم جواز السفر",
+      "enterNationalId": "أدخل رقم الهوية",
+      "enterPassport": "أدخل رقم جواز السفر",
+      "dateOfBirth": "تاريخ الميلاد"
+    },
+    "purposeStep": {
+      "title": "ما هو غرض زيارتك؟"
+    },
+    "roomStep": {
+      "title": "راحة غرفتك",
+      "temperature": "درجة الحرارة",
+      "cool": "16 مئوية (بارد)",
+      "ideal": "22 مئوية (مثالي)",
+      "warm": "30 مئوية (دافئ)",
+      "pillowType": "نوع الوسادة",
+      "floorPreference": "تفضيل الطابق",
+      "smokingRoom": "غرفة للمدخنين",
+      "smokingDisclaimer": "يخضع لتوفر الفندق وسياساته."
+    },
+    "foodStep": {
+      "title": "الطعام والشراب",
+      "morningDrink": {
+        "title": "مشروب الصباح المفضل",
+        "placeholder": "اختر تفضيلاً...",
+        "blackCoffee": "قهوة سوداء",
+        "coffeeMilk": "قهوة بالحليب",
+        "espresso": "إسبريسو",
+        "latte": "لاتيه / كابتشينو",
+        "englishTea": "شاي الإفطار الإنجليزي",
+        "greenTea": "شاي أخضر",
+        "herbalTea": "شاي أعشاب",
+        "orangeJuice": "عصير برتقال",
+        "hotChocolate": "شوكولاتة ساخنة",
+        "water": "ماء",
+        "noPreference": "لا يوجد تفضيل"
+      },
+      "breakfastStyle": {
+        "title": "التفضيلات الغذائية / نوع الإفطار",
+        "placeholder": "اختر تفضيلاً...",
+        "continental": "كونتيننتال",
+        "american": "فطور أمريكي / إنجليزي",
+        "vegetarian": "نباتي",
+        "vegan": "نباتي صرف (فيغان)",
+        "glutenFree": "خالي من الغلوتين",
+        "halal": "حلال",
+        "kosher": "كوشير",
+        "healthy": "صحي / قليل السعرات",
+        "noPreference": "لا يوجد تفضيل"
+      }
+    },
+    "extraStep": {
+      "title": "تخصيص إضافي",
+      "subtitle": "هل هناك أي شيء آخر يمكننا القيام به لجعل إقامتك مثالية؟",
+      "placeholder": "احتفال ذكرى سنوية، مناشف إضافية، طلب تسجيل دخول مبكر..."
+    },
+    "actions": {
+      "back": "رجوع",
+      "nextStep": "الخطوة التالية",
+      "completeProfile": "إكمال الملف الشخصي",
+      "saving": "جاري الحفظ..."
+    }
+  },
+  "qrAuth": {
+    "qrRequiredLogin": "يتطلب مسح رمز QR لتسجيل الدخول",
+    "scanToLogin": "امسح رمز QR لتسجيل الدخول",
+    "scanToEnableLogin": "امسح رمز QR لتفعيل تسجيل الدخول",
+    "validating": "جاري التحقق...",
+    "resetScanner": "إعادة تهيئة الماسح",
+    "resetScannerHelp": "إذا لم يعمل الماسح، جرب إعادة تهيئته أولاً",
+    "qrLoginOnlyNotice": "مسح رمز QR مطلوب لتسجيل الدخول فقط. التسجيل متاح دائماً.",
+    "selectedViaQR": "تم التحديد عبر رمز QR",
+    "changeHotel": "تغيير الفندق",
+    "change": "تغيير",
+    "scanQR": "امسح رمز QR",
+    "scanAtReception": "امسح رمز QR في استقبال الفندق للتسجيل"
+  },
+  "qrScanner": {
+    "title": "امسح رمز QR",
+    "instructions": "امسح رمز QR الموجود في استقبال الفندق لاختيار فندقك تلقائياً وبدء التسجيل.",
+    "tryEnableCamera": "حاول تفعيل الكاميرا مرة أخرى",
+    "cameraNeeded": "يلزم الوصول إلى الكاميرا لمسح رموز QR",
+    "enableCameraBtn": "تفعيل الكاميرا",
+    "allowPrompt": "تأكد من السماح بالوصول إلى الكاميرا عند الطلب",
+    "cameraRequired": "مطلوب السماح بالوصول للكاميرا لمسح رموز QR",
+    "enableStepsTitle": "لتفعيل الوصول إلى الكاميرا:",
+    "step1": "اضغط على أيقونة الكاميرا في شريط عنوان المتصفح",
+    "step2": "اختر \"السماح دائماً\" للوصول إلى الكاميرا",
+    "step3": "قم بتحديث الصفحة وحاول مرة أخرى",
+    "tryAgain": "حاول مرة أخرى",
+    "cameraActive": "الكاميرا نشطة - وجهها نحو رمز QR",
+    "highlightInfo": "سيتم تمييز رمز QR عند اكتشافه",
+    "startCamera": "تشغيل الكاميرا",
+    "orUploadImage": "أو رفع صورة تحتوي على رمز QR:",
+    "clickToUpload": "اضغط لرفع صورة رمز QR"
   }
-
 }

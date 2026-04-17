@@ -2975,7 +2975,6 @@ router.get('/housekeeping-services', catchAsync(async (req, res) => {
  */
 router.post('/housekeeping-services', catchAsync(async (req, res) => {
   const providerId = req.user.serviceProviderId;
-  const hotelId = req.user.hotelId;
   const { name, description, category, estimatedDuration, availability, requirements, instructions, basePrice } = req.body;
 
   const provider = await ServiceProvider.findById(providerId);
@@ -2985,6 +2984,8 @@ router.post('/housekeeping-services', catchAsync(async (req, res) => {
       message: 'Service provider not found'
     });
   }
+
+  const hotelId = provider.hotelId;
 
   // Create proper Service document for housekeeping services
   const serviceData = {

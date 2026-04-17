@@ -313,7 +313,7 @@ const LoginPage = () => {
                       <HiQrcode className="h-5 w-5 text-green-600" />
                       <div>
                         <p className="text-sm font-medium text-green-800">Login to {qrHotelInfo.hotelName}</p>
-                        <p className="text-xs text-green-600">Hotel selected via QR code</p>
+                        <p className="text-xs text-green-600">{t('qrAuth.selectedViaQR')}</p>
                       </div>
                     </div>
                     <button
@@ -321,7 +321,7 @@ const LoginPage = () => {
                       onClick={clearQRSelection}
                       className="text-xs text-green-600 hover:text-green-800 underline"
                     >
-                      Change Hotel
+                      {t('qrAuth.changeHotel')}
                     </button>
                   </div>
                 </div>
@@ -329,7 +329,7 @@ const LoginPage = () => {
                 /* QR Scanner Required Notice */
                 <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
                   <HiQrcode className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <h3 className="text-sm font-medium text-blue-800 mb-2">QR Code Required for Login</h3>
+                  <h3 className="text-sm font-medium text-blue-800 mb-2">{t('qrAuth.qrRequiredLogin')}</h3>
                   <button
                     type="button"
                     onClick={() => setShowQRScanner(true)}
@@ -337,7 +337,7 @@ const LoginPage = () => {
                     disabled={validatingQR}
                   >
                     <HiQrcode className="h-5 w-5" />
-                    <span>{validatingQR ? 'Validating...' : 'Scan QR Code to Login'}</span>
+                    <span>{validatingQR ? t('qrAuth.validating') : t('qrAuth.scanToLogin')}</span>
                   </button>
 
                   {/* Clear Session Button for users with login cookies */}
@@ -350,11 +350,11 @@ const LoginPage = () => {
                     className="ml-2 inline-flex items-center space-x-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                     title="Clear any existing login data that might interfere with QR scanning"
                   >
-                    <span className="text-sm">Clear Session</span>
+                    <span className="text-sm">{t('qrAuth.resetScanner')}</span>
                   </button>
 
                   <p className="mt-2 text-xs text-orange-600">
-                    If QR scanning doesn't work, try clicking "Clear Session" first
+                    {t('qrAuth.resetScannerHelp')}
                   </p>
                 </div>
               )}
@@ -416,11 +416,11 @@ const LoginPage = () => {
                       onClick={() => setShowForgotPassword(true)}
                       className="font-medium text-blue-600 hover:text-blue-500"
                     >
-                      Forgot your password?
+                      {t('login.forgotPassword', 'Forgot your password?')}
                     </button>
                   ) : (
                     <span className="font-medium text-gray-400 cursor-not-allowed">
-                      Forgot your password?
+                      {t('login.forgotPassword', 'Forgot your password?')}
                     </span>
                   )}
                 </div>
@@ -437,7 +437,7 @@ const LoginPage = () => {
                 {!qrHotelInfo ? (
                   <div className="flex items-center justify-center">
                     <HiQrcode className="h-5 w-5 mr-2" />
-                    <span>Scan QR Code to Enable Login</span>
+                    <span>{t('qrAuth.scanToEnableLogin')}</span>
                   </div>
                 ) : (isSubmitting || isLoading) ? (
                   <div className="flex items-center justify-center">
@@ -464,7 +464,7 @@ const LoginPage = () => {
           </p>
           {!qrHotelInfo && (
             <p className="text-xs text-gray-500 mt-2">
-              QR scan required for login only. Registration is always available.
+              {t('qrAuth.qrLoginOnlyNotice')}
             </p>
           )}
         </div>

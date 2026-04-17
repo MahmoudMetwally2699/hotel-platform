@@ -442,7 +442,7 @@ const RegisterPage = () => {
                         <HiQrcode className="h-5 w-5 text-green-600" />
                         <div>
                           <p className="text-sm font-medium text-green-800">{qrHotelInfo.hotelName}</p>
-                          <p className="text-xs text-green-600">Selected via QR code</p>
+                          <p className="text-xs text-green-600">{t('qrAuth.selectedViaQR')}</p>
                         </div>
                       </div>
                       <button
@@ -450,7 +450,7 @@ const RegisterPage = () => {
                         onClick={clearQRSelection}
                         className="text-xs text-green-600 hover:text-green-800 underline"
                       >
-                        Change
+                        {t('qrAuth.change')}
                       </button>
                     </div>
                   </div>
@@ -464,7 +464,7 @@ const RegisterPage = () => {
                       disabled={validatingQR}
                     >
                       <HiQrcode className="h-5 w-5" />
-                      <span>{validatingQR ? 'Validating...' : 'Scan QR Code'}</span>
+                      <span>{validatingQR ? t('qrAuth.validating') : t('qrAuth.scanQR')}</span>
                     </button>
 
                     {/* Clear Session Button for users with login cookies */}
@@ -477,14 +477,14 @@ const RegisterPage = () => {
                       className="ml-2 inline-flex items-center space-x-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                       title="Clear any existing login data that might interfere with QR scanning"
                     >
-                      <span className="text-sm">Clear Session</span>
+                      <span className="text-sm">{t('qrAuth.resetScanner')}</span>
                     </button>
 
                     <p className="mt-1 text-xs text-gray-500">
-                      Scan the QR code at hotel reception to proceed with registration
+                      {t('qrAuth.scanAtReception')}
                     </p>
                     <p className="mt-1 text-xs text-orange-600">
-                      If QR scanning doesn't work, try clicking "Clear Session" first
+                      {t('qrAuth.resetScannerHelp')}
                     </p>
                   </div>
                 )}
@@ -514,7 +514,7 @@ const RegisterPage = () => {
               {/* Room Number Field */}
               <div>
                 <label htmlFor="roomNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                  Room Number <span className="text-red-500">*</span>
+                  {t('register.roomNumber')} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -528,7 +528,7 @@ const RegisterPage = () => {
                     type="text"
                     name="roomNumber"
                     className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., 101, A205, Suite1"
+                    placeholder={t('register.roomNumberPlaceholder')}
                   />
                 </div>
                 <ErrorMessage name="roomNumber" component="div" className="mt-1 text-sm text-red-600" />
@@ -537,7 +537,7 @@ const RegisterPage = () => {
               {/* Check-in Date Field */}
               <div>
                 <label htmlFor="checkInDate" className="block text-sm font-medium text-gray-700 mb-1">
-                  Check-in Date <span className="text-red-500">*</span>
+                  {t('register.checkInDate')} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -558,7 +558,7 @@ const RegisterPage = () => {
               {/* Check-out Date Field */}
               <div>
                 <label htmlFor="checkOutDate" className="block text-sm font-medium text-gray-700 mb-1">
-                  Check-out Date <span className="text-red-500">*</span>
+                  {t('register.checkOutDate')} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
