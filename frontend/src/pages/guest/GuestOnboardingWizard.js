@@ -32,6 +32,8 @@ const GuestOnboardingWizard = () => {
     idType: user?.idType || 'national_id',
     idNumber: user?.idNumber || '',
     dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '',
+    nationality: user?.nationality || '',
+    gender: user?.gender === 'prefer-not-to-say' ? '' : user?.gender || '',
     preferences: {
       tripPurpose: user?.preferences?.tripPurpose || 'Leisure',
       roomPreferences: {
@@ -73,6 +75,20 @@ const GuestOnboardingWizard = () => {
   const temperatures = ['Cool (18-20°C)', 'Standard (21-22°C)', 'Warm (23-25°C)'];
   const floorPreferences = [t('guestOnboarding.floors.lower'), t('guestOnboarding.floors.any'), t('guestOnboarding.floors.higher')];
   const views = [t('guestOnboarding.views.any'), t('guestOnboarding.views.city'), t('guestOnboarding.views.pool'), t('guestOnboarding.views.nature')];
+  const nationalities = [
+    "Afghan", "Albanian", "Algerian", "American", "Andorran", "Angolan", "Antiguans", "Argentinean", "Armenian", "Australian", "Austrian", "Azerbaijani",
+    "Bahamian", "Bahraini", "Bangladeshi", "Barbadian", "Barbudans", "Batswana", "Belarusian", "Belgian", "Belizean", "Beninese", "Bhutanese", "Bolivian", "Bosnian", "Brazilian", "British", "Bruneian", "Bulgarian", "Burkinabe", "Burmese", "Burundian",
+    "Cambodian", "Cameroonian", "Canadian", "Cape Verdean", "Central African", "Chadian", "Chilean", "Chinese", "Colombian", "Comoran", "Congolese", "Costa Rican", "Croatian", "Cuban", "Cypriot", "Czech",
+    "Danish", "Djibouti", "Dominican", "Dutch", "East Timorese", "Ecuadorean", "Egyptian", "Emirian", "Equatorial Guinean", "Eritrean", "Estonian", "Ethiopian",
+    "Fijian", "Filipino", "Finnish", "French", "Gabonese", "Gambian", "Georgian", "German", "Ghanaian", "Greek", "Grenadian", "Guatemalan", "Guinea-Bissauan", "Guinean", "Guyanese",
+    "Haitian", "Herzegovinian", "Honduran", "Hungarian", "I-Kiribati", "Icelander", "Indian", "Indonesian", "Iranian", "Iraqi", "Irish", "Israeli", "Italian", "Ivorian",
+    "Jamaican", "Japanese", "Jordanian", "Kazakhstani", "Kenyan", "Kittian and Nevisian", "Kuwaiti", "Kyrgyz", "Laotian", "Latvian", "Lebanese", "Liberian", "Libyan", "Liechtensteiner", "Lithuanian", "Luxembourger",
+    "Macedonian", "Malagasy", "Malawian", "Malaysian", "Maldivan", "Malian", "Maltese", "Marshallese", "Mauritanian", "Mauritian", "Mexican", "Micronesian", "Moldovan", "Monacan", "Mongolian", "Moroccan", "Mosotho", "Motswana", "Mozambican",
+    "Namibian", "Nauruan", "Nepalese", "New Zealander", "Ni-Vanuatu", "Nicaraguan", "Nigerien", "North Korean", "Northern Irish", "Norwegian", "Omani", "Pakistani", "Palauan", "Panamanian", "Papua New Guinean", "Paraguayan", "Peruvian", "Polish", "Portuguese",
+    "Qatari", "Romanian", "Russian", "Rwandan", "Saint Lucian", "Salvadoran", "Samoan", "San Marinese", "Sao Tomean", "Saudi", "Scottish", "Senegalese", "Serbian", "Seychellois", "Sierra Leonean", "Singaporean", "Slovakian", "Slovenian", "Solomon Islander", "Somali", "South African", "South Korean", "Spanish", "Sri Lankan", "Sudanese", "Surinamer", "Swazi", "Swedish", "Swiss", "Syrian",
+    "Taiwanese", "Tajik", "Tanzanian", "Thai", "Togolese", "Tongan", "Trinidadian or Tobagonian", "Tunisian", "Turkish", "Tuvaluan", "Ugandan", "Ukrainian", "Uruguayan", "Uzbekistani",
+    "Venezuelan", "Vietnamese", "Welsh", "Yemenite", "Zambian", "Zimbabwean", "Other"
+  ];
 
   // Handle Updates
   const updateNestedState = (category, field, value) => {
@@ -91,7 +107,7 @@ const GuestOnboardingWizard = () => {
   const handleNext = async () => {
     // Validation for Personal Info step
     if (currentStep === 1) {
-      if (!formData.idNumber?.trim() || !formData.dateOfBirth) {
+      if (!formData.idNumber?.trim() || !formData.dateOfBirth || !formData.nationality || !formData.gender) {
         toast.error(t('guestOnboarding.messages.validationError'));
         return;
       }
@@ -197,6 +213,34 @@ const GuestOnboardingWizard = () => {
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
+            {t('guestOnboarding.personalStep.gender', 'Gender')} <span className="text-red-500">*</span>
+          </label>
+          <div className="flex bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setFormData(p => ({ ...p, gender: 'male' }))}
+              className={`flex-1 py-2 px-2 text-sm font-medium rounded-md transition-all ${
+                formData.gender === 'male'
+                  ? 'bg-white shadow text-primary-light'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {t('guestOnboarding.personalStep.male', 'Male')}
+            </button>
+            <button
+              onClick={() => setFormData(p => ({ ...p, gender: 'female' }))}
+              className={`flex-1 py-2 px-2 text-sm font-medium rounded-md transition-all ${
+                formData.gender === 'female'
+                  ? 'bg-white shadow text-primary-light'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {t('guestOnboarding.personalStep.female', 'Female')}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             {t('guestOnboarding.personalStep.dateOfBirth')} <span className="text-red-500">*</span>
           </label>
           <input
@@ -206,6 +250,23 @@ const GuestOnboardingWizard = () => {
             className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-light focus:border-primary-light transition-all"
             required
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {t('guestOnboarding.personalStep.nationality', 'Nationality')} <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={formData.nationality}
+            onChange={(e) => setFormData(p => ({ ...p, nationality: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-light focus:border-primary-light transition-all bg-white"
+            required
+          >
+            <option value="">{t('guestOnboarding.personalStep.selectNationality', 'Select Nationality')}</option>
+            {nationalities.map(nat => (
+              <option key={nat} value={nat}>{nat}</option>
+            ))}
+          </select>
         </div>
       </div>
     </div>
@@ -356,6 +417,7 @@ const GuestOnboardingWizard = () => {
             className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-light focus:border-primary-light transition-all bg-white"
           >
             <option value="">{t('guestOnboarding.foodStep.breakfastStyle.placeholder')}</option>
+            <option value="Oriental">فطار شرقي</option>
             <option value="Continental">{t('guestOnboarding.foodStep.breakfastStyle.continental')}</option>
             <option value="Full English / American">{t('guestOnboarding.foodStep.breakfastStyle.american')}</option>
             <option value="Vegetarian">{t('guestOnboarding.foodStep.breakfastStyle.vegetarian')}</option>

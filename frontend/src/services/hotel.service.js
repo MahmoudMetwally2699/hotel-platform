@@ -526,6 +526,49 @@ class HotelService {
   }
 
   /**
+   * Generate Login QR code for hotel guest login
+   * @returns {Promise} - Response from API
+   */
+  async generateLoginQRCode() {
+    try {
+      const response = await apiClient.get('/hotel/qr/login/generate');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Regenerate Login QR code with new token
+   * @returns {Promise} - Response from API
+   */
+  async regenerateLoginQRCode() {
+    try {
+      const response = await apiClient.post('/hotel/qr/login/regenerate');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Download Login QR code as PNG file
+   * @param {Object} options - Download options (size, etc.)
+   * @returns {Promise} - Response from API
+   */
+  async downloadLoginQRCode(options = {}) {
+    try {
+      const response = await apiClient.get('/hotel/qr/login/download', {
+        params: options,
+        responseType: 'blob'
+      });
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Get hotel guests with pagination and filtering
    * @param {Object} params - Query parameters (page, limit, search, status)
    * @returns {Promise} - Response from API

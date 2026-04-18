@@ -499,6 +499,170 @@ router.get('/qr/info', catchAsync(async (req, res, next) => {
 }));
 
 /**
+ * @route   GET /api/hotel/qr/login/generate
+ * @desc    Generate QR code for hotel guest login
+ * @access  Private/HotelAdmin
+ */
+router.get('/qr/login/generate', catchAsync(async (req, res, next) => {
+  try {
+    const hotelId = req.user.hotelId;
+
+    if (!hotelId) {
+      return next(new AppError('Hotel ID not found in user profile', 400));
+    }
+
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return next(new AppError('Hotel not found', 404));
+    }
+
+    if (!hotel.isActive) {
+      return next(new AppError('Cannot generate QR code for inactive hotel', 400));
+    }
+
+    const hotelData = {
+      hotelId: hotel._id.toString(),
+      hotelName: hotel.name,
+      hotelAddress: hotel.address ? `${hotel.address.street}, ${hotel.address.city}` : null
+    };
+
+    const qrResult = await qrUtils.generateLoginQRCode(hotelData, { size: 300 });
+    const metadata = qrUtils.getQRMetadata(hotelId);
+
+    logger.info('Login QR code generated for hotel admin', {
+      hotelId,
+      hotelName: hotel.name,
+      adminId: req.user._id
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        ...qrResult,
+        metadata,
+        hotelInfo: {
+          id: hotel._id,
+          name: hotel.name,
+          address: hotel.address
+        }
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error generating login QR code:', error);
+    return next(new AppError('Failed to generate login QR code', 500));
+  }
+}));
+
+/**
+ * @route   GET /api/hotel/qr/login/download
+ * @desc    Download login QR code as PNG file for printing
+ * @access  Private/HotelAdmin
+ */
+router.get('/qr/login/download', catchAsync(async (req, res, next) => {
+  try {
+    const hotelId = req.user.hotelId;
+    const { size = 600 } = req.query;
+
+    if (!hotelId) {
+      return next(new AppError('Hotel ID not found in user profile', 400));
+    }
+
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return next(new AppError('Hotel not found', 404));
+    }
+
+    if (!hotel.isActive) {
+      return next(new AppError('Cannot generate QR code for inactive hotel', 400));
+    }
+
+    const hotelData = {
+      hotelId: hotel._id.toString(),
+      hotelName: hotel.name,
+      hotelAddress: hotel.address ? `${hotel.address.street}, ${hotel.address.city}` : null
+    };
+
+    const qrBuffer = await qrUtils.generateLoginQRCodeBuffer(hotelData, { size: parseInt(size) });
+
+    const filename = `${hotel.name.replace(/[^a-zA-Z0-9]/g, '_')}_Login_QR_Code.png`;
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', qrBuffer.length);
+
+    logger.info('Login QR code downloaded by hotel admin', {
+      hotelId,
+      hotelName: hotel.name,
+      adminId: req.user._id,
+      size: parseInt(size)
+    });
+
+    res.send(qrBuffer);
+
+  } catch (error) {
+    logger.error('Error downloading login QR code:', error);
+    return next(new AppError('Failed to download login QR code', 500));
+  }
+}));
+
+/**
+ * @route   POST /api/hotel/qr/login/regenerate
+ * @desc    Regenerate login QR code with new token
+ * @access  Private/HotelAdmin
+ */
+router.post('/qr/login/regenerate', catchAsync(async (req, res, next) => {
+  try {
+    const hotelId = req.user.hotelId;
+
+    if (!hotelId) {
+      return next(new AppError('Hotel ID not found in user profile', 400));
+    }
+
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return next(new AppError('Hotel not found', 404));
+    }
+
+    if (!hotel.isActive) {
+      return next(new AppError('Cannot regenerate QR code for inactive hotel', 400));
+    }
+
+    const hotelData = {
+      hotelId: hotel._id.toString(),
+      hotelName: hotel.name,
+      hotelAddress: hotel.address ? `${hotel.address.street}, ${hotel.address.city}` : null
+    };
+
+    const qrResult = await qrUtils.generateLoginQRCode(hotelData, { size: 300 });
+    const metadata = qrUtils.getQRMetadata(hotelId);
+
+    logger.logSecurity('LOGIN_QR_CODE_REGENERATED', req.user, req, {
+      hotelId,
+      hotelName: hotel.name,
+      reason: 'Admin requested regeneration'
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Login QR code regenerated successfully',
+      data: {
+        ...qrResult,
+        metadata,
+        hotelInfo: {
+          id: hotel._id,
+          name: hotel.name,
+          address: hotel.address
+        }
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error regenerating login QR code:', error);
+    return next(new AppError('Failed to regenerate login QR code', 500));
+  }
+}));
+
+/**
  * @route   GET /api/hotel/room-status-overview
  * @desc    Get room status overview showing occupied rooms and service requests
  * @access  Private/HotelAdmin

@@ -22,16 +22,18 @@ const QR_TOKEN_EXPIRE = '90d';
  * @param {string} hotelData.hotelAddress - Hotel address (optional)
  * @returns {string} JWT token for QR code
  */
-const generateQRToken = (hotelData) => {
+const generateQRToken = (hotelData, tokenType = 'registration') => {
   const { hotelId, hotelName, hotelAddress } = hotelData;
 
   if (!hotelId || !hotelName) {
     throw new AppError('Hotel ID and name are required for QR token generation', 400);
   }
 
+  const isLogin = tokenType === 'login';
+
   // Create payload with hotel information and additional security data
   const payload = {
-    type: 'hotel_registration_qr',
+    type: isLogin ? 'hotel_login_qr' : 'hotel_registration_qr',
     hotelId,
     hotelName,
     hotelAddress: hotelAddress || null,
@@ -47,13 +49,14 @@ const generateQRToken = (hotelData) => {
     {
       expiresIn: QR_TOKEN_EXPIRE,
       issuer: 'hotel-platform-qr',
-      audience: 'guest-registration'
+      audience: isLogin ? 'guest-login' : 'guest-registration'
     }
   );
 
-  logger.info('QR token generated for hotel', {
+  logger.info(`QR token generated for hotel (${tokenType})`, {
     hotelId,
     hotelName,
+    tokenType,
     expiresIn: QR_TOKEN_EXPIRE
   });
 
@@ -65,7 +68,7 @@ const generateQRToken = (hotelData) => {
  * @param {string} token - JWT token from QR code
  * @returns {Object} Decoded hotel information
  */
-const validateQRToken = (token) => {
+const validateQRToken = (token, expectedContext = null) => {
   if (!token) {
     throw new AppError('QR token is required', 400);
   }
@@ -78,18 +81,27 @@ const validateQRToken = (token) => {
       throw new AppError('Invalid QR token format', 400);
     }
 
+    // Determine expected audience based on token type
+    const tokenType = unverifiedDecoded.type;
+    let audience;
+    if (expectedContext === 'login' || tokenType === 'hotel_login_qr') {
+      audience = 'guest-login';
+    } else {
+      audience = 'guest-registration';
+    }
+
     // Now verify with hotel-specific secret
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET + unverifiedDecoded.hotelId,
       {
         issuer: 'hotel-platform-qr',
-        audience: 'guest-registration'
+        audience
       }
     );
 
     // Validate token type
-    if (decoded.type !== 'hotel_registration_qr') {
+    if (decoded.type !== 'hotel_registration_qr' && decoded.type !== 'hotel_login_qr') {
       throw new AppError('Invalid QR token type', 400);
     }
 
@@ -101,6 +113,7 @@ const validateQRToken = (token) => {
     logger.info('QR token validated successfully', {
       hotelId: decoded.hotelId,
       hotelName: decoded.hotelName,
+      tokenType: decoded.type,
       generatedAt: decoded.generatedAt
     });
 
@@ -109,6 +122,7 @@ const validateQRToken = (token) => {
       hotelName: decoded.hotelName,
       hotelAddress: decoded.hotelAddress,
       generatedAt: decoded.generatedAt,
+      tokenType: decoded.type,
       expiresAt: new Date(decoded.exp * 1000).toISOString()
     };
 
@@ -180,6 +194,55 @@ const generateQRCode = async (hotelData, options = {}) => {
 };
 
 /**
+ * Generate Login QR code image from hotel data
+ * @param {Object} hotelData - Hotel information
+ * @param {Object} options - QR code generation options
+ * @returns {Promise<string>} Base64 encoded QR code image
+ */
+const generateLoginQRCode = async (hotelData, options = {}) => {
+  try {
+    // Generate JWT token for login
+    const token = generateQRToken(hotelData, 'login');
+
+    // Create QR code URL that points to login page
+    const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?qr=${token}`;
+
+    const qrOptions = {
+      type: 'image/png',
+      quality: 0.92,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      },
+      width: options.size || 300,
+      errorCorrectionLevel: 'H',
+      ...options
+    };
+
+    const qrCodeDataURL = await QRCode.toDataURL(qrUrl, qrOptions);
+
+    logger.info('Login QR code generated successfully', {
+      hotelId: hotelData.hotelId,
+      hotelName: hotelData.hotelName,
+      size: qrOptions.width
+    });
+
+    return {
+      qrCodeImage: qrCodeDataURL,
+      qrToken: token,
+      qrUrl,
+      expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+      generatedAt: new Date().toISOString()
+    };
+
+  } catch (error) {
+    logger.error('Login QR code generation failed:', error);
+    throw new AppError('Failed to generate login QR code', 500);
+  }
+};
+
+/**
  * Generate QR code as buffer for downloads
  * @param {Object} hotelData - Hotel information
  * @param {Object} options - QR code generation options
@@ -216,6 +279,46 @@ const generateQRCodeBuffer = async (hotelData, options = {}) => {
   } catch (error) {
     logger.error('QR code buffer generation failed:', error);
     throw new AppError('Failed to generate QR code for download', 500);
+  }
+};
+
+/**
+ * Generate Login QR code as buffer for downloads
+ * @param {Object} hotelData - Hotel information
+ * @param {Object} options - QR code generation options
+ * @returns {Promise<Buffer>} QR code image buffer
+ */
+const generateLoginQRCodeBuffer = async (hotelData, options = {}) => {
+  try {
+    const token = generateQRToken(hotelData, 'login');
+    const qrUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?qr=${token}`;
+
+    const qrOptions = {
+      type: 'png',
+      quality: 0.92,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      },
+      width: options.size || 600,
+      errorCorrectionLevel: 'H',
+      ...options
+    };
+
+    const buffer = await QRCode.toBuffer(qrUrl, qrOptions);
+
+    logger.info('Login QR code buffer generated for download', {
+      hotelId: hotelData.hotelId,
+      hotelName: hotelData.hotelName,
+      bufferSize: buffer.length
+    });
+
+    return buffer;
+
+  } catch (error) {
+    logger.error('Login QR code buffer generation failed:', error);
+    throw new AppError('Failed to generate login QR code for download', 500);
   }
 };
 
@@ -298,6 +401,8 @@ module.exports = {
   validateQRToken,
   generateQRCode,
   generateQRCodeBuffer,
+  generateLoginQRCode,
+  generateLoginQRCodeBuffer,
   processQRRegistration,
   getQRMetadata,
   QR_TOKEN_EXPIRE
