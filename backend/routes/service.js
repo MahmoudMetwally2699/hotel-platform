@@ -531,29 +531,7 @@ router.delete('/services/:id', catchAsync(async (req, res, next) => {
     return next(new AppError('No service found with that ID for this provider', 404));
   }
 
-  // Check if service has any active bookings
-  const activeBookings = await Booking.findOne({
-    serviceId: serviceId,
-    status: { $nin: ['completed', 'cancelled', 'refunded'] }
-  });
-
-  if (activeBookings) {
-    // Soft delete: Mark as deleted instead of removing
-    service.isDeleted = true;
-    await service.save();
-
-    logger.info(`Service soft deleted (has active bookings): ${service.name}`, {
-      serviceProviderId: providerId,
-      serviceId: serviceId
-    });
-
-    return res.status(200).json({
-      status: 'success',
-      message: 'Service removed successfully'
-    });
-  }
-
-  // Hard delete if no active bookings
+  // Always hard delete - remove from DB entirely
   await Service.findByIdAndDelete(serviceId);
 
   logger.info(`Service deleted: ${service.name}`, {

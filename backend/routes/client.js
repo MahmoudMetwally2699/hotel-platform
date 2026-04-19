@@ -1563,7 +1563,8 @@ router.get('/services', async (req, res) => {
   try {
     const { category, search, city, minPrice, maxPrice, page = 1, limit = 12 } = req.query;    // Build query for active services from active hotels
     const serviceQuery = {
-      isActive: true
+      isActive: true,
+      isDeleted: { $ne: true }
     };
 
     if (category) serviceQuery.category = category;
@@ -1669,7 +1670,8 @@ router.get('/hotels/:hotelId/services/laundry/items', async (req, res) => {
     const laundryServices = await Service.find({
       hotelId: hotelId,
       category: 'laundry',
-      isActive: true
+      isActive: true,
+      isDeleted: { $ne: true }
     })
     .populate('providerId', 'businessName rating contactEmail contactPhone markup')
     .sort({ 'performance.totalBookings': -1 });
@@ -1792,7 +1794,8 @@ router.get('/hotels/:hotelId/services/dining/items', async (req, res) => {
     const restaurantServices = await Service.find({
       hotelId: hotelId,
       category: 'dining',
-      isActive: true
+      isActive: true,
+      isDeleted: { $ne: true }
     })
     .populate('providerId', 'businessName rating contactEmail contactPhone markup restaurant')
     .sort({ 'performance.totalBookings': -1 });
