@@ -293,9 +293,9 @@ const serviceProviderSchema = new mongoose.Schema({
       closeTime: { type: String, default: '17:00' }
     },
     sunday: {
-      isOpen: { type: Boolean, default: false },
-      openTime: { type: String, default: '10:00' },
-      closeTime: { type: String, default: '16:00' }
+      isOpen: { type: Boolean, default: true },
+      openTime: { type: String, default: '09:00' },
+      closeTime: { type: String, default: '18:00' }
     }
   },
 

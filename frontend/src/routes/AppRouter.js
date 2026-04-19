@@ -75,6 +75,7 @@ const HotelAdminGuestsPage = lazy(() => import('../pages/hotel/GuestsPage'));
 const GuestProfilePage = lazy(() => import('../pages/hotel/GuestProfilePage'));
 const HotelAdminUserManagementPage = lazy(() => import('../pages/hotel/UserManagementPage'));
 const HotelAdminRevenuePage = lazy(() => import('../pages/hotel/RevenuePage'));
+const HotelAdminSalesPage = lazy(() => import('../pages/hotel/SalesPage'));
 const HotelAdminMarkupSettingsPage = lazy(() => import('../pages/hotel/MarkupSettingsPage'));
 const HotelAdminProviderAnalyticsPage = lazy(() => import('../pages/hotel/ProviderAnalyticsPage'));
 const HotelAdminSettingsPage = lazy(() => import('../pages/hotel/SettingsPage'));
@@ -489,6 +490,16 @@ const AppRouter = () => {
             <ProtectedRoute allowedRoles="hotel">
               <TailwindLayout>
                 <HotelAdminRevenuePage />
+              </TailwindLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel/sales"
+          element={
+            <ProtectedRoute allowedRoles="hotel">
+              <TailwindLayout>
+                <HotelAdminSalesPage />
               </TailwindLayout>
             </ProtectedRoute>
           }

@@ -277,7 +277,9 @@ const PaymentSuccess = () => {
             <FaCheckCircle className="text-8xl mx-auto animate-bounce" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            {t('paymentSuccess.title')}
+            {booking.payment?.method === 'cash' 
+              ? t('paymentSuccess.bookingConfirmedTitle', 'Booking Confirmed!')
+              : t('paymentSuccess.title')}
           </h1>
           <p className="text-xl text-gray-600">
             {booking.bookingType === 'laundry'
@@ -546,76 +548,106 @@ const PaymentSuccess = () => {
               </div>
 
               {/* Payment Details */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <FaMoneyBillWave className="mr-2 text-green-500" />
-                  {t('paymentSuccess.paymentDetails')}
-                </h3>
-                <div className="space-y-4">
-                  <div className="bg-green-50 rounded-md p-4">
-                    <div className="text-center">
-                      <p className="text-sm text-green-600 font-medium">{t('paymentSuccess.amountPaid')}</p>
-                      <p className="text-3xl font-bold text-green-700">
+              {booking.payment?.method === 'cash' ? (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <FaMoneyBillWave className="mr-2 text-amber-500" />
+                    {t('paymentSuccess.paymentInfo', 'Payment Information')}
+                  </h3>
+                  <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+                    <div className="text-center space-y-2">
+                      <p className="text-amber-700 font-semibold text-lg">
+                        {t('paymentSuccess.payAtHotelTitle', 'Pay at Hotel')}
+                      </p>
+                      <p className="text-amber-600 text-sm">
+                        {t('paymentSuccess.payAtHotelDesc', 'Please pay the total amount at the hotel reception upon service delivery.')}
+                      </p>
+                      <p className="text-2xl font-bold text-amber-800 mt-3">
                         {formatPriceByLanguage(
-                          booking.payment?.paidAmount ||
-                          booking.payment?.totalAmount ||
+                          booking.pricing?.totalAmount ||
                           booking.pricing?.total ||
                           0,
                           'en',
-                          booking.payment?.currency || booking.pricing?.currency || 'USD'
+                          booking.pricing?.currency || 'USD'
                         )}
                       </p>
                     </div>
-                  </div>
-
-                  {booking.payment.paymentDate && (
-                    <div>
-                      <p className="font-medium text-gray-700">{t('paymentSuccess.paymentDate')}</p>
-                      <p className="text-gray-600">
-                        {new Date(booking.payment.paymentDate).toLocaleString()}
-                      </p>
-                    </div>
-                  )}
-
-                  {booking.payment.kashier?.transactionId && (
-                    <div>
-                      <p className="font-medium text-gray-700">{t('paymentSuccess.transactionId')}</p>
-                      <p className="text-gray-600 font-mono text-sm">
-                        {booking.payment.kashier.transactionId}
-                      </p>
-                    </div>
-                  )}
-
-                  {booking.payment.method && (
-                    <div>
-                      <p className="font-medium text-gray-700">{t('paymentSuccess.paymentMethod')}</p>
-                      <p className="text-gray-600 capitalize">{booking.payment.method}</p>
-                    </div>
-                  )}
-
-                  {booking.payment.kashier?.cardInfo && (
-                    <div className="bg-gray-50 rounded-md p-3">
-                      <p className="font-medium text-gray-700 mb-2">{t('paymentSuccess.cardDetails')}</p>
-                      <div className="text-sm space-y-1">
-                        <p className="text-gray-600">
-                          {booking.payment.kashier.cardInfo.cardBrand} {t('paymentSuccess.endingIn')} {booking.payment.kashier.cardInfo.maskedCard?.slice(-4)}
-                        </p>
-                        {booking.payment.kashier.cardInfo.cardHolderName && (
-                          <p className="text-gray-600">
-                            {booking.payment.kashier.cardInfo.cardHolderName}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="border-t pt-4">
-                    <p className="text-lg font-semibold text-green-600 text-center">
-                      {t('paymentSuccess.paymentStatusCompleted')}
-                    </p>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <FaMoneyBillWave className="mr-2 text-green-500" />
+                    {t('paymentSuccess.paymentDetails')}
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="bg-green-50 rounded-md p-4">
+                      <div className="text-center">
+                        <p className="text-sm text-green-600 font-medium">
+                          {t('paymentSuccess.amountPaid')}
+                        </p>
+                        <p className="text-3xl font-bold text-green-700">
+                          {formatPriceByLanguage(
+                            booking.payment?.paidAmount ||
+                            booking.payment?.totalAmount ||
+                            booking.pricing?.total ||
+                            0,
+                            'en',
+                            booking.payment?.currency || booking.pricing?.currency || 'USD'
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    {booking.payment.paymentDate && (
+                      <div>
+                        <p className="font-medium text-gray-700">{t('paymentSuccess.paymentDate')}</p>
+                        <p className="text-gray-600">
+                          {new Date(booking.payment.paymentDate).toLocaleString()}
+                        </p>
+                      </div>
+                    )}
+
+                    {booking.payment.kashier?.transactionId && (
+                      <div>
+                        <p className="font-medium text-gray-700">{t('paymentSuccess.transactionId')}</p>
+                        <p className="text-gray-600 font-mono text-sm">
+                          {booking.payment.kashier.transactionId}
+                        </p>
+                      </div>
+                    )}
+
+                    {booking.payment.method && (
+                      <div>
+                        <p className="font-medium text-gray-700">{t('paymentSuccess.paymentMethod')}</p>
+                        <p className="text-gray-600 capitalize">{booking.payment.method}</p>
+                      </div>
+                    )}
+
+                    {booking.payment.kashier?.cardInfo && (
+                      <div className="bg-gray-50 rounded-md p-3">
+                        <p className="font-medium text-gray-700 mb-2">{t('paymentSuccess.cardDetails')}</p>
+                        <div className="text-sm space-y-1">
+                          <p className="text-gray-600">
+                            {booking.payment.kashier.cardInfo.cardBrand} {t('paymentSuccess.endingIn')} {booking.payment.kashier.cardInfo.maskedCard?.slice(-4)}
+                          </p>
+                          {booking.payment.kashier.cardInfo.cardHolderName && (
+                            <p className="text-gray-600">
+                              {booking.payment.kashier.cardInfo.cardHolderName}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="border-t pt-4">
+                      <p className="text-lg font-semibold text-green-600 text-center">
+                        {t('paymentSuccess.paymentStatusCompleted')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Service Provider Info */}

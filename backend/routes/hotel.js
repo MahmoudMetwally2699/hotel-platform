@@ -663,6 +663,54 @@ router.post('/qr/login/regenerate', catchAsync(async (req, res, next) => {
 }));
 
 /**
+ * @route   GET /api/hotel/sales
+ * @desc    Get sales data for hotel admin (paid/unpaid orders to providers, totals)
+ * @access  Private/HotelAdmin
+ */
+router.get('/sales', protect, restrictTo('hotel', 'superHotel'), catchAsync(async (req, res) => {
+  const hotelId = req.user.hotelId;
+
+  // Get all completed orders for this hotel (excluding housekeeping which has no pricing)
+  const allOrders = await Booking.find({
+    hotelId: hotelId,
+    status: 'completed',
+    'serviceDetails.category': { $nin: ['housekeeping', 'cleaning'] }
+  })
+    .populate('serviceId', 'name category')
+    .populate('guestId', 'firstName lastName email')
+    .populate('serviceProviderId', 'businessName')
+    .sort({ createdAt: -1 });
+
+  // Separate paid and unpaid orders
+  const paidOrders = allOrders.filter(o => o.providerPaid?.isPaid === true);
+  const unpaidOrders = allOrders.filter(o => !o.providerPaid?.isPaid);
+
+  // Calculate totals
+  const totalSales = allOrders.reduce((sum, o) => sum + (o.pricing?.providerEarnings || o.pricing?.totalBeforeMarkup || 0), 0);
+  const paidTotal = paidOrders.reduce((sum, o) => sum + (o.pricing?.providerEarnings || o.pricing?.totalBeforeMarkup || 0), 0);
+  const unpaidTotal = unpaidOrders.reduce((sum, o) => sum + (o.pricing?.providerEarnings || o.pricing?.totalBeforeMarkup || 0), 0);
+
+  // Monthly sales (current month)
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthlySales = allOrders
+    .filter(o => new Date(o.createdAt) >= startOfMonth)
+    .reduce((sum, o) => sum + (o.pricing?.providerEarnings || o.pricing?.totalBeforeMarkup || 0), 0);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      totalOrders: allOrders.length,
+      totalSales,
+      monthlySales,
+      remainingAmount: unpaidTotal,
+      paidOrders,
+      unpaidOrders
+    }
+  });
+}));
+
+/**
  * @route   GET /api/hotel/room-status-overview
  * @desc    Get room status overview showing occupied rooms and service requests
  * @access  Private/HotelAdmin

@@ -16,7 +16,8 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaCalendarAlt,
-  FaCheck
+  FaCheck,
+  FaExclamationTriangle
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { formatPriceByLanguage } from '../../utils/currency';
@@ -339,6 +340,18 @@ const GuestLaundryBookings = () => {
                              booking.amount;
                 return total ? formatPriceByLanguage(total, i18n.language, booking.payment?.currency || booking.pricing?.currency || 'USD') : 'N/A';
               })()}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Pay at Hotel - Payment Pending Indicator */}
+      {booking.payment?.method === 'cash' && booking.status !== 'completed' && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-2 mb-2 border border-amber-300">
+          <div className="flex items-center gap-2">
+            <FaExclamationTriangle className="text-amber-500 text-sm flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-semibold text-amber-700">
+              {t('booking.payAtHotel', 'Pay at Hotel - Payment Pending')}
             </span>
           </div>
         </div>

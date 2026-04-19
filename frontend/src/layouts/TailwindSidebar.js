@@ -93,6 +93,7 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
           { name: t('navigation.serviceProviders'), path: '/hotel/service-providers', icon: 'briefcase-custom' },
           { name: t('navigation.feedback'), path: '/hotel/feedback', icon: 'bubble-star' },
           { name: t('navigation.revenue'), path: '/hotel/revenue', icon: 'wallet' },
+          { name: t('navigation.sales'), path: '/hotel/sales', icon: 'cash' },
           { name: t('navigation.qrCodes'), path: '/hotel/qr-codes', icon: 'scan-qr-code' },
           { name: t('navigation.loyaltyProgram'), path: '/hotel/loyalty-program', icon: '1st-medal' },
           { name: t('navigation.performanceAnalytics'), path: '/hotel/performance-analytics', icon: 'graph-up' },

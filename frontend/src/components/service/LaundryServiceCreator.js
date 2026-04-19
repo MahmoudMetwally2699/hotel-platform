@@ -88,8 +88,8 @@ const LaundryServiceCreator = () => {
     wednesday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
     thursday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
     friday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
-    saturday: { isAvailable: false, startTime: '09:00', endTime: '17:00' },
-    sunday: { isAvailable: false, startTime: '09:00', endTime: '17:00' }
+    saturday: { isAvailable: true, startTime: '09:00', endTime: '17:00' },
+    sunday: { isAvailable: true, startTime: '09:00', endTime: '17:00' }
   };
   const [operatingHours, setOperatingHours] = useState(defaultSchedule);
 
@@ -242,7 +242,7 @@ const LaundryServiceCreator = () => {
       setActiveTab('manage'); // Switch to manage tab after creation
       fetchExistingServices();
     } catch (err) {
-      console.error(err);
+      console.error('[LAUNDRY CREATE] Full error response:', JSON.stringify(err?.response?.data, null, 2));
       toast.error(err?.response?.data?.message || t('serviceProvider.laundryManagement.messages.failedToCreateService'));
     } finally {
       setLoading(false);

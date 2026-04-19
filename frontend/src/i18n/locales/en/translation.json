@@ -1899,7 +1899,8 @@
     "cancelled": "Cancelled",
     "paid": "Paid",
     "unpaid": "Unpaid",
-    "refunded": "Refunded"
+    "refunded": "Refunded",
+    "payAtHotel": "Pay at Hotel - Payment Pending"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -3871,7 +3872,13 @@
     "exploreMoreServices": "Explore More Services",
     "bookAnotherTrip": "Book Another Trip",
     "makeAnotherReservation": "Make Another Reservation",
-    "needHelp": "Need help? Contact our support team at <1>{{email}}</1>"
+    "needHelp": "Need help? Contact our support team at <1>{{email}}</1>",
+    "bookingConfirmedTitle": "Booking Confirmed!",
+    "totalAmount": "Total Amount",
+    "paymentStatusPending": "Payment Pending (Pay at Hotel)",
+    "paymentInfo": "Payment Information",
+    "payAtHotelTitle": "Pay at Hotel",
+    "payAtHotelDesc": "Please pay the total amount at the hotel reception upon service delivery."
   },
   "paymentFailed": {
     "noBookingId": "No booking ID provided",

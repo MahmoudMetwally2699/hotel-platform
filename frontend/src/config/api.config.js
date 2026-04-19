@@ -68,6 +68,7 @@ export const HOTEL_API = {
   BOOKINGS: `/hotel/bookings`,
   GUESTS: `/hotel/guests`,
   REVENUE: `/hotel/revenue`,
+  SALES: `/hotel/sales`,
   ANALYTICS: `/hotel/analytics`,
   USER_MANAGEMENT: `/hotel/users`,
   MANAGE_PROVIDERS: `/hotel/manage-providers`,

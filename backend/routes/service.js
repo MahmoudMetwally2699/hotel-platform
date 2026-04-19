@@ -36,6 +36,19 @@ router.use(restrictTo('service'));
 router.use(restrictToOwnServiceProvider);
 
 /**
+ * Helper: Resolve hotelId for service provider users.
+ * The User model for service providers doesn't have hotelId directly;
+ * it lives on the ServiceProvider document.
+ */
+async function resolveHotelId(user) {
+  if (user.hotelId) return user.hotelId._id || user.hotelId;
+  const spId = user.serviceProviderId?._id || user.serviceProviderId;
+  if (!spId) return null;
+  const sp = await ServiceProvider.findById(spId).select('hotelId');
+  return sp?.hotelId || null;
+}
+
+/**
  * @route   GET /api/service/dashboard
  * @desc    Get service provider dashboard data
  * @access  Private/ServiceProvider
@@ -43,7 +56,7 @@ router.use(restrictToOwnServiceProvider);
 router.get('/dashboard', catchAsync(async (req, res) => {
   // Handle both populated object and plain ID
   const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
-  const hotelId = req.user.hotelId?._id || req.user.hotelId;
+  const hotelId = await resolveHotelId(req.user);
 
   // Get service provider and hotel info
   const [
@@ -274,9 +287,10 @@ router.get('/services', catchAsync(async (req, res) => {
     Service.countDocuments(filter)
   ]);
 
-  // Get hotel markup information
-  const hotel = await Hotel.findById(req.user.hotelId).select('markupSettings');
-  const markupSettings = hotel.markupSettings || { default: 15, categories: {} };
+  // Get hotel markup information - get hotelId from ServiceProvider if not on user
+  const hotelId = await resolveHotelId(req.user);
+  const hotel = hotelId ? await Hotel.findById(hotelId).select('markupSettings') : null;
+  const markupSettings = hotel?.markupSettings || { default: 15, categories: {} };
 
   // Calculate final prices with markup for each service
   const servicesWithMarkup = services.map(service => {
@@ -336,8 +350,9 @@ router.get('/services/:id', catchAsync(async (req, res, next) => {  const provid
   ]);
 
   // Get hotel markup information
-  const hotel = await Hotel.findById(req.user.hotelId).select('markupSettings');
-  const markupSettings = hotel.markupSettings || { default: 15, categories: {} };
+  const hId = await resolveHotelId(req.user);
+  const hotel = hId ? await Hotel.findById(hId).select('markupSettings') : null;
+  const markupSettings = hotel?.markupSettings || { default: 15, categories: {} };
 
   const categoryMarkup = service.category && markupSettings.categories[service.category] !== undefined
     ? markupSettings.categories[service.category]
@@ -371,7 +386,7 @@ router.get('/services/:id', catchAsync(async (req, res, next) => {  const provid
  */
 router.post('/services', catchAsync(async (req, res, next) => {
   const providerId = req.user.serviceProviderId;
-  const hotelId = req.user.hotelId;
+  const hotelId = await resolveHotelId(req.user);
 
   // Create service with all required fields
   const serviceData = {
@@ -2058,8 +2073,9 @@ router.get('/services-by-category/:category', catchAsync(async (req, res) => {
   ]);
 
   // Get hotel markup information
-  const hotel = await Hotel.findById(req.user.hotelId).select('markupSettings');
-  const markupSettings = hotel.markupSettings || { default: 15, categories: {} };
+  const hId2 = await resolveHotelId(req.user);
+  const hotel = hId2 ? await Hotel.findById(hId2).select('markupSettings') : null;
+  const markupSettings = hotel?.markupSettings || { default: 15, categories: {} };
 
   // Calculate final prices with markup for each service
   const servicesWithMarkup = services.map(service => {
@@ -2179,13 +2195,22 @@ router.get('/orders/by-category', catchAsync(async (req, res) => {
 router.post('/categories/:category/items', catchAsync(async (req, res) => {
   // For service providers, use the serviceProviderId from the populated user
   const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
-  const hotelId = req.user.hotelId;
+
+  // Get hotelId - try from user first, then from ServiceProvider document
+  const hotelId = await resolveHotelId(req.user);
 
   // Validate that the user has a serviceProviderId
   if (!providerId) {
     return res.status(400).json({
       status: 'fail',
       message: 'User is not associated with a service provider'
+    });
+  }
+
+  if (!hotelId) {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'Could not determine hotel for this service provider'
     });
   }
 
@@ -2268,7 +2293,7 @@ router.post('/categories/:category/items', catchAsync(async (req, res) => {
     pricing: {
       basePrice: 0, // Will be calculated dynamically
       pricingType: 'per-item',
-      currency: 'USD'
+      currency: req.body.pricing?.currency || 'SAR'
     },
     laundryItems: processedLaundryItems
   };
@@ -2284,6 +2309,7 @@ router.post('/categories/:category/items', catchAsync(async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('[LAUNDRY CREATE ERROR]', error.message, error.name === 'ValidationError' ? JSON.stringify(error.errors) : '');
     return res.status(400).json({
       status: 'fail',
       message: `Service creation failed: ${error.message}`,
@@ -2396,7 +2422,7 @@ router.delete('/categories/laundry/items/:serviceId', catchAsync(async (req, res
 router.post('/categories/transportation/vehicles', catchAsync(async (req, res) => {
   // For service providers, use the serviceProviderId from the populated user
   const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
-  const hotelId = req.user.hotelId;
+  const hotelId = await resolveHotelId(req.user);
 
   // Validate that the user has a serviceProviderId
   if (!providerId) {
@@ -2552,7 +2578,7 @@ router.post('/categories/transportation/vehicles', catchAsync(async (req, res) =
  */
 router.get('/categories/transportation/vehicles', catchAsync(async (req, res) => {
   const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
-  const hotelId = req.user.hotelId;
+  const hotelId = await resolveHotelId(req.user);
 
   if (!providerId) {
     return res.status(400).json({
@@ -3226,7 +3252,7 @@ router.delete('/housekeeping-services/:serviceId', catchAsync(async (req, res) =
  */
 router.get('/housekeeping-bookings', catchAsync(async (req, res) => {
   const providerId = req.user.serviceProviderId?._id || req.user.serviceProviderId;
-  const hotelId = req.user.hotelId;
+  const hotelId = await resolveHotelId(req.user);
   const { status, limit = 50, page = 1 } = req.query;
 
   let query = {
@@ -3262,7 +3288,7 @@ router.get('/housekeeping-bookings', catchAsync(async (req, res) => {
 router.put('/housekeeping-bookings/:bookingId/status', catchAsync(async (req, res) => {
   const { bookingId } = req.params;
   const { status, notes } = req.body;
-  const hotelId = req.user.hotelId;
+  const hotelId = await resolveHotelId(req.user);
 
   const booking = await Booking.findOne({
     _id: bookingId,

@@ -583,6 +583,19 @@ class HotelService {
   }
 
   /**
+   * Get sales data for hotel admin
+   * @returns {Promise} - Response from API
+   */
+  async getSalesData() {
+    try {
+      const response = await apiClient.get(HOTEL_ADMIN_API.SALES);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Update guest active status
    * @param {string} guestId - Guest ID
    * @param {boolean} isActive - New active status

@@ -1797,7 +1797,8 @@
     "cancelled": "ملغي",
     "paid": "مدفوع",
     "unpaid": "غير مدفوع",
-    "refunded": "مسترد"
+    "refunded": "مسترد",
+    "payAtHotel": "الدفع في الفندق - في انتظار الدفع"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -3878,7 +3879,13 @@
     "exploreMoreServices": "استكشف المزيد من الخدمات",
     "bookAnotherTrip": "حجز رحلة أخرى",
     "makeAnotherReservation": "قم بحجز آخر",
-    "needHelp": "هل تحتاج مساعدة؟ تواصل مع فريق الدعم عبر <1>{{email}}</1>"
+    "needHelp": "هل تحتاج مساعدة؟ تواصل مع فريق الدعم عبر <1>{{email}}</1>",
+    "bookingConfirmedTitle": "تم تأكيد الطلب بنجاح!",
+    "totalAmount": "المبلغ الإجمالي",
+    "paymentStatusPending": "الدفع عند الوصول",
+    "paymentInfo": "معلومات الدفع",
+    "payAtHotelTitle": "الدفع في الفندق",
+    "payAtHotelDesc": "يرجى دفع المبلغ الإجمالي في استقبال الفندق عند تسليم الخدمة."
   },
   "paymentFailed": {
     "noBookingId": "لم يتم تقديم معرف الحجز",
