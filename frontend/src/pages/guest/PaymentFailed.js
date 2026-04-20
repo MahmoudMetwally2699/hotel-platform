@@ -75,7 +75,7 @@ const PaymentFailed = () => {
   };
 
   const handleViewBookings = () => {
-    navigate('/guest/bookings');
+    navigate('/my-orders');
   };
 
   const handleGoHome = () => {

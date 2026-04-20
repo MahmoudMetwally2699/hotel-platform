@@ -1,16 +1,19 @@
 /**
  * Guest Feedback View Component
- * Shows feedback history for the logged-in guest
+ * Shows pending (unrated) bookings + submitted feedback history
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaStar, FaCalendarAlt, FaComment, FaSearch, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaStar, FaCalendarAlt, FaComment, FaSearch, FaTrash, FaClock, FaTshirt, FaCar, FaUtensils, FaConciergeBell } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
+import FeedbackModal from './FeedbackModal';
 
 const GuestFeedbackView = () => {
   const [feedback, setFeedback] = useState([]);
+  const [unratedBookings, setUnratedBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [unratedLoading, setUnratedLoading] = useState(true);
   const [pagination, setPagination] = useState({});
   const [filters, setFilters] = useState({
     rating: '',
@@ -18,6 +21,24 @@ const GuestFeedbackView = () => {
     search: '',
     page: 1
   });
+
+  // Feedback modal state
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+
+  const fetchUnratedBookings = useCallback(async () => {
+    setUnratedLoading(true);
+    try {
+      const response = await apiClient.get('/client/unrated-bookings');
+      if (response.data.success) {
+        setUnratedBookings(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching unrated bookings:', error);
+    } finally {
+      setUnratedLoading(false);
+    }
+  }, []);
 
   const fetchFeedback = useCallback(async () => {
     setLoading(true);
@@ -44,6 +65,10 @@ const GuestFeedbackView = () => {
   }, [filters]);
 
   useEffect(() => {
+    fetchUnratedBookings();
+  }, [fetchUnratedBookings]);
+
+  useEffect(() => {
     fetchFeedback();
   }, [fetchFeedback]);
 
@@ -51,7 +76,7 @@ const GuestFeedbackView = () => {
     setFilters(prev => ({
       ...prev,
       [key]: value,
-      page: 1 // Reset to first page when filtering
+      page: 1
     }));
   };
 
@@ -64,12 +89,31 @@ const GuestFeedbackView = () => {
       const response = await apiClient.delete(`/client/feedback/${feedbackId}`);
       if (response.data.success) {
         toast.success('Feedback deleted successfully');
-        fetchFeedback(); // Refresh the list
+        fetchFeedback();
       }
     } catch (error) {
       console.error('Error deleting feedback:', error);
       toast.error('Failed to delete feedback');
     }
+  };
+
+  const handleRateNow = (booking) => {
+    setSelectedBooking(booking);
+    setIsFeedbackModalOpen(true);
+  };
+
+  const handleFeedbackSubmitted = () => {
+    setIsFeedbackModalOpen(false);
+    setSelectedBooking(null);
+    // Refresh both lists
+    fetchUnratedBookings();
+    fetchFeedback();
+    toast.success('Thank you for your feedback!');
+  };
+
+  const handleModalClose = () => {
+    setIsFeedbackModalOpen(false);
+    setSelectedBooking(null);
   };
 
   const renderStars = (rating) => {
@@ -104,19 +148,124 @@ const GuestFeedbackView = () => {
     return 'text-red-600';
   };
 
+  const getServiceIcon = (serviceType) => {
+    switch (serviceType) {
+      case 'laundry': return <FaTshirt className="text-blue-500" />;
+      case 'transportation': return <FaCar className="text-green-500" />;
+      case 'restaurant':
+      case 'dining': return <FaUtensils className="text-orange-500" />;
+      default: return <FaConciergeBell className="text-purple-500" />;
+    }
+  };
+
+  const getServiceTypeLabel = (serviceType) => {
+    const labels = {
+      laundry: 'Laundry',
+      transportation: 'Transportation',
+      restaurant: 'Restaurant',
+      dining: 'Dining',
+      housekeeping: 'Housekeeping',
+      regular: 'Service'
+    };
+    return labels[serviceType] || serviceType || 'Service';
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm p-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          My Feedback History
+          My Feedback
         </h1>
         <p className="text-gray-600">
-          View and manage your service feedback and reviews
+          Rate your past services and view your submitted reviews
         </p>
       </div>
 
-      {/* Quick Stats */}
+      {/* ── PENDING REVIEWS SECTION ── */}
+      {(unratedLoading || unratedBookings.length > 0) && (
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-amber-200">
+          {/* Section Header */}
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 border-b border-amber-200 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <FaClock className="text-amber-600 text-lg" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-amber-900">Pending Reviews</h2>
+              <p className="text-sm text-amber-700">You have services waiting for your rating</p>
+            </div>
+            {!unratedLoading && (
+              <span className="ml-auto bg-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                {unratedBookings.length}
+              </span>
+            )}
+          </div>
+
+          {unratedLoading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mx-auto" />
+              <p className="mt-3 text-sm text-gray-500">Loading pending reviews...</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {unratedBookings.map((booking) => (
+                <div
+                  key={booking._id}
+                  className="px-6 py-4 flex items-center gap-4 hover:bg-amber-50/40 transition-colors"
+                >
+                  {/* Service icon */}
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-lg">
+                    {getServiceIcon(booking.serviceType)}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                      <span className="font-medium text-gray-900 truncate">
+                        {booking.serviceDetails?.name || booking.serviceId?.name || booking.serviceId?.title || 'Service'}
+                      </span>
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full capitalize">
+                        {getServiceTypeLabel(booking.serviceType)}
+                      </span>
+                      {booking.feedbackRequest?.isSkipped && (
+                        <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                          Previously skipped
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-500 flex items-center gap-3 flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <FaCalendarAlt className="text-xs" />
+                        {booking.createdAt
+                          ? new Date(booking.createdAt).toLocaleDateString()
+                          : 'N/A'}
+                      </span>
+                      {booking.hotelId?.name && (
+                        <span>• {booking.hotelId.name}</span>
+                      )}
+                      <span className="font-mono text-xs text-gray-400">
+                        #{booking.bookingNumber || booking._id?.slice(-8)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Rate Now Button */}
+                  <button
+                    onClick={() => handleRateNow(booking)}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-sm font-medium transition-all hover:opacity-90 active:scale-95"
+                    style={{ background: 'linear-gradient(135deg, #67BAE0 0%, #3B5787 100%)' }}
+                  >
+                    <FaStar className="text-yellow-300 text-xs" />
+                    Rate Now
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── QUICK STATS ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="text-center">
@@ -149,8 +298,9 @@ const GuestFeedbackView = () => {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* ── FILTERS ── */}
       <div className="bg-white rounded-lg shadow-sm p-6">
+        <h2 className="text-base font-semibold text-gray-800 mb-4">Submitted Reviews</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Search */}
           <div className="relative">
@@ -193,7 +343,7 @@ const GuestFeedbackView = () => {
         </div>
       </div>
 
-      {/* Feedback List */}
+      {/* ── FEEDBACK LIST ── */}
       <div className="bg-white rounded-lg shadow-sm">
         {loading ? (
           <div className="p-8 text-center">
@@ -227,12 +377,6 @@ const GuestFeedbackView = () => {
                   </div>
 
                   <div className="flex gap-2">
-                    <button
-                      className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                      title="Edit feedback"
-                    >
-                      <FaEdit />
-                    </button>
                     <button
                       onClick={() => handleDeleteFeedback(item._id)}
                       className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
@@ -313,6 +457,16 @@ const GuestFeedbackView = () => {
           </div>
         )}
       </div>
+
+      {/* Feedback Modal for rating a skipped booking */}
+      {isFeedbackModalOpen && selectedBooking && (
+        <FeedbackModal
+          isOpen={isFeedbackModalOpen}
+          onClose={handleModalClose}
+          booking={selectedBooking}
+          onFeedbackSubmitted={handleFeedbackSubmitted}
+        />
+      )}
     </div>
   );
 };

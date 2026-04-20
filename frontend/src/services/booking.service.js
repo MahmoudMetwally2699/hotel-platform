@@ -159,7 +159,21 @@ class BookingService {
       throw error;
     }
   }
+
+  /**
+   * Get all unrated (skipped or pending) bookings for the feedback page
+   * @returns {Promise} - Response from API
+   */
+  async getUnratedBookings() {
+    try {
+      const response = await apiClient.get('/client/unrated-bookings');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
+
 
 const bookingService = new BookingService();
 export default bookingService;

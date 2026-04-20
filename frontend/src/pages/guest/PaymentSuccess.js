@@ -215,7 +215,7 @@ const PaymentSuccess = () => {
   }, [bookingId, searchParams, t]);
 
   const handleViewBookings = () => {
-    navigate('/guest/bookings');
+    navigate('/my-orders');
   };
 
   const handleGoHome = () => {

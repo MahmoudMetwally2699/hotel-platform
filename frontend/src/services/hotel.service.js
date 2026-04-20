@@ -696,7 +696,38 @@ class HotelService {
     }
   }
 
+  /**
+   * Add a note to a guest's profile
+   * @param {string} guestId - Guest ID
+   * @param {string} text - Note text
+   * @returns {Promise} - Response from API
+   */
+  async addGuestNote(guestId, text) {
+    try {
+      const response = await apiClient.post(`/hotel/guests/${guestId}/notes`, { text });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a note from a guest's profile
+   * @param {string} guestId - Guest ID
+   * @param {string} noteId - Note ID
+   * @returns {Promise} - Response from API
+   */
+  async deleteGuestNote(guestId, noteId) {
+    try {
+      const response = await apiClient.delete(`/hotel/guests/${guestId}/notes/${noteId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 }
 
 const hotelService = new HotelService();
 export default hotelService;
+

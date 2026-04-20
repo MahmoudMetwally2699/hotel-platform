@@ -3524,6 +3524,114 @@ router.put('/bookings/:id/payment-method', protect, restrictTo('guest'), async (
   }
 });
 
+/**
+ * @desc    Get next pending feedback request for the guest
+ * @route   GET /api/client/pending-feedback
+ * @access  Private (Guest)
+ */
+router.get('/pending-feedback', protect, restrictTo('guest'), async (req, res) => {
+  try {
+    // Find the oldest booking that has a pending feedback request and hasn't been submitted or skipped
+    const booking = await Booking.findOne({
+      guestId: req.user.id,
+      'feedbackRequest.isRequested': true,
+      'feedbackRequest.isFeedbackSubmitted': { $ne: true },
+      'feedbackRequest.isSkipped': { $ne: true }
+    })
+      .populate('serviceId', 'title name category')
+      .populate('serviceProviderId', 'businessName')
+      .populate('hotelId', 'name')
+      .sort({ 'feedbackRequest.requestedAt': 1 });
+
+    if (!booking) {
+      return res.json({
+        success: true,
+        data: null,
+        message: 'No pending feedback requests'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: booking
+    });
+  } catch (error) {
+    logger.error('Get pending feedback error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while retrieving pending feedback'
+    });
+  }
+});
+
+/**
+ * @desc    Get all pending (unrated) bookings for the feedback page
+ * @route   GET /api/client/unrated-bookings
+ * @access  Private (Guest)
+ */
+router.get('/unrated-bookings', protect, restrictTo('guest'), async (req, res) => {
+  try {
+    const bookings = await Booking.find({
+      guestId: req.user.id,
+      'feedbackRequest.isRequested': true,
+      'feedbackRequest.isFeedbackSubmitted': { $ne: true }
+    })
+      .populate('serviceId', 'title name category')
+      .populate('serviceProviderId', 'businessName')
+      .populate('hotelId', 'name')
+      .sort({ 'feedbackRequest.requestedAt': -1 })
+      .limit(50);
+
+    res.json({
+      success: true,
+      data: bookings
+    });
+  } catch (error) {
+    logger.error('Get unrated bookings error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while retrieving unrated bookings'
+    });
+  }
+});
+
+/**
+ * @desc    Skip feedback for a booking (saves for later)
+ * @route   POST /api/client/bookings/:id/skip-feedback
+ * @access  Private (Guest)
+ */
+router.post('/bookings/:id/skip-feedback', protect, restrictTo('guest'), async (req, res) => {
+  try {
+    const booking = await Booking.findOne({
+      _id: req.params.id,
+      guestId: req.user.id
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    // Mark as skipped — it will remain visible on the feedback page
+    booking.feedbackRequest.isSkipped = true;
+    booking.feedbackRequest.skippedAt = new Date();
+    await booking.save();
+
+    res.json({
+      success: true,
+      message: 'Feedback skipped. You can rate this booking later from your feedback page.'
+    });
+  } catch (error) {
+    logger.error('Skip feedback error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while skipping feedback'
+    });
+  }
+});
+
 // Import and use feedback routes
 const feedbackRoutes = require('./feedback');
 router.use('/', feedbackRoutes);

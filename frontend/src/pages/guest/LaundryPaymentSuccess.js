@@ -81,7 +81,7 @@ const LaundryPaymentSuccess = () => {
     }
   };
 
-  const handleViewBookings = () => navigate('/guest/bookings');
+  const handleViewBookings = () => navigate('/my-orders');
   const handleGoHome = () => navigate('/');
 
   if (loading) {

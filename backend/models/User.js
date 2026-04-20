@@ -330,7 +330,37 @@ const userSchema = new mongoose.Schema({
     },
     referralCode: String,
     notes: String
-  }
+  },
+
+  // Hotel Admin Notes — structured notes attached by hotel staff
+  hotelNotes: [{
+    text: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: [1000, 'Note cannot exceed 1000 characters']
+    },
+    addedBy: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    addedByName: {
+      type: String // Cached display name for speed
+    },
+    hotelId: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Hotel',
+      required: true
+    },
+    hotelName: {
+      type: String // Cached hotel name for speed
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

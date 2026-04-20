@@ -73,7 +73,7 @@ const LaundryPaymentFailed = () => {
     }
   };
 
-  const handleViewBookings = () => navigate('/guest/bookings');
+  const handleViewBookings = () => navigate('/my-orders');
   const handleGoHome = () => navigate('/');
 
   const getErrorMessage = () => {

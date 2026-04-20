@@ -2405,6 +2405,91 @@ router.get('/guests/:guestId', catchAsync(async (req, res, next) => {
 }));
 
 /**
+ * @route   POST /api/hotel/guests/:guestId/notes
+ * @desc    Add a note to a guest's profile
+ * @access  Private/HotelAdmin
+ */
+router.post('/guests/:guestId/notes', catchAsync(async (req, res, next) => {
+  const { guestId } = req.params;
+  const { text } = req.body;
+  const hotelId = req.user.hotelId;
+
+  if (!text || !text.trim()) {
+    return next(new AppError('Note text is required', 400));
+  }
+
+  const guest = await User.findById(guestId);
+  if (!guest || guest.role !== 'guest') {
+    return next(new AppError('Guest not found', 404));
+  }
+
+  // Get hotel name to cache it in the note
+  const hotel = await Hotel.findById(hotelId).select('name');
+  const adminUser = await User.findById(req.user.id).select('firstName lastName');
+
+  const note = {
+    text: text.trim(),
+    addedBy: req.user.id,
+    addedByName: `${adminUser.firstName} ${adminUser.lastName || ''}`.trim(),
+    hotelId,
+    hotelName: hotel?.name || 'Hotel',
+    createdAt: new Date()
+  };
+
+  await User.findByIdAndUpdate(guestId, {
+    $push: { hotelNotes: note }
+  });
+
+  const updatedGuest = await User.findById(guestId).select('hotelNotes');
+
+  logger.info(`Hotel admin ${req.user.email} added note to guest ${guest.email}`);
+
+  res.status(201).json({
+    success: true,
+    message: 'Note added successfully',
+    data: {
+      notes: updatedGuest.hotelNotes
+    }
+  });
+}));
+
+/**
+ * @route   DELETE /api/hotel/guests/:guestId/notes/:noteId
+ * @desc    Delete a note from a guest's profile
+ * @access  Private/HotelAdmin
+ */
+router.delete('/guests/:guestId/notes/:noteId', catchAsync(async (req, res, next) => {
+  const { guestId, noteId } = req.params;
+  const hotelId = req.user.hotelId;
+
+  const guest = await User.findById(guestId);
+  if (!guest || guest.role !== 'guest') {
+    return next(new AppError('Guest not found', 404));
+  }
+
+  // Only allow deleting notes from this hotel
+  const note = guest.hotelNotes?.id(noteId);
+  if (!note) {
+    return next(new AppError('Note not found', 404));
+  }
+
+  if (note.hotelId.toString() !== hotelId.toString()) {
+    return next(new AppError('You can only delete notes added by your hotel', 403));
+  }
+
+  await User.findByIdAndUpdate(guestId, {
+    $pull: { hotelNotes: { _id: noteId } }
+  });
+
+  logger.info(`Hotel admin ${req.user.email} deleted note ${noteId} from guest ${guest.email}`);
+
+  res.status(200).json({
+    success: true,
+    message: 'Note deleted successfully'
+  });
+}));
+
+/**
  * @route   PATCH /api/hotel/guests/:guestId
  * @desc    Update guest information (room number, check-in/out dates) and reactivate if needed
  * @access  Private/HotelAdmin
