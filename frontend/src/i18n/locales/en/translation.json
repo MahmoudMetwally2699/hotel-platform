@@ -1029,6 +1029,7 @@
     "termsAndConditions": "Terms and Conditions",
     "createAccount": "Create Account",
     "creatingAccount": "Creating Account...",
+    "registrationSuccess": "Registration successful! Complete your profile setup.",
     "alreadyHaveAccount": "Already have an account?",
     "signInHere": "Sign in here",
     "close": "Close",
@@ -4216,6 +4217,15 @@
       "hello": "Hello",
       "guest": "Guest",
       "quickAccess": "Quick Access"
+    },
+    "pendingApproval": {
+      "title": "Account Pending Activation",
+      "message": "Your account is being reviewed by the hotel team. Services will become available once your account is activated.",
+      "profileReady": "Profile Ready",
+      "profileReadyDesc": "Your profile and preferences have been saved",
+      "awaitingActivation": "Awaiting Activation",
+      "awaitingActivationDesc": "The hotel admin will activate your access shortly",
+      "contactHint": "Need immediate access? Please contact the hotel reception desk for assistance."
     },
     "transportation": {
       "noTransportationServices": "No Transportation Services Available",

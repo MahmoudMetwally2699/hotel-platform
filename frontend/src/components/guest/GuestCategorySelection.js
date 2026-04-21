@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   FaTshirt,
   FaCar,
@@ -27,7 +27,7 @@ import {
 } from 'react-icons/fa';
 import apiClient from '../../services/api.service';
 import { toast } from 'react-toastify';
-import { selectCurrentUser } from '../../redux/slices/authSlice';
+import { selectCurrentUser, fetchProfile } from '../../redux/slices/authSlice';
 
 const categoryIcons = {
   laundry: FaTshirt,
@@ -59,11 +59,28 @@ const GuestCategorySelection = () => {
   const navigate = useNavigate();
   const { hotelId } = useParams();
   const currentUser = useSelector(selectCurrentUser);
+  const dispatch = useDispatch();
 
   const [categories, setCategories] = useState([]);
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showQuickAccess, setShowQuickAccess] = useState(false);
+
+  // When user appears inactive/pending, periodically fetch fresh profile from server
+  // to detect when an admin has activated the account without needing a new login
+  useEffect(() => {
+    if (!currentUser || currentUser.isActive !== false) return;
+
+    // Fetch fresh data immediately
+    dispatch(fetchProfile());
+
+    // Then poll every 10 seconds
+    const interval = setInterval(() => {
+      dispatch(fetchProfile());
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [currentUser?.isActive, dispatch]);
 
   useEffect(() => {
     // Get localized category descriptions (unchanged)
@@ -209,6 +226,112 @@ const GuestCategorySelection = () => {
       </div>
     );
   }
+
+  // Check if user account is pending activation (only use isActive from server — deactivationReason can be stale in localStorage)
+  const isPendingApproval = currentUser && currentUser.isActive === false;
+
+  if (isPendingApproval) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] pb-24 font-sans">
+        <style>{`
+          @keyframes fade-in {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fade-in { animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+          @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+          }
+          .animate-float { animation: float 3s ease-in-out infinite; }
+          @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.7; }
+          }
+          .animate-pulse-ring { animation: pulse-ring 2.5s ease-in-out infinite; }
+        `}</style>
+
+        {/* Hotel Header */}
+        <div className="relative overflow-hidden bg-white shadow-sm border-b border-gray-100">
+          <div className="absolute inset-0 z-0">
+            <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-gradient-to-bl from-primary-light/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+          </div>
+          <div className="relative z-0 w-full px-4 pt-24 pb-10 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center animate-fade-in">
+            <div className="flex flex-col items-center text-center">
+              {hotel?.images?.logo ? (
+                <div className="p-1 bg-white rounded-2xl shadow-sm border border-gray-100 mb-4 animate-float">
+                  <img src={hotel.images.logo} alt={`${hotel?.name || 'Hotel'} Logo`} className="h-16 w-auto sm:h-20 object-contain rounded-xl" />
+                </div>
+              ) : (
+                <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-gradient-to-tr from-primary-main to-primary-light shadow-md flex items-center justify-center mb-4 animate-float">
+                  <span className="text-white font-bold text-3xl">{hotel?.name?.charAt(0) || 'H'}</span>
+                </div>
+              )}
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">
+                {hotel?.name || t('guest.common.hotelServices')}
+              </h1>
+            </div>
+          </div>
+        </div>
+
+        {/* Pending Approval Card */}
+        <main className="w-full px-4 sm:px-6 lg:px-8 py-10 max-w-2xl mx-auto">
+          <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+            <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8 sm:p-12 text-center">
+              {/* Animated Icon */}
+              <div className="relative mx-auto mb-8 w-24 h-24">
+                <div className="absolute inset-0 bg-amber-100 rounded-full animate-pulse-ring"></div>
+                <div className="relative z-10 h-24 w-24 rounded-full bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-200 flex items-center justify-center">
+                  <svg className="w-12 h-12 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">
+                {t('guest.pendingApproval.title', 'Account Pending Activation')}
+              </h2>
+              <p className="text-gray-500 text-base sm:text-lg leading-relaxed max-w-md mx-auto mb-8">
+                {t('guest.pendingApproval.message', 'Your account is being reviewed by the hotel team. Services will become available once your account is activated.')}
+              </p>
+
+              {/* Info Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="h-9 w-9 rounded-xl bg-primary-light/10 flex items-center justify-center">
+                      <FaUser className="text-primary-main text-sm" />
+                    </div>
+                    <span className="font-bold text-gray-900 text-sm">{t('guest.pendingApproval.profileReady', 'Profile Ready')}</span>
+                  </div>
+                  <p className="text-xs text-gray-500">{t('guest.pendingApproval.profileReadyDesc', 'Your profile and preferences have been saved')}</p>
+                </div>
+                <div className="bg-amber-50/50 rounded-2xl p-5 border border-amber-100">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="h-9 w-9 rounded-xl bg-amber-100 flex items-center justify-center">
+                      <FaClock className="text-amber-600 text-sm" />
+                    </div>
+                    <span className="font-bold text-gray-900 text-sm">{t('guest.pendingApproval.awaitingActivation', 'Awaiting Activation')}</span>
+                  </div>
+                  <p className="text-xs text-gray-500">{t('guest.pendingApproval.awaitingActivationDesc', 'The hotel admin will activate your access shortly')}</p>
+                </div>
+              </div>
+
+              {/* Contact Info */}
+              <div className="bg-primary-light/5 rounded-2xl p-5 border border-primary-light/10">
+                <p className="text-sm text-gray-600">
+                  {t('guest.pendingApproval.contactHint', 'Need immediate access? Please contact the hotel reception desk for assistance.')}
+                </p>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 font-sans selection:bg-primary-light selection:text-white">
       {/* CSS Animations */}

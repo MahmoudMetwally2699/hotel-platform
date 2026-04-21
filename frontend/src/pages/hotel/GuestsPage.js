@@ -588,12 +588,12 @@ const GuestsPage = () => {
                       <div className="space-y-1">
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-gray-900">
-                            {guest.isActive === false ? '---' : (guest.roomNumber ? `Room ${guest.roomNumber}` : 'No room assigned')}
+                            {guest.roomNumber ? `Room ${guest.roomNumber}` : 'No room assigned'}
                           </span>
                         </div>
                         <div className="text-xs text-gray-500">
-                          <div>Check-in: {guest.isActive === false ? '---' : formatDate(guest.checkInDate)}</div>
-                          <div>Check-out: {guest.isActive === false ? '---' : formatDate(guest.checkOutDate)}</div>
+                          <div>Check-in: {formatDate(guest.checkInDate)}</div>
+                          <div>Check-out: {formatDate(guest.checkOutDate)}</div>
                         </div>
                       </div>
                     </td>
@@ -819,6 +819,18 @@ const GuestsPage = () => {
                     <div>
                       <span className="text-gray-500">{t('hotelAdmin.guests.table.room')}:</span>
                       <div className="font-medium">#{guest.roomNumber}</div>
+                    </div>
+                  )}
+                  {guest.checkInDate && (
+                    <div>
+                      <span className="text-gray-500">Check-in:</span>
+                      <div className="font-medium">{formatDate(guest.checkInDate)}</div>
+                    </div>
+                  )}
+                  {guest.checkOutDate && (
+                    <div>
+                      <span className="text-gray-500">Check-out:</span>
+                      <div className="font-medium">{formatDate(guest.checkOutDate)}</div>
                     </div>
                   )}
                 </div>

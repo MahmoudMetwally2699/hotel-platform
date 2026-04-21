@@ -8,7 +8,7 @@ const Service = require('../models/Service');
 const ServiceProvider = require('../models/ServiceProvider');
 const Booking = require('../models/Booking');
 const User = require('../models/User');
-const { protect, restrictTo, restrictToOwnBookings } = require('../middleware/auth');
+const { protect, restrictTo, restrictToOwnBookings, requireActiveAccount } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { sendEmail } = require('../utils/email');
 const {
@@ -379,7 +379,7 @@ router.get('/my-hotel', protect, restrictTo('guest'), async (req, res) => {
  * @route   POST /api/client/bookings
  * @access  Private
  */
-router.post('/bookings', protect, restrictTo('guest'), async (req, res) => {
+router.post('/bookings', protect, restrictTo('guest'), requireActiveAccount, async (req, res) => {
   try {
     // Booking request body (output removed)
 
@@ -1888,7 +1888,7 @@ router.get('/hotels/:hotelId/services/dining/items', async (req, res) => {
  * @route   POST /api/client/bookings/laundry
  * @access  Private/Guest
  */
-router.post('/bookings/laundry', protect, restrictTo('guest'), async (req, res) => {
+router.post('/bookings/laundry', protect, restrictTo('guest'), requireActiveAccount, async (req, res) => {
   try {
     const {
       serviceId,
@@ -2429,7 +2429,7 @@ router.get('/hotels/:hotelId/services/transportation/vehicles', async (req, res)
  * @route   POST /api/client/bookings/transportation
  * @access  Private/Guest
  */
-router.post('/bookings/transportation', protect, restrictTo('guest'), async (req, res) => {
+router.post('/bookings/transportation', protect, restrictTo('guest'), requireActiveAccount, async (req, res) => {
   try {
     const {
       serviceId,

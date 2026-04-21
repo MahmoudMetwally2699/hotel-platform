@@ -2384,7 +2384,7 @@ router.get('/guests/:guestId', catchAsync(async (req, res, next) => {
   const hotelId = req.user.hotelId;
 
   const guest = await User.findById(guestId).select('-password');
-  
+
   if (!guest || guest.role !== 'guest') {
     return next(new AppError('Guest not found', 404));
   }

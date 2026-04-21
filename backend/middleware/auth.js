@@ -65,7 +65,8 @@ const protect = catchAsync(async (req, res, next) => {
     }
 
     // 4) Check if user account is active
-    if (!currentUser.isActive) {
+    // Allow pending_approval users through - they can access their account but not services
+    if (!currentUser.isActive && currentUser.deactivationReason !== 'pending_approval') {
       logger.logSecurity('ACCESS_DENIED_INACTIVE_USER', req, {
         userId: decoded.id,
         deactivationReason: currentUser.deactivationReason,
@@ -382,6 +383,22 @@ const restrictToAssignedHotels = catchAsync(async (req, res, next) => {
   next();
 });
 
+/**
+ * Require active account - Block pending_approval users from service endpoints
+ * Use this middleware on booking/service routes that should only be accessible
+ * to guests whose accounts have been activated by the hotel admin.
+ */
+const requireActiveAccount = catchAsync(async (req, res, next) => {
+  if (req.user && req.user.role === 'guest') {
+    // Re-fetch to get the latest isActive status
+    const freshUser = await User.findById(req.user.id).select('+isActive');
+    if (freshUser && !freshUser.isActive && freshUser.deactivationReason === 'pending_approval') {
+      return next(new AppError('Your account is pending approval from the hotel admin. You cannot access services until your account is activated.', 403));
+    }
+  }
+  next();
+});
+
 module.exports = {
   protect,
   protectSuperHotel,
@@ -390,5 +407,6 @@ module.exports = {
   restrictToAssignedHotels,
   restrictToOwnServiceProvider,
   restrictToOwnBookings,
-  restrictProviderToHotelAdmin
+  restrictProviderToHotelAdmin,
+  requireActiveAccount
 };

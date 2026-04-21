@@ -926,6 +926,7 @@
     "termsAndConditions": "الشروط والأحكام",
     "createAccount": "إنشاء حساب",
     "creatingAccount": "جاري إنشاء الحساب...",
+    "registrationSuccess": "تم التسجيل بنجاح! أكمل إعداد ملفك الشخصي.",
     "alreadyHaveAccount": "لديك حساب بالفعل؟",
     "signInHere": "سجل دخولك هنا",
     "close": "إغلاق",
@@ -4228,6 +4229,15 @@
       "hello": "مرحباً",
       "guest": "ضيف",
       "quickAccess": "وصول سريع"
+    },
+    "pendingApproval": {
+      "title": "الحساب بانتظار التفعيل",
+      "message": "يتم مراجعة حسابك من قبل فريق الفندق. ستصبح الخدمات متاحة بمجرد تفعيل حسابك.",
+      "profileReady": "الملف الشخصي جاهز",
+      "profileReadyDesc": "تم حفظ ملفك الشخصي وتفضيلاتك",
+      "awaitingActivation": "بانتظار التفعيل",
+      "awaitingActivationDesc": "سيقوم مدير الفندق بتفعيل وصولك قريباً",
+      "contactHint": "تحتاج وصولاً فورياً؟ يرجى التواصل مع مكتب استقبال الفندق للمساعدة."
     },
     "transportation": {
       "noTransportationServices": "لا توجد خدمات نقل متاحة",

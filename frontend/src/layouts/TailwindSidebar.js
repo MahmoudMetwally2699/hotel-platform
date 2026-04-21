@@ -19,13 +19,16 @@ import { useTheme } from '../context/ThemeContext';
 
 const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
   const { t, i18n } = useTranslation();
-  const { role } = useAuth();
+  const { role, currentUser } = useAuth();
   const { hasCategory } = useServiceProviderCategories();
   const location = useLocation();
   const { theme } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
   const [showMobileCategories, setShowMobileCategories] = useState(false);
+
+  // Check if guest account is pending approval
+  const isGuestPendingApproval = role === 'guest' && currentUser && (currentUser.isActive === false || currentUser.deactivationReason === 'pending_approval');
 
   // Resolve authentication conflicts on mount and location change
   useEffect(() => {
@@ -181,6 +184,13 @@ const TailwindSidebar = ({ isOpen, toggleSidebar }) => {
 
         return serviceNavItems;
       case 'guest':
+        // If account is pending approval, show limited navigation
+        if (isGuestPendingApproval) {
+          return [
+            { name: t('navigation.hotelServices'), path: '/my-hotel-services', icon: 'server' },
+            { name: t('navigation.profile'), path: '/profile', icon: 'user' }
+          ];
+        }
         return [
           { name: t('navigation.hotelServices'), path: '/my-hotel-services', icon: 'server' },
           {

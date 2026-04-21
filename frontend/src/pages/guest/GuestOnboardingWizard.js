@@ -71,7 +71,11 @@ const GuestOnboardingWizard = () => {
     { value: 'Transit', label: t('guestOnboarding.purposes.transit'), icon: <HiArrowRight className="w-6 h-6" /> },
   ];
 
-  const pillowTypes = [t('guestOnboarding.pillows.soft'), t('guestOnboarding.pillows.medium'), t('guestOnboarding.pillows.firm')];
+  const pillowTypes = [
+    { value: 'Soft', label: t('guestOnboarding.pillows.soft') },
+    { value: 'Medium', label: t('guestOnboarding.pillows.medium') },
+    { value: 'Firm', label: t('guestOnboarding.pillows.firm') }
+  ];
   const temperatures = ['Cool (18-20°C)', 'Standard (21-22°C)', 'Warm (23-25°C)'];
   const floorPreferences = [t('guestOnboarding.floors.lower'), t('guestOnboarding.floors.any'), t('guestOnboarding.floors.higher')];
   const views = [t('guestOnboarding.views.any'), t('guestOnboarding.views.city'), t('guestOnboarding.views.pool'), t('guestOnboarding.views.nature')];
@@ -329,15 +333,15 @@ const GuestOnboardingWizard = () => {
           <div className="flex bg-gray-100 p-1 rounded-lg">
             {pillowTypes.map(pillow => (
               <button
-                key={pillow}
-                onClick={() => updateNestedState('roomPreferences', 'pillow', pillow)}
+                key={pillow.value}
+                onClick={() => updateNestedState('roomPreferences', 'pillow', pillow.value)}
                 className={`flex-1 py-2 px-2 text-sm font-medium rounded-md transition-all ${
-                  formData.preferences.roomPreferences.pillow === pillow
+                  formData.preferences.roomPreferences.pillow === pillow.value
                     ? 'bg-white shadow text-primary-light'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {pillow}
+                {pillow.label}
               </button>
             ))}
           </div>

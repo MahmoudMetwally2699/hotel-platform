@@ -224,8 +224,15 @@ const RegisterPage = () => {
       if (register.fulfilled.match(resultAction)) {
         const response = resultAction.payload;
         const token = response?.token || response?.data?.token;
-        if (!token) {
-          toast.success(response?.message || 'Registration successful. Your account is pending hotel admin approval.', {
+        if (token) {
+          // Registration returned a token - user is logged in, go to onboarding
+          toast.success(t('register.registrationSuccess', 'Registration successful! Complete your profile setup.'), {
+            duration: 4000,
+          });
+          navigate('/guest/onboarding', { replace: true });
+        } else {
+          // Fallback: no token returned, redirect to login
+          toast.success(response?.message || 'Registration successful. Please login.', {
             duration: 6000,
           });
           navigate('/login');

@@ -220,21 +220,29 @@ router.post('/register', catchAsync(async (req, res, next) => {
     logger.logAuth('USER_REGISTERED', newUser, req, logData);
   }
 
-  res.status(201).json({
-    success: true,
-    message: 'User registered successfully. Your account is pending hotel admin approval.',
-    data: {
-      user: {
-        _id: newUser._id,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        email: newUser.email,
-        role: newUser.role,
-        isActive: newUser.isActive,
-        deactivationReason: newUser.deactivationReason
-      }
-    }
-  });
+  // Issue JWT token so guest can proceed to onboarding immediately
+  // Account is still pending approval but guest can access their account
+  const userForToken = {
+    _id: newUser._id,
+    firstName: newUser.firstName,
+    lastName: newUser.lastName,
+    email: newUser.email,
+    role: newUser.role,
+    selectedHotelId: newUser.selectedHotelId,
+    roomNumber: newUser.roomNumber,
+    checkInDate: newUser.checkInDate,
+    checkOutDate: newUser.checkOutDate,
+    hasActiveBooking: newUser.hasActiveBooking,
+    isActive: newUser.isActive,
+    deactivationReason: newUser.deactivationReason,
+    onboardingCompleted: false
+  };
+
+  // Populate the hotel info for the token response
+  await newUser.populate('selectedHotelId', 'name address');
+  userForToken.selectedHotelId = newUser.selectedHotelId;
+
+  createSendToken(userForToken, 201, res, 'Registration successful. Your account is pending admin approval.');
 }));
 
 /**
@@ -285,7 +293,8 @@ router.post('/login', catchAsync(async (req, res, next) => {
   }
 
   // Check if account is active and handle deactivation reasons
-  if (!user.isActive) {
+  // Allow pending_approval accounts to log in (they can access account but not services)
+  if (!user.isActive && user.deactivationReason !== 'pending_approval') {
     const logData = { email, hotelId, deactivationReason: user.deactivationReason };
     logger.logSecurity('LOGIN_ATTEMPT_INACTIVE_ACCOUNT', req, logData);
 
@@ -297,8 +306,6 @@ router.post('/login', catchAsync(async (req, res, next) => {
       errorMessage = 'Your account has been deactivated by hotel administration. Please contact hotel reception for assistance.';
     } else if (user.deactivationReason === 'manual') {
       errorMessage = 'Your account has been manually deactivated. Please contact hotel reception for assistance.';
-    } else if (user.deactivationReason === 'pending_approval') {
-      errorMessage = 'Your account is awaiting approval from the hotel admin. Please check with reception.';
     }
 
     return next(new AppError(errorMessage, 403));
@@ -361,7 +368,9 @@ router.post('/login', catchAsync(async (req, res, next) => {
     selectedHotelId: user.selectedHotelId,
     hotelId: user.hotelId,
     serviceProviderId: user.serviceProviderId,
-    onboardingCompleted: user.onboardingCompleted
+    onboardingCompleted: user.onboardingCompleted,
+    isActive: user.isActive,
+    deactivationReason: user.deactivationReason
   };
 
   // Login response user data (output removed)
@@ -417,8 +426,13 @@ router.post('/refresh-token', catchAsync(async (req, res, next) => {
     // Check if user still exists
     const currentUser = await User.findById(decoded.id).select('+isActive').populate('selectedHotelId', 'name address');
 
-    if (!currentUser || !currentUser.isActive) {
+    if (!currentUser) {
       return next(new AppError('The user belonging to this token no longer exists', 401));
+    }
+
+    // Allow pending_approval users to refresh tokens (they can access account but not services)
+    if (!currentUser.isActive && currentUser.deactivationReason !== 'pending_approval') {
+      return next(new AppError('Your account has been deactivated', 401));
     }
 
     createSendToken(currentUser, 200, res, 'Token refreshed successfully');
@@ -705,6 +719,26 @@ router.patch('/update-password', protect, catchAsync(async (req, res, next) => {
   logger.logAuth('PASSWORD_UPDATED', user, req);
 
   createSendToken(user, 200, res, 'Password updated successfully');
+}));
+
+/**
+ * @route   GET /api/auth/profile
+ * @desc    Get current user's profile (fresh from DB, not from token/localStorage)
+ * @access  Private
+ */
+router.get('/profile', protect, catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.user.id)
+    .select('-password -passwordChangedAt -passwordResetToken -passwordResetExpires')
+    .populate('selectedHotelId', 'name address images');
+
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  res.status(200).json({
+    success: true,
+    data: user
+  });
 }));
 
 /**
