@@ -105,6 +105,7 @@ const LoyaltyProgramPage = () => {
         isOpen={showConfigModal}
         onClose={() => setShowConfigModal(false)}
         existingProgram={loyaltyProgram}
+        currency={currency}
       />
 
       {/* Header */}

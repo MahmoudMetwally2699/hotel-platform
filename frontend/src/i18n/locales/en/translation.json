@@ -467,7 +467,7 @@
     },
     "pointsRules": {
       "title": "Points Earning Rules",
-      "pointsPerDollar": "Points per Dollar Spent",
+      "pointsPerDollar": "Points per {{currency}} Spent",
       "pointsPerNight": "Points per Night Stayed",
       "pointsPerNightDesc": "Award bonus points for each night guests stay at your hotel",
       "serviceMultipliers": "Service Category Multipliers",
@@ -498,7 +498,7 @@
     },
     "validation": {
       "expirationRange": "Expiration must be between 1 and 36 months",
-      "pointsPerDollarMin": "Points per dollar must be at least 1",
+      "pointsPerDollarMin": "Points per {{currency}} must be at least 1",
       "minimumRedemptionMin": "Minimum redemption must be at least 1",
       "tierOverlap": "Tier point ranges must not overlap"
     }
@@ -542,7 +542,8 @@
       "to": "to",
       "apply": "Apply",
       "refresh": "Refresh",
-      "exportReport": "Export Report"
+      "exportReport": "Export Report",
+      "exporting": "Exporting..."
     },
     "serviceTypes": {
       "all": "All Services",
@@ -601,6 +602,12 @@
         "mostPopularService": "Most Popular Service",
         "requestsSuffix": "{{count}} requests"
       },
+      "tooltips": {
+        "avgCustomerSpending": "How it's calculated: All completed booking amounts (pricing.totalAmount for regular bookings, quote.finalPrice for transportation) are summed to get total spending. Unique guest IDs across all bookings are collected and de-duplicated. Formula: Total spending ÷ Number of unique customers. This shows how much each individual customer spends on average across all their service bookings in this period.",
+        "totalCustomersServed": "How it's calculated: The system collects all guest IDs from completed bookings (both regular and transportation) and de-duplicates them using a Set. The result is the count of unique guests who placed at least one completed order in this period. One guest ordering multiple services still counts as 1.",
+        "totalServiceRequests": "How it's calculated: The total count of all booking records (regular + transportation) in this period, regardless of status. This is a raw count of all service requests placed, not just completed ones.",
+        "mostPopularService": "How it's calculated: Completed bookings are grouped by serviceType. The group with the highest count of completed bookings is selected as the most popular. The request count shown below is the number of completed orders for that service category in this period."
+      },
       "popularity": {
         "title": "Service Popularity & Revenue Analysis",
         "subtitle": "Most active and in-demand services with spending metrics",
@@ -639,6 +646,8 @@
     "messages": {
       "refreshSuccess": "Analytics data refreshed",
       "exportSoon": "Export functionality coming soon",
+      "exportSuccess": "Report exported successfully!",
+      "exportError": "Failed to export report. Please try again.",
       "selectBothDates": "Please select both start and end dates",
       "startBeforeEnd": "Start date must be before end date",
       "fetchError": "Failed to fetch analytics data",
@@ -652,7 +661,12 @@
       "vsPrevious": "vs previous period",
       "noChange": "No change",
       "reviews": "reviews",
-      "basedOn": "Based on {{count}} reviews"
+      "basedOn": "Based on {{count}} reviews",
+      "tooltips": {
+        "averageRating": "How it's calculated: All feedback ratings collected in this period are summed and divided by the total number of reviews. Formula: Sum of all ratings ÷ Total number of reviews. Only active (non-deleted) reviews are counted. Compared to the previous period of the same length to show the trend.",
+        "totalReviews": "How it's calculated: A count of all feedback submissions (rating entries) recorded in this period for this hotel. Each booking that receives a guest rating counts as one review. Compared to the previous period of the same length to show if review volume is growing or declining.",
+        "topService": "How it's calculated: Groups all feedback by service type, computes the average rating per group, then selects the group with the highest average rating. In case of a tie, the service with more total reviews is ranked higher. Only services with at least 1 review in this period are considered."
+      }
     },
     "ratingsBreakdown": {
       "title": "Detailed Ratings Breakdown",
@@ -719,6 +733,12 @@
         "fromTarget": "{{value}}% from target",
         "ofTotalRequests": "{{percent}}% of total requests",
         "noData": "No data available"
+      },
+      "tooltips": {
+        "avgResponseTime": "How it's calculated: For each booking, the system records the timestamp when the request was created and when it was first accepted by the provider (sla.actualResponseTime). All individual response times are summed and divided by the count of bookings that have a recorded response time. Formula: Total response time across all bookings ÷ Number of bookings with a recorded response. The trend compares this value to the equivalent previous period — a positive trend (green) means response time improved (got faster).",
+        "avgCompletionTime": "How it's calculated: For each completed or in-progress booking, the system records the total time from acceptance to service completion (sla.actualCompletionTime in minutes). All individual completion times are summed and divided by the number of bookings that have a recorded completion time. Formula: Total completion time ÷ Number of completed bookings. The trend compares this to the previous period — a positive trend means services are being completed faster.",
+        "slaComplianceRate": "How it's calculated: When a booking is created, a target completion time is set based on the guest's chosen time. If the guest selects ASAP, the target is taken from the service provider's configured 'Delayed Time' for that service category (e.g. 45 min for dining, 65 min for transport). If the guest picks a specific time (e.g. 14:30), the target is the number of minutes from now until that scheduled time. When the service is marked completed, the actual time elapsed (from booking creation to completion) is compared to this target. Formula: (Number of bookings where actualCompletionTime ≤ targetCompletionTime ÷ Total completed bookings with SLA data) × 100%.",
+        "delayedRequests": "How it's calculated: Each booking's delay target is set at creation time: if the guest chose ASAP, the target is the provider's configured 'Delayed Time' for that service category (set by the hotel admin per service type). If the guest chose a specific time slot, the target is the number of minutes from booking creation until that preferred time. A request is counted as delayed when it is completed but the actual elapsed time (from creation to completion) exceeds this target. Formula: Count of bookings where sla.isCompletionOnTime = false. The percentage below the count is: (Delayed count ÷ All bookings in this period) × 100%."
       },
       "slaByService": {
         "title": "SLA Performance by Service",
@@ -820,6 +840,12 @@
         "internalRevenue": "Internal Revenue",
         "externalRevenue": "External Revenue",
         "commissionEarned": "Commission Earned"
+      },
+      "tooltips": {
+        "totalRevenue": "How it's calculated: The sum of all completed booking amounts (pricing.totalAmount for regular bookings, quote.finalPrice for transportation). This includes both internal and external services. Formula: Internal Revenue + External Revenue. The trend compares this period's total to the same-length previous period and shows the percentage change.",
+        "internalRevenue": "How it's calculated: The sum of all completed booking amounts where the assigned service provider is classified as 'internal' (hotel-managed staff). This represents revenue from services the hotel delivers directly without a third-party provider markup split.",
+        "externalRevenue": "How it's calculated: The sum of the base prices (before hotel markup) for all completed bookings where the provider is classified as 'external'. Formula: Sum of pricing.providerEarnings (regular) and quote.basePrice (transportation) for external providers only. This is the gross amount that goes to the third-party provider.",
+        "commissionEarned": "How it's calculated: The sum of the hotel's markup earnings on all external provider bookings. Formula: Sum of pricing.hotelEarnings (regular bookings) and hotelMarkup.amount (transportation bookings) for external providers only. This is the hotel's profit margin on top of the provider's base price."
       },
       "internal": {
         "title": "Internal Services Revenue",
@@ -975,6 +1001,9 @@
   },
   "register": {
     "createYourAccount": "Create Your Account",
+    "personalInformation": "Personal Information",
+    "stayDetails": "Stay Details",
+    "security": "Security",
     "registerForYourHotelStay": "Register for your hotel stay",
     "firstName": "First Name",
     "lastName": "Last Name",
@@ -2462,7 +2491,7 @@
         "itemsAdded": "{{count}} Items Added",
         "itemsPricing": "Items & Pricing",
         "configurePricing": "Configure pricing for this item",
-        "price": "Price ($)",
+        "price": "Price",
         "pricePlaceholder": "0.00",
         "notes": "Notes (optional)",
         "notesPlaceholder": "Special instructions or notes for this item",

@@ -249,7 +249,7 @@ const userSchema = new mongoose.Schema({
 
   deactivationReason: {
     type: String,
-    enum: ['checkout_expired', 'manual', 'admin_action', 'checkout_completed'],
+    enum: ['checkout_expired', 'manual', 'admin_action', 'checkout_completed', 'pending_approval'],
     default: null
   },
 

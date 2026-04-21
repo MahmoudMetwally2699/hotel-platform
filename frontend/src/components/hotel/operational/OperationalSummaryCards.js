@@ -11,7 +11,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../context/ThemeContext';
-import { FiClock, FiCheckCircle, FiAlertTriangle, FiTrendingDown, FiTrendingUp } from 'react-icons/fi';
+import { FiClock, FiCheckCircle, FiAlertTriangle, FiTrendingDown, FiTrendingUp, FiInfo } from 'react-icons/fi';
 
 const OperationalSummaryCards = ({ data, loading }) => {
   const { t } = useTranslation();
@@ -50,7 +50,8 @@ const OperationalSummaryCards = ({ data, loading }) => {
       trendText: data.responseTrend > 0
         ? t('performanceAnalyticsPage.operational.summary.faster')
         : t('performanceAnalyticsPage.operational.summary.slower'),
-      isPositive: data.responseTrend > 0 // Positive = faster (lower time)
+      isPositive: data.responseTrend > 0, // Positive = faster (lower time)
+      tooltip: t('performanceAnalyticsPage.operational.tooltips.avgResponseTime')
     },
     {
       title: t('performanceAnalyticsPage.operational.summary.avgCompletionTime'),
@@ -61,7 +62,8 @@ const OperationalSummaryCards = ({ data, loading }) => {
       trendText: data.completionTrend > 0
         ? t('performanceAnalyticsPage.operational.summary.faster')
         : t('performanceAnalyticsPage.operational.summary.slower'),
-      isPositive: data.completionTrend > 0
+      isPositive: data.completionTrend > 0,
+      tooltip: t('performanceAnalyticsPage.operational.tooltips.avgCompletionTime')
     },
     {
       title: t('performanceAnalyticsPage.operational.summary.slaComplianceRate'),
@@ -70,7 +72,8 @@ const OperationalSummaryCards = ({ data, loading }) => {
       icon: FiCheckCircle,
       bgColor: theme.primaryColor,
       trendText: t('performanceAnalyticsPage.operational.summary.fromTarget', { value: Math.abs(data.slaTrend).toFixed(1) }),
-      isPositive: data.slaTrend > 0
+      isPositive: data.slaTrend > 0,
+      tooltip: t('performanceAnalyticsPage.operational.tooltips.slaComplianceRate')
     },
     {
       title: t('performanceAnalyticsPage.operational.summary.delayedRequests'),
@@ -80,7 +83,8 @@ const OperationalSummaryCards = ({ data, loading }) => {
         : t('performanceAnalyticsPage.operational.summary.ofTotalRequests', { percent: '0' }),
       icon: FiAlertTriangle,
       bgColor: '#DC2626',
-      isNegative: true
+      isNegative: true,
+      tooltip: t('performanceAnalyticsPage.operational.tooltips.delayedRequests')
     }
   ];
 
@@ -95,7 +99,12 @@ const OperationalSummaryCards = ({ data, loading }) => {
           <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
             <div style={{ backgroundColor: card.bgColor }} className="p-4 text-white">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium opacity-90">{card.title}</span>
+                <span className="text-sm font-medium opacity-90 flex items-center">
+                  {card.title}
+                  {card.tooltip && (
+                    <FiInfo className="w-4 h-4 ml-1 opacity-70 cursor-help" title={card.tooltip} />
+                  )}
+                </span>
                 <Icon className="w-6 h-6 opacity-80" />
               </div>
             </div>

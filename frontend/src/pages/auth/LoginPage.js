@@ -163,7 +163,7 @@ const LoginPage = () => {
    */
   const clearQRSelection = () => {
     setQrHotelInfo(null);
-    toast.info('QR hotel selection cleared. You can now login manually.');
+    toast.success('QR hotel selection cleared. You can now login manually.');
   };
 
   /**
@@ -265,26 +265,59 @@ const LoginPage = () => {
     );
   }
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+    <div className="min-h-screen flex flex-col lg:flex-row bg-white">
+      {/* Left Pane - Image & Branding (Desktop Only) */}
+      <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 bg-[#3B5787]">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img src="/auth-bg.png" alt="Luxury Hotel" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-[#3B5787] bg-opacity-40 mix-blend-multiply"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#2A4065] via-transparent to-transparent opacity-80"></div>
+        </div>
+
         {/* Logo */}
-        <div className="text-center mb-6">
-          <img
-            src="/qickroom.png"
-            alt="Qickroom Logo"
-            className="mx-auto h-16 w-auto mb-4"
-          />
+        <div className="relative z-10">
+          <div className="bg-white/90 backdrop-blur-md p-3 rounded-2xl inline-block shadow-lg">
+            <img
+              src="/qickroom.png"
+              alt="Qickroom Logo"
+              className="h-10 w-auto"
+            />
+          </div>
         </div>
 
-        {/* Language Switcher */}
-        <div className="flex justify-end mb-4">
-          <LanguageSwitcher />
+        {/* Tagline */}
+        <div className="relative z-10 text-white max-w-md">
+          <h1 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight tracking-tight">
+            {t('login.welcomeMessage', 'Elevate your stay.')}
+          </h1>
+          <p className="text-lg text-white/80 font-medium">
+            {t('login.welcomeSubMessage', 'Seamless access to premium hotel services and personalized amenities.')}
+          </p>
         </div>
+      </div>
 
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-800">{t('login.welcomeBack')}</h2>
-          <p className="text-gray-600 mt-2">{t('login.signInToYourAccount')}</p>
-        </div>
+      {/* Right Pane - Form Container */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-16 xl:p-24 min-h-screen lg:min-h-0 relative overflow-y-auto bg-gray-50/50">
+        <div className="w-full max-w-md">
+          {/* Mobile Logo */}
+          <div className="lg:hidden text-center mb-8">
+            <img
+              src="/qickroom.png"
+              alt="Qickroom Logo"
+              className="mx-auto h-12 w-auto mb-4"
+            />
+          </div>
+
+          {/* Language Switcher */}
+          <div className="absolute top-6 right-6 sm:top-8 sm:right-8 z-10">
+            <LanguageSwitcher />
+          </div>
+
+          <div className="mb-10 lg:mt-0 mt-8">
+            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">{t('login.welcomeBack')}</h2>
+            <p className="text-gray-500 mt-2 text-lg">{t('login.signInToYourAccount')}</p>
+          </div>
 
         {showError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -327,84 +360,85 @@ const LoginPage = () => {
                 </div>
               ) : (
                 /* QR Scanner Required Notice */
-                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                  <HiQrcode className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <h3 className="text-sm font-medium text-blue-800 mb-2">{t('qrAuth.qrRequiredLogin')}</h3>
+                <div className="mb-8 p-6 bg-[#67BAE0]/10 border border-[#67BAE0]/30 rounded-2xl text-center shadow-sm">
+                  <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100">
+                    <HiQrcode className="h-8 w-8 text-[#67BAE0]" />
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-900 mb-2">{t('qrAuth.qrRequiredLogin')}</h3>
                   <button
                     type="button"
                     onClick={() => setShowQRScanner(true)}
-                    className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center space-x-2 px-6 py-3 bg-[#3B5787] text-white rounded-xl hover:bg-[#2A4065] transition-all duration-200 shadow-md hover:shadow-lg font-medium"
                     disabled={validatingQR}
                   >
                     <HiQrcode className="h-5 w-5" />
                     <span>{validatingQR ? t('qrAuth.validating') : t('qrAuth.scanToLogin')}</span>
                   </button>
 
-                  {/* Clear Session Button for users with login cookies */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      authService.clearSession();
-                      toast.success('Session cleared! You can now scan QR codes without interference.');
-                    }}
-                    className="ml-2 inline-flex items-center space-x-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                    title="Clear any existing login data that might interfere with QR scanning"
-                  >
-                    <span className="text-sm">{t('qrAuth.resetScanner')}</span>
-                  </button>
-
-                  <p className="mt-2 text-xs text-orange-600">
-                    {t('qrAuth.resetScannerHelp')}
-                  </p>
+                  <div className="mt-4 pt-4 border-t border-[#67BAE0]/20 flex flex-col items-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        authService.clearSession();
+                        toast.success('Scanner reset successfully.');
+                      }}
+                      className="inline-flex items-center space-x-2 px-4 py-2 text-[#3B5787] bg-white rounded-lg hover:bg-gray-50 transition-colors shadow-sm border border-gray-200 font-medium"
+                    >
+                      <span className="text-sm">{t('qrAuth.resetScanner')}</span>
+                    </button>
+                    <p className="mt-2 text-xs text-gray-500">
+                      {t('qrAuth.resetScannerHelp')}
+                    </p>
+                  </div>
                 </div>
               )}
 
-              <div className="mb-4">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="mb-5">
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">
                   {t('login.emailAddress')}
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <HiMail className="h-5 w-5 text-gray-400" />
                   </div>
                   <Field
                     type="email"
                     name="email"
                     disabled={!qrHotelInfo}
-                    className={`w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${!qrHotelInfo ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}`}
+                    className={`w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] transition-all bg-white shadow-sm ${!qrHotelInfo ? 'bg-gray-50 cursor-not-allowed opacity-70' : ''}`}
                     placeholder={qrHotelInfo ? t('login.enterYourEmail') : 'Scan QR code first'}
                   />
                 </div>
-                <ErrorMessage name="email" component="div" className="mt-1 text-sm text-red-600" />
-              </div>              <div className="mb-4">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                <ErrorMessage name="email" component="div" className="mt-1.5 text-sm text-red-500 font-medium" />
+              </div>              <div className="mb-6">
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-1.5">
                   {t('login.password')}
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <HiLockClosed className="h-5 w-5 text-gray-400" />
                   </div>
                   <Field
                     type="password"
                     name="password"
                     disabled={!qrHotelInfo}
-                    className={`w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${!qrHotelInfo ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}`}
+                    className={`w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#67BAE0] focus:border-[#67BAE0] transition-all bg-white shadow-sm ${!qrHotelInfo ? 'bg-gray-50 cursor-not-allowed opacity-70' : ''}`}
                     placeholder={qrHotelInfo ? t('login.enterYourPassword') : 'Scan QR code first'}
                   />
                 </div>
-                <ErrorMessage name="password" component="div" className="mt-1 text-sm text-red-600" />
+                <ErrorMessage name="password" component="div" className="mt-1.5 text-sm text-red-500 font-medium" />
               </div>
 
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center">
                   <Field
                     id="remember-me"
                     name="rememberMe"
                     type="checkbox"
                     disabled={!qrHotelInfo}
-                    className={`h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded ${!qrHotelInfo ? 'cursor-not-allowed opacity-60' : ''}`}
+                    className={`h-4.5 w-4.5 text-[#67BAE0] focus:ring-[#67BAE0] border-gray-300 rounded transition-colors ${!qrHotelInfo ? 'cursor-not-allowed opacity-60' : ''}`}
                   />
-                  <label htmlFor="remember-me" className={`ml-2 block text-sm text-gray-700 ${!qrHotelInfo ? 'opacity-60' : ''}`}>
+                  <label htmlFor="remember-me" className={`ml-2.5 block text-sm font-medium text-gray-700 ${!qrHotelInfo ? 'opacity-60' : ''}`}>
                     {t('login.rememberMe')}
                   </label>
                 </div>
@@ -414,12 +448,12 @@ const LoginPage = () => {
                     <button
                       type="button"
                       onClick={() => setShowForgotPassword(true)}
-                      className="font-medium text-blue-600 hover:text-blue-500"
+                      className="font-semibold text-[#3B5787] hover:text-[#67BAE0] transition-colors"
                     >
                       {t('login.forgotPassword', 'Forgot your password?')}
                     </button>
                   ) : (
-                    <span className="font-medium text-gray-400 cursor-not-allowed">
+                    <span className="font-semibold text-gray-400 cursor-not-allowed">
                       {t('login.forgotPassword', 'Forgot your password?')}
                     </span>
                   )}
@@ -428,9 +462,8 @@ const LoginPage = () => {
 
               <button
                 type="submit"
-                // Disable the button if no QR info, while submitting, or loading
                 disabled={!qrHotelInfo || isSubmitting}
-                className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3.5 px-4 rounded-xl shadow-lg shadow-[#3B5787]/20 text-sm font-bold text-white hover:bg-[#2A4065] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3B5787] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
                 style={{ backgroundColor: '#3B5787' }}
               >
                 {/* Show different text based on state */}
@@ -455,20 +488,21 @@ const LoginPage = () => {
           )}
         </Formik>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+        <div className="mt-8 text-center">
+          <p className="text-sm font-medium text-gray-600">
             {t('login.dontHaveAnAccount')}{' '}
-            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link to="/register" className="font-bold text-[#67BAE0] hover:text-[#3B5787] transition-colors">
               {t('login.signUp')}
             </Link>
           </p>
           {!qrHotelInfo && (
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-400 mt-3 font-medium">
               {t('qrAuth.qrLoginOnlyNotice')}
             </p>
           )}
         </div>
       </div>
+    </div>
 
       {/* Forgot Password Modal */}
       {showForgotPassword && qrHotelInfo && (

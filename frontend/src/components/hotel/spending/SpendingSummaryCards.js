@@ -2,6 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { useTheme } from '../../../context/ThemeContext';
 import { DollarSign, Users, FileText, Star } from 'lucide-react';
+import { FiInfo } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 import { selectHotelCurrency } from '../../../redux/slices/hotelSlice';
 import { formatPriceByLanguage } from '../../../utils/currency';
@@ -50,7 +51,8 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
       icon: DollarSign,
       bgColor: theme.primaryColor,
       iconBg: 'bg-white',
-      iconColor: theme.primaryColor
+      iconColor: theme.primaryColor,
+      tooltip: t('performanceAnalyticsPage.spending.tooltips.avgCustomerSpending')
     },
     {
       title: t('performanceAnalyticsPage.spending.summary.totalCustomersServed'),
@@ -58,7 +60,8 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
       icon: Users,
       bgColor: theme.primaryColor,
       iconBg: 'bg-white',
-      iconColor: theme.primaryColor
+      iconColor: theme.primaryColor,
+      tooltip: t('performanceAnalyticsPage.spending.tooltips.totalCustomersServed')
     },
     {
       title: t('performanceAnalyticsPage.spending.summary.totalServiceRequests'),
@@ -66,7 +69,8 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
       icon: FileText,
       bgColor: theme.primaryColor,
       iconBg: 'bg-white',
-      iconColor: theme.primaryColor
+      iconColor: theme.primaryColor,
+      tooltip: t('performanceAnalyticsPage.spending.tooltips.totalServiceRequests')
     },
     {
       title: t('performanceAnalyticsPage.spending.summary.mostPopularService'),
@@ -75,7 +79,8 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
       icon: Star,
       bgColor: theme.primaryColor,
       iconBg: 'bg-white',
-      iconColor: theme.primaryColor
+      iconColor: theme.primaryColor,
+      tooltip: t('performanceAnalyticsPage.spending.tooltips.mostPopularService')
     }
   ];
 
@@ -97,7 +102,12 @@ const SpendingSummaryCards = ({ data, loading, error }) => {
               </div>
             </div>
             <div className="p-4 bg-white">
-              <p className="text-sm text-gray-600 mb-1">{card.title}</p>
+              <p className="text-sm text-gray-600 mb-1 flex items-center">
+                {card.title}
+                {card.tooltip && (
+                  <FiInfo className="w-4 h-4 ml-1 opacity-70 cursor-help" title={card.tooltip} />
+                )}
+              </p>
               <p className="text-2xl font-bold text-gray-900">
                 {card.value}
               </p>

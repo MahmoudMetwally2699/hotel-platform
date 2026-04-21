@@ -9,6 +9,7 @@ import {
   Users,
   Percent
 } from 'lucide-react';
+import { FiInfo } from 'react-icons/fi';
 
 const RevenueSummaryCards = ({ data, loading, error }) => {
   const { t, i18n } = useTranslation();
@@ -48,25 +49,29 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
       value: data.totalRevenue,
       trend: data.trend,
       icon: DollarSign,
-      bgColor: theme.primaryColor
+      bgColor: theme.primaryColor,
+      tooltip: t('performanceAnalyticsPage.revenue.tooltips.totalRevenue')
     },
     {
       title: t('performanceAnalyticsPage.revenue.summary.internalRevenue'),
       value: data.internalRevenue,
       icon: Home,
-      bgColor: theme.primaryColor
+      bgColor: theme.primaryColor,
+      tooltip: t('performanceAnalyticsPage.revenue.tooltips.internalRevenue')
     },
     {
       title: t('performanceAnalyticsPage.revenue.summary.externalRevenue'),
       value: data.externalRevenue,
       icon: Users,
-      bgColor: theme.primaryColor
+      bgColor: theme.primaryColor,
+      tooltip: t('performanceAnalyticsPage.revenue.tooltips.externalRevenue')
     },
     {
       title: t('performanceAnalyticsPage.revenue.summary.commissionEarned'),
       value: data.externalCommission,
       icon: Percent,
-      bgColor: theme.primaryColor
+      bgColor: theme.primaryColor,
+      tooltip: t('performanceAnalyticsPage.revenue.tooltips.commissionEarned')
     }
   ];
 
@@ -114,7 +119,12 @@ const RevenueSummaryCards = ({ data, loading, error }) => {
               </div>
             </div>
             <div className="p-4 bg-white">
-              <p className="text-sm text-gray-600 mb-1">{card.title}</p>
+              <p className="text-sm text-gray-600 mb-1 flex items-center">
+                {card.title}
+                {card.tooltip && (
+                  <FiInfo className="w-4 h-4 ml-1 opacity-70 cursor-help" title={card.tooltip} />
+                )}
+              </p>
               <p className="text-2xl font-bold text-gray-900">
                 {formatCurrency(card.value)}
               </p>

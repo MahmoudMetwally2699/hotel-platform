@@ -332,7 +332,7 @@ const ChannelLoyaltySettings = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Points per Dollar Spent
+                  Points per Unit Spent
                 </label>
                 <input
                   type="number"
@@ -345,7 +345,7 @@ const ChannelLoyaltySettings = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <p className="mt-1 text-sm text-gray-500">
-                  Base points earned per $1 spent
+                  Base points earned per 1 unit spent
                 </p>
               </div>
 
@@ -412,7 +412,7 @@ const ChannelLoyaltySettings = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Points to Dollar Ratio
+                  Points to Value Ratio
                 </label>
                 <input
                   type="number"
@@ -424,7 +424,7 @@ const ChannelLoyaltySettings = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <p className="mt-1 text-sm text-gray-500">
-                  Points needed for $1 redemption
+                  Points needed for 1 unit redemption
                 </p>
               </div>
 

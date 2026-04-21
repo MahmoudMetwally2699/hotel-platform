@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../context/ThemeContext';
 import { FiCalendar, FiDownload, FiRefreshCw, FiStar, FiActivity, FiDollarSign, FiShoppingCart } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { exportAnalyticsPDF } from '../../utils/exportAnalyticsPDF';
 import RatingSummaryCards from '../../components/hotel/analytics/RatingSummaryCards';
 import RatingsBreakdownTable from '../../components/hotel/analytics/RatingsBreakdownTable';
 import RatingsByTypeChart from '../../components/hotel/analytics/RatingsByTypeChart';
@@ -110,6 +111,7 @@ const PerformanceAnalyticsPage = () => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [spendingPeriod, setSpendingPeriod] = useState('weekly');
 
   // Service type options
@@ -289,9 +291,42 @@ const PerformanceAnalyticsPage = () => {
     toast.success(t('performanceAnalyticsPage.messages.refreshSuccess'));
   };
 
-  // Handle export (placeholder for future PDF generation)
-  const handleExport = () => {
-    toast.info(t('performanceAnalyticsPage.messages.exportSoon'));
+  // Handle export — data-driven PDF (numbers & tables, no chart screenshots)
+  const handleExport = async () => {
+    try {
+      await exportAnalyticsPDF({
+        activeTab,
+        selectedRange,
+        selectedService,
+        primaryColor: theme.primaryColor,
+        t,
+        analyticsData: {
+          // Ratings
+          ratingSummary:    summaryState.data,
+          ratingsBreakdown: breakdownState.data,
+          ratingsByType:    byTypeState.data,
+          // Operational
+          operationalSummary: operationalSummary.data,
+          slaByService:       slaByService.data,
+          serviceDetails:     serviceDetails.data,
+          // Revenue
+          revenueSummary:    revenueSummary.data,
+          revenueByCategory: revenueByCategory.data,
+          internalServices:  internalServices.data,
+          externalProviders: externalProviders.data,
+          // Spending
+          spendingSummary:    spendingSummary.data,
+          servicePopularity:  servicePopularity.data,
+          comprehensive:      comprehensive.data,
+        },
+        onStart: () => setExporting(true),
+        onEnd:   () => setExporting(false),
+      });
+      toast.success(t('performanceAnalyticsPage.messages.exportSuccess', 'Report exported successfully!'));
+    } catch (err) {
+      setExporting(false);
+      toast.error(t('performanceAnalyticsPage.messages.exportError', 'Failed to export report. Please try again.'));
+    }
   };
 
   // Handle spending period change
@@ -435,11 +470,21 @@ const PerformanceAnalyticsPage = () => {
 
               <button
                 onClick={handleExport}
-                className="flex items-center px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
+                disabled={exporting}
+                className="flex items-center px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-60"
                 style={{ backgroundColor: theme.primaryColor }}
               >
-                <FiDownload className="w-4 h-4 mr-2" />
-                {t('performanceAnalyticsPage.controls.exportReport')}
+                {exporting ? (
+                  <>
+                    <FiRefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    {t('performanceAnalyticsPage.controls.exporting', 'Exporting...')}
+                  </>
+                ) : (
+                  <>
+                    <FiDownload className="w-4 h-4 mr-2" />
+                    {t('performanceAnalyticsPage.controls.exportReport')}
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -483,7 +528,7 @@ const PerformanceAnalyticsPage = () => {
 
         {/* Tab Content */}
         {activeTab === 'ratings' && (
-          <div className="space-y-6">
+          <div className="space-y-6" data-pdf-section="ratings">
             {/* Summary Cards */}
             <RatingSummaryCards
               data={summaryState.data}
@@ -511,7 +556,7 @@ const PerformanceAnalyticsPage = () => {
         )}
 
         {activeTab === 'operational' && (
-          <div className="space-y-6">
+          <div className="space-y-6" data-pdf-section="operational">
             {/* Operational Summary Cards */}
             <OperationalSummaryCards
               data={operationalSummary.data}
@@ -552,7 +597,7 @@ const PerformanceAnalyticsPage = () => {
         )}
 
         {activeTab === 'revenue' && (
-          <div className="space-y-6">
+          <div className="space-y-6" data-pdf-section="revenue">
             {/* Revenue Summary Cards */}
             <RevenueSummaryCards
               data={revenueSummary.data}
@@ -599,7 +644,7 @@ const PerformanceAnalyticsPage = () => {
         )}
 
         {activeTab === 'spending' && (
-          <div className="space-y-6">
+          <div className="space-y-6" data-pdf-section="spending">
             {/* Period Selector for Spending Tab */}
             <div className="bg-white rounded-lg shadow p-4">
               <div className="flex items-center gap-4">

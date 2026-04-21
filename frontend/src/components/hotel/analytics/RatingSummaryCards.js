@@ -6,7 +6,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../context/ThemeContext';
-import { FiStar, FiTrendingUp, FiTrendingDown, FiMessageSquare } from 'react-icons/fi';
+import { FiStar, FiTrendingUp, FiTrendingDown, FiMessageSquare, FiInfo } from 'react-icons/fi';
 
 const RatingSummaryCards = ({ data, loading }) => {
   const { t } = useTranslation();
@@ -74,7 +74,10 @@ const RatingSummaryCards = ({ data, loading }) => {
       {/* Average Rating Card */}
       <div className="rounded-lg shadow-lg p-6 text-white" style={{ backgroundColor: theme.primaryColor }}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold opacity-90">{t('performanceAnalyticsPage.ratingSummaryCards.averageRating')}</h3>
+          <h3 className="text-lg font-semibold opacity-90 flex items-center">
+            {t('performanceAnalyticsPage.ratingSummaryCards.averageRating')}
+            <FiInfo className="w-4 h-4 ml-2 opacity-70 cursor-help" title={t('performanceAnalyticsPage.ratingSummaryCards.tooltips.averageRating')} />
+          </h3>
           <div className="bg-white bg-opacity-20 rounded-full p-2">
             <FiStar className="w-6 h-6" />
           </div>
@@ -95,7 +98,10 @@ const RatingSummaryCards = ({ data, loading }) => {
       {/* Total Reviews Card */}
       <div className="rounded-lg shadow-lg p-6 text-white" style={{ backgroundColor: theme.primaryColor }}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold opacity-90">{t('performanceAnalyticsPage.ratingSummaryCards.totalReviews')}</h3>
+          <h3 className="text-lg font-semibold opacity-90 flex items-center">
+            {t('performanceAnalyticsPage.ratingSummaryCards.totalReviews')}
+            <FiInfo className="w-4 h-4 ml-2 opacity-70 cursor-help" title={t('performanceAnalyticsPage.ratingSummaryCards.tooltips.totalReviews')} />
+          </h3>
           <div className="bg-white bg-opacity-20 rounded-full p-2">
             <FiMessageSquare className="w-6 h-6" />
           </div>
@@ -114,7 +120,10 @@ const RatingSummaryCards = ({ data, loading }) => {
       {/* Highest Rated Service Card */}
       <div className="rounded-lg shadow-lg p-6 text-white" style={{ backgroundColor: theme.primaryColor }}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold opacity-90">{t('performanceAnalyticsPage.ratingSummaryCards.topService')}</h3>
+          <h3 className="text-lg font-semibold opacity-90 flex items-center">
+            {t('performanceAnalyticsPage.ratingSummaryCards.topService')}
+            <FiInfo className="w-4 h-4 ml-2 opacity-70 cursor-help" title={t('performanceAnalyticsPage.ratingSummaryCards.tooltips.topService')} />
+          </h3>
           <div className="bg-white bg-opacity-20 rounded-full p-2">
             <FiTrendingUp className="w-6 h-6" />
           </div>

@@ -203,7 +203,8 @@ router.post('/register', catchAsync(async (req, res, next) => {
     checkOutDate,
     nationality,
     hasActiveBooking: true, // Set to true since they're providing booking details
-    isActive: true
+    isActive: false, // Wait for admin approval
+    deactivationReason: 'pending_approval'
   });
 
   // Log registration with QR indication
@@ -219,7 +220,21 @@ router.post('/register', catchAsync(async (req, res, next) => {
     logger.logAuth('USER_REGISTERED', newUser, req, logData);
   }
 
-  createSendToken(newUser, 201, res, 'User registered successfully. You can now log in to your account.');
+  res.status(201).json({
+    success: true,
+    message: 'User registered successfully. Your account is pending hotel admin approval.',
+    data: {
+      user: {
+        _id: newUser._id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+        role: newUser.role,
+        isActive: newUser.isActive,
+        deactivationReason: newUser.deactivationReason
+      }
+    }
+  });
 }));
 
 /**
@@ -282,6 +297,8 @@ router.post('/login', catchAsync(async (req, res, next) => {
       errorMessage = 'Your account has been deactivated by hotel administration. Please contact hotel reception for assistance.';
     } else if (user.deactivationReason === 'manual') {
       errorMessage = 'Your account has been manually deactivated. Please contact hotel reception for assistance.';
+    } else if (user.deactivationReason === 'pending_approval') {
+      errorMessage = 'Your account is awaiting approval from the hotel admin. Please check with reception.';
     }
 
     return next(new AppError(errorMessage, 403));

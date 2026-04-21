@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Loyalty Program Configuration Modal
  * Allows hotel admins to create/update loyalty program settings
  */
@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { X, Save, AlertCircle, Users, Building2, UserCheck } from 'lucide-react';
 import { fetchLoyaltyProgram } from '../../../redux/slices/loyaltySlice';
 
-const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
+const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null, currency = 'USD' }) => {
   const { t } = useTranslation();
   const { loading, loyaltyProgram } = useSelector((state) => state.loyalty);
   const dispatch = useDispatch();
@@ -254,7 +254,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
     }
 
     if (currentChannelSettings.pointsPerDollar < 1) {
-      newErrors.pointsPerDollar = t('loyaltyProgramConfig.validation.pointsPerDollarMin');
+      newErrors.pointsPerDollar = t('loyaltyProgramConfig.validation.pointsPerDollarMin', { currency });
     }
 
     if (currentChannelSettings.minimumRedemption < 1) {
@@ -542,7 +542,7 @@ const LoyaltyProgramConfig = ({ isOpen, onClose, existingProgram = null }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('loyaltyProgramConfig.pointsRules.pointsPerDollar')}
+                  {t('loyaltyProgramConfig.pointsRules.pointsPerDollar', { currency })}
                 </label>
                 <input
                   type="number"
