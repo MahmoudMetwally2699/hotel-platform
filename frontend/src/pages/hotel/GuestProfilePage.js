@@ -156,7 +156,7 @@ const GuestProfilePage = () => {
           className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
         >
           <HiChevronLeft className="w-5 h-5 mr-1" />
-          Back to Guests
+          {t('guestProfile.backToGuests', 'Back to Guests')}
         </button>
       </div>
 
@@ -171,9 +171,9 @@ const GuestProfilePage = () => {
             <div className="flex items-center gap-6">
               <div>
                 <div className="flex items-center gap-3 mb-1">
-                  <span className="text-xs font-bold tracking-wider text-indigo-300 uppercase">Primary Guest</span>
+                  <span className="text-xs font-bold tracking-wider text-indigo-300 uppercase">{t('guestProfile.primaryGuest', 'Primary Guest')}</span>
                   <span className="w-1 h-1 rounded-full bg-gray-500"></span>
-                  <span className="text-xs font-bold tracking-wider text-[#d4af37] uppercase">Loyalty: {guest.channel || 'Standard'}</span>
+                  <span className="text-xs font-bold tracking-wider text-[#d4af37] uppercase">{t('guestProfile.loyalty', 'Loyalty:')} {guest.channel || 'Standard'}</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">
                   {guest.firstName} {guest.lastName}
@@ -181,7 +181,7 @@ const GuestProfilePage = () => {
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300 font-medium">
                   {guest.nationality && (
                     <span className="flex items-center gap-1.5">
-                      <HiLocationMarker /> {guest.nationality}
+                      <HiLocationMarker /> {t(`nationalities.${guest.nationality}`, guest.nationality)}
                     </span>
                   )}
                   <span className="flex items-center gap-1.5">
@@ -189,12 +189,12 @@ const GuestProfilePage = () => {
                   </span>
                   {guest.idNumber && (
                     <span className="flex items-center gap-1.5">
-                      <HiIdentification /> {guest.idType === 'passport' ? 'Passport' : 'National ID'}: {guest.idNumber}
+                      <HiIdentification /> {guest.idType === 'passport' ? t('guestProfile.passport', 'Passport') : t('guestProfile.nationalId', 'National ID')}: {guest.idNumber}
                     </span>
                   )}
                   {guest.dateOfBirth && (
                     <span className="flex items-center gap-1.5">
-                      <HiCake /> Born: {new Date(guest.dateOfBirth).toLocaleDateString()}
+                      <HiCake /> {t('guestProfile.born', 'Born:')} {new Date(guest.dateOfBirth).toLocaleDateString()}
                     </span>
                   )}
                 </div>
@@ -206,7 +206,7 @@ const GuestProfilePage = () => {
                 onClick={() => setIsEditModalOpen(true)}
                 className="flex-1 md:flex-none px-6 py-2.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-sm font-semibold transition-all"
               >
-                Edit Profile
+                {t('guestProfile.editProfile', 'Edit Profile')}
               </button>
             </div>
           </div>
@@ -216,31 +216,31 @@ const GuestProfilePage = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-              <HiOutlineOfficeBuilding className="w-4 h-4" /> Total Stays
+              <HiOutlineOfficeBuilding className="w-4 h-4" /> {t('guestProfile.totalStays', 'Total Stays')}
             </span>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-extrabold text-gray-900">{totalStays}</span>
-              {totalStays > 0 && <span className="text-xs font-bold text-green-500 flex items-center bg-green-50 px-1.5 py-0.5 rounded"><HiTrendingUp className="mr-1"/> +20% YOY</span>}
+              {totalStays > 0 && <span className="text-xs font-bold text-green-500 flex items-center bg-green-50 px-1.5 py-0.5 rounded"><HiTrendingUp className="mr-1"/> +20% {t('guestProfile.yoy', 'YOY')}</span>}
             </div>
           </div>
           
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-              <HiOutlineSparkles className="w-4 h-4" /> Life-Time Value
+              <HiOutlineSparkles className="w-4 h-4" /> {t('guestProfile.lifetimeValue', 'Life-Time Value')}
             </span>
             <span className="text-3xl font-extrabold text-indigo-900">{formattedLTV}</span>
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-              Preferred Room
+              {t('guestProfile.preferredRoom', 'Preferred Room')}
             </span>
-            <span className="text-xl font-bold text-gray-800">{preferredRoom}</span>
+            <span className="text-xl font-bold text-gray-800">{preferredRoom === 'Any' ? t('guestProfile.any', 'Any') : preferredRoom}</span>
           </div>
 
           <div className="bg-[#fcf5e5] p-6 rounded-2xl shadow-sm border border-[#f5e6c4] flex flex-col justify-center">
             <span className="text-xs font-bold text-[#b89547] uppercase tracking-wider mb-2 flex items-center gap-2">
-              <HiOutlineStar className="w-4 h-4" /> Avg Guest Rating
+              <HiOutlineStar className="w-4 h-4" /> {t('guestProfile.avgGuestRating', 'Avg Guest Rating')}
             </span>
             <div className="flex items-center gap-3">
               <span className="text-3xl font-extrabold text-[#7a5e1f]">{formatReviewFormat()}</span>
@@ -261,7 +261,7 @@ const GuestProfilePage = () => {
             <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
                 <h3 className="text-lg font-bold text-gray-900 flex items-center">
-                  Activity & Bookings
+                  {t('guestProfile.activityBookings', 'Activity & Bookings')}
                 </h3>
                 <div className="flex items-center gap-3 text-gray-400">
                   <button className="p-2 hover:bg-gray-50 rounded-lg transition-colors"><HiFilter className="w-5 h-5"/></button>
@@ -273,18 +273,18 @@ const GuestProfilePage = () => {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-gray-50/50 text-xs uppercase tracking-wider text-gray-400 font-bold border-b border-gray-100">
-                      <th className="px-6 py-4 font-semibold">Dates</th>
-                      <th className="px-6 py-4 font-semibold">Service Type</th>
-                      <th className="px-6 py-4 font-semibold">Status</th>
-                      <th className="px-6 py-4 font-semibold">Revenue</th>
-                      <th className="px-6 py-4 font-semibold">Guest Rating</th>
+                      <th className="px-6 py-4 font-semibold">{t('guestProfile.dates', 'Dates')}</th>
+                      <th className="px-6 py-4 font-semibold">{t('guestProfile.serviceType', 'Service Type')}</th>
+                      <th className="px-6 py-4 font-semibold">{t('guestProfile.status', 'Status')}</th>
+                      <th className="px-6 py-4 font-semibold">{t('guestProfile.revenue', 'Revenue')}</th>
+                      <th className="px-6 py-4 font-semibold">{t('guestProfile.guestRating', 'Guest Rating')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 text-sm">
                     {stays && stays.length > 0 ? (
                       stays.map((stay, idx) => {
                         const category = stay.serviceDetails?.category || stay.serviceType || 'regular';
-                        const serviceName = stay.serviceDetails?.name || category.charAt(0).toUpperCase() + category.slice(1);
+                        const serviceName = stay.serviceDetails?.name || t(`feedback.serviceTypes.${category}`, category.charAt(0).toUpperCase() + category.slice(1));
                         const rev = stay.pricing?.totalAmount 
                           ? `${stay.pricing.currency || 'USD'} ${stay.pricing.totalAmount.toFixed(2)}` 
                           : '-';
@@ -318,7 +318,7 @@ const GuestProfilePage = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 text-gray-600">
-                              <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${statusColor}`}>{stay.status}</span>
+                              <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${statusColor}`}>{t(`common.${stay.status}`, stay.status)}</span>
                             </td>
                             <td className="px-6 py-4 font-semibold text-gray-900">
                               {rev}
@@ -339,7 +339,7 @@ const GuestProfilePage = () => {
                         <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
                           <div className="flex flex-col items-center justify-center">
                             <HiCalendar className="w-10 h-10 text-gray-300 mb-3" />
-                            <p>No past activity found for this guest.</p>
+                            <p>{t('guestProfile.noActivity', 'No past activity found for this guest.')}</p>
                           </div>
                         </td>
                       </tr>
@@ -348,7 +348,7 @@ const GuestProfilePage = () => {
                 </table>
               </div>
               <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">
-                <span>Showing {stays?.length || 0} activity records</span>
+                <span>{t('guestProfile.showingRecords', 'Showing {{count}} activity records', { count: stays?.length || 0 })}</span>
               </div>
             </div>
             
@@ -357,7 +357,7 @@ const GuestProfilePage = () => {
               
               {/* Noted Preferences */}
               <div className="bg-[#f8f9fa] rounded-[24px] p-6 lg:p-8">
-                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Noted Preferences</h3>
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">{t('guestProfile.notedPreferences', 'Noted Preferences')}</h3>
                 
                 <div className="space-y-6">
                   {guest.preferences?.foodAndBeverage?.morningDrink && (
@@ -366,9 +366,9 @@ const GuestProfilePage = () => {
                         <span className="text-sm">🥃</span>
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900 text-sm">Morning Drink</h4>
+                        <h4 className="font-bold text-gray-900 text-sm">{t('guestProfile.morningDrink', 'Morning Drink')}</h4>
                         <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                          Prefers {guest.preferences.foodAndBeverage.morningDrink}.
+                          {t('guestProfile.prefersDrink', 'Prefers {{drink}}.', { drink: guest.preferences.foodAndBeverage.morningDrink })}
                         </p>
                       </div>
                     </div>
@@ -380,9 +380,9 @@ const GuestProfilePage = () => {
                         <span className="text-sm">🏢</span>
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900 text-sm">Room Preference</h4>
+                        <h4 className="font-bold text-gray-900 text-sm">{t('guestProfile.roomPreference', 'Room Preference')}</h4>
                         <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                          Requests {guest.preferences.roomPreferences.floor} floor setups. View preference: {guest.preferences.roomPreferences.view}.
+                          {t('guestProfile.requestsRoom', 'Requests {{floor}} floor setups. View preference: {{view}}.', { floor: guest.preferences.roomPreferences.floor, view: guest.preferences.roomPreferences.view })}
                         </p>
                       </div>
                     </div>
@@ -394,9 +394,9 @@ const GuestProfilePage = () => {
                         <span className="text-sm">🛏️</span>
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-900 text-sm">Pillow Type</h4>
+                        <h4 className="font-bold text-gray-900 text-sm">{t('guestProfile.pillowType', 'Pillow Type')}</h4>
                         <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                          Comfort mandatory: {guest.preferences.roomPreferences.pillow} pillows.
+                          {t('guestProfile.comfortMandatory', 'Comfort mandatory: {{pillow}} pillows.', { pillow: guest.preferences.roomPreferences.pillow })}
                         </p>
                       </div>
                     </div>
@@ -413,17 +413,17 @@ const GuestProfilePage = () => {
                 <div>
                   <h3 className="text-xs font-bold text-indigo-300 uppercase tracking-widest flex items-center gap-2 mb-6">
                     <span className="w-5 h-5 bg-indigo-500/20 rounded flex items-center justify-center text-indigo-400">📝</span> 
-                    Internal Concierge Note
+                    {t('guestProfile.internalConciergeNote', 'Internal Concierge Note')}
                   </h3>
                   
                   <p className="text-lg md:text-xl lg:text-2xl font-medium text-white/90 leading-snug italic relative z-10">
-                    "{guest.preferences?.extraPersonalization || 'No extra personalization notes provided.'}"
+                    "{guest.preferences?.extraPersonalization || t('guestProfile.noPersonalization', 'No extra personalization notes provided.')}"
                   </p>
                 </div>
 
                 <div className="mt-8 border-t border-white/10 pt-6 relative z-10 text-right">
                   <span className="text-xs font-medium text-gray-500">
-                    Last updated: {new Date(guest.updatedAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'})}
+                    {t('guestProfile.lastUpdated', 'Last updated:')} {new Date(guest.updatedAt || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'})}
                   </span>
                 </div>
               </div>
@@ -435,7 +435,7 @@ const GuestProfilePage = () => {
                   <div className="flex items-center gap-2">
                     <HiAnnotation className="w-5 h-5 text-indigo-300" />
                     <h3 className="text-sm font-bold text-white uppercase tracking-widest">
-                      Staff Notes
+                      {t('guestProfile.staffNotes', 'Staff Notes')}
                     </h3>
                     {notes.length > 0 && (
                       <span className="ml-1 bg-indigo-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
@@ -451,7 +451,7 @@ const GuestProfilePage = () => {
                     <textarea
                       value={newNoteText}
                       onChange={e => setNewNoteText(e.target.value)}
-                      placeholder="Add an internal note about this guest..."
+                      placeholder={t('guestProfile.addNotePlaceholder', 'Add an internal note about this guest...')}
                       rows={2}
                       maxLength={1000}
                       onKeyDown={e => {
@@ -470,10 +470,10 @@ const GuestProfilePage = () => {
                       ) : (
                         <HiPlus className="w-4 h-4" />
                       )}
-                      Add
+                      {t('common.add', 'Add')}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1.5 ml-1">Tip: Press Ctrl+Enter to save quickly</p>
+                  <p className="text-xs text-gray-400 mt-1.5 ml-1">{t('guestProfile.saveTip', 'Tip: Press Ctrl+Enter to save quickly')}</p>
                 </div>
 
                 {/* Notes list */}
@@ -481,8 +481,8 @@ const GuestProfilePage = () => {
                   {notes.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                       <HiAnnotation className="w-10 h-10 mb-3 opacity-30" />
-                      <p className="text-sm">No staff notes yet</p>
-                      <p className="text-xs mt-1 text-gray-400">Be the first to add a note about this guest</p>
+                      <p className="text-sm">{t('guestProfile.noStaffNotes', 'No staff notes yet')}</p>
+                      <p className="text-xs mt-1 text-gray-400">{t('guestProfile.beFirstNote', 'Be the first to add a note about this guest')}</p>
                     </div>
                   ) : (
                     notes.map(note => (
@@ -499,12 +499,12 @@ const GuestProfilePage = () => {
                             {/* Author */}
                             <span className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full font-medium">
                               <HiUser className="w-3.5 h-3.5" />
-                              {note.addedByName || 'Admin'}
+                              {note.addedByName || t('guestProfile.admin', 'Admin')}
                             </span>
                             {/* Hotel */}
                             <span className="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-medium">
                               <HiOfficeBuilding className="w-3.5 h-3.5" />
-                              {note.hotelName || 'Hotel'}
+                              {note.hotelName || t('guestProfile.hotel', 'Hotel')}
                             </span>
                             {/* Time */}
                             <span className="flex items-center gap-1 text-gray-400">
@@ -546,7 +546,7 @@ const GuestProfilePage = () => {
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col transform transition-transform scale-100">
             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="text-lg font-bold text-gray-900">
-                Edit Guest Profile
+                {t('guestProfile.editModal.title', 'Edit Guest Profile')}
               </h3>
               <button 
                 onClick={() => setIsEditModalOpen(false)}
@@ -560,33 +560,33 @@ const GuestProfilePage = () => {
               <form id="edit-profile-form" onSubmit={handleUpdateProfile} className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">ID Type</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">{t('guestProfile.editModal.idType', 'ID Type')}</label>
                     <select
                       value={editForm.idType}
                       onChange={(e) => setEditForm(prev => ({ ...prev, idType: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow bg-white"
                     >
-                      <option value="national_id">National ID</option>
-                      <option value="passport">Passport</option>
+                      <option value="national_id">{t('guestProfile.nationalId', 'National ID')}</option>
+                      <option value="passport">{t('guestProfile.passport', 'Passport')}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                      Number
+                      {t('guestProfile.editModal.number', 'Number')}
                     </label>
                     <input
                       type="text"
                       value={editForm.idNumber}
                       onChange={(e) => setEditForm(prev => ({ ...prev, idNumber: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow"
-                      placeholder="Enter ID/Passport number"
+                      placeholder={t('guestProfile.editModal.numberPlaceholder', 'Enter ID/Passport number')}
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    Nationality
+                    {t('guestProfile.editModal.nationality', 'Nationality')}
                   </label>
                   <input
                     type="text"
@@ -599,7 +599,7 @@ const GuestProfilePage = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    Date of Birth
+                    {t('guestProfile.editModal.dob', 'Date of Birth')}
                   </label>
                   <input
                     type="date"
@@ -610,12 +610,12 @@ const GuestProfilePage = () => {
                 </div>
 
                 <div className="pt-4 border-t border-gray-100">
-                  <h4 className="font-bold text-gray-900 mb-4">Preferences</h4>
+                  <h4 className="font-bold text-gray-900 mb-4">{t('guestProfile.editModal.preferences', 'Preferences')}</h4>
 
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                        Trip Purpose
+                        {t('guestProfile.editModal.tripPurpose', 'Trip Purpose')}
                       </label>
                       <input
                         type="text"
@@ -628,14 +628,14 @@ const GuestProfilePage = () => {
 
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                        Extra Personalization Notes
+                        {t('guestProfile.editModal.extraNotes', 'Extra Personalization Notes')}
                       </label>
                       <textarea
                         value={editForm.preferences?.extraPersonalization || ''}
                         onChange={(e) => setEditForm(prev => ({ ...prev, preferences: { ...prev.preferences, extraPersonalization: e.target.value } }))}
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-shadow resize-y"
                         rows="4"
-                        placeholder="Special requests or internal notes..."
+                        placeholder={t('guestProfile.editModal.notesPlaceholder', 'Special requests or internal notes...')}
                       />
                     </div>
                   </div>
@@ -650,7 +650,7 @@ const GuestProfilePage = () => {
                 className="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
                 disabled={isSaving}
               >
-                Cancel
+                {t('common.cancel', 'Cancel')}
               </button>
               <button
                 type="submit"
@@ -664,10 +664,10 @@ const GuestProfilePage = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Saving...
+                    {t('common.saving', 'Saving...')}
                   </span>
                 ) : (
-                  'Save Profile'
+                  t('guestProfile.editModal.save', 'Save Profile')
                 )}
               </button>
             </div>
