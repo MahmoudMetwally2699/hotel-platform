@@ -80,18 +80,200 @@ const GuestOnboardingWizard = () => {
   const floorPreferences = [t('guestOnboarding.floors.lower'), t('guestOnboarding.floors.any'), t('guestOnboarding.floors.higher')];
   const views = [t('guestOnboarding.views.any'), t('guestOnboarding.views.city'), t('guestOnboarding.views.pool'), t('guestOnboarding.views.nature')];
   const nationalities = [
-    "Afghan", "Albanian", "Algerian", "American", "Andorran", "Angolan", "Antiguans", "Argentinean", "Armenian", "Australian", "Austrian", "Azerbaijani",
-    "Bahamian", "Bahraini", "Bangladeshi", "Barbadian", "Barbudans", "Batswana", "Belarusian", "Belgian", "Belizean", "Beninese", "Bhutanese", "Bolivian", "Bosnian", "Brazilian", "British", "Bruneian", "Bulgarian", "Burkinabe", "Burmese", "Burundian",
-    "Cambodian", "Cameroonian", "Canadian", "Cape Verdean", "Central African", "Chadian", "Chilean", "Chinese", "Colombian", "Comoran", "Congolese", "Costa Rican", "Croatian", "Cuban", "Cypriot", "Czech",
-    "Danish", "Djibouti", "Dominican", "Dutch", "East Timorese", "Ecuadorean", "Egyptian", "Emirian", "Equatorial Guinean", "Eritrean", "Estonian", "Ethiopian",
-    "Fijian", "Filipino", "Finnish", "French", "Gabonese", "Gambian", "Georgian", "German", "Ghanaian", "Greek", "Grenadian", "Guatemalan", "Guinea-Bissauan", "Guinean", "Guyanese",
-    "Haitian", "Herzegovinian", "Honduran", "Hungarian", "I-Kiribati", "Icelander", "Indian", "Indonesian", "Iranian", "Iraqi", "Irish", "Israeli", "Italian", "Ivorian",
-    "Jamaican", "Japanese", "Jordanian", "Kazakhstani", "Kenyan", "Kittian and Nevisian", "Kuwaiti", "Kyrgyz", "Laotian", "Latvian", "Lebanese", "Liberian", "Libyan", "Liechtensteiner", "Lithuanian", "Luxembourger",
-    "Macedonian", "Malagasy", "Malawian", "Malaysian", "Maldivan", "Malian", "Maltese", "Marshallese", "Mauritanian", "Mauritian", "Mexican", "Micronesian", "Moldovan", "Monacan", "Mongolian", "Moroccan", "Mosotho", "Motswana", "Mozambican",
-    "Namibian", "Nauruan", "Nepalese", "New Zealander", "Ni-Vanuatu", "Nicaraguan", "Nigerien", "North Korean", "Northern Irish", "Norwegian", "Omani", "Pakistani", "Palauan", "Panamanian", "Papua New Guinean", "Paraguayan", "Peruvian", "Polish", "Portuguese",
-    "Qatari", "Romanian", "Russian", "Rwandan", "Saint Lucian", "Salvadoran", "Samoan", "San Marinese", "Sao Tomean", "Saudi", "Scottish", "Senegalese", "Serbian", "Seychellois", "Sierra Leonean", "Singaporean", "Slovakian", "Slovenian", "Solomon Islander", "Somali", "South African", "South Korean", "Spanish", "Sri Lankan", "Sudanese", "Surinamer", "Swazi", "Swedish", "Swiss", "Syrian",
-    "Taiwanese", "Tajik", "Tanzanian", "Thai", "Togolese", "Tongan", "Trinidadian or Tobagonian", "Tunisian", "Turkish", "Tuvaluan", "Ugandan", "Ukrainian", "Uruguayan", "Uzbekistani",
-    "Venezuelan", "Vietnamese", "Welsh", "Yemenite", "Zambian", "Zimbabwean", "Other"
+    { value: "Afghan", label: t('nationalities.Afghan', 'Afghan') },
+    { value: "Albanian", label: t('nationalities.Albanian', 'Albanian') },
+    { value: "Algerian", label: t('nationalities.Algerian', 'Algerian') },
+    { value: "American", label: t('nationalities.American', 'American') },
+    { value: "Andorran", label: t('nationalities.Andorran', 'Andorran') },
+    { value: "Angolan", label: t('nationalities.Angolan', 'Angolan') },
+    { value: "Antiguans", label: t('nationalities.Antiguans', 'Antiguans') },
+    { value: "Argentinean", label: t('nationalities.Argentinean', 'Argentinean') },
+    { value: "Armenian", label: t('nationalities.Armenian', 'Armenian') },
+    { value: "Australian", label: t('nationalities.Australian', 'Australian') },
+    { value: "Austrian", label: t('nationalities.Austrian', 'Austrian') },
+    { value: "Azerbaijani", label: t('nationalities.Azerbaijani', 'Azerbaijani') },
+    { value: "Bahamian", label: t('nationalities.Bahamian', 'Bahamian') },
+    { value: "Bahraini", label: t('nationalities.Bahraini', 'Bahraini') },
+    { value: "Bangladeshi", label: t('nationalities.Bangladeshi', 'Bangladeshi') },
+    { value: "Barbadian", label: t('nationalities.Barbadian', 'Barbadian') },
+    { value: "Barbudans", label: t('nationalities.Barbudans', 'Barbudans') },
+    { value: "Batswana", label: t('nationalities.Batswana', 'Batswana') },
+    { value: "Belarusian", label: t('nationalities.Belarusian', 'Belarusian') },
+    { value: "Belgian", label: t('nationalities.Belgian', 'Belgian') },
+    { value: "Belizean", label: t('nationalities.Belizean', 'Belizean') },
+    { value: "Beninese", label: t('nationalities.Beninese', 'Beninese') },
+    { value: "Bhutanese", label: t('nationalities.Bhutanese', 'Bhutanese') },
+    { value: "Bolivian", label: t('nationalities.Bolivian', 'Bolivian') },
+    { value: "Bosnian", label: t('nationalities.Bosnian', 'Bosnian') },
+    { value: "Brazilian", label: t('nationalities.Brazilian', 'Brazilian') },
+    { value: "British", label: t('nationalities.British', 'British') },
+    { value: "Bruneian", label: t('nationalities.Bruneian', 'Bruneian') },
+    { value: "Bulgarian", label: t('nationalities.Bulgarian', 'Bulgarian') },
+    { value: "Burkinabe", label: t('nationalities.Burkinabe', 'Burkinabe') },
+    { value: "Burmese", label: t('nationalities.Burmese', 'Burmese') },
+    { value: "Burundian", label: t('nationalities.Burundian', 'Burundian') },
+    { value: "Cambodian", label: t('nationalities.Cambodian', 'Cambodian') },
+    { value: "Cameroonian", label: t('nationalities.Cameroonian', 'Cameroonian') },
+    { value: "Canadian", label: t('nationalities.Canadian', 'Canadian') },
+    { value: "Cape Verdean", label: t('nationalities.Cape Verdean', 'Cape Verdean') },
+    { value: "Central African", label: t('nationalities.Central African', 'Central African') },
+    { value: "Chadian", label: t('nationalities.Chadian', 'Chadian') },
+    { value: "Chilean", label: t('nationalities.Chilean', 'Chilean') },
+    { value: "Chinese", label: t('nationalities.Chinese', 'Chinese') },
+    { value: "Colombian", label: t('nationalities.Colombian', 'Colombian') },
+    { value: "Comoran", label: t('nationalities.Comoran', 'Comoran') },
+    { value: "Congolese", label: t('nationalities.Congolese', 'Congolese') },
+    { value: "Costa Rican", label: t('nationalities.Costa Rican', 'Costa Rican') },
+    { value: "Croatian", label: t('nationalities.Croatian', 'Croatian') },
+    { value: "Cuban", label: t('nationalities.Cuban', 'Cuban') },
+    { value: "Cypriot", label: t('nationalities.Cypriot', 'Cypriot') },
+    { value: "Czech", label: t('nationalities.Czech', 'Czech') },
+    { value: "Danish", label: t('nationalities.Danish', 'Danish') },
+    { value: "Djibouti", label: t('nationalities.Djibouti', 'Djibouti') },
+    { value: "Dominican", label: t('nationalities.Dominican', 'Dominican') },
+    { value: "Dutch", label: t('nationalities.Dutch', 'Dutch') },
+    { value: "East Timorese", label: t('nationalities.East Timorese', 'East Timorese') },
+    { value: "Ecuadorean", label: t('nationalities.Ecuadorean', 'Ecuadorean') },
+    { value: "Egyptian", label: t('nationalities.Egyptian', 'Egyptian') },
+    { value: "Emirian", label: t('nationalities.Emirian', 'Emirian') },
+    { value: "Equatorial Guinean", label: t('nationalities.Equatorial Guinean', 'Equatorial Guinean') },
+    { value: "Eritrean", label: t('nationalities.Eritrean', 'Eritrean') },
+    { value: "Estonian", label: t('nationalities.Estonian', 'Estonian') },
+    { value: "Ethiopian", label: t('nationalities.Ethiopian', 'Ethiopian') },
+    { value: "Fijian", label: t('nationalities.Fijian', 'Fijian') },
+    { value: "Filipino", label: t('nationalities.Filipino', 'Filipino') },
+    { value: "Finnish", label: t('nationalities.Finnish', 'Finnish') },
+    { value: "French", label: t('nationalities.French', 'French') },
+    { value: "Gabonese", label: t('nationalities.Gabonese', 'Gabonese') },
+    { value: "Gambian", label: t('nationalities.Gambian', 'Gambian') },
+    { value: "Georgian", label: t('nationalities.Georgian', 'Georgian') },
+    { value: "German", label: t('nationalities.German', 'German') },
+    { value: "Ghanaian", label: t('nationalities.Ghanaian', 'Ghanaian') },
+    { value: "Greek", label: t('nationalities.Greek', 'Greek') },
+    { value: "Grenadian", label: t('nationalities.Grenadian', 'Grenadian') },
+    { value: "Guatemalan", label: t('nationalities.Guatemalan', 'Guatemalan') },
+    { value: "Guinea-Bissauan", label: t('nationalities.Guinea-Bissauan', 'Guinea-Bissauan') },
+    { value: "Guinean", label: t('nationalities.Guinean', 'Guinean') },
+    { value: "Guyanese", label: t('nationalities.Guyanese', 'Guyanese') },
+    { value: "Haitian", label: t('nationalities.Haitian', 'Haitian') },
+    { value: "Herzegovinian", label: t('nationalities.Herzegovinian', 'Herzegovinian') },
+    { value: "Honduran", label: t('nationalities.Honduran', 'Honduran') },
+    { value: "Hungarian", label: t('nationalities.Hungarian', 'Hungarian') },
+    { value: "I-Kiribati", label: t('nationalities.I-Kiribati', 'I-Kiribati') },
+    { value: "Icelander", label: t('nationalities.Icelander', 'Icelander') },
+    { value: "Indian", label: t('nationalities.Indian', 'Indian') },
+    { value: "Indonesian", label: t('nationalities.Indonesian', 'Indonesian') },
+    { value: "Iranian", label: t('nationalities.Iranian', 'Iranian') },
+    { value: "Iraqi", label: t('nationalities.Iraqi', 'Iraqi') },
+    { value: "Irish", label: t('nationalities.Irish', 'Irish') },
+    { value: "Israeli", label: t('nationalities.Israeli', 'Israeli') },
+    { value: "Italian", label: t('nationalities.Italian', 'Italian') },
+    { value: "Ivorian", label: t('nationalities.Ivorian', 'Ivorian') },
+    { value: "Jamaican", label: t('nationalities.Jamaican', 'Jamaican') },
+    { value: "Japanese", label: t('nationalities.Japanese', 'Japanese') },
+    { value: "Jordanian", label: t('nationalities.Jordanian', 'Jordanian') },
+    { value: "Kazakhstani", label: t('nationalities.Kazakhstani', 'Kazakhstani') },
+    { value: "Kenyan", label: t('nationalities.Kenyan', 'Kenyan') },
+    { value: "Kittian and Nevisian", label: t('nationalities.Kittian and Nevisian', 'Kittian and Nevisian') },
+    { value: "Kuwaiti", label: t('nationalities.Kuwaiti', 'Kuwaiti') },
+    { value: "Kyrgyz", label: t('nationalities.Kyrgyz', 'Kyrgyz') },
+    { value: "Laotian", label: t('nationalities.Laotian', 'Laotian') },
+    { value: "Latvian", label: t('nationalities.Latvian', 'Latvian') },
+    { value: "Lebanese", label: t('nationalities.Lebanese', 'Lebanese') },
+    { value: "Liberian", label: t('nationalities.Liberian', 'Liberian') },
+    { value: "Libyan", label: t('nationalities.Libyan', 'Libyan') },
+    { value: "Liechtensteiner", label: t('nationalities.Liechtensteiner', 'Liechtensteiner') },
+    { value: "Lithuanian", label: t('nationalities.Lithuanian', 'Lithuanian') },
+    { value: "Luxembourger", label: t('nationalities.Luxembourger', 'Luxembourger') },
+    { value: "Macedonian", label: t('nationalities.Macedonian', 'Macedonian') },
+    { value: "Malagasy", label: t('nationalities.Malagasy', 'Malagasy') },
+    { value: "Malawian", label: t('nationalities.Malawian', 'Malawian') },
+    { value: "Malaysian", label: t('nationalities.Malaysian', 'Malaysian') },
+    { value: "Maldivan", label: t('nationalities.Maldivan', 'Maldivan') },
+    { value: "Malian", label: t('nationalities.Malian', 'Malian') },
+    { value: "Maltese", label: t('nationalities.Maltese', 'Maltese') },
+    { value: "Marshallese", label: t('nationalities.Marshallese', 'Marshallese') },
+    { value: "Mauritanian", label: t('nationalities.Mauritanian', 'Mauritanian') },
+    { value: "Mauritian", label: t('nationalities.Mauritian', 'Mauritian') },
+    { value: "Mexican", label: t('nationalities.Mexican', 'Mexican') },
+    { value: "Micronesian", label: t('nationalities.Micronesian', 'Micronesian') },
+    { value: "Moldovan", label: t('nationalities.Moldovan', 'Moldovan') },
+    { value: "Monacan", label: t('nationalities.Monacan', 'Monacan') },
+    { value: "Mongolian", label: t('nationalities.Mongolian', 'Mongolian') },
+    { value: "Moroccan", label: t('nationalities.Moroccan', 'Moroccan') },
+    { value: "Mosotho", label: t('nationalities.Mosotho', 'Mosotho') },
+    { value: "Motswana", label: t('nationalities.Motswana', 'Motswana') },
+    { value: "Mozambican", label: t('nationalities.Mozambican', 'Mozambican') },
+    { value: "Namibian", label: t('nationalities.Namibian', 'Namibian') },
+    { value: "Nauruan", label: t('nationalities.Nauruan', 'Nauruan') },
+    { value: "Nepalese", label: t('nationalities.Nepalese', 'Nepalese') },
+    { value: "New Zealander", label: t('nationalities.New Zealander', 'New Zealander') },
+    { value: "Ni-Vanuatu", label: t('nationalities.Ni-Vanuatu', 'Ni-Vanuatu') },
+    { value: "Nicaraguan", label: t('nationalities.Nicaraguan', 'Nicaraguan') },
+    { value: "Nigerien", label: t('nationalities.Nigerien', 'Nigerien') },
+    { value: "North Korean", label: t('nationalities.North Korean', 'North Korean') },
+    { value: "Northern Irish", label: t('nationalities.Northern Irish', 'Northern Irish') },
+    { value: "Norwegian", label: t('nationalities.Norwegian', 'Norwegian') },
+    { value: "Omani", label: t('nationalities.Omani', 'Omani') },
+    { value: "Pakistani", label: t('nationalities.Pakistani', 'Pakistani') },
+    { value: "Palauan", label: t('nationalities.Palauan', 'Palauan') },
+    { value: "Panamanian", label: t('nationalities.Panamanian', 'Panamanian') },
+    { value: "Papua New Guinean", label: t('nationalities.Papua New Guinean', 'Papua New Guinean') },
+    { value: "Paraguayan", label: t('nationalities.Paraguayan', 'Paraguayan') },
+    { value: "Peruvian", label: t('nationalities.Peruvian', 'Peruvian') },
+    { value: "Polish", label: t('nationalities.Polish', 'Polish') },
+    { value: "Portuguese", label: t('nationalities.Portuguese', 'Portuguese') },
+    { value: "Qatari", label: t('nationalities.Qatari', 'Qatari') },
+    { value: "Romanian", label: t('nationalities.Romanian', 'Romanian') },
+    { value: "Russian", label: t('nationalities.Russian', 'Russian') },
+    { value: "Rwandan", label: t('nationalities.Rwandan', 'Rwandan') },
+    { value: "Saint Lucian", label: t('nationalities.Saint Lucian', 'Saint Lucian') },
+    { value: "Salvadoran", label: t('nationalities.Salvadoran', 'Salvadoran') },
+    { value: "Samoan", label: t('nationalities.Samoan', 'Samoan') },
+    { value: "San Marinese", label: t('nationalities.San Marinese', 'San Marinese') },
+    { value: "Sao Tomean", label: t('nationalities.Sao Tomean', 'Sao Tomean') },
+    { value: "Saudi", label: t('nationalities.Saudi', 'Saudi') },
+    { value: "Scottish", label: t('nationalities.Scottish', 'Scottish') },
+    { value: "Senegalese", label: t('nationalities.Senegalese', 'Senegalese') },
+    { value: "Serbian", label: t('nationalities.Serbian', 'Serbian') },
+    { value: "Seychellois", label: t('nationalities.Seychellois', 'Seychellois') },
+    { value: "Sierra Leonean", label: t('nationalities.Sierra Leonean', 'Sierra Leonean') },
+    { value: "Singaporean", label: t('nationalities.Singaporean', 'Singaporean') },
+    { value: "Slovakian", label: t('nationalities.Slovakian', 'Slovakian') },
+    { value: "Slovenian", label: t('nationalities.Slovenian', 'Slovenian') },
+    { value: "Solomon Islander", label: t('nationalities.Solomon Islander', 'Solomon Islander') },
+    { value: "Somali", label: t('nationalities.Somali', 'Somali') },
+    { value: "South African", label: t('nationalities.South African', 'South African') },
+    { value: "South Korean", label: t('nationalities.South Korean', 'South Korean') },
+    { value: "Spanish", label: t('nationalities.Spanish', 'Spanish') },
+    { value: "Sri Lankan", label: t('nationalities.Sri Lankan', 'Sri Lankan') },
+    { value: "Sudanese", label: t('nationalities.Sudanese', 'Sudanese') },
+    { value: "Surinamer", label: t('nationalities.Surinamer', 'Surinamer') },
+    { value: "Swazi", label: t('nationalities.Swazi', 'Swazi') },
+    { value: "Swedish", label: t('nationalities.Swedish', 'Swedish') },
+    { value: "Swiss", label: t('nationalities.Swiss', 'Swiss') },
+    { value: "Syrian", label: t('nationalities.Syrian', 'Syrian') },
+    { value: "Taiwanese", label: t('nationalities.Taiwanese', 'Taiwanese') },
+    { value: "Tajik", label: t('nationalities.Tajik', 'Tajik') },
+    { value: "Tanzanian", label: t('nationalities.Tanzanian', 'Tanzanian') },
+    { value: "Thai", label: t('nationalities.Thai', 'Thai') },
+    { value: "Togolese", label: t('nationalities.Togolese', 'Togolese') },
+    { value: "Tongan", label: t('nationalities.Tongan', 'Tongan') },
+    { value: "Trinidadian or Tobagonian", label: t('nationalities.Trinidadian or Tobagonian', 'Trinidadian or Tobagonian') },
+    { value: "Tunisian", label: t('nationalities.Tunisian', 'Tunisian') },
+    { value: "Turkish", label: t('nationalities.Turkish', 'Turkish') },
+    { value: "Tuvaluan", label: t('nationalities.Tuvaluan', 'Tuvaluan') },
+    { value: "Ugandan", label: t('nationalities.Ugandan', 'Ugandan') },
+    { value: "Ukrainian", label: t('nationalities.Ukrainian', 'Ukrainian') },
+    { value: "Uruguayan", label: t('nationalities.Uruguayan', 'Uruguayan') },
+    { value: "Uzbekistani", label: t('nationalities.Uzbekistani', 'Uzbekistani') },
+    { value: "Venezuelan", label: t('nationalities.Venezuelan', 'Venezuelan') },
+    { value: "Vietnamese", label: t('nationalities.Vietnamese', 'Vietnamese') },
+    { value: "Welsh", label: t('nationalities.Welsh', 'Welsh') },
+    { value: "Yemenite", label: t('nationalities.Yemenite', 'Yemenite') },
+    { value: "Zambian", label: t('nationalities.Zambian', 'Zambian') },
+    { value: "Zimbabwean", label: t('nationalities.Zimbabwean', 'Zimbabwean') },
+    { value: "Other", label: t('nationalities.Other', 'Other') },
   ];
 
   // Handle Updates
@@ -268,7 +450,7 @@ const GuestOnboardingWizard = () => {
           >
             <option value="">{t('guestOnboarding.personalStep.selectNationality', 'Select Nationality')}</option>
             {nationalities.map(nat => (
-              <option key={nat} value={nat}>{nat}</option>
+              <option key={nat.value} value={nat.value}>{nat.label}</option>
             ))}
           </select>
         </div>
@@ -386,6 +568,12 @@ const GuestOnboardingWizard = () => {
     </div>
   );
 
+  const knownDrinks = ['', 'Black Coffee', 'Coffee with Milk', 'Espresso', 'Latte / Cappuccino', 'English Breakfast Tea', 'Green Tea', 'Herbal Tea', 'Orange Juice', 'Hot Chocolate', 'Water', 'No Preference', 'Other'];
+  const knownBreakfasts = ['', 'Oriental', 'Continental', 'Full English / American', 'Vegetarian', 'Vegan', 'Gluten-Free', 'Halal', 'Kosher', 'Healthy / Low Calorie', 'No Preference', 'Other'];
+
+  const isDrinkOther = formData.preferences.foodAndBeverage.morningDrink && !knownDrinks.includes(formData.preferences.foodAndBeverage.morningDrink);
+  const isBreakfastOther = formData.preferences.foodAndBeverage.breakfastStyle && !knownBreakfasts.includes(formData.preferences.foodAndBeverage.breakfastStyle);
+
   const renderFood = () => (
     <div className="space-y-8 animate-fade-in-up w-full max-w-xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">{t('guestOnboarding.foodStep.title')}</h2>
@@ -394,8 +582,16 @@ const GuestOnboardingWizard = () => {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">{t('guestOnboarding.foodStep.morningDrink.title')}</label>
           <select
-            value={formData.preferences.foodAndBeverage.morningDrink}
-            onChange={(e) => updateNestedState('foodAndBeverage', 'morningDrink', e.target.value)}
+            value={isDrinkOther ? 'Other' : formData.preferences.foodAndBeverage.morningDrink}
+            onChange={(e) => {
+              if (e.target.value === 'Other') {
+                updateNestedState('foodAndBeverage', 'morningDrink', '');
+                setFormData(p => ({ ...p, _drinkOther: true }));
+              } else {
+                setFormData(p => ({ ...p, _drinkOther: false }));
+                updateNestedState('foodAndBeverage', 'morningDrink', e.target.value);
+              }
+            }}
             className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-light focus:border-primary-light transition-all bg-white"
           >
             <option value="">{t('guestOnboarding.foodStep.morningDrink.placeholder')}</option>
@@ -410,18 +606,37 @@ const GuestOnboardingWizard = () => {
             <option value="Hot Chocolate">{t('guestOnboarding.foodStep.morningDrink.hotChocolate')}</option>
             <option value="Water">{t('guestOnboarding.foodStep.morningDrink.water')}</option>
             <option value="No Preference">{t('guestOnboarding.foodStep.morningDrink.noPreference')}</option>
+            <option value="Other">{t('guestOnboarding.foodStep.other', 'أخرى')}</option>
           </select>
+          {(formData._drinkOther || isDrinkOther) && (
+            <input
+              type="text"
+              placeholder={t('guestOnboarding.foodStep.otherPlaceholder', 'اكتب تفضيلك...')}
+              value={formData.preferences.foodAndBeverage.morningDrink}
+              onChange={(e) => updateNestedState('foodAndBeverage', 'morningDrink', e.target.value)}
+              className="w-full mt-3 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-light focus:border-primary-light transition-all"
+              autoFocus
+            />
+          )}
         </div>
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">{t('guestOnboarding.foodStep.breakfastStyle.title')}</label>
           <select
-            value={formData.preferences.foodAndBeverage.breakfastStyle}
-            onChange={(e) => updateNestedState('foodAndBeverage', 'breakfastStyle', e.target.value)}
+            value={isBreakfastOther ? 'Other' : formData.preferences.foodAndBeverage.breakfastStyle}
+            onChange={(e) => {
+              if (e.target.value === 'Other') {
+                updateNestedState('foodAndBeverage', 'breakfastStyle', '');
+                setFormData(p => ({ ...p, _breakfastOther: true }));
+              } else {
+                setFormData(p => ({ ...p, _breakfastOther: false }));
+                updateNestedState('foodAndBeverage', 'breakfastStyle', e.target.value);
+              }
+            }}
             className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-light focus:border-primary-light transition-all bg-white"
           >
             <option value="">{t('guestOnboarding.foodStep.breakfastStyle.placeholder')}</option>
-            <option value="Oriental">فطار شرقي</option>
+            <option value="Oriental">{t('guestOnboarding.foodStep.breakfastStyle.oriental', 'فطار شرقي')}</option>
             <option value="Continental">{t('guestOnboarding.foodStep.breakfastStyle.continental')}</option>
             <option value="Full English / American">{t('guestOnboarding.foodStep.breakfastStyle.american')}</option>
             <option value="Vegetarian">{t('guestOnboarding.foodStep.breakfastStyle.vegetarian')}</option>
@@ -431,7 +646,18 @@ const GuestOnboardingWizard = () => {
             <option value="Kosher">{t('guestOnboarding.foodStep.breakfastStyle.kosher')}</option>
             <option value="Healthy / Low Calorie">{t('guestOnboarding.foodStep.breakfastStyle.healthy')}</option>
             <option value="No Preference">{t('guestOnboarding.foodStep.breakfastStyle.noPreference')}</option>
+            <option value="Other">{t('guestOnboarding.foodStep.other', 'أخرى')}</option>
           </select>
+          {(formData._breakfastOther || isBreakfastOther) && (
+            <input
+              type="text"
+              placeholder={t('guestOnboarding.foodStep.otherPlaceholder', 'اكتب تفضيلك...')}
+              value={formData.preferences.foodAndBeverage.breakfastStyle}
+              onChange={(e) => updateNestedState('foodAndBeverage', 'breakfastStyle', e.target.value)}
+              className="w-full mt-3 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary-light focus:border-primary-light transition-all"
+              autoFocus
+            />
+          )}
         </div>
       </div>
     </div>

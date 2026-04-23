@@ -108,11 +108,11 @@ const FeedbackModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full mx-4 overflow-hidden shadow-2xl relative">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-xl sm:rounded-2xl max-w-md w-full mx-2 sm:mx-4 overflow-hidden shadow-2xl relative">
         {/* Decorative header with gradient */}
         <div
-          className="h-20 relative"
+          className="h-16 sm:h-20 relative"
           style={{
             background: `linear-gradient(135deg, #67BAE0 0%, #3B5787 100%)`
           }}
@@ -144,17 +144,17 @@ const FeedbackModal = ({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Icon and title */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-4 sm:mb-6">
             <div
-              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+              className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-4"
               style={{ backgroundColor: '#67BAE0' }}
             >
               <FaStar className="text-white text-2xl" />
             </div>
             <h2
-              className="text-xl font-semibold mb-2"
+              className="text-lg sm:text-xl font-semibold mb-1 sm:mb-2"
               style={{ color: '#3B5787' }}
             >
               {t('feedback.title', 'Share your feedback')}
@@ -163,25 +163,25 @@ const FeedbackModal = ({
 
           {/* Booking Details Section */}
           {booking && (
-            <div className="mb-6 bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="flex items-start gap-3">
+            <div className="mb-4 sm:mb-6 bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+              <div className="flex items-start gap-2 sm:gap-3">
                 {/* Service Icon */}
                 <div className="flex-shrink-0">
                   {booking.bookingType === 'laundry' || booking.serviceType === 'laundry' ? (
-                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                      <FaTshirt className="text-blue-600 text-xl" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                      <FaTshirt className="text-blue-600 text-lg sm:text-xl" />
                     </div>
                   ) : booking.bookingType === 'transportation' || booking.serviceType === 'transportation' ? (
-                    <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                      <FaCar className="text-green-600 text-xl" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 flex items-center justify-center">
+                      <FaCar className="text-green-600 text-lg sm:text-xl" />
                     </div>
                   ) : booking.bookingType === 'restaurant' || booking.serviceType === 'restaurant' ? (
-                    <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
-                      <FaUtensils className="text-orange-600 text-xl" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                      <FaUtensils className="text-orange-600 text-lg sm:text-xl" />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                      <FaReceipt className="text-purple-600 text-xl" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                      <FaReceipt className="text-purple-600 text-lg sm:text-xl" />
                     </div>
                   )}
                 </div>
@@ -290,11 +290,11 @@ const FeedbackModal = ({
                         {/* Show housekeeping type */}
                         {booking.serviceDetails?.housekeepingType && (
                           <div className="flex items-start gap-2 mt-2">
-                            <span className="font-medium text-gray-700">Type:</span>
+                            <span className="font-medium text-gray-700">{t('feedback.labels.type', 'Type')}:</span>
                             <span className="capitalize">
                               {typeof booking.serviceDetails.housekeepingType === 'string'
-                                ? booking.serviceDetails.housekeepingType.replace(/_/g, ' ')
-                                : booking.serviceDetails.housekeepingType.name?.replace(/_/g, ' ') || 'N/A'
+                                ? t(`feedback.issueCategories.${booking.serviceDetails.housekeepingType}`, booking.serviceDetails.housekeepingType.replace(/_/g, ' '))
+                                : t(`feedback.issueCategories.${booking.serviceDetails.housekeepingType.name}`, booking.serviceDetails.housekeepingType.name?.replace(/_/g, ' ') || 'N/A')
                               }
                             </span>
                           </div>
@@ -305,7 +305,7 @@ const FeedbackModal = ({
                          Array.isArray(booking.serviceDetails.specificCategory) &&
                          booking.serviceDetails.specificCategory.length > 0 && (
                           <div className="mt-2">
-                            <span className="font-medium text-gray-700 block mb-1">Issue Categories:</span>
+                            <span className="font-medium text-gray-700 block mb-1">{t('feedback.labels.issueCategories', 'Issue Categories')}:</span>
                             <div className="flex flex-wrap gap-1">
                               {booking.serviceDetails.specificCategory.map((category, index) => {
                                 // Format category name
@@ -319,7 +319,7 @@ const FeedbackModal = ({
                                     key={index}
                                     className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs"
                                   >
-                                    {formattedCategory}
+                                    {t(`feedback.issueCategories.${category}`, formattedCategory)}
                                   </span>
                                 );
                               })}
@@ -330,7 +330,7 @@ const FeedbackModal = ({
                         {/* Show description if available */}
                         {booking.serviceDetails?.description && booking.serviceDetails.description.length > 0 && (
                           <div className="mt-2">
-                            <span className="font-medium text-gray-700 block mb-1">Details:</span>
+                            <span className="font-medium text-gray-700 block mb-1">{t('feedback.labels.details', 'Details')}:</span>
                             <p className="text-xs text-gray-600 italic">
                               "{booking.serviceDetails.description}"
                             </p>
@@ -345,7 +345,7 @@ const FeedbackModal = ({
                         {((booking.bookingConfig?.laundryItems?.length > 0) || (booking.laundryItems?.length > 0)) && (
                           <div className="mt-2">
                             <span className="font-medium text-gray-700 block mb-1">
-                              Laundry Items ({booking.bookingConfig?.laundryItems?.length || booking.laundryItems?.length}):
+                              {t('feedback.labels.laundryItems', 'Laundry Items')} ({booking.bookingConfig?.laundryItems?.length || booking.laundryItems?.length}):
                             </span>
                             <div className="space-y-1 max-h-32 overflow-y-auto">
                               {(booking.bookingConfig?.laundryItems || booking.laundryItems || []).map((item, index) => (
@@ -381,7 +381,7 @@ const FeedbackModal = ({
                       <>
                         {!!booking.tripDetails?.pickupLocation && (
                           <div className="mt-2">
-                            <span className="font-medium text-gray-700 block mb-1">Pickup:</span>
+                            <span className="font-medium text-gray-700 block mb-1">{t('feedback.labels.pickup', 'Pickup')}:</span>
                             <div className="flex items-center gap-2 text-xs">
                               <FaMapMarkerAlt className="text-green-500" />
                               <span>{booking.tripDetails.pickupLocation}</span>
@@ -390,7 +390,7 @@ const FeedbackModal = ({
                         )}
                         {!!booking.tripDetails?.destination && (
                           <div className="mt-1">
-                            <span className="font-medium text-gray-700 block mb-1">Destination:</span>
+                            <span className="font-medium text-gray-700 block mb-1">{t('feedback.labels.destination', 'Destination')}:</span>
                             <div className="flex items-center gap-2 text-xs">
                               <FaMapMarkerAlt className="text-red-500" />
                               <span>{booking.tripDetails.destination}</span>
@@ -408,7 +408,7 @@ const FeedbackModal = ({
                         {!!booking.tripDetails?.passengers && (
                           <div className="mt-2">
                             <span className="text-xs">
-                              <span className="font-medium">Passengers:</span> {booking.tripDetails.passengers}
+                              <span className="font-medium">{t('feedback.labels.passengers', 'Passengers')}:</span> {booking.tripDetails.passengers}
                             </span>
                           </div>
                         )}
@@ -422,7 +422,7 @@ const FeedbackModal = ({
                         {((booking.bookingConfig?.selectedItems?.length > 0) || (booking.orderItems?.length > 0) || (booking.items?.length > 0)) && (
                           <div className="mt-2">
                             <span className="font-medium text-gray-700 block mb-1">
-                              Order Items:
+                              {t('feedback.labels.orderItems', 'Order Items')}:
                             </span>
                             <div className="space-y-1 max-h-32 overflow-y-auto">
                               {(booking.bookingConfig?.selectedItems || booking.orderItems || booking.items || []).map((item, index) => (
@@ -461,7 +461,7 @@ const FeedbackModal = ({
                         {!!booking.reservationDetails?.numberOfGuests && (
                           <div className="mt-1">
                             <span className="text-xs">
-                              <span className="font-medium">Guests:</span> {booking.reservationDetails.numberOfGuests}
+                              <span className="font-medium">{t('feedback.labels.guests', 'Guests')}:</span> {booking.reservationDetails.numberOfGuests}
                             </span>
                           </div>
                         )}
@@ -469,7 +469,7 @@ const FeedbackModal = ({
                         {/* Special requests */}
                         {!!(booking.specialRequests || booking.reservationDetails?.specialRequests) && (
                           <div className="mt-2">
-                            <span className="font-medium text-gray-700 block mb-1 text-xs">Special Requests:</span>
+                            <span className="font-medium text-gray-700 block mb-1 text-xs">{t('feedback.labels.specialRequests', 'Special Requests')}:</span>
                             <p className="text-xs text-gray-600 italic">
                               "{booking.specialRequests || booking.reservationDetails.specialRequests}"
                             </p>
@@ -482,7 +482,7 @@ const FeedbackModal = ({
                     {!!(booking.payment?.totalAmount || booking.pricing?.total || booking.pricing?.totalAmount) && (
                       <div className="mt-3 pt-2 border-t border-gray-200">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-gray-700">Total Amount:</span>
+                          <span className="text-sm font-medium text-gray-700">{t('feedback.labels.totalAmount', 'Total Amount')}:</span>
                           <span className="font-semibold text-gray-900">
                             {formatPriceByLanguage(
                               booking.payment?.totalAmount || booking.pricing?.total || booking.pricing?.totalAmount,
@@ -499,10 +499,10 @@ const FeedbackModal = ({
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Star Rating */}
             <div className="text-center">
-              <div className="flex justify-center gap-2 mb-2">
+              <div className="flex justify-center gap-1 sm:gap-2 mb-1 sm:mb-2">
                 {[1, 2, 3, 4, 5].map((star) => {
                   const isActive = star <= (hoveredRating || rating);
                   return (
@@ -519,8 +519,7 @@ const FeedbackModal = ({
                       disabled={isSubmitting}
                     >
                       <FaStar
-                        size={32}
-                        className={`transition-colors duration-200 ${
+                        className={`text-3xl sm:text-4xl transition-colors duration-200 ${
                           isActive
                             ? 'text-yellow-400'
                             : 'text-gray-300 hover:text-yellow-400'
@@ -577,11 +576,11 @@ const FeedbackModal = ({
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={handleSkip}
-                className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                className="flex-1 py-2.5 sm:py-3 px-3 sm:px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 text-sm sm:text-base"
                 style={{ focusRingColor: '#67BAE0' }}
                 disabled={isSubmitting}
               >
@@ -590,7 +589,7 @@ const FeedbackModal = ({
               <button
                 type="submit"
                 disabled={rating === 0 || isSubmitting}
-                className="flex-1 py-3 px-4 rounded-lg text-white font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg text-white font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                 style={{
                   background: rating === 0 ? '#9CA3AF' : 'linear-gradient(135deg, #67BAE0 0%, #3B5787 100%)',
                   focusRingColor: '#67BAE0'
