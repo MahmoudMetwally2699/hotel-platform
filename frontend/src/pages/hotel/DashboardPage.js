@@ -271,7 +271,20 @@ const DashboardPage = () => {
                           <td className={`px-4 py-4 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
                             <div className="flex flex-col">
                               <span className="text-sm font-medium text-gray-900 capitalize">
-                                {order.serviceId?.category || order.serviceDetails?.category || order.serviceType || t('hotelAdmin.dashboard.recentOrders.unknownService')}
+                                {(() => {
+                                  const cat = order.serviceId?.category || order.serviceDetails?.category || order.serviceType;
+                                  if (!cat) return t('hotelAdmin.dashboard.recentOrders.unknownService');
+                                  
+                                  let finalCat = cat;
+                                  if (cat.toLowerCase() === 'housekeeping') {
+                                    const hkType = order.serviceDetails?.housekeepingType || order.housekeepingType || order.serviceId?.subcategory;
+                                    if (hkType) {
+                                      finalCat = hkType;
+                                    }
+                                  }
+                                  
+                                  return t(`performanceAnalyticsPage.serviceTypes.${finalCat.toLowerCase()}`, { defaultValue: finalCat });
+                                })()}
                               </span>
                             </div>
                           </td>
@@ -330,13 +343,14 @@ const DashboardPage = () => {
                                   'payment_pending': 'pending',
                                   'quote_accepted': 'confirmed',
                                   'payment_completed': 'confirmed',
-                                  'service_active': 'in progress',
+                                  'service_active': 'inProgress',
                                   'completed': 'completed',
                                   'cancelled': 'cancelled',
                                   'quote_rejected': 'cancelled',
                                   'quote_expired': 'cancelled'
                                 };
-                                return statusMap[bookingStatus] || bookingStatus || 'processing';
+                                const mappedStatus = statusMap[bookingStatus] || bookingStatus || 'pending';
+                                return t(`common.${mappedStatus}`, { defaultValue: mappedStatus });
                               })()}
                             </span>
                           </td>
@@ -377,7 +391,7 @@ const DashboardPage = () => {
                                 'bg-gray-100 text-gray-800'}`}
                             style={order.status === 'confirmed' ? { backgroundColor: `${theme.primaryColor}20`, color: theme.primaryColor } : {}}
                           >
-                            {order.status || 'processing'}
+                            {t(`common.${order.status || 'pending'}`, { defaultValue: order.status || 'pending' })}
                           </span>
                         </div>
 
@@ -421,7 +435,20 @@ const DashboardPage = () => {
                             <span className="text-xs font-medium text-modern-darkGray">{t('hotelAdmin.dashboard.recentOrders.service')}</span>
                             <div className="text-right">
                               <div className="text-sm font-medium text-gray-900 capitalize">
-                                {order.serviceId?.category || order.serviceDetails?.category || order.serviceType || t('hotelAdmin.dashboard.recentOrders.unknownService')}
+                                {(() => {
+                                  const cat = order.serviceId?.category || order.serviceDetails?.category || order.serviceType;
+                                  if (!cat) return t('hotelAdmin.dashboard.recentOrders.unknownService');
+                                  
+                                  let finalCat = cat;
+                                  if (cat.toLowerCase() === 'housekeeping') {
+                                    const hkType = order.serviceDetails?.housekeepingType || order.housekeepingType || order.serviceId?.subcategory;
+                                    if (hkType) {
+                                      finalCat = hkType;
+                                    }
+                                  }
+                                  
+                                  return t(`performanceAnalyticsPage.serviceTypes.${finalCat.toLowerCase()}`, { defaultValue: finalCat });
+                                })()}
                               </div>
                             </div>
                           </div>
@@ -507,7 +534,7 @@ const DashboardPage = () => {
                       </div>
                     </div>
                     <div className={`${isRtl ? 'text-right' : 'text-left'} mt-4`}>
-                      <div className="text-sm text-modern-darkGray font-semibold">{t('hotelAdmin.revenue.stats.totalRevenue')}</div>
+                      <div className="text-sm text-modern-darkGray font-semibold">{t('hotelAdmin.revenue.stats.hotelCommission')}</div>
                       <div className="text-2xl font-bold mt-1" style={{ color: theme.primaryColor }}>
                         {formatPriceByLanguage(dashboardStats?.revenueStats?.[0]?.hotelEarnings || 0, i18n.language, currency)}
                       </div>
@@ -525,7 +552,7 @@ const DashboardPage = () => {
                       </div>
                     </div>
                     <div className={`${isRtl ? 'text-right' : 'text-left'} mt-4`}>
-                      <div className="text-sm text-modern-darkGray font-semibold">{t('hotelAdmin.revenue.stats.totalBookings')}</div>
+                      <div className="text-sm text-modern-darkGray font-semibold">{t('hotelAdmin.revenue.stats.totalRevenue')}</div>
                       <div className="text-2xl font-bold mt-1" style={{ color: theme.primaryColor }}>
                         {formatPriceByLanguage(dashboardStats?.revenueStats?.[0]?.totalRevenue || 0, i18n.language, currency)}
                       </div>
@@ -540,12 +567,12 @@ const DashboardPage = () => {
                       </span>
                       <div className="flex items-center justify-center">
                         <svg className="w-12 h-12" style={{ color: theme.primaryColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 8h6m-5 0a3 3 0 110 6H9l3 3-3-3h1m1 4h6m-7-7h7m-7 0V8a3 3 0 013-3h3a3 3 0 013 3v8a3 3 0 01-3 3h-3a3 3 0 01-3-3z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
                     </div>
                     <div className={`${isRtl ? 'text-right' : 'text-left'} mt-4`}>
-                      <div className="text-sm text-modern-darkGray font-semibold">{t('hotelAdmin.revenue.stats.totalBookings')}</div>
+                      <div className="text-sm text-modern-darkGray font-semibold">{t('hotelAdmin.revenue.stats.averageOrder')}</div>
                       <div className="text-2xl font-bold mt-1" style={{ color: theme.primaryColor }}>
                         {formatPriceByLanguage(dashboardStats?.revenueStats?.[0]?.averageOrderValue || 0, i18n.language, currency)}
                       </div>
@@ -570,7 +597,9 @@ const DashboardPage = () => {
                             <div className="flex items-center">
                               <div className="h-3 w-3 rounded-full mr-4" style={{ background: `linear-gradient(to right, ${theme.primaryColor}, ${theme.secondaryColor})` }}></div>
                               <div>
-                                <span className="font-bold capitalize text-lg" style={{ color: theme.primaryColor }}>{category._id}</span>
+                                <span className="font-bold capitalize text-lg" style={{ color: theme.primaryColor }}>
+                                  {t(`performanceAnalyticsPage.serviceTypes.${category._id.toLowerCase()}`, { defaultValue: category._id })}
+                                </span>
                                 <div className="flex items-center mt-1">
                                   <svg className="w-4 h-4 text-modern-darkGray mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -590,7 +619,9 @@ const DashboardPage = () => {
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center">
                                 <div className="h-3 w-3 rounded-full mr-3" style={{ background: `linear-gradient(to right, ${theme.primaryColor}, ${theme.secondaryColor})` }}></div>
-                                <span className="font-bold capitalize text-base" style={{ color: theme.primaryColor }}>{category._id}</span>
+                                <span className="font-bold capitalize text-base" style={{ color: theme.primaryColor }}>
+                                  {t(`performanceAnalyticsPage.serviceTypes.${category._id.toLowerCase()}`, { defaultValue: category._id })}
+                                </span>
                               </div>
                               <span className="font-bold text-xl" style={{ color: theme.primaryColor }}>{formatPriceByLanguage(category.revenue, i18n.language, currency)}</span>
                             </div>

@@ -44,10 +44,11 @@ const RatingsBreakdownTable = ({ data, loading }) => {
   };
 
   const formatServiceName = (serviceType, housekeepingType = null) => {
-    if (housekeepingType) {
-      return `${housekeepingType.charAt(0).toUpperCase()}${housekeepingType.slice(1)}`;
+    const normalizedType = serviceType ? serviceType.toLowerCase() : '';
+    if (normalizedType === 'housekeeping' && housekeepingType) {
+      return t(`performanceAnalyticsPage.serviceTypes.${housekeepingType.toLowerCase()}`, { defaultValue: housekeepingType });
     }
-    return serviceType.charAt(0).toUpperCase() + serviceType.slice(1);
+    return t(`performanceAnalyticsPage.serviceTypes.${normalizedType}`, { defaultValue: serviceType });
   };
 
   const renderStarRating = (avgRating) => {

@@ -13,7 +13,7 @@ import {
 const GuestProfilePage = () => {
   const { guestId } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
   const [guest, setGuest] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -136,7 +136,7 @@ const GuestProfilePage = () => {
   
   // Calculate real LTV based on bookings
   const lifetimeValue = stays.reduce((sum, b) => sum + (b.pricing?.totalAmount || 0), 0);
-  const formattedLTV = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(lifetimeValue);
+  const formattedLTV = new Intl.NumberFormat(i18n.language === 'ar' ? 'ar-EG' : 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(lifetimeValue);
 
   // Determine preferred room from guest onboarding preferences
   const roomPrefs = guest.preferences?.roomPreferences;

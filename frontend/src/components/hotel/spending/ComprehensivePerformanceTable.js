@@ -48,7 +48,10 @@ const ComprehensivePerformanceTable = ({ data, loading, error }) => {
     );
   }
 
-  const formatServiceName = (service) => t(`performanceAnalyticsPage.serviceTypes.${service}`, { defaultValue: service });
+  const formatServiceName = (service) => {
+    const normalizedService = service ? service.toLowerCase() : '';
+    return t(`performanceAnalyticsPage.serviceTypes.${normalizedService}`, { defaultValue: service });
+  };
 
   const handleSort = (field) => {
     if (sortBy === field) {

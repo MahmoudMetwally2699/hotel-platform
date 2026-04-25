@@ -18,7 +18,7 @@ import { useTheme } from '../../context/ThemeContext';
                           <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
-                          Room: {order.roomNumber || order.guestDetails?.roomNumber || order.guestInfo?.roomNumber || order.guestId?.roomNumber || 'N/A'}
+                          {t('hotelAdmin.orders.roomPrefix', { defaultValue: 'Room' })}: {order.roomNumber || order.guestDetails?.roomNumber || order.guestInfo?.roomNumber || order.guestId?.roomNumber || 'N/A'}
                         </div>
                       </div>turns {JSX.Element} Orders management page
  */
@@ -315,7 +315,7 @@ const OrdersPage = () => {
               >
                 <option value="all">{t('hotelAdmin.orders.filters.allStatuses')}</option>
                 <option value="pending">{t('hotelAdmin.orders.filters.pending')}</option>
-                <option value="processing">Processing</option>
+                <option value="processing">{t('hotelAdmin.orders.filters.processing', { defaultValue: 'Processing' })}</option>
                 <option value="confirmed">{t('hotelAdmin.orders.filters.confirmed')}</option>
                 <option value="completed">{t('hotelAdmin.orders.filters.completed')}</option>
                 <option value="cancelled">{t('hotelAdmin.orders.filters.cancelled')}</option>
@@ -381,11 +381,11 @@ const OrdersPage = () => {
                       <tr>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.orderId')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[200px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.guest')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>Room Number</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.roomNumber', { defaultValue: 'Room Number' })}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[180px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.service')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.date')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.amount')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>Payment Method</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.paymentMethod', { defaultValue: 'Payment Method' })}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.orders.table.status')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px] sticky right-0 z-10 shadow-sm" style={{ color: theme.primaryColor, backgroundColor: theme.backgroundColor }}>{t('hotelAdmin.orders.table.actions')}</th>
                       </tr>
@@ -454,7 +454,20 @@ const OrdersPage = () => {
                           <td className="px-4 py-4">
                             <div className="flex flex-col">
                               <span className="text-sm font-medium text-gray-900 truncate max-w-[150px] capitalize">
-                                {order.serviceId?.category || order.service?.category || order.serviceType || t('hotelAdmin.dashboard.recentOrders.unknownService')}
+                                {(() => {
+                                  const cat = order.serviceId?.category || order.service?.category || order.serviceType;
+                                  if (!cat) return t('hotelAdmin.dashboard.recentOrders.unknownService');
+                                  
+                                  let finalCat = cat;
+                                  if (cat.toLowerCase() === 'housekeeping') {
+                                    const hkType = order.serviceDetails?.housekeepingType || order.housekeepingType || order.service?.subcategory || order.serviceId?.subcategory;
+                                    if (hkType) {
+                                      finalCat = hkType;
+                                    }
+                                  }
+                                  
+                                  return t(`performanceAnalyticsPage.serviceTypes.${finalCat.toLowerCase()}`, { defaultValue: finalCat });
+                                })()}
                               </span>
                             </div>
                           </td>
@@ -486,7 +499,7 @@ const OrdersPage = () => {
                                 if (category === 'housekeeping' || category === 'cleaning') {
                                   return '---';
                                 }
-                                return order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card';
+                                return order.payment?.paymentMethod === 'cash' ? t('hotelAdmin.orders.paymentMethods.cash', { defaultValue: 'Cash' }) : t('hotelAdmin.orders.paymentMethods.visaCard', { defaultValue: 'Visa/Card' });
                               })()}
                             </span>
                           </td>
@@ -500,7 +513,7 @@ const OrdersPage = () => {
                                 'bg-gray-100 text-gray-800'
                               }`}
                             >
-                              {order.status || 'processing'}
+                              {t(`common.${order.status || 'pending'}`, { defaultValue: order.status || 'pending' })}
                             </span>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap text-center text-sm font-medium sticky right-0 z-0 shadow-sm" style={{ backgroundColor: 'inherit' }}>
@@ -537,7 +550,7 @@ const OrdersPage = () => {
                           'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {order.status || 'processing'}
+                        {t(`common.${order.status || 'pending'}`, { defaultValue: order.status || 'pending' })}
                       </span>
                     </div>
 
@@ -586,7 +599,20 @@ const OrdersPage = () => {
 
                       <div>
                         <div className="text-sm font-medium text-gray-900 capitalize">
-                          {order.serviceId?.category || order.service?.category || order.serviceType || t('hotelAdmin.dashboard.recentOrders.unknownService')}
+                          {(() => {
+                            const cat = order.serviceId?.category || order.service?.category || order.serviceType;
+                            if (!cat) return t('hotelAdmin.dashboard.recentOrders.unknownService');
+                            
+                            let finalCat = cat;
+                            if (cat.toLowerCase() === 'housekeeping') {
+                              const hkType = order.serviceDetails?.housekeepingType || order.housekeepingType || order.service?.subcategory || order.serviceId?.subcategory;
+                              if (hkType) {
+                                finalCat = hkType;
+                              }
+                            }
+                            
+                            return t(`performanceAnalyticsPage.serviceTypes.${finalCat.toLowerCase()}`, { defaultValue: finalCat });
+                          })()}
                         </div>
                       </div>
 
@@ -615,7 +641,7 @@ const OrdersPage = () => {
                               if (category === 'housekeeping' || category === 'cleaning') {
                                 return '---';
                               }
-                              return order.payment?.paymentMethod === 'cash' ? 'Cash' : 'Visa/Card';
+                              return order.payment?.paymentMethod === 'cash' ? t('hotelAdmin.orders.paymentMethods.cash', { defaultValue: 'Cash' }) : t('hotelAdmin.orders.paymentMethods.visaCard', { defaultValue: 'Visa/Card' });
                             })()}
                           </div>
                         </div>
@@ -806,7 +832,7 @@ const OrdersPage = () => {
                         'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      {selectedOrder.status || 'processing'}
+                      {t(`common.${selectedOrder.status || 'pending'}`, { defaultValue: selectedOrder.status || 'pending' })}
                     </span>
                   </div>
                   <div>
@@ -831,14 +857,14 @@ const OrdersPage = () => {
                     </p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Payment Method:</span>
+                    <span className="text-gray-600">{t('hotelAdmin.orders.details.paymentMethod', { defaultValue: 'Payment Method' })}:</span>
                     <p className="font-medium">
                       {(() => {
                         const category = (selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || '').toLowerCase();
                         if (category === 'housekeeping' || category === 'cleaning') {
                           return '---';
                         }
-                        return selectedOrder.payment?.paymentMethod === 'cash' ? 'Cash at Hotel' : 'Online Payment';
+                        return selectedOrder.payment?.paymentMethod === 'cash' ? t('hotelAdmin.orders.details.cashAtHotel', { defaultValue: 'Cash at Hotel' }) : t('hotelAdmin.orders.details.onlinePayment', { defaultValue: 'Online Payment' });
                       })()}
                     </p>
                   </div>
@@ -914,7 +940,15 @@ const OrdersPage = () => {
                         'maintenance': 'Maintenance Service',
                         'amenities': 'Amenities Service'
                       };
-                      return categoryNames[category] || 'Service';
+                      let finalCat = category;
+                      if (category === 'housekeeping') {
+                        const hkType = selectedOrder.serviceDetails?.housekeepingType || selectedOrder.housekeepingType || selectedOrder.service?.subcategory || selectedOrder.serviceId?.subcategory;
+                        if (hkType) {
+                          finalCat = hkType.toLowerCase();
+                        }
+                      }
+                      
+                      return t(`performanceAnalyticsPage.serviceTypes.${finalCat}`, { defaultValue: categoryNames[finalCat] || categoryNames[category] || 'Service' });
                     })()}
                   </h5>
                   <div className="space-y-4 text-sm">
@@ -923,7 +957,20 @@ const OrdersPage = () => {
                       <div>
                         <span className="text-gray-600">{t('hotelAdmin.orders.details.category')}:</span>
                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                          {selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || selectedOrder.serviceDetails?.category || 'N/A'}
+                          {(() => {
+                            const category = (selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || selectedOrder.serviceDetails?.category || '').toLowerCase();
+                            if (!category) return 'N/A';
+                            
+                            let finalCat = category;
+                            if (category === 'housekeeping') {
+                              const hkType = selectedOrder.serviceDetails?.housekeepingType || selectedOrder.housekeepingType || selectedOrder.service?.subcategory || selectedOrder.serviceId?.subcategory;
+                              if (hkType) {
+                                finalCat = hkType.toLowerCase();
+                              }
+                            }
+                            
+                            return t(`performanceAnalyticsPage.serviceTypes.${finalCat}`, { defaultValue: selectedOrder.serviceId?.category || selectedOrder.service?.category || selectedOrder.serviceType || selectedOrder.serviceDetails?.category || 'N/A' });
+                          })()}
                         </span>
                       </div>
                       <div>
@@ -940,22 +987,22 @@ const OrdersPage = () => {
                       if (category === 'housekeeping' || category === 'cleaning') {
                         return (
                           <div className="bg-blue-50 rounded-lg p-3 space-y-2">
-                            <h6 className="font-medium text-blue-900">Housekeeping Details</h6>
+                            <h6 className="font-medium text-blue-900">{t('hotelAdmin.orders.details.housekeepingDetails', { defaultValue: 'Housekeeping Details' })}</h6>
 
                             {/* Category Issues */}
                             {selectedOrder.serviceDetails?.specificCategory && (
                               <div>
-                                <span className="text-blue-700 font-medium">Issue Categories:</span>
+                                <span className="text-blue-700 font-medium">{t('hotelAdmin.orders.details.issueCategories', { defaultValue: 'Issue Categories' })}:</span>
                                 <div className="mt-1 flex flex-wrap gap-1">
                                   {Array.isArray(selectedOrder.serviceDetails.specificCategory)
                                     ? selectedOrder.serviceDetails.specificCategory.map((cat, index) => (
                                         <span key={index} className="px-2 py-1 bg-blue-200 text-blue-800 rounded text-xs">
-                                          {cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                          {t(`performanceAnalyticsPage.serviceTypes.${cat}`, { defaultValue: cat.replace(/_/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase()) })}
                                         </span>
                                       ))
                                     : (
                                         <span className="px-2 py-1 bg-blue-200 text-blue-800 rounded text-xs">
-                                          {selectedOrder.serviceDetails.specificCategory.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                          {t(`performanceAnalyticsPage.serviceTypes.${selectedOrder.serviceDetails.specificCategory}`, { defaultValue: selectedOrder.serviceDetails.specificCategory.replace(/_/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase()) })}
                                         </span>
                                       )
                                   }
@@ -966,7 +1013,7 @@ const OrdersPage = () => {
                             {/* Special Requests */}
                             {(selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests || selectedOrder.bookingDetails?.specialRequests) && (
                               <div>
-                                <span className="text-blue-700 font-medium">Special Requests:</span>
+                                <span className="text-blue-700 font-medium">{t('hotelAdmin.orders.details.specialRequests', { defaultValue: 'Special Requests' })}:</span>
                                 <p className="text-blue-900 mt-1">
                                   {selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests || selectedOrder.bookingDetails?.specialRequests}
                                 </p>
@@ -976,7 +1023,7 @@ const OrdersPage = () => {
                             {/* Room Number */}
                             {selectedOrder.guestDetails?.roomNumber && (
                               <div>
-                                <span className="text-blue-700 font-medium">Room Number:</span>
+                                <span className="text-blue-700 font-medium">{t('hotelAdmin.orders.details.roomNumber', { defaultValue: 'Room Number' })}:</span>
                                 <span className="ml-2 text-blue-900">{selectedOrder.guestDetails.roomNumber}</span>
                               </div>
                             )}
@@ -984,13 +1031,13 @@ const OrdersPage = () => {
                             {/* Urgency Level */}
                             {selectedOrder.schedule?.urgencyLevel && (
                               <div>
-                                <span className="text-blue-700 font-medium">Urgency:</span>
+                                <span className="text-blue-700 font-medium">{t('hotelAdmin.orders.details.urgency', { defaultValue: 'Urgency' })}:</span>
                                 <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
                                   selectedOrder.schedule.urgencyLevel === 'urgent' ? 'bg-red-100 text-red-800' :
                                   selectedOrder.schedule.urgencyLevel === 'high' ? 'bg-orange-100 text-orange-800' :
                                   'bg-green-100 text-green-800'
                                 }`}>
-                                  {selectedOrder.schedule.urgencyLevel}
+                                  {t(`common.${selectedOrder.schedule.urgencyLevel}`, { defaultValue: selectedOrder.schedule.urgencyLevel })}
                                 </span>
                               </div>
                             )}
@@ -1006,11 +1053,11 @@ const OrdersPage = () => {
                       if (category === 'laundry' && selectedOrder.bookingConfig?.laundryItems?.length > 0) {
                         return (
                           <div className="bg-green-50 rounded-lg p-3 space-y-2">
-                            <h6 className="font-medium text-green-900">Laundry Details</h6>
+                            <h6 className="font-medium text-green-900">{t('hotelAdmin.orders.details.laundryDetails', { defaultValue: 'Laundry Details' })}</h6>
 
                             {/* Laundry Items */}
                             <div>
-                              <span className="text-green-700 font-medium">Items:</span>
+                              <span className="text-green-700 font-medium">{t('hotelAdmin.orders.details.items', { defaultValue: 'Items' })}:</span>
                               <div className="mt-2 space-y-2">
                                 {selectedOrder.bookingConfig.laundryItems.map((item, index) => (
                                   <div key={index} className="bg-green-100 rounded p-2 text-sm">
@@ -1023,7 +1070,7 @@ const OrdersPage = () => {
                                     </div>
                                     {item.serviceType && (
                                       <div className="text-green-700 text-xs mt-1">
-                                        Service: {item.serviceType.name}
+                                        {t('hotelAdmin.orders.details.service', { defaultValue: 'Service' })}: {item.serviceType.name}
                                       </div>
                                     )}
                                   </div>
@@ -1035,7 +1082,7 @@ const OrdersPage = () => {
                             {selectedOrder.bookingConfig?.isExpressService && (
                               <div>
                                 <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-medium">
-                                  Express Service
+                                  {t('hotelAdmin.orders.details.expressService', { defaultValue: 'Express Service' })}
                                 </span>
                               </div>
                             )}
@@ -1043,7 +1090,7 @@ const OrdersPage = () => {
                             {/* Special Requests */}
                             {(selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests) && (
                               <div>
-                                <span className="text-green-700 font-medium">Special Requests:</span>
+                                <span className="text-green-700 font-medium">{t('hotelAdmin.orders.details.specialRequests', { defaultValue: 'Special Requests' })}:</span>
                                 <p className="text-green-900 mt-1">
                                   {selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests}
                                 </p>
@@ -1061,15 +1108,15 @@ const OrdersPage = () => {
                       if (category === 'transportation') {
                         return (
                           <div className="bg-purple-50 rounded-lg p-3 space-y-2">
-                            <h6 className="font-medium text-purple-900">Transportation Details</h6>
+                            <h6 className="font-medium text-purple-900">{t('hotelAdmin.orders.details.transportationDetails', { defaultValue: 'Transportation Details' })}</h6>
 
                             {/* Pickup Location */}
                             {selectedOrder.location?.pickup && (
                               <div>
-                                <span className="text-purple-700 font-medium">Pickup Location:</span>
+                                <span className="text-purple-700 font-medium">{t('hotelAdmin.orders.details.pickupLocation', { defaultValue: 'Pickup Location' })}:</span>
                                 <p className="text-purple-900 mt-1">{selectedOrder.location.pickup.address}</p>
                                 {selectedOrder.location.pickup.instructions && (
-                                  <p className="text-purple-700 text-sm">Instructions: {selectedOrder.location.pickup.instructions}</p>
+                                  <p className="text-purple-700 text-sm">{t('hotelAdmin.orders.details.instructions', { defaultValue: 'Instructions' })}: {selectedOrder.location.pickup.instructions}</p>
                                 )}
                               </div>
                             )}
@@ -1077,10 +1124,10 @@ const OrdersPage = () => {
                             {/* Delivery Location */}
                             {selectedOrder.location?.delivery && (
                               <div>
-                                <span className="text-purple-700 font-medium">Destination:</span>
+                                <span className="text-purple-700 font-medium">{t('hotelAdmin.orders.details.destination', { defaultValue: 'Destination' })}:</span>
                                 <p className="text-purple-900 mt-1">{selectedOrder.location.delivery.address}</p>
                                 {selectedOrder.location.delivery.instructions && (
-                                  <p className="text-purple-700 text-sm">Instructions: {selectedOrder.location.delivery.instructions}</p>
+                                  <p className="text-purple-700 text-sm">{t('hotelAdmin.orders.details.instructions', { defaultValue: 'Instructions' })}: {selectedOrder.location.delivery.instructions}</p>
                                 )}
                               </div>
                             )}
@@ -1088,7 +1135,7 @@ const OrdersPage = () => {
                             {/* Vehicle Type */}
                             {selectedOrder.assignment?.vehicle && (
                               <div>
-                                <span className="text-purple-700 font-medium">Vehicle Type:</span>
+                                <span className="text-purple-700 font-medium">{t('hotelAdmin.orders.details.vehicleType', { defaultValue: 'Vehicle Type' })}:</span>
                                 <span className="ml-2 text-purple-900">{selectedOrder.assignment.vehicle}</span>
                               </div>
                             )}
@@ -1096,7 +1143,7 @@ const OrdersPage = () => {
                             {/* Special Requests */}
                             {(selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests) && (
                               <div>
-                                <span className="text-purple-700 font-medium">Special Requests:</span>
+                                <span className="text-purple-700 font-medium">{t('hotelAdmin.orders.details.specialRequests', { defaultValue: 'Special Requests' })}:</span>
                                 <p className="text-purple-900 mt-1">
                                   {selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests}
                                 </p>
@@ -1114,7 +1161,7 @@ const OrdersPage = () => {
                       if ((category === 'restaurant' || category === 'dining') && selectedOrder.bookingConfig?.menuItems?.length > 0) {
                         return (
                           <div className="bg-yellow-50 rounded-lg p-3 space-y-2">
-                            <h6 className="font-medium text-yellow-900">Menu Items</h6>
+                            <h6 className="font-medium text-yellow-900">{t('hotelAdmin.orders.details.menuItems', { defaultValue: 'Menu Items' })}</h6>
 
                             <div className="space-y-2">
                               {selectedOrder.bookingConfig.menuItems.map((item, index) => (
@@ -1130,14 +1177,14 @@ const OrdersPage = () => {
                                     <p className="text-yellow-700 text-xs mt-1">{item.description}</p>
                                   )}
                                   {item.specialInstructions && (
-                                    <p className="text-yellow-700 text-xs mt-1 italic">Note: {item.specialInstructions}</p>
+                                    <p className="text-yellow-700 text-xs mt-1 italic">{t('hotelAdmin.orders.details.notePrefix', { defaultValue: 'Note' })}: {item.specialInstructions}</p>
                                   )}
                                   <div className="flex gap-2 mt-1">
                                     {item.isVegetarian && (
-                                      <span className="px-1 py-0.5 bg-green-200 text-green-800 rounded text-xs">Vegetarian</span>
+                                      <span className="px-1 py-0.5 bg-green-200 text-green-800 rounded text-xs">{t('hotelAdmin.orders.details.vegetarian', { defaultValue: 'Vegetarian' })}</span>
                                     )}
                                     {item.isVegan && (
-                                      <span className="px-1 py-0.5 bg-green-200 text-green-800 rounded text-xs">Vegan</span>
+                                      <span className="px-1 py-0.5 bg-green-200 text-green-800 rounded text-xs">{t('hotelAdmin.orders.details.vegan', { defaultValue: 'Vegan' })}</span>
                                     )}
                                     {item.spicyLevel && item.spicyLevel !== 'normal' && (
                                       <span className="px-1 py-0.5 bg-red-200 text-red-800 rounded text-xs">
@@ -1152,7 +1199,7 @@ const OrdersPage = () => {
                             {/* Special Requests */}
                             {(selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests) && (
                               <div>
-                                <span className="text-yellow-700 font-medium">Special Requests:</span>
+                                <span className="text-yellow-700 font-medium">{t('hotelAdmin.orders.details.specialRequests', { defaultValue: 'Special Requests' })}:</span>
                                 <p className="text-yellow-900 mt-1">
                                   {selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests}
                                 </p>
@@ -1170,15 +1217,15 @@ const OrdersPage = () => {
                       if (category === 'tours' || category === 'travel') {
                         return (
                           <div className="bg-indigo-50 rounded-lg p-3 space-y-2">
-                            <h6 className="font-medium text-indigo-900">Tour Details</h6>
+                            <h6 className="font-medium text-indigo-900">{t('hotelAdmin.orders.details.tourDetails', { defaultValue: 'Tour Details' })}</h6>
 
                             {/* Service Location */}
                             {selectedOrder.location?.service && (
                               <div>
-                                <span className="text-indigo-700 font-medium">Tour Location:</span>
+                                <span className="text-indigo-700 font-medium">{t('hotelAdmin.orders.details.tourLocation', { defaultValue: 'Tour Location' })}:</span>
                                 <p className="text-indigo-900 mt-1">{selectedOrder.location.service.address}</p>
                                 {selectedOrder.location.service.meetingPoint && (
-                                  <p className="text-indigo-700 text-sm">Meeting Point: {selectedOrder.location.service.meetingPoint}</p>
+                                  <p className="text-indigo-700 text-sm">{t('hotelAdmin.orders.details.meetingPoint', { defaultValue: 'Meeting Point' })}: {selectedOrder.location.service.meetingPoint}</p>
                                 )}
                               </div>
                             )}
@@ -1186,15 +1233,15 @@ const OrdersPage = () => {
                             {/* Number of Participants */}
                             {selectedOrder.bookingConfig?.quantity && (
                               <div>
-                                <span className="text-indigo-700 font-medium">Participants:</span>
-                                <span className="ml-2 text-indigo-900">{selectedOrder.bookingConfig.quantity} person(s)</span>
+                                <span className="text-indigo-700 font-medium">{t('hotelAdmin.orders.details.participants', { defaultValue: 'Participants' })}:</span>
+                                <span className="ml-2 text-indigo-900">{selectedOrder.bookingConfig.quantity} {t('hotelAdmin.orders.details.persons', { defaultValue: 'person(s)' })}</span>
                               </div>
                             )}
 
                             {/* Special Requests */}
                             {(selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests) && (
                               <div>
-                                <span className="text-indigo-700 font-medium">Special Requests:</span>
+                                <span className="text-indigo-700 font-medium">{t('hotelAdmin.orders.details.specialRequests', { defaultValue: 'Special Requests' })}:</span>
                                 <p className="text-indigo-900 mt-1">
                                   {selectedOrder.serviceDetails?.specialRequests || selectedOrder.bookingConfig?.specialRequests}
                                 </p>
@@ -1226,7 +1273,7 @@ const OrdersPage = () => {
                     {/* Additional Services */}
                     {selectedOrder.bookingConfig?.additionalServices?.length > 0 && (
                       <div>
-                        <span className="text-gray-600">Additional Services:</span>
+                        <span className="text-gray-600">{t('hotelAdmin.orders.details.additionalServices', { defaultValue: 'Additional Services' })}:</span>
                         <div className="mt-1 space-y-1">
                           {selectedOrder.bookingConfig.additionalServices.map((service, index) => (
                             <div key={index} className="flex justify-between bg-gray-100 rounded px-2 py-1 text-sm">
@@ -1241,7 +1288,7 @@ const OrdersPage = () => {
                     {/* Notes */}
                     {selectedOrder.bookingConfig?.notes && (
                       <div>
-                        <span className="text-gray-600">Notes:</span>
+                        <span className="text-gray-600">{t('hotelAdmin.orders.details.notes', { defaultValue: 'Notes' })}:</span>
                         <p className="ml-2 text-gray-900">{selectedOrder.bookingConfig.notes}</p>
                       </div>
                     )}
@@ -1281,7 +1328,7 @@ const OrdersPage = () => {
                             selectedOrder.schedule.urgencyLevel === 'high' ? 'bg-orange-100 text-orange-800' :
                             'bg-green-100 text-green-800'
                           }`}>
-                            {selectedOrder.schedule.urgencyLevel}
+                            {t(`common.${selectedOrder.schedule.urgencyLevel}`, { defaultValue: selectedOrder.schedule.urgencyLevel })}
                           </span>
                         </div>
                       )}
@@ -1370,7 +1417,7 @@ const OrdersPage = () => {
               {/* Order Info */}
               <div className="bg-gray-50 rounded-lg p-3 text-sm">
                 <div className="font-medium text-gray-900">
-                  Order #{selectedOrder.bookingId || selectedOrder._id?.slice(-6)}
+                  {t('hotelAdmin.orders.statusUpdate.orderNumber', { defaultValue: 'Order' })} #{selectedOrder.bookingId || selectedOrder._id?.slice(-6)}
                 </div>
                 <div className="text-gray-600">
                   {t('hotelAdmin.orders.statusUpdate.currentStatus')}:
@@ -1381,7 +1428,7 @@ const OrdersPage = () => {
                     selectedOrder.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
-                    {selectedOrder.status || 'processing'}
+                    {t(`common.${selectedOrder.status || 'processing'}`, { defaultValue: selectedOrder.status || 'processing' })}
                   </span>
                 </div>
               </div>

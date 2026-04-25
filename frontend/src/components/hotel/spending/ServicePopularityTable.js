@@ -46,7 +46,10 @@ const ServicePopularityTable = ({ data, loading, error }) => {
     );
   }
 
-  const formatServiceName = (service) => t(`performanceAnalyticsPage.serviceTypes.${service}`, { defaultValue: service });
+  const formatServiceName = (service) => {
+    const normalizedService = service ? service.toLowerCase() : '';
+    return t(`performanceAnalyticsPage.serviceTypes.${normalizedService}`, { defaultValue: service });
+  };
 
   const pieData = data.services.map(service => ({
     name: formatServiceName(service.serviceType),

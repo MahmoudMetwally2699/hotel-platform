@@ -51,7 +51,8 @@ const CompleteSummaryTable = ({ data, loading, error }) => {
   }
 
   const formatServiceName = (type) => {
-    return t(`performanceAnalyticsPage.serviceTypes.${type}`, { defaultValue: type });
+    const normalizedType = type ? type.toLowerCase() : '';
+    return t(`performanceAnalyticsPage.serviceTypes.${normalizedType}`, { defaultValue: type });
   };
 
   const getServiceIcon = (type) => {

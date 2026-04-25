@@ -381,7 +381,7 @@ const ServiceProvidersPage = () => {
                   <table className="min-w-full divide-y divide-gray-200">                    <thead style={{ backgroundColor: theme.backgroundColor }}>
                       <tr>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[200px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.businessName')}</th>
-                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>Provider Type</th>
+                        <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.providerType', { defaultValue: 'Provider Type' })}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[180px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.contact')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[100px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.status')}</th>
                         <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider min-w-[120px]" style={{ color: theme.primaryColor }}>{t('hotelAdmin.serviceProviders.table.markup')}</th>
@@ -417,7 +417,7 @@ const ServiceProvidersPage = () => {
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-blue-100 text-blue-800'
                             }`}>
-                              {provider.providerType === 'internal' ? 'Internal' : 'External'}
+                              {provider.providerType === 'internal' ? t('hotelAdmin.serviceProviders.providerTypes.internal', { defaultValue: 'Internal' }) : t('hotelAdmin.serviceProviders.providerTypes.external', { defaultValue: 'External' })}
                             </span>
                           </td>
                           <td className="px-4 py-4">
@@ -454,7 +454,7 @@ const ServiceProvidersPage = () => {
                           <td className="px-4 py-4">
                             {provider.providerType === 'internal' ? (
                               <span className="text-sm font-medium text-gray-500">
-                                No Markup (0%)
+                                {t('hotelAdmin.serviceProviders.noMarkup', { defaultValue: 'No Markup (0%)' })}
                               </span>
                             ) : (
                               <span className="text-sm font-medium text-gray-900">
@@ -611,13 +611,13 @@ const ServiceProvidersPage = () => {
 
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Provider Type</span>
+                        <span className="text-sm text-gray-600">{t('hotelAdmin.serviceProviders.table.providerType', { defaultValue: 'Provider Type' })}</span>
                         <span className={`text-sm font-medium px-2 py-1 rounded-full ${
                           provider.providerType === 'internal'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-blue-100 text-blue-800'
                         }`}>
-                          {provider.providerType === 'internal' ? 'Internal' : 'External'}
+                          {provider.providerType === 'internal' ? t('hotelAdmin.serviceProviders.providerTypes.internal', { defaultValue: 'Internal' }) : t('hotelAdmin.serviceProviders.providerTypes.external', { defaultValue: 'External' })}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -632,7 +632,7 @@ const ServiceProvidersPage = () => {
                         <span className="text-sm text-gray-600">{t('hotelAdmin.serviceProviders.mobile.markup')}</span>
                         <span className="text-sm font-medium text-gray-900">
                           {provider.providerType === 'internal'
-                            ? 'No Markup (0%)'
+                            ? t('hotelAdmin.serviceProviders.noMarkup', { defaultValue: 'No Markup (0%)' })
                             : provider.markup?.percentage ? `${provider.markup.percentage}%` : t('hotelAdmin.serviceProviders.markupNotSet')
                           }
                         </span>

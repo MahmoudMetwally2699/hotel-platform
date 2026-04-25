@@ -43,7 +43,7 @@ const RatingsTrendChart = ({ data, loading }) => {
   const serviceTypes = new Set();
   data.trendData.forEach(item => {
     Object.keys(item).forEach(key => {
-      if (key !== 'period') {
+      if (key !== 'period' && key !== 'housekeeping') {
         serviceTypes.add(key);
       }
     });
@@ -71,9 +71,9 @@ const RatingsTrendChart = ({ data, loading }) => {
 
   const formatServiceName = (name) => {
     if (!name) return t('services.service', { defaultValue: 'Service' });
-    const key = name.toString();
+    const key = name.toString().toLowerCase();
     return t(`performanceAnalyticsPage.serviceTypes.${key}`, {
-      defaultValue: key.charAt(0).toUpperCase() + key.slice(1)
+      defaultValue: name.toString().charAt(0).toUpperCase() + name.toString().slice(1)
     });
   };
 

@@ -73,127 +73,9 @@
     "min": "min",
     "words": "Words",
     "change": "Change",
-    "note": "Note"
-  },
-  "feedback": {
-    "title": "My Feedback",
-    "subtitle": "Rate your past services and view your submitted reviews",
-    "loading": "Loading your feedback...",
-    "pending": {
-      "title": "Pending Reviews",
-      "subtitle": "You have services waiting for your rating",
-      "loading": "Loading pending reviews...",
-      "rateNow": "Rate Now",
-      "previouslySkipped": "Previously skipped"
-    },
-    "stats": {
-      "totalReviews": "Total Reviews",
-      "positiveReviews": "Positive Reviews",
-      "averageRating": "Average Rating"
-    },
-    "submittedReviews": "Submitted Reviews",
-    "filters": {
-      "searchPlaceholder": "Search your feedback...",
-      "allRatings": "All Ratings",
-      "stars": "{{count}} Stars",
-      "star": "{{count}} Star",
-      "allServices": "All Services"
-    },
-    "serviceTypes": {
-      "laundry": "Laundry",
-      "transportation": "Transportation",
-      "restaurant": "Restaurant",
-      "dining": "Dining",
-      "housekeeping": "Housekeeping",
-      "service": "Service"
-    },
-    "ratings": {
-      "poor": "Poor",
-      "fair": "Fair",
-      "good": "Good",
-      "veryGood": "Very Good",
-      "excellent": "Excellent"
-    },
-    "labels": {
-      "hotel": "Hotel",
-      "service": "Service",
-      "provider": "Provider",
-      "bookingRef": "Booking Reference",
-      "type": "Type",
-      "issueCategories": "Issue Categories",
-      "details": "Details",
-      "laundryItems": "Laundry Items",
-      "pickup": "Pickup",
-      "destination": "Destination",
-      "passengers": "Passengers",
-      "orderItems": "Order Items",
-      "guests": "Guests",
-      "specialRequests": "Special Requests",
-      "totalAmount": "Total Amount"
-    },
-    "actions": {
-      "delete": "Delete feedback"
-    },
-    "commentLabel": "Any suggestions for further improvement? (optional)",
-    "commentPlaceholder": "Your feedback",
-    "privacyNote": "Don't include personal or customer data in this feedback.",
-    "charactersRemaining": "characters",
-    "skip": "Skip",
-    "submitting": "Submitting...",
-    "submit": "Send Feedback"
-  },
-  "guestProfile": {
-    "backToGuests": "Back to Guests",
-    "primaryGuest": "Primary Guest",
-    "loyalty": "Loyalty:",
-    "passport": "Passport",
-    "nationalId": "National ID",
-    "born": "Born:",
-    "editProfile": "Edit Profile",
-    "totalStays": "Total Stays",
-    "yoy": "YOY",
-    "lifetimeValue": "Life-Time Value",
-    "preferredRoom": "Preferred Room",
-    "any": "Any",
-    "avgGuestRating": "Avg Guest Rating",
-    "activityBookings": "Activity & Bookings",
-    "dates": "Dates",
-    "serviceType": "Service Type",
-    "status": "Status",
-    "revenue": "Revenue",
-    "guestRating": "Guest Rating",
-    "showingRecords": "Showing {{count}} activity records",
-    "noActivity": "No past activity found for this guest.",
-    "notedPreferences": "Noted Preferences",
-    "morningDrink": "Morning Drink",
-    "prefersDrink": "Prefers {{drink}}.",
-    "roomPreference": "Room Preference",
-    "requestsRoom": "Requests {{floor}} floor setups. View preference: {{view}}.",
-    "pillowType": "Pillow Type",
-    "comfortMandatory": "Comfort mandatory: {{pillow}} pillows.",
-    "internalConciergeNote": "Internal Concierge Note",
-    "noPersonalization": "No extra personalization notes provided.",
-    "lastUpdated": "Last updated:",
-    "staffNotes": "Staff Notes",
-    "addNotePlaceholder": "Add an internal note about this guest...",
-    "saveTip": "Tip: Press Ctrl+Enter to save quickly",
-    "noStaffNotes": "No staff notes yet",
-    "beFirstNote": "Be the first to add a note about this guest",
-    "admin": "Admin",
-    "hotel": "Hotel",
-    "editModal": {
-      "title": "Edit Guest Profile",
-      "idType": "ID Type",
-      "number": "Number",
-      "numberPlaceholder": "Enter ID/Passport number",
-      "nationality": "Nationality",
-      "dob": "Date of Birth",
-      "preferences": "Preferences",
-      "tripPurpose": "Trip Purpose",
-      "extraNotes": "Extra Personalization Notes",
-      "notesPlaceholder": "Special requests or internal notes...",
-      "save": "Save Profile"
-    }
+    "note": "Note",
+    "notAvailable": "N/A",
+    "processing": "Processing"
   },
   "feedback": {
     "title": "My Feedback",
@@ -292,6 +174,59 @@
       "bathroom_amenities": "Bathroom Amenities",
       "room_supplies": "Room Supplies",
       "cleaning_supplies": "Cleaning Supplies"
+    }
+  },
+  "guestProfile": {
+    "backToGuests": "Back to Guests",
+    "primaryGuest": "Primary Guest",
+    "loyalty": "Loyalty:",
+    "passport": "Passport",
+    "nationalId": "National ID",
+    "born": "Born:",
+    "editProfile": "Edit Profile",
+    "totalStays": "Total Stays",
+    "yoy": "YOY",
+    "lifetimeValue": "Life-Time Value",
+    "preferredRoom": "Preferred Room",
+    "any": "Any",
+    "avgGuestRating": "Avg Guest Rating",
+    "activityBookings": "Activity & Bookings",
+    "dates": "Dates",
+    "serviceType": "Service Type",
+    "status": "Status",
+    "revenue": "Revenue",
+    "guestRating": "Guest Rating",
+    "showingRecords": "Showing {{count}} activity records",
+    "noActivity": "No past activity found for this guest.",
+    "notedPreferences": "Noted Preferences",
+    "morningDrink": "Morning Drink",
+    "prefersDrink": "Prefers {{drink}}.",
+    "roomPreference": "Room Preference",
+    "requestsRoom": "Requests {{floor}} floor setups. View preference: {{view}}.",
+    "pillowType": "Pillow Type",
+    "comfortMandatory": "Comfort mandatory: {{pillow}} pillows.",
+    "internalConciergeNote": "Internal Concierge Note",
+    "noPersonalization": "No extra personalization notes provided.",
+    "lastUpdated": "Last updated:",
+    "staffNotes": "Staff Notes",
+    "addNotePlaceholder": "Add an internal note about this guest...",
+    "saveTip": "Tip: Press Ctrl+Enter to save quickly",
+    "noStaffNotes": "No staff notes yet",
+    "beFirstNote": "Be the first to add a note about this guest",
+    "admin": "Admin",
+    "hotel": "Hotel",
+    "editModal": {
+      "title": "Edit Guest Profile",
+      "idType": "ID Type",
+      "number": "Number",
+      "numberPlaceholder": "Enter ID/Passport number",
+      "nationality": "Nationality",
+      "dob": "Date of Birth",
+      "preferences": "Preferences",
+      "tripPurpose": "Trip Purpose",
+      "extraNotes": "Extra Personalization Notes",
+      "notesPlaceholder": "Special requests or internal notes...",
+      "save": "Save Profile"
     }
   },
   "restaurant": {
@@ -747,7 +682,16 @@
       "transportation": "Transportation",
       "dining": "Dining",
       "restaurant": "Restaurant",
-      "roomService": "Room Service"
+      "roomService": "Room Service",
+      "bathroom amenities": "Bathroom Amenities",
+      "bathroom_amenities": "Bathroom Amenities",
+      "room cleaning": "Room Cleaning",
+      "room_cleaning": "Room Cleaning",
+      "bedding": "Bedding",
+      "electrical issues": "Electrical Issues",
+      "electrical_issues": "Electrical Issues",
+      "plumbing": "Plumbing",
+      "furniture": "Furniture"
     },
     "dateRanges": {
       "allTime": "All Time",
@@ -1378,7 +1322,8 @@
         "completed": "Completed",
         "cancelled": "Cancelled",
         "filterByCategory": "Filter by Category",
-        "categoryDescription": "Select a service category to filter orders"
+        "categoryDescription": "Select a service category to filter orders",
+        "processing": "Processing"
       },
       "table": {
         "orderId": "Order ID",
@@ -1388,7 +1333,9 @@
         "date": "Date",
         "amount": "Amount",
         "status": "Status",
-        "actions": "Actions"
+        "actions": "Actions",
+        "roomNumber": "Room Number",
+        "paymentMethod": "Payment Method"
       },
       "details": {
         "title": "Order Details",
@@ -1409,7 +1356,33 @@
         "noDescription": "No description",
         "markup": "Markup",
         "close": "Close",
-        "updateStatus": "Update Status"
+        "updateStatus": "Update Status",
+        "paymentMethod": "Payment Method",
+        "cashAtHotel": "Cash at Hotel",
+        "onlinePayment": "Online Payment",
+        "housekeepingDetails": "Housekeeping Details",
+        "issueCategories": "Issue Categories",
+        "roomNumber": "Room Number",
+        "laundryDetails": "Laundry Details",
+        "items": "Items",
+        "service": "Service",
+        "expressService": "Express Service",
+        "transportationDetails": "Transportation Details",
+        "pickupLocation": "Pickup Location",
+        "instructions": "Instructions",
+        "destination": "Destination",
+        "vehicleType": "Vehicle Type",
+        "menuItems": "Menu Items",
+        "vegetarian": "Vegetarian",
+        "vegan": "Vegan",
+        "tourDetails": "Tour Details",
+        "tourLocation": "Tour Location",
+        "meetingPoint": "Meeting Point",
+        "participants": "Participants",
+        "persons": "person(s)",
+        "additionalServices": "Additional Services",
+        "notes": "Notes",
+        "notePrefix": "Note"
       },
       "statusUpdate": {
         "title": "Update Order Status",
@@ -1427,14 +1400,20 @@
           "cancelled": "Cancelled",
           "confirmed": "Confirmed",
           "inProgress": "In Progress"
-        }
+        },
+        "orderNumber": "Order"
       },
       "pagination": {
         "summary": "Page {{page}} of {{totalPages}} • Showing {{count}} orders",
         "showing": "Showing <1>{{from}}</1> to <2>{{to}}</2> of <3>{{total}}</3> results"
       },
       "noOrders": "No orders found",
-      "loadingOrders": "Loading orders..."
+      "loadingOrders": "Loading orders...",
+      "paymentMethods": {
+        "cash": "Cash",
+        "visaCard": "Visa/Card"
+      },
+      "roomPrefix": "Room"
     },
     "services": {
       "title": "Services Management",
@@ -1526,7 +1505,8 @@
         "rating": "Rating",
         "status": "Status",
         "markup": "Markup",
-        "actions": "Actions"
+        "actions": "Actions",
+        "providerType": "Provider Type"
       },
       "status": {
         "active": "Active",
@@ -1618,7 +1598,12 @@
         "markupSetFailed": "Failed to set markup. Please try again.",
         "updateLicenseFirst": "Cannot set markup: Business license has expired. Please update the license expiry date first.",
         "categoriesUpdateFailed": "Failed to update service categories. Please try again."
-      }
+      },
+      "providerTypes": {
+        "internal": "Internal",
+        "external": "External"
+      },
+      "noMarkup": "No Markup (0%)"
     },
     "revenue": {
       "title": "Revenue Analytics",
@@ -1789,7 +1774,8 @@
       "sections": {
         "basicInfo": "Basic Information",
         "contactInfo": "Contact Information",
-        "addressInfo": "Address Information"
+        "addressInfo": "Address Information",
+        "hotelLogo": "Hotel Logo"
       },
       "fields": {
         "hotelName": "Hotel Name",
@@ -1801,10 +1787,16 @@
         "city": "City",
         "state": "State/Province",
         "zipCode": "ZIP/Postal Code",
-        "country": "Country"
+        "country": "Country",
+        "uploadLogo": "Upload Logo",
+        "newLogoPreview": "New Logo Preview",
+        "currentHotelLogo": "Current Hotel Logo"
       },
       "placeholders": {
-        "description": "Describe your hotel's unique features and amenities..."
+        "description": "Describe your hotel's unique features and amenities...",
+        "uploadLogoHint": "Upload a new logo for your hotel (PNG, JPG, or GIF). Leave empty to keep current logo.",
+        "newLogoHint": "This is how your new logo will look",
+        "currentLogoHint": "This is your current hotel logo"
       }
     },
     "guests": {
@@ -1812,7 +1804,7 @@
       "subtitle": "Manage your hotel guests and their access permissions",
       "searchPlaceholder": "Search guests by name, email...",
       "table": {
-        "guest": "Guest",
+        "guest": "Guest Name",
         "contact": "Contact",
         "joined": "Joined",
         "status": "Status",
@@ -1822,7 +1814,17 @@
         "checkIn": "Check-in",
         "checkOut": "Check-out",
         "totalBookings": "Total Bookings",
-        "totalSpent": "Total Spent"
+        "totalSpent": "Total Spent",
+        "channel": "Channel",
+        "resType": "Res. Type",
+        "loyaltyTier": "Loyalty Tier",
+        "roomAndDates": "Room & Dates",
+        "new": "New",
+        "notEnrolled": "Not Enrolled",
+        "roomNumber": "Room {{number}}",
+        "noRoomAssigned": "No room assigned",
+        "roomNumberLabel": "Room Number",
+        "nights": "Nights"
       },
       "filters": {
         "allStatuses": "All Statuses",
@@ -1830,13 +1832,33 @@
         "inactive": "Inactive",
         "activeGuests": "Active Guests",
         "allGuests": "All Guests",
-        "checkedOut": "Checked Out"
+        "checkedOut": "Checked Out",
+        "allChannels": "All Channels",
+        "travelAgency": "Travel Agency",
+        "corporate": "Corporate",
+        "direct": "Direct",
+        "TravelAgency": "Travel Agency",
+        "Corporate": "Corporate",
+        "Direct": "Direct"
       },
       "actions": {
         "activate": "Activate",
         "deactivate": "Deactivate",
         "activateGuest": "Activate Guest",
-        "deactivateGuest": "Deactivate Guest"
+        "deactivateGuest": "Deactivate Guest",
+        "editRoom": "Edit Room",
+        "profile": "Profile",
+        "viewHistory": "View History",
+        "removeLoyalty": "Remove Loyalty",
+        "addLoyalty": "Add Loyalty",
+        "removeFromLoyalty": "Remove from Loyalty Program",
+        "addToLoyalty": "Add to Loyalty Program",
+        "markAsViewed": "Mark as Viewed",
+        "activateGuestStayInfo": "Activate Guest - Enter New Stay Information",
+        "editGuestInfo": "Edit Guest Information",
+        "activating": "Activating...",
+        "stayHistoryTitle": "Stay History - {{name}}",
+        "noStayHistory": "No stay history available"
       },
       "pagination": {
         "previous": "Previous",
@@ -1849,7 +1871,23 @@
       "noGuests": "No guests found",
       "noGuestsDescription": "Try adjusting your search criteria or filters.",
       "noPhone": "No phone",
-      "unknownGuest": "Unknown Guest"
+      "unknownGuest": "Unknown Guest",
+      "reservationTypes": {
+        "bb": "BB",
+        "hb": "HB",
+        "fb": "FB",
+        "ro": "RO",
+        "ai": "AI"
+      },
+      "loyaltyTiers": {
+        "bronze": "BRONZE",
+        "silver": "SILVER",
+        "gold": "GOLD",
+        "platinum": "PLATINUM"
+      },
+      "placeholders": {
+        "enterRoomNumber": "Enter room number"
+      }
     },
     "feedback": {
       "title": "Hotel Feedback Management",
@@ -3354,17 +3392,45 @@
     "positive": "{{field}} must be a positive number"
   },
   "homepage": {
-    "login": "Login",
-    "mainTitle": "Your Hotel Room Services Platform",
-    "subtitle": "Advanced digital solutions for guest services",
-    "accessService": "Access Service",
-    "footer": "© 2024 Qickroom. All rights reserved",
     "brand": "Qickroom",
-    "welcomeBadge": "WELCOME TO QICKROOM",
-    "platformName": "Qickroom",
-    "laundryDescription": "Professional washing, dry cleaning, and pressing services directly to your room.",
-    "transportationDescription": "Reliable car bookings, airport transfers, and chauffeur services.",
-    "tourismDescription": "Discover local attractions with expert guided tours and curated experiences."
+    "login": "Login",
+    "welcomeBadge": "Premium Guest Experience",
+    "mainTitle": "Elevate Your Hotel Stay",
+    "subtitle": "Seamless access to room service, laundry, housekeeping, and transportation—all from the palm of your hand.",
+    "accessService": "Access Services",
+    "servicesTitle": "Everything You Need, Instantly",
+    "servicesDesc": "Enjoy a frictionless hotel experience with our comprehensive suite of digital services.",
+    "dining": "In-Room Dining",
+    "diningDesc": "Order gourmet meals directly to your room with a few taps.",
+    "laundry": "Laundry Service",
+    "laundryDesc": "Schedule pickups for cleaning, pressing, and folding.",
+    "housekeeping": "Housekeeping",
+    "housekeepingDesc": "Request room cleaning, extra towels, or amenities.",
+    "transport": "Transportation",
+    "transportDesc": "Book airport transfers and local rides effortlessly.",
+    "howItWorks": "How It Works",
+    "step1": "Scan QR Code",
+    "step1Desc": "Scan the QR code in your room to access the platform instantly.",
+    "step2": "Select Services",
+    "step2Desc": "Browse menus, schedule services, and customize your requests.",
+    "step3": "Relax & Enjoy",
+    "step3Desc": "Sit back while the hotel staff takes care of the rest.",
+    "secure": "Secure & Private",
+    "secureDesc": "Your data is protected with enterprise-grade security.",
+    "partner": "Partner With Us",
+    "footer": "© 2024 Qickroom. All rights reserved.",
+    "statHotels": "Partner Hotels",
+    "statGuests": "Happy Guests",
+    "statServices": "Services Delivered",
+    "statSupport": "Active Support",
+    "noAppNeeded": "No App Download Required",
+    "seamlessTitle": "A Seamless Experience Across All Devices",
+    "seamlessDesc": "Guests can access all hotel services instantly through their mobile browser. No cumbersome app downloads, no complicated registrations. Just scan and enjoy.",
+    "benefit1": "Instant access via QR code",
+    "benefit2": "Works on any smartphone or tablet",
+    "benefit3": "Multi-language support (English & Arabic)",
+    "webBased": "100% Web-Based",
+    "webBasedDesc": "Accessible from anywhere, anytime, without using up storage space on your device."
   },
   "landingPage": {
     "nav": {

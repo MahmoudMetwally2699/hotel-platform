@@ -67,7 +67,8 @@ const RevenueByCategoryChart = ({ data, loading, error }) => {
   };
 
   const formatLabel = (category) => {
-    return t(`performanceAnalyticsPage.serviceTypes.${category}`, { defaultValue: category });
+    const normalizedCategory = category ? category.toLowerCase() : '';
+    return t(`performanceAnalyticsPage.serviceTypes.${normalizedCategory}`, { defaultValue: category });
   };
 
   const chartData = data.categoryData.map(item => ({

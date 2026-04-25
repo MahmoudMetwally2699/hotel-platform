@@ -52,7 +52,10 @@ const InternalServicesTable = ({ data, loading, error }) => {
     }).format(value || 0);
   };
 
-  const formatServiceName = (type) => t(`performanceAnalyticsPage.serviceTypes.${type}`, { defaultValue: type });
+  const formatServiceName = (type) => {
+    const normalizedType = type ? type.toLowerCase() : '';
+    return t(`performanceAnalyticsPage.serviceTypes.${normalizedType}`, { defaultValue: type });
+  };
 
   const getServiceIcon = (type) => {
     const iconMap = {

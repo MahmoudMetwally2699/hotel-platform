@@ -72,7 +72,8 @@
     "service": "خدمة",
     "words": "كلمات",
     "change": "تغيير",
-    "note": "ملاحظة"
+    "note": "ملاحظة",
+    "processing": "قيد المعالجة"
   },
   "platform": {
     "hotelPlatform": "تجريبي",
@@ -489,7 +490,16 @@
       "transportation": "المواصلات",
       "dining": "المطعم",
       "restaurant": "المطعم",
-      "roomService": "خدمة الغرف"
+      "roomService": "خدمة الغرف",
+      "bathroom amenities": "مستلزمات الحمام",
+      "bathroom_amenities": "مستلزمات الحمام",
+      "room cleaning": "تنظيف الغرفة",
+      "room_cleaning": "تنظيف الغرفة",
+      "bedding": "مفارش السرير",
+      "electrical issues": "أعطال كهربائية",
+      "electrical_issues": "أعطال كهربائية",
+      "plumbing": "سباكة",
+      "furniture": "أثاث"
     },
     "dateRanges": {
       "allTime": "كل الوقت",
@@ -1084,7 +1094,8 @@
         "completed": "مكتمل",
         "cancelled": "ملغي",
         "filterByCategory": "تصفية حسب الفئة",
-        "categoryDescription": "اختر فئة خدمة لتصفية الطلبات"
+        "categoryDescription": "اختر فئة خدمة لتصفية الطلبات",
+        "processing": "قيد المعالجة"
       },
       "table": {
         "orderId": "رقم الطلب",
@@ -1094,7 +1105,9 @@
         "date": "التاريخ",
         "amount": "المبلغ",
         "status": "الحالة",
-        "actions": "الإجراءات"
+        "actions": "الإجراءات",
+        "roomNumber": "رقم الغرفة",
+        "paymentMethod": "طريقة الدفع"
       },
       "details": {
         "title": "تفاصيل الطلب",
@@ -1115,7 +1128,33 @@
         "noDescription": "لا يوجد وصف",
         "markup": "هامش الربح",
         "close": "إغلاق",
-        "updateStatus": "تحديث الحالة"
+        "updateStatus": "تحديث الحالة",
+        "paymentMethod": "طريقة الدفع",
+        "cashAtHotel": "نقداً في الفندق",
+        "onlinePayment": "دفع إلكتروني",
+        "housekeepingDetails": "تفاصيل الغرف والتنظيف",
+        "issueCategories": "الفئات",
+        "roomNumber": "رقم الغرفة",
+        "laundryDetails": "تفاصيل الغسيل",
+        "items": "العناصر",
+        "service": "الخدمة",
+        "expressService": "خدمة سريعة",
+        "transportationDetails": "تفاصيل المواصلات",
+        "pickupLocation": "مكان الانطلاق",
+        "instructions": "تعليمات",
+        "destination": "الوجهة",
+        "vehicleType": "نوع المركبة",
+        "menuItems": "عناصر القائمة",
+        "vegetarian": "نباتي",
+        "vegan": "نباتي صرف",
+        "tourDetails": "تفاصيل الجولة",
+        "tourLocation": "موقع الجولة",
+        "meetingPoint": "نقطة التجمع",
+        "participants": "المشاركين",
+        "persons": "شخص",
+        "additionalServices": "خدمات إضافية",
+        "notes": "ملاحظات",
+        "notePrefix": "ملاحظة"
       },
       "statusUpdate": {
         "title": "تحديث حالة الطلب",
@@ -1133,14 +1172,20 @@
           "cancelled": "ملغى",
           "confirmed": "مؤكد",
           "inProgress": "قيد التنفيذ"
-        }
+        },
+        "orderNumber": "طلب"
       },
       "pagination": {
         "summary": "الصفحة {{page}} من {{totalPages}} • عرض {{count}} طلب",
         "showing": "عرض <1>{{from}}</1> إلى <2>{{to}}</2> من <3>{{total}}</3> نتيجة"
       },
       "noOrders": "لا توجد طلبات",
-      "loadingOrders": "جاري تحميل الطلبات..."
+      "loadingOrders": "جاري تحميل الطلبات...",
+      "paymentMethods": {
+        "cash": "كاش",
+        "visaCard": "فيزا/بطاقة"
+      },
+      "roomPrefix": "الغرفة"
     },
     "services": {
       "title": "إدارة الخدمات",
@@ -1232,7 +1277,8 @@
         "rating": "التقييم",
         "status": "الحالة",
         "markup": "هامش الربح",
-        "actions": "الإجراءات"
+        "actions": "الإجراءات",
+        "providerType": "نوع المزود"
       },
       "status": {
         "active": "نشط",
@@ -1324,7 +1370,12 @@
         "markupSetFailed": "فشل في تحديد هامش الربح. يرجى المحاولة مرة أخرى.",
         "updateLicenseFirst": "لا يمكن تحديد هامش الربح: انتهت صلاحية ترخيص النشاط. يرجى تحديث تاريخ انتهاء الترخيص أولاً.",
         "categoriesUpdateFailed": "فشل في تحديث فئات الخدمات. يرجى المحاولة مرة أخرى."
-      }
+      },
+      "providerTypes": {
+        "internal": "داخلي",
+        "external": "خارجي"
+      },
+      "noMarkup": "بدون هامش (0%)"
     },
     "revenue": {
       "title": "تحليلات الإيرادات",
@@ -1495,7 +1546,8 @@
       "sections": {
         "basicInfo": "المعلومات الأساسية",
         "contactInfo": "معلومات الاتصال",
-        "addressInfo": "معلومات العنوان"
+        "addressInfo": "معلومات العنوان",
+        "hotelLogo": "شعار الفندق"
       },
       "fields": {
         "hotelName": "اسم الفندق",
@@ -1507,10 +1559,16 @@
         "city": "المدينة",
         "state": "الولاية/المحافظة",
         "zipCode": "الرمز البريدي",
-        "country": "البلد"
+        "country": "البلد",
+        "uploadLogo": "رفع الشعار",
+        "newLogoPreview": "معاينة الشعار الجديد",
+        "currentHotelLogo": "شعار الفندق الحالي"
       },
       "placeholders": {
-        "description": "صف الميزات الفريدة والمرافق في فندقك..."
+        "description": "صف الميزات الفريدة والمرافق في فندقك...",
+        "uploadLogoHint": "قم برفع شعار جديد لفندقك (PNG أو JPG أو GIF). اتركه فارغاً للاحتفاظ بالشعار الحالي.",
+        "newLogoHint": "هكذا سيبدو شعارك الجديد",
+        "currentLogoHint": "هذا هو شعار الفندق الحالي الخاص بك"
       }
     },
     "guests": {
@@ -1518,17 +1576,27 @@
       "subtitle": "إدارة نزلاء الفندق وأذونات الوصول الخاصة بهم",
       "searchPlaceholder": "البحث في النزلاء بالاسم أو البريد الإلكتروني...",
       "table": {
-        "guest": "النزيل",
+        "guest": "اسم النزيل",
         "contact": "جهة الاتصال",
-        "joined": "تاريخ الانضمام",
+        "joined": "انضم في",
         "status": "الحالة",
         "actions": "الإجراءات",
         "phone": "الهاتف",
         "room": "الغرفة",
-        "checkIn": "تسجيل الوصول",
-        "checkOut": "تسجيل المغادرة",
+        "checkIn": "تاريخ الدخول",
+        "checkOut": "تاريخ المغادرة",
         "totalBookings": "إجمالي الحجوزات",
-        "totalSpent": "إجمالي المبلغ المنفق"
+        "totalSpent": "إجمالي المبلغ المنفق",
+        "channel": "القناة",
+        "resType": "نوع الحجز",
+        "loyaltyTier": "مستوى الولاء",
+        "roomAndDates": "الغرفة والتواريخ",
+        "new": "جديد",
+        "notEnrolled": "غير مسجل",
+        "roomNumber": "غرفة {{number}}",
+        "noRoomAssigned": "لم يتم تعيين غرفة",
+        "roomNumberLabel": "رقم الغرفة",
+        "nights": "الليالي"
       },
       "filters": {
         "allStatuses": "جميع الحالات",
@@ -1536,13 +1604,33 @@
         "inactive": "غير نشط",
         "activeGuests": "النزلاء النشطون",
         "allGuests": "جميع النزلاء",
-        "checkedOut": "غادروا الفندق"
+        "checkedOut": "غادروا الفندق",
+        "allChannels": "كل القنوات",
+        "travelAgency": "وكالة سفر",
+        "corporate": "شركات",
+        "direct": "مباشر",
+        "TravelAgency": "وكالة سفر",
+        "Corporate": "شركات",
+        "Direct": "مباشر"
       },
       "actions": {
         "activate": "تفعيل",
         "deactivate": "إلغاء التفعيل",
         "activateGuest": "تفعيل النزيل",
-        "deactivateGuest": "إلغاء تفعيل النزيل"
+        "deactivateGuest": "إلغاء تفعيل النزيل",
+        "editRoom": "تعديل الغرفة",
+        "profile": "الملف الشخصي",
+        "viewHistory": "عرض السجل",
+        "removeLoyalty": "إزالة من الولاء",
+        "addLoyalty": "إضافة للولاء",
+        "removeFromLoyalty": "إزالة من برنامج الولاء",
+        "addToLoyalty": "إضافة إلى برنامج الولاء",
+        "markAsViewed": "تحديد كمقروء",
+        "activateGuestStayInfo": "تفعيل النزيل - إدخال معلومات إقامة جديدة",
+        "editGuestInfo": "تعديل معلومات النزيل",
+        "activating": "جاري التفعيل...",
+        "stayHistoryTitle": "سجل الإقامات - {{name}}",
+        "noStayHistory": "لا يوجد سجل إقامات متاح"
       },
       "pagination": {
         "previous": "السابق",
@@ -1555,7 +1643,23 @@
       "noGuests": "لا يوجد نزلاء",
       "noGuestsDescription": "جرب تعديل معايير البحث أو المرشحات.",
       "noPhone": "لا يوجد هاتف",
-      "unknownGuest": "نزيل غير معروف"
+      "unknownGuest": "نزيل غير معروف",
+      "reservationTypes": {
+        "bb": "إفطار وسرير",
+        "hb": "نصف إقامة",
+        "fb": "إقامة كاملة",
+        "ro": "غرفة فقط",
+        "ai": "شامل"
+      },
+      "loyaltyTiers": {
+        "bronze": "برونزي",
+        "silver": "فضي",
+        "gold": "ذهبي",
+        "platinum": "بلاتيني"
+      },
+      "placeholders": {
+        "enterRoomNumber": "أدخل رقم الغرفة"
+      }
     },
     "feedback": {
       "title": "إدارة تعليقات الفندق",
@@ -3140,17 +3244,45 @@
     "positive": "{{field}} يجب أن يكون رقماً موجباً"
   },
   "homepage": {
+    "brand": "Qickroom",
     "login": "دخول",
-    "mainTitle": "منصة خدمات الغرف لفندقك",
-    "subtitle": "حلول رقمية متطورة لخدمات الضيوف",
+    "welcomeBadge": "تجربة ضيف مميزة",
+    "mainTitle": "ارتقِ بإقامتك الفندقية",
+    "subtitle": "وصول سلس لخدمات الغرف، الغسيل، التنظيف، والمواصلات—كل ذلك من راحة يدك.",
     "accessService": "دخول إلى الخدمة",
-    "footer": "© 2024 كيك روم. جميع الحقوق محفوظة",
-    "brand": "كيك روم",
-    "welcomeBadge": "مرحباً بك في كيك روم",
-    "platformName": "كيك روم",
-    "laundryDescription": "خدمات غسيل وتنظيف جاف وكي احترافية تصل مباشرة إلى غرفتك.",
-    "transportationDescription": "حجوزات سيارات موثوقة، تنقلات المطار، وخدمات السائق الخاص.",
-    "tourismDescription": "اكتشف المعالم السياحية المحلية مع جولات مخصصة وتجارب مميزة."
+    "servicesTitle": "كل ما تحتاجه، فوراً",
+    "servicesDesc": "استمتع بتجربة فندقية سلسة مع مجموعتنا الشاملة من الخدمات الرقمية.",
+    "dining": "طعام في الغرفة",
+    "diningDesc": "اطلب وجبات شهية مباشرة إلى غرفتك ببضع نقرات.",
+    "laundry": "خدمة الغسيل",
+    "laundryDesc": "حدد مواعيد لاستلام الملابس للتنظيف والكي والطي.",
+    "housekeeping": "تنظيف الغرف",
+    "housekeepingDesc": "اطلب تنظيف الغرفة أو مناشف إضافية أو مستلزمات.",
+    "transport": "المواصلات",
+    "transportDesc": "احجز تنقلات المطار والرحلات المحلية بكل سهولة.",
+    "howItWorks": "كيف يعمل",
+    "step1": "مسح رمز الاستجابة",
+    "step1Desc": "امسح رمز الاستجابة السريعة (QR) في غرفتك للوصول إلى المنصة فوراً.",
+    "step2": "اختر الخدمات",
+    "step2Desc": "تصفح القوائم، حدد الخدمات، وقم بتخصيص طلباتك.",
+    "step3": "استرخ واستمتع",
+    "step3Desc": "استرخ بينما يهتم طاقم الفندق بالباقي.",
+    "secure": "آمن وخاص",
+    "secureDesc": "بياناتك محمية بأمان على مستوى الشركات.",
+    "partner": "كن شريكاً معنا",
+    "footer": "© 2024 Qickroom. جميع الحقوق محفوظة.",
+    "statHotels": "فنادق شريكة",
+    "statGuests": "ضيوف سعداء",
+    "statServices": "خدمة منفذة",
+    "statSupport": "دعم متواصل",
+    "noAppNeeded": "لا يلزم تنزيل تطبيق",
+    "seamlessTitle": "تجربة سلسة عبر جميع الأجهزة",
+    "seamlessDesc": "يمكن للضيوف الوصول إلى جميع خدمات الفندق فوراً عبر متصفح الهاتف المحمول. لا حاجة لتنزيل تطبيقات معقدة أو تسجيلاات طويلة. فقط امسح الرمز واستمتع.",
+    "benefit1": "وصول فوري عبر رمز الاستجابة",
+    "benefit2": "يعمل على أي هاتف ذكي أو جهاز لوحي",
+    "benefit3": "دعم متعدد اللغات (الإنجليزية والعربية)",
+    "webBased": "يعمل عبر الويب 100%",
+    "webBasedDesc": "يمكن الوصول إليه من أي مكان وفي أي وقت دون استهلاك مساحة التخزين على جهازك."
   },
   "landingPage": {
     "nav": {

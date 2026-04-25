@@ -13,7 +13,7 @@ import { useTheme } from '../../context/ThemeContext';
  * @returns {JSX.Element} Guests management page
  */
 const GuestsPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const users = useSelector(selectAllUsers);
@@ -388,9 +388,9 @@ const GuestsPage = () => {
 
   // Format date
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return t('common.notAvailable', { defaultValue: 'N/A' });
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+    return new Date(dateString).toLocaleDateString(i18n.language === 'ar' ? 'ar-EG' : 'en-US', options);
   };
 
   // Get guest display name
@@ -472,10 +472,10 @@ const GuestsPage = () => {
                 setPagination(prev => ({ ...prev, page: 1 }));
               }}
             >
-              <option value="">All Channels</option>
-              <option value="Travel Agency">Travel Agency</option>
-              <option value="Corporate">Corporate</option>
-              <option value="Direct">Direct</option>
+              <option value="">{t('hotelAdmin.guests.filters.allChannels', { defaultValue: 'All Channels' })}</option>
+              <option value="Travel Agency">{t('hotelAdmin.guests.filters.travelAgency', { defaultValue: 'Travel Agency' })}</option>
+              <option value="Corporate">{t('hotelAdmin.guests.filters.corporate', { defaultValue: 'Corporate' })}</option>
+              <option value="Direct">{t('hotelAdmin.guests.filters.direct', { defaultValue: 'Direct' })}</option>
             </select>
           </div>
 
@@ -511,16 +511,16 @@ const GuestsPage = () => {
                   {t('hotelAdmin.guests.table.guest')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Channel
+                  {t('hotelAdmin.guests.table.channel', { defaultValue: 'Channel' })}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Res. Type
+                  {t('hotelAdmin.guests.table.resType', { defaultValue: 'Res. Type' })}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Loyalty Tier
+                  {t('hotelAdmin.guests.table.loyaltyTier', { defaultValue: 'Loyalty Tier' })}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Room & Dates
+                  {t('hotelAdmin.guests.table.roomAndDates', { defaultValue: 'Room & Dates' })}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('hotelAdmin.guests.table.contact')}
@@ -557,7 +557,7 @@ const GuestsPage = () => {
                             {getGuestName(guest)}
                             {!guest.isViewedByAdmin && (
                               <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-green-500 text-white animate-pulse">
-                                New
+                                {t('hotelAdmin.guests.table.new', { defaultValue: 'New' })}
                               </span>
                             )}
                           </div>
@@ -566,21 +566,21 @@ const GuestsPage = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900">{guest.channel || 'Direct'}</span>
+                      <span className="text-sm text-gray-900">{t(`hotelAdmin.guests.filters.${(guest.channel || 'Direct').replace(' ', '')}`, { defaultValue: guest.channel || 'Direct' })}</span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {guest.reservationType || 'BB'}
+                        {t('hotelAdmin.guests.reservationTypes.' + (guest.reservationType || 'BB').toLowerCase(), { defaultValue: guest.reservationType || 'BB' })}
                       </span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       {guest.loyaltyTier ? (
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTierBadgeColor(guest.loyaltyTier)}`}>
-                          {guest.loyaltyTier.toUpperCase()}
+                          {t('hotelAdmin.guests.loyaltyTiers.' + guest.loyaltyTier.toLowerCase(), { defaultValue: guest.loyaltyTier.toUpperCase() })}
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200">
-                          Not Enrolled
+                          {t('hotelAdmin.guests.table.notEnrolled', { defaultValue: 'Not Enrolled' })}
                         </span>
                       )}
                     </td>
@@ -588,18 +588,18 @@ const GuestsPage = () => {
                       <div className="space-y-1">
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-gray-900">
-                            {guest.roomNumber ? `Room ${guest.roomNumber}` : 'No room assigned'}
+                            {guest.roomNumber ? t('hotelAdmin.guests.table.roomNumber', { defaultValue: `Room ${guest.roomNumber}`, number: guest.roomNumber }) : t('hotelAdmin.guests.table.noRoomAssigned', { defaultValue: 'No room assigned' })}
                           </span>
                         </div>
                         <div className="text-xs text-gray-500">
-                          <div>Check-in: {formatDate(guest.checkInDate)}</div>
-                          <div>Check-out: {formatDate(guest.checkOutDate)}</div>
+                          <div>{t('hotelAdmin.guests.table.checkIn', { defaultValue: 'Check-in' })}: {formatDate(guest.checkInDate)}</div>
+                          <div>{t('hotelAdmin.guests.table.checkOut', { defaultValue: 'Check-out' })}: {formatDate(guest.checkOutDate)}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm text-gray-900">{guest.phone || t('hotelAdmin.guests.noPhone')}</div>
-                      <div className="text-sm text-gray-500">Joined: {formatDate(guest.createdAt)}</div>
+                      <div className="text-sm text-gray-500">{t('hotelAdmin.guests.table.joined', { defaultValue: 'Joined' })}: {formatDate(guest.createdAt)}</div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -678,7 +678,7 @@ const GuestsPage = () => {
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <HiPencil className="w-4 h-4 mr-3 text-blue-600" />
-                                Edit Room
+                                {t('hotelAdmin.guests.actions.editRoom', { defaultValue: 'Edit Room' })}
                               </button>
                             )}
                             
@@ -691,7 +691,7 @@ const GuestsPage = () => {
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 flex items-center"
                               >
                                 <HiUser className="w-4 h-4 mr-3 text-green-600" />
-                                Profile
+                                {t('hotelAdmin.guests.actions.profile', { defaultValue: 'Profile' })}
                             </button>
 
                             {/* View History Button - For guests with stay history */}
@@ -704,7 +704,7 @@ const GuestsPage = () => {
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 flex items-center"
                               >
                                 <HiCheckCircle className="w-4 h-4 mr-3 text-indigo-600" />
-                                View History
+                                {t('hotelAdmin.guests.actions.viewHistory', { defaultValue: 'View History' })}
                               </button>
                             )}
 
@@ -724,7 +724,7 @@ const GuestsPage = () => {
                               ) : (
                                 <HiStar className="w-4 h-4 mr-3 text-purple-600" />
                               )}
-                              {guest.loyaltyTier ? 'Remove Loyalty' : 'Add Loyalty'}
+                              {guest.loyaltyTier ? t('hotelAdmin.guests.actions.removeLoyalty', { defaultValue: 'Remove Loyalty' }) : t('hotelAdmin.guests.actions.addLoyalty', { defaultValue: 'Add Loyalty' })}
                             </button>
 
                             {/* Divider */}
@@ -807,10 +807,10 @@ const GuestsPage = () => {
                   </div>
                   {guest.loyaltyTier && (
                     <div>
-                      <span className="text-gray-500">Loyalty Tier:</span>
+                      <span className="text-gray-500">{t('hotelAdmin.guests.table.loyaltyTier', { defaultValue: 'Loyalty Tier' })}:</span>
                       <div>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getTierBadgeColor(guest.loyaltyTier)}`}>
-                          {guest.loyaltyTier.toUpperCase()}
+                          {t('hotelAdmin.guests.loyaltyTiers.' + guest.loyaltyTier.toLowerCase(), { defaultValue: guest.loyaltyTier.toUpperCase() })}
                         </span>
                       </div>
                     </div>
@@ -823,13 +823,13 @@ const GuestsPage = () => {
                   )}
                   {guest.checkInDate && (
                     <div>
-                      <span className="text-gray-500">Check-in:</span>
+                      <span className="text-gray-500">{t('hotelAdmin.guests.table.checkIn', { defaultValue: 'Check-in' })}:</span>
                       <div className="font-medium">{formatDate(guest.checkInDate)}</div>
                     </div>
                   )}
                   {guest.checkOutDate && (
                     <div>
-                      <span className="text-gray-500">Check-out:</span>
+                      <span className="text-gray-500">{t('hotelAdmin.guests.table.checkOut', { defaultValue: 'Check-out' })}:</span>
                       <div className="font-medium">{formatDate(guest.checkOutDate)}</div>
                     </div>
                   )}
@@ -852,7 +852,7 @@ const GuestsPage = () => {
                       className="w-full inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
                     >
                       <HiCheckCircle className="w-5 h-5 mr-2" />
-                      Mark as Viewed
+                      {t('hotelAdmin.guests.actions.markAsViewed', { defaultValue: 'Mark as Viewed' })}
                     </button>
                   )}
 
@@ -873,7 +873,7 @@ const GuestsPage = () => {
                     ) : (
                       <HiStar className="w-5 h-5 mr-2" />
                     )}
-                    {guest.loyaltyTier ? 'Remove from Loyalty Program' : 'Add to Loyalty Program'}
+                    {guest.loyaltyTier ? t('hotelAdmin.guests.actions.removeFromLoyalty', { defaultValue: 'Remove from Loyalty Program' }) : t('hotelAdmin.guests.actions.addToLoyalty', { defaultValue: 'Add to Loyalty Program' })}
                   </button>
 
                   {/* Guest Status Button */}
@@ -1009,13 +1009,13 @@ const GuestsPage = () => {
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {editModal.guest?.isActive === false ? 'Activate Guest - Enter New Stay Information' : 'Edit Guest Information'}
+                {editModal.guest?.isActive === false ? t('hotelAdmin.guests.actions.activateGuestStayInfo', { defaultValue: 'Activate Guest - Enter New Stay Information' }) : t('hotelAdmin.guests.actions.editGuestInfo', { defaultValue: 'Edit Guest Information' })}
               </h3>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Guest Name
+                    {t('hotelAdmin.guests.table.guest', { defaultValue: 'Guest Name' })}
                   </label>
                   <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded border">
                     {getGuestName(editModal.guest)}
@@ -1025,52 +1025,52 @@ const GuestsPage = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Channel
+                      {t('hotelAdmin.guests.table.channel', { defaultValue: 'Channel' })}
                     </label>
                     <select
                       value={editModal.channel}
                       onChange={(e) => setEditModal(prev => ({ ...prev, channel: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="Direct">Direct</option>
-                      <option value="Travel Agency">Travel Agency</option>
-                      <option value="Corporate">Corporate</option>
+                      <option value="Direct">{t('hotelAdmin.guests.filters.direct', { defaultValue: 'Direct' })}</option>
+                      <option value="Travel Agency">{t('hotelAdmin.guests.filters.travelAgency', { defaultValue: 'Travel Agency' })}</option>
+                      <option value="Corporate">{t('hotelAdmin.guests.filters.corporate', { defaultValue: 'Corporate' })}</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Reservation Type
+                      {t('hotelAdmin.guests.table.resType', { defaultValue: 'Reservation Type' })}
                     </label>
                     <select
                       value={editModal.reservationType}
                       onChange={(e) => setEditModal(prev => ({ ...prev, reservationType: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="RO">RO (Room Only)</option>
-                      <option value="BB">BB (Bed & Breakfast)</option>
-                      <option value="FB">FB (Full Board)</option>
-                      <option value="All">All (All Inclusive)</option>
+                      <option value="RO">RO ({t('hotelAdmin.guests.reservationTypes.ro', { defaultValue: 'Room Only' })})</option>
+                      <option value="BB">BB ({t('hotelAdmin.guests.reservationTypes.bb', { defaultValue: 'Bed & Breakfast' })})</option>
+                      <option value="FB">FB ({t('hotelAdmin.guests.reservationTypes.fb', { defaultValue: 'Full Board' })})</option>
+                      <option value="All">All ({t('hotelAdmin.guests.reservationTypes.ai', { defaultValue: 'All Inclusive' })})</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Room Number
+                    {t('hotelAdmin.guests.table.roomNumberLabel', { defaultValue: 'Room Number' })}
                   </label>
                   <input
                     type="text"
                     value={editModal.roomNumber}
                     onChange={(e) => setEditModal(prev => ({ ...prev, roomNumber: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter room number"
+                    placeholder={t('hotelAdmin.guests.placeholders.enterRoomNumber', { defaultValue: 'Enter room number' })}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Check-in Date
+                    {t('hotelAdmin.guests.table.checkIn', { defaultValue: 'Check-in Date' })}
                   </label>
                   <input
                     type="date"
@@ -1082,7 +1082,7 @@ const GuestsPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Check-out Date
+                    {t('hotelAdmin.guests.table.checkOut', { defaultValue: 'Check-out Date' })}
                   </label>
                   <input
                     type="date"
@@ -1098,7 +1098,7 @@ const GuestsPage = () => {
                   onClick={closeEditModal}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
                 >
-                  Cancel
+                  {t('common.cancel', { defaultValue: 'Cancel' })}
                 </button>
                 <button
                   onClick={updateGuestInfo}
@@ -1109,10 +1109,10 @@ const GuestsPage = () => {
                   {updating.has(editModal.guest?._id) ? (
                     <div className="flex items-center">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                      {editModal.guest?.isActive === false ? 'Activating...' : 'Updating...'}
+                      {editModal.guest?.isActive === false ? t('hotelAdmin.guests.actions.activating', { defaultValue: 'Activating...' }) : t('common.saving', { defaultValue: 'Updating...' })}
                     </div>
                   ) : (
-                    editModal.guest?.isActive === false ? 'Activate Guest' : 'Update'
+                    editModal.guest?.isActive === false ? t('hotelAdmin.guests.actions.activateGuest', { defaultValue: 'Activate Guest' }) : t('common.save', { defaultValue: 'Update' })
                   )}
                 </button>
               </div>
@@ -1127,7 +1127,7 @@ const GuestsPage = () => {
           <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900">
-                Stay History - {getGuestName(historyModal.guest)}
+                {t('hotelAdmin.guests.actions.stayHistoryTitle', { defaultValue: 'Stay History - {{name}}', name: getGuestName(historyModal.guest) })}
               </h3>
               <button
                 onClick={closeHistoryModal}
@@ -1142,7 +1142,7 @@ const GuestsPage = () => {
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
               {historyModal.stayHistory.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No stay history available</p>
+                  <p className="text-gray-500">{t('hotelAdmin.guests.actions.noStayHistory', { defaultValue: 'No stay history available' })}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1153,25 +1153,25 @@ const GuestsPage = () => {
                     >
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Check-in</p>
+                          <p className="text-xs text-gray-500 mb-1">{t('hotelAdmin.guests.table.checkIn', { defaultValue: 'Check-in' })}</p>
                           <p className="font-medium text-gray-900">
                             {formatDate(stay.checkInDate)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Check-out</p>
+                          <p className="text-xs text-gray-500 mb-1">{t('hotelAdmin.guests.table.checkOut', { defaultValue: 'Check-out' })}</p>
                           <p className="font-medium text-gray-900">
                             {formatDate(stay.checkOutDate)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Room</p>
+                          <p className="text-xs text-gray-500 mb-1">{t('hotelAdmin.guests.table.roomNumberLabel', { defaultValue: 'Room' })}</p>
                           <p className="font-medium text-gray-900">
-                            {stay.roomNumber || 'N/A'}
+                            {stay.roomNumber || t('common.notAvailable', { defaultValue: 'N/A' })}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500 mb-1">Nights</p>
+                          <p className="text-xs text-gray-500 mb-1">{t('hotelAdmin.guests.table.nights', { defaultValue: 'Nights' })}</p>
                           <p className="font-medium text-gray-900">
                             {stay.numberOfNights || 0}
                           </p>
@@ -1188,7 +1188,7 @@ const GuestsPage = () => {
                 onClick={closeHistoryModal}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
               >
-                Close
+                {t('common.close', { defaultValue: 'Close' })}
               </button>
             </div>
           </div>
